@@ -12,7 +12,7 @@ import (
 )
 
 func TestNewCountingBloomFilter(t *testing.T) {
-	client, flushAllAndClose, err := setup()
+	client, flushAllAndClose, err := setupRedis7Cluster()
 	if err != nil {
 		t.Error(err)
 	}
@@ -50,7 +50,7 @@ func TestNewCountingBloomFilter(t *testing.T) {
 
 func TestNewCountingBloomFilterError(t *testing.T) {
 	t.Run("EmptyName", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -68,7 +68,7 @@ func TestNewCountingBloomFilterError(t *testing.T) {
 	})
 
 	t.Run("NegativeFalsePositiveRate", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -86,7 +86,7 @@ func TestNewCountingBloomFilterError(t *testing.T) {
 	})
 
 	t.Run("GreaterThanOneFalsePositiveRate", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -104,7 +104,7 @@ func TestNewCountingBloomFilterError(t *testing.T) {
 	})
 
 	t.Run("BitsSizeZero", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -123,7 +123,7 @@ func TestNewCountingBloomFilterError(t *testing.T) {
 }
 
 func TestCountingBloomFilterAdd(t *testing.T) {
-	client, flushAllAndClose, err := setup()
+	client, flushAllAndClose, err := setupRedis7Cluster()
 	if err != nil {
 		t.Error(err)
 	}
@@ -162,7 +162,7 @@ func TestCountingBloomFilterAdd(t *testing.T) {
 }
 
 func TestCountingBloomFilterAddError(t *testing.T) {
-	client, flushAllAndClose, err := setup()
+	client, flushAllAndClose, err := setupRedis7Cluster()
 	if err != nil {
 		t.Error(err)
 	}
@@ -188,7 +188,7 @@ func TestCountingBloomFilterAddError(t *testing.T) {
 
 func TestCountingBloomFilterAddMulti(t *testing.T) {
 	t.Run("add multiple items", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -230,7 +230,7 @@ func TestCountingBloomFilterAddMulti(t *testing.T) {
 	})
 
 	t.Run("add empty items", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -261,7 +261,7 @@ func TestCountingBloomFilterAddMulti(t *testing.T) {
 	})
 
 	t.Run("add already exists items", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -337,7 +337,7 @@ func TestCountingBloomFilterAddMulti(t *testing.T) {
 	})
 
 	t.Run("add duplicate items", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -379,7 +379,7 @@ func TestCountingBloomFilterAddMulti(t *testing.T) {
 }
 
 func TestCountingBloomFilterAddMultiError(t *testing.T) {
-	client, flushAllAndClose, err := setup()
+	client, flushAllAndClose, err := setupRedis7Cluster()
 	if err != nil {
 		t.Error(err)
 	}
@@ -405,7 +405,7 @@ func TestCountingBloomFilterAddMultiError(t *testing.T) {
 
 func TestCountingBloomFilterExists(t *testing.T) {
 	t.Run("exists", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -436,7 +436,7 @@ func TestCountingBloomFilterExists(t *testing.T) {
 	})
 
 	t.Run("does not exist", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -463,7 +463,7 @@ func TestCountingBloomFilterExists(t *testing.T) {
 }
 
 func TestCountingBloomFilterExistsError(t *testing.T) {
-	client, flushAllAndClose, err := setup()
+	client, flushAllAndClose, err := setupRedis7Cluster()
 	if err != nil {
 		t.Error(err)
 	}
@@ -489,7 +489,7 @@ func TestCountingBloomFilterExistsError(t *testing.T) {
 
 func TestCountingBloomFilterExistsMulti(t *testing.T) {
 	t.Run("exists", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -522,7 +522,7 @@ func TestCountingBloomFilterExistsMulti(t *testing.T) {
 	})
 
 	t.Run("does not exist", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -550,7 +550,7 @@ func TestCountingBloomFilterExistsMulti(t *testing.T) {
 	})
 
 	t.Run("duplicated saved items exist", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -599,7 +599,7 @@ func TestCountingBloomFilterExistsMulti(t *testing.T) {
 	})
 
 	t.Run("empty keys", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -626,7 +626,7 @@ func TestCountingBloomFilterExistsMulti(t *testing.T) {
 }
 
 func TestCountingBloomFilterExistsMultiError(t *testing.T) {
-	client, flushAllAndClose, err := setup()
+	client, flushAllAndClose, err := setupRedis7Cluster()
 	if err != nil {
 		t.Error(err)
 	}
@@ -652,7 +652,7 @@ func TestCountingBloomFilterExistsMultiError(t *testing.T) {
 
 func TestCountingBloomFilterRemove(t *testing.T) {
 	t.Run("remove", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -704,7 +704,7 @@ func TestCountingBloomFilterRemove(t *testing.T) {
 	})
 
 	t.Run("does not exist", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -728,7 +728,7 @@ func TestCountingBloomFilterRemove(t *testing.T) {
 }
 
 func TestCountingBloomFilterRemoveError(t *testing.T) {
-	client, flushAllAndClose, err := setup()
+	client, flushAllAndClose, err := setupRedis7Cluster()
 	if err != nil {
 		t.Error(err)
 	}
@@ -754,7 +754,7 @@ func TestCountingBloomFilterRemoveError(t *testing.T) {
 
 func TestCountingBloomFilterRemoveMulti(t *testing.T) {
 	t.Run("remove multiple items", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -809,7 +809,7 @@ func TestCountingBloomFilterRemoveMulti(t *testing.T) {
 	})
 
 	t.Run("remove empty items", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -840,7 +840,7 @@ func TestCountingBloomFilterRemoveMulti(t *testing.T) {
 	})
 
 	t.Run("remove not exist items", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -873,7 +873,7 @@ func TestCountingBloomFilterRemoveMulti(t *testing.T) {
 	})
 
 	t.Run("remove already deleted items", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -953,7 +953,7 @@ func TestCountingBloomFilterRemoveMulti(t *testing.T) {
 	})
 
 	t.Run("remove duplicate items", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -1030,7 +1030,7 @@ func TestCountingBloomFilterRemoveMulti(t *testing.T) {
 	})
 
 	t.Run("remove more than count", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -1098,7 +1098,7 @@ func TestCountingBloomFilterRemoveMulti(t *testing.T) {
 	})
 
 	t.Run("remove very large items", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -1144,7 +1144,7 @@ func TestCountingBloomFilterRemoveMulti(t *testing.T) {
 
 func TestCountingBloomFilterDelete(t *testing.T) {
 	t.Run("delete exists", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -1202,7 +1202,7 @@ func TestCountingBloomFilterDelete(t *testing.T) {
 	})
 
 	t.Run("delete does not exist", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -1226,7 +1226,7 @@ func TestCountingBloomFilterDelete(t *testing.T) {
 }
 
 func TestCountingBloomFilterDeleteError(t *testing.T) {
-	client, flushAllAndClose, err := setup()
+	client, flushAllAndClose, err := setupRedis7Cluster()
 	if err != nil {
 		t.Error(err)
 	}
@@ -1252,7 +1252,7 @@ func TestCountingBloomFilterDeleteError(t *testing.T) {
 
 func TestCountingBloomFilterItemMintCount(t *testing.T) {
 	t.Run("item exists", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -1283,7 +1283,7 @@ func TestCountingBloomFilterItemMintCount(t *testing.T) {
 	})
 
 	t.Run("item does not exist", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -1311,7 +1311,7 @@ func TestCountingBloomFilterItemMintCount(t *testing.T) {
 
 func TestCountingBloomFilterItemMinCountError(t *testing.T) {
 	t.Run("min item count error", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -1338,7 +1338,7 @@ func TestCountingBloomFilterItemMinCountError(t *testing.T) {
 
 func TestCountingBloomFilterItemMinCountMulti(t *testing.T) {
 	t.Run("item exists", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -1371,7 +1371,7 @@ func TestCountingBloomFilterItemMinCountMulti(t *testing.T) {
 	})
 
 	t.Run("item does not exist", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -1400,7 +1400,7 @@ func TestCountingBloomFilterItemMinCountMulti(t *testing.T) {
 	})
 
 	t.Run("empty keys", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -1426,7 +1426,7 @@ func TestCountingBloomFilterItemMinCountMulti(t *testing.T) {
 	})
 
 	t.Run("zero count items", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -1465,7 +1465,7 @@ func TestCountingBloomFilterItemMinCountMulti(t *testing.T) {
 
 func TestCountingBloomFilterCount(t *testing.T) {
 	t.Run("count exists", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -1496,7 +1496,7 @@ func TestCountingBloomFilterCount(t *testing.T) {
 	})
 
 	t.Run("count does not exist", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -1522,7 +1522,7 @@ func TestCountingBloomFilterCount(t *testing.T) {
 	})
 
 	t.Run("add multiple items", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -1556,7 +1556,7 @@ func TestCountingBloomFilterCount(t *testing.T) {
 
 func TestCountingBloomFilterCountError(t *testing.T) {
 	t.Run("count error", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -1581,7 +1581,7 @@ func TestCountingBloomFilterCountError(t *testing.T) {
 	})
 
 	t.Run("counter key is corrupted", func(t *testing.T) {
-		client, flushAllAndClose, err := setup()
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
@@ -1617,7 +1617,7 @@ func TestCountingBloomFilterCountError(t *testing.T) {
 }
 
 func BenchmarkCountingBloomFilterAddMultiBigSize(b *testing.B) {
-	client, flushAllAndClose, err := setup()
+	client, flushAllAndClose, err := setupRedis7Cluster()
 	if err != nil {
 		b.Error(err)
 	}
@@ -1649,7 +1649,7 @@ func BenchmarkCountingBloomFilterAddMultiBigSize(b *testing.B) {
 }
 
 func BenchmarkCountingBloomFilterAddMultiLowRate(b *testing.B) {
-	client, flushAllAndClose, err := setup()
+	client, flushAllAndClose, err := setupRedis7Cluster()
 	if err != nil {
 		b.Error(err)
 	}
@@ -1681,7 +1681,7 @@ func BenchmarkCountingBloomFilterAddMultiLowRate(b *testing.B) {
 }
 
 func BenchmarkCountingBloomFilterAddMultiManyKeys(b *testing.B) {
-	client, flushAllAndClose, err := setup()
+	client, flushAllAndClose, err := setupRedis7Cluster()
 	if err != nil {
 		b.Error(err)
 	}
@@ -1713,7 +1713,7 @@ func BenchmarkCountingBloomFilterAddMultiManyKeys(b *testing.B) {
 }
 
 func BenchmarkCountingBloomFilterExistsMultiBigSize(b *testing.B) {
-	client, flushAllAndClose, err := setup()
+	client, flushAllAndClose, err := setupRedis7Cluster()
 	if err != nil {
 		b.Error(err)
 	}
@@ -1755,7 +1755,7 @@ func BenchmarkCountingBloomFilterExistsMultiBigSize(b *testing.B) {
 }
 
 func BenchmarkCountingBloomFilterExistsMultiLowRate(b *testing.B) {
-	client, flushAllAndClose, err := setup()
+	client, flushAllAndClose, err := setupRedis7Cluster()
 	if err != nil {
 		b.Error(err)
 	}
@@ -1797,7 +1797,7 @@ func BenchmarkCountingBloomFilterExistsMultiLowRate(b *testing.B) {
 }
 
 func BenchmarkCountingBloomFilterExistsMultiManyKeys(b *testing.B) {
-	client, flushAllAndClose, err := setup()
+	client, flushAllAndClose, err := setupRedis7Cluster()
 	if err != nil {
 		b.Error(err)
 	}
@@ -1839,7 +1839,7 @@ func BenchmarkCountingBloomFilterExistsMultiManyKeys(b *testing.B) {
 }
 
 func BenchmarkCountingBloomFilterRemoveMultiBigSize(b *testing.B) {
-	client, flushAllAndClose, err := setup()
+	client, flushAllAndClose, err := setupRedis7Cluster()
 	if err != nil {
 		b.Error(err)
 	}
@@ -1877,7 +1877,7 @@ func BenchmarkCountingBloomFilterRemoveMultiBigSize(b *testing.B) {
 }
 
 func BenchmarkCountingBloomFilterRemoveMultiLowRate(b *testing.B) {
-	client, flushAllAndClose, err := setup()
+	client, flushAllAndClose, err := setupRedis7Cluster()
 	if err != nil {
 		b.Error(err)
 	}
@@ -1915,7 +1915,7 @@ func BenchmarkCountingBloomFilterRemoveMultiLowRate(b *testing.B) {
 }
 
 func BenchmarkCountingBloomFilterRemoveMultiManyKeys(b *testing.B) {
-	client, flushAllAndClose, err := setup()
+	client, flushAllAndClose, err := setupRedis7Cluster()
 	if err != nil {
 		b.Error(err)
 	}
@@ -1953,7 +1953,7 @@ func BenchmarkCountingBloomFilterRemoveMultiManyKeys(b *testing.B) {
 }
 
 func BenchmarkCountingBloomFilterItemMinCountMultiBigSize(b *testing.B) {
-	client, flushAllAndClose, err := setup()
+	client, flushAllAndClose, err := setupRedis7Cluster()
 	if err != nil {
 		b.Error(err)
 	}
@@ -1995,7 +1995,7 @@ func BenchmarkCountingBloomFilterItemMinCountMultiBigSize(b *testing.B) {
 }
 
 func BenchmarkCountingBloomFilterItemMinCountMultiLowRate(b *testing.B) {
-	client, flushAllAndClose, err := setup()
+	client, flushAllAndClose, err := setupRedis7Cluster()
 	if err != nil {
 		b.Error(err)
 	}
@@ -2037,7 +2037,7 @@ func BenchmarkCountingBloomFilterItemMinCountMultiLowRate(b *testing.B) {
 }
 
 func BenchmarkCountingBloomFilterItemMinCountMultiManyKeys(b *testing.B) {
-	client, flushAllAndClose, err := setup()
+	client, flushAllAndClose, err := setupRedis7Cluster()
 	if err != nil {
 		b.Error(err)
 	}
