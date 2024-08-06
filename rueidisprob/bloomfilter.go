@@ -4,10 +4,11 @@ import (
 	"bufio"
 	"context"
 	"errors"
-	"github.com/redis/rueidis"
 	"math"
 	"strconv"
 	"strings"
+
+	"github.com/redis/rueidis"
 )
 
 const (
@@ -106,12 +107,11 @@ return 1
 )
 
 var (
-	ErrEmptyName                               = errors.New("name cannot be empty")
-	ErrFalsePositiveRateLessThanEqualZero      = errors.New("false positive rate cannot be less than or equal to zero")
-	ErrFalsePositiveRateGreaterThanOne         = errors.New("false positive rate cannot be greater than 1")
-	ErrBitsSizeZero                            = errors.New("bits size cannot be zero")
-	ErrBitsSizeTooLarge                        = errors.New("bits size is too large")
-	ErrUnsupportedRedisVersionForReadOperation = errors.New("minimum redis version should be 7.0.0 for read operation")
+	ErrEmptyName                          = errors.New("name cannot be empty")
+	ErrFalsePositiveRateLessThanEqualZero = errors.New("false positive rate cannot be less than or equal to zero")
+	ErrFalsePositiveRateGreaterThanOne    = errors.New("false positive rate cannot be greater than 1")
+	ErrBitsSizeZero                       = errors.New("bits size cannot be zero")
+	ErrBitsSizeTooLarge                   = errors.New("bits size is too large")
 )
 
 // BloomFilterOptions is used to configure BloomFilter.
@@ -219,20 +219,6 @@ func NewBloomFilter(
 
 	var existsMultiScript *rueidis.Lua
 	if options.enableReadOperation {
-		resp := client.Do(context.Background(), client.B().Info().Section("server").Build())
-		if resp.Error() != nil {
-			return nil, resp.Error()
-		}
-
-		info, err := resp.ToString()
-		if err != nil {
-			return nil, err
-		}
-
-		if parseRedisMajorVersion(info) < 7 {
-			return nil, ErrUnsupportedRedisVersionForReadOperation
-		}
-
 		existsMultiScript = rueidis.NewLuaScriptReadOnly(bloomFilterExistsMultiReadOnlyScript)
 	} else {
 		existsMultiScript = rueidis.NewLuaScript(bloomFilterExistsMultiScript)

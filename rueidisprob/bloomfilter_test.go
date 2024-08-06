@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math/rand"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/redis/rueidis"
@@ -221,24 +222,6 @@ func TestNewBloomFilterError(t *testing.T) {
 		_, err = NewBloomFilter(client, "test", 1<<33, 0.01)
 		if !errors.Is(err, ErrBitsSizeTooLarge) {
 			t.Error("Error is not ErrBitsSizeTooLarge")
-		}
-	})
-
-	t.Run("unsupported redis version for read operation", func(t *testing.T) {
-		client, flushAllAndClose, err := setupRedis5Cluster()
-		if err != nil {
-			t.Error(err)
-		}
-		defer func() {
-			err := flushAllAndClose()
-			if err != nil {
-				t.Error(err)
-			}
-		}()
-
-		_, err = NewBloomFilter(client, "test", 100, 0.05, WithEnableReadOperation(true))
-		if !errors.Is(err, ErrUnsupportedRedisVersionForReadOperation) {
-			t.Error("Error is not ErrUnsupportedRedisVersion")
 		}
 	})
 }
@@ -625,28 +608,61 @@ func TestBloomFilterExists(t *testing.T) {
 }
 
 func TestBloomFilterExistsError(t *testing.T) {
-	client, flushAllAndClose, err := setupRedis7Cluster()
-	if err != nil {
-		t.Error(err)
-	}
-	defer func() {
-		err := flushAllAndClose()
+	t.Run("exists error", func(t *testing.T) {
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
-	}()
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
 
-	bf, err := NewBloomFilter(client, "test", 100, 0.05)
-	if err != nil {
-		t.Error(err)
-	}
+		bf, err := NewBloomFilter(client, "test", 100, 0.05)
+		if err != nil {
+			t.Error(err)
+		}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-	_, err = bf.Exists(ctx, "1")
-	if !errors.Is(err, context.Canceled) {
-		t.Error("Error is not context.Canceled")
-	}
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		_, err = bf.Exists(ctx, "1")
+		if !errors.Is(err, context.Canceled) {
+			t.Error("Error is not context.Canceled")
+		}
+	})
+
+	t.Run("unsupported redis version for read operation", func(t *testing.T) {
+		client, flushAllAndClose, err := setupRedis5Cluster()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		bf, err := NewBloomFilter(client, "test", 100, 0.05, WithEnableReadOperation(true))
+		if err != nil {
+			t.Error(err)
+		}
+
+		err = bf.Add(context.Background(), "1")
+		if err != nil {
+			t.Error(err)
+		}
+
+		_, err = bf.Exists(context.Background(), "1")
+		if err == nil {
+			t.Error("Error is nil")
+		}
+		if !strings.Contains(err.Error(), "unknown command") {
+			t.Error("Error is not unsupported redis version")
+		}
+	})
 }
 
 func TestBloomFilterExistsMulti(t *testing.T) {
@@ -811,28 +827,61 @@ func TestBloomFilterExistsMulti(t *testing.T) {
 }
 
 func TestBloomFilterExistsMultiError(t *testing.T) {
-	client, flushAllAndClose, err := setupRedis7Cluster()
-	if err != nil {
-		t.Error(err)
-	}
-	defer func() {
-		err := flushAllAndClose()
+	t.Run("exists error", func(t *testing.T) {
+		client, flushAllAndClose, err := setupRedis7Cluster()
 		if err != nil {
 			t.Error(err)
 		}
-	}()
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
 
-	bf, err := NewBloomFilter(client, "test", 100, 0.05)
-	if err != nil {
-		t.Error(err)
-	}
+		bf, err := NewBloomFilter(client, "test", 100, 0.05)
+		if err != nil {
+			t.Error(err)
+		}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-	_, err = bf.ExistsMulti(ctx, []string{"1", "2", "3"})
-	if !errors.Is(err, context.Canceled) {
-		t.Error("Error is not context.Canceled")
-	}
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		_, err = bf.ExistsMulti(ctx, []string{"1", "2", "3"})
+		if !errors.Is(err, context.Canceled) {
+			t.Error("Error is not context.Canceled")
+		}
+	})
+
+	t.Run("unsupported redis version for read operation", func(t *testing.T) {
+		client, flushAllAndClose, err := setupRedis5Cluster()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		bf, err := NewBloomFilter(client, "test", 100, 0.05, WithEnableReadOperation(true))
+		if err != nil {
+			t.Error(err)
+		}
+
+		err = bf.Add(context.Background(), "1")
+		if err != nil {
+			t.Error(err)
+		}
+
+		_, err = bf.ExistsMulti(context.Background(), []string{"1"})
+		if err == nil {
+			t.Error("Error is nil")
+		}
+		if !strings.Contains(err.Error(), "unknown command") {
+			t.Error("Error is not unsupported redis version")
+		}
+	})
 }
 
 func TestBloomFilterReset(t *testing.T) {
