@@ -1,12 +1,10 @@
 package rueidisprob
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"math"
 	"strconv"
-	"strings"
 
 	"github.com/redis/rueidis"
 )
@@ -247,25 +245,6 @@ func numberOfBloomFilterBits(n uint, r float64) uint {
 
 func numberOfBloomFilterHashFunctions(s uint, n uint) uint {
 	return uint(math.Round(float64(s) / float64(n) * math.Log(2)))
-}
-
-func parseRedisMajorVersion(info string) int {
-	scanner := bufio.NewScanner(strings.NewReader(info))
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.HasPrefix(line, "redis_version:") {
-			parts := strings.Split(strings.TrimSpace(line), ":")
-			if len(parts) == 2 {
-				ver := strings.Split(parts[1], ".")
-				if len(ver) == 3 {
-					vv, _ := strconv.ParseInt(ver[0], 10, 32)
-					return int(vv)
-				}
-			}
-		}
-	}
-
-	return 0
 }
 
 func (c *bloomFilter) Add(ctx context.Context, key string) error {
