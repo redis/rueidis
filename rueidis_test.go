@@ -197,38 +197,84 @@ func TestFallBackSingleClient(t *testing.T) {
 
 func TestForceSingleClient(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
+
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer ln.Close()
-	done := make(chan struct{})
-	go func() {
-		mock, err := accept(t, ln)
-		if err != nil {
-			return
-		}
-		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
-			ReplyError("UNKNOWN COMMAND")
-		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
-			ReplyError("UNKNOWN COMMAND")
-		mock.Expect("PING").ReplyString("OK")
-		mock.Close()
-		close(done)
-	}()
-	_, port, _ := net.SplitHostPort(ln.Addr().String())
-	client, err := NewClient(ClientOption{
-		InitAddress:       []string{"127.0.0.1:" + port},
-		ForceSingleClient: true,
-	})
-	if err != nil {
-		t.Fatal(err)
+
+	testCases := []struct {
+		name              string
+		maxFailures       int
+		simulateError     bool
+		forceSingleClient bool
+		expectError       bool
+		clientType        string
+	}{
+		{"NoFailuresSingleClient", 0, false, true, false, "*rueidis.singleClient"},
+		{"SimulatedFailuresSingleClient", 3, true, true, true, "*rueidis.singleClient"},
 	}
-	if _, ok := client.(*singleClient); !ok {
-		t.Fatal("client should be a singleClient")
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			done := make(chan struct{})
+
+			go func() {
+				mock, err := accept(t, ln)
+				if err != nil {
+					return
+				}
+				mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+					ReplyError("UNKNOWN COMMAND")
+				mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+					ReplyError("UNKNOWN COMMAND")
+				mock.Expect("PING").ReplyString("OK")
+				mock.Close()
+				close(done)
+			}()
+
+			_, port, _ := net.SplitHostPort(ln.Addr().String())
+
+			dialFn := func(addr string, dialer *net.Dialer, tlsConfig *tls.Config) (net.Conn, error) {
+				if tc.simulateError && tc.maxFailures > 0 {
+					tc.maxFailures--
+					return nil, fmt.Errorf("simulated connection failure")
+				}
+				if tlsConfig != nil {
+					return tls.DialWithDialer(dialer, "tcp", addr, tlsConfig)
+				}
+				return dialer.Dial("tcp", addr)
+			}
+
+			client, err := NewClient(ClientOption{
+				InitAddress:       []string{"127.0.0.1:" + port},
+				ForceSingleClient: tc.forceSingleClient,
+				DialFn:            dialFn,
+			})
+
+			// Check for expected error based on test case
+			if tc.expectError {
+				if err == nil {
+					t.Fatalf("expected an error but got nil")
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("did not expect an error but got: %v", err)
+				}
+			}
+
+			// Check the type of the returned client
+			clientType := fmt.Sprintf("%T", client)
+			if clientType != tc.clientType {
+				t.Fatalf("expected client to be of type %s, but got %T", tc.clientType, client)
+			}
+			if !tc.expectError {
+				client.Close()
+			}
+			<-done
+		})
 	}
-	client.Close()
-	<-done
 }
 
 func TestTLSClient(t *testing.T) {
@@ -321,7 +367,7 @@ func TestNewClientMaxMultiplex(t *testing.T) {
 		InitAddress:       []string{"127.0.0.1:6379"},
 		PipelineMultiplex: MaxPipelineMultiplex + 1,
 	})
-	if err != ErrWrongPipelineMultiplex {
+	if !errors.Is(err, ErrWrongPipelineMultiplex) {
 		t.Fatalf("unexpected error %v", err)
 	}
 }
