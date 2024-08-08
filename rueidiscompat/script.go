@@ -30,7 +30,6 @@ import (
 	"context"
 	"crypto/sha1"
 	"encoding/hex"
-	"fmt"
 	"io"
 	"strings"
 )
@@ -82,8 +81,6 @@ func (s *Script) EvalRO(ctx context.Context, c Scripter, keys []string, args ...
 }
 
 func (s *Script) EvalSha(ctx context.Context, c Scripter, keys []string, args ...interface{}) *Cmd {
-	fmt.Println(ctx, s.hash)
-	fmt.Println(keys, args)
 	return c.EvalSha(ctx, s.hash, keys, args...)
 }
 
