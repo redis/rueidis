@@ -265,21 +265,23 @@ func (m *locker) onInvalidations(messages []rueidis.RedisMessage) {
 	}
 	for _, msg := range messages {
 		k, _ := msg.ToString()
-		if ks := strings.SplitN(k, ":", 3); len(ks) == 3 {
-			m.mu.RLock()
-			g, ok := m.gates[ks[2]]
-			if ok {
-				n, _ := strconv.Atoi(ks[1])
-				select {
-				case g.csc[n] <- struct{}{}:
-				default:
+		if strings.HasPrefix(k, m.prefix) {
+			if ks := strings.SplitN(k[len(m.prefix)+1:], ":", 2); len(ks) == 2 {
+				m.mu.RLock()
+				g, ok := m.gates[ks[1]]
+				if ok {
+					n, _ := strconv.Atoi(ks[0])
+					select {
+					case g.csc[n] <- struct{}{}:
+					default:
+					}
+					select {
+					case g.ch <- struct{}{}:
+					default:
+					}
 				}
-				select {
-				case g.ch <- struct{}{}:
-				default:
-				}
+				m.mu.RUnlock()
 			}
-			m.mu.RUnlock()
 		}
 	}
 }
