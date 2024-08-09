@@ -677,7 +677,7 @@ func TestLocker_Close(t *testing.T) {
 			t.Fatal(err)
 		}
 		if _, _, err := locker.WithContext(context.Background(), lck); err != ErrLockerClosed {
-			t.Error(err)
+			t.Fatal(err)
 		}
 	}
 	for _, nocsc := range []bool{false, true} {
