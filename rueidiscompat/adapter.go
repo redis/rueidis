@@ -473,6 +473,9 @@ type ProbabilisticCmdable interface {
 	Subscribe(ctx context.Context, channels ...string) PubSub
 	PSubscribe(ctx context.Context, patterns ...string) PubSub
 	SSubscribe(ctx context.Context, channels ...string) PubSub
+
+	Pipeline() Pipeliner
+	Pipelined(ctx context.Context, fn func(Pipeliner) error) ([]Cmder, error)
 }
 
 // Align with go-redis
@@ -4616,6 +4619,14 @@ func (c *Compat) PSubscribe(ctx context.Context, patterns ...string) PubSub {
 	p := newPubSub(c.client)
 	_ = p.PSubscribe(ctx, patterns...)
 	return p
+}
+
+func (c *Compat) Pipelined(ctx context.Context, fn func(Pipeliner) error) ([]Cmder, error) {
+	return newPipeline(c.client).Pipelined(ctx, fn)
+}
+
+func (c *Compat) Pipeline() Pipeliner {
+	return newPipeline(c.client)
 }
 
 func (c CacheCompat) BitCount(ctx context.Context, key string, bitCount *BitCount) *IntCmd {
