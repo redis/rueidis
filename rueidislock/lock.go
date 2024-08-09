@@ -311,10 +311,14 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 							<-csc
 						}
 					}
-				case <-csc:
-					if err = m.script(ctx, extend, key, val, deadline); err == nil {
-						if !m.noloop {
-							<-csc
+				case _, ok := <-csc:
+					if !ok {
+						err = ErrLockerClosed
+					} else {
+						if err = m.script(ctx, extend, key, val, deadline); err == nil {
+							if !m.noloop {
+								<-csc
+							}
 						}
 					}
 				}
@@ -352,10 +356,14 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 		}
 		if err != ErrNotLocked {
 			if err = m.acquire(ctx, key, val, deadline, force); force && err == nil {
-				select {
-				case ch <- struct{}{}:
-				default:
+				m.mu.RLock()
+				if m.gates != nil {
+					select {
+					case ch <- struct{}{}:
+					default:
+					}
 				}
+				m.mu.RUnlock()
 			}
 		}
 		go monitoring(err, key, deadline, ch)
@@ -432,7 +440,7 @@ func (m *locker) WithContext(ctx context.Context, name string) (context.Context,
 				return ctx, cancel, nil
 			}
 			m.mu.Lock()
-			if g.w--; g.w == 0 && err != nil {
+			if g.w--; g.w == 0 && err != nil { // delete g from m.gates only when exiting with an error.
 				if m.gates[name] == g {
 					delete(m.gates, name)
 				}
@@ -452,6 +460,9 @@ func (m *locker) Client() rueidis.Client {
 func (m *locker) Close() {
 	m.mu.Lock()
 	for _, g := range m.gates {
+		for _, ch := range g.csc {
+			close(ch)
+		}
 		close(g.ch)
 	}
 	m.gates = nil
