@@ -138,11 +138,13 @@ type CoreCmdable interface {
 	BitPos(ctx context.Context, key string, bit int64, pos ...int64) *IntCmd
 	BitPosSpan(ctx context.Context, key string, bit int64, start, end int64, span string) *IntCmd
 	BitField(ctx context.Context, key string, args ...any) *IntSliceCmd
+	// TODO BitFieldRO(ctx context.Context, key string, values ...interface{}) *IntSliceCmd
 
 	Scan(ctx context.Context, cursor uint64, match string, count int64) *ScanCmd
 	ScanType(ctx context.Context, cursor uint64, match string, count int64, keyType string) *ScanCmd
 	SScan(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd
 	HScan(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd
+	// TODO HScanNoValues(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd
 	ZScan(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd
 
 	HDel(ctx context.Context, key string, fields ...string) *IntCmd
@@ -160,6 +162,19 @@ type CoreCmdable interface {
 	HVals(ctx context.Context, key string) *StringSliceCmd
 	HRandField(ctx context.Context, key string, count int64) *StringSliceCmd
 	HRandFieldWithValues(ctx context.Context, key string, count int64) *KeyValueSliceCmd
+	// TODO HExpire(ctx context.Context, key string, expiration time.Duration, fields ...string) *IntSliceCmd
+	// TODO HExpireWithArgs(ctx context.Context, key string, expiration time.Duration, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd
+	// TODO HPExpire(ctx context.Context, key string, expiration time.Duration, fields ...string) *IntSliceCmd
+	// TODO HPExpireWithArgs(ctx context.Context, key string, expiration time.Duration, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd
+	// TODO HExpireAt(ctx context.Context, key string, tm time.Time, fields ...string) *IntSliceCmd
+	// TODO HExpireAtWithArgs(ctx context.Context, key string, tm time.Time, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd
+	// TODO HPExpireAt(ctx context.Context, key string, tm time.Time, fields ...string) *IntSliceCmd
+	// TODO HPExpireAtWithArgs(ctx context.Context, key string, tm time.Time, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd
+	// TODO HPersist(ctx context.Context, key string, fields ...string) *IntSliceCmd
+	// TODO HExpireTime(ctx context.Context, key string, fields ...string) *IntSliceCmd
+	// TODO HPExpireTime(ctx context.Context, key string, fields ...string) *IntSliceCmd
+	// TODO HTTL(ctx context.Context, key string, fields ...string) *IntSliceCmd
+	// TODO HPTTL(ctx context.Context, key string, fields ...string) *IntSliceCmd
 
 	BLPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd
 	BLMPop(ctx context.Context, timeout time.Duration, direction string, count int64, keys ...string) *KeyValuesCmd
@@ -386,6 +401,8 @@ type CoreCmdable interface {
 	ClusterFailover(ctx context.Context) *StatusCmd
 	ClusterAddSlots(ctx context.Context, slots ...int64) *StatusCmd
 	ClusterAddSlotsRange(ctx context.Context, min, max int64) *StatusCmd
+	// TODO ReadOnly(ctx context.Context) *StatusCmd
+	// TODO ReadWrite(ctx context.Context) *StatusCmd
 
 	GeoAdd(ctx context.Context, key string, geoLocation ...GeoLocation) *IntCmd
 	GeoPos(ctx context.Context, key string, members ...string) *GeoPosCmd
@@ -400,13 +417,48 @@ type CoreCmdable interface {
 	GeoHash(ctx context.Context, key string, members ...string) *StringSliceCmd
 
 	ACLDryRun(ctx context.Context, username string, command ...any) *StringCmd
+	// TODO ACLLog(ctx context.Context, count int64) *ACLLogCmd
+	// TODO ACLLogReset(ctx context.Context) *StatusCmd
 
 	// TODO ModuleLoadex(ctx context.Context, conf *ModuleLoadexConfig) *StringCmd
 	GearsCmdable
 	ProbabilisticCmdable
 	TimeseriesCmdable
 	JSONCmdable
+	// TODO SearchCmdable
 }
+
+// TODO SearchCmdable
+//type SearchCmdable interface {
+//	FT_List(ctx context.Context) *StringSliceCmd
+//	FTAggregate(ctx context.Context, index string, query string) *MapStringInterfaceCmd
+//	FTAggregateWithArgs(ctx context.Context, index string, query string, options *FTAggregateOptions) *AggregateCmd
+//	FTAliasAdd(ctx context.Context, index string, alias string) *StatusCmd
+//	FTAliasDel(ctx context.Context, alias string) *StatusCmd
+//	FTAliasUpdate(ctx context.Context, index string, alias string) *StatusCmd
+//	FTAlter(ctx context.Context, index string, skipInitalScan bool, definition []interface{}) *StatusCmd
+//	FTConfigGet(ctx context.Context, option string) *MapMapStringInterfaceCmd
+//	FTConfigSet(ctx context.Context, option string, value interface{}) *StatusCmd
+//	FTCreate(ctx context.Context, index string, options *FTCreateOptions, schema ...*FieldSchema) *StatusCmd
+//	FTCursorDel(ctx context.Context, index string, cursorId int) *StatusCmd
+//	FTCursorRead(ctx context.Context, index string, cursorId int, count int) *MapStringInterfaceCmd
+//	FTDictAdd(ctx context.Context, dict string, term ...interface{}) *IntCmd
+//	FTDictDel(ctx context.Context, dict string, term ...interface{}) *IntCmd
+//	FTDictDump(ctx context.Context, dict string) *StringSliceCmd
+//	FTDropIndex(ctx context.Context, index string) *StatusCmd
+//	FTDropIndexWithArgs(ctx context.Context, index string, options *FTDropIndexOptions) *StatusCmd
+//	FTExplain(ctx context.Context, index string, query string) *StringCmd
+//	FTExplainWithArgs(ctx context.Context, index string, query string, options *FTExplainOptions) *StringCmd
+//	FTInfo(ctx context.Context, index string) *FTInfoCmd
+//	FTSpellCheck(ctx context.Context, index string, query string) *FTSpellCheckCmd
+//	FTSpellCheckWithArgs(ctx context.Context, index string, query string, options *FTSpellCheckOptions) *FTSpellCheckCmd
+//	FTSearch(ctx context.Context, index string, query string) *FTSearchCmd
+//	FTSearchWithArgs(ctx context.Context, index string, query string, options *FTSearchOptions) *FTSearchCmd
+//	FTSynDump(ctx context.Context, index string) *FTSynDumpCmd
+//	FTSynUpdate(ctx context.Context, index string, synGroupId interface{}, terms []interface{}) *StatusCmd
+//	FTSynUpdateWithArgs(ctx context.Context, index string, synGroupId interface{}, options *FTSynUpdateOptions, terms []interface{}) *StatusCmd
+//	FTTagVals(ctx context.Context, index string, field string) *StringSliceCmd
+//}
 
 // https://github.com/redis/go-redis/blob/af4872cbd0de349855ce3f0978929c2f56eb995f/probabilistic.go#L10
 type ProbabilisticCmdable interface {
