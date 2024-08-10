@@ -72,7 +72,7 @@ type proxyresult struct {
 	val rueidis.RedisMessage
 }
 
-var placeholder = proxyresult{err: errors.New("")}
+var placeholder = proxyresult{err: errors.New("the pipeline has not been executed")}
 
 type proxy struct {
 	rueidis.Client
