@@ -49,6 +49,8 @@ const (
 	BitCountIndexBit  = "BIT"
 )
 
+var Nil = rueidis.Nil
+
 type Cmdable interface {
 	CoreCmdable
 	Cache(ttl time.Duration) CacheCompat

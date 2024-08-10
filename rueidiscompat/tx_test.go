@@ -114,10 +114,10 @@ func testAdapterTxPipeline(resp3 bool) {
 		k1 := "_k1_"
 		k2 := "_k2_"
 		err := adapter.Watch(ctx, func(t Tx) error {
-			if t.Get(ctx, k1).Err() != rueidis.Nil {
+			if t.Get(ctx, k1).Err() != Nil {
 				return errors.New("unclean")
 			}
-			if t.Get(ctx, k2).Err() != rueidis.Nil {
+			if t.Get(ctx, k2).Err() != Nil {
 				return errors.New("unclean")
 			}
 			_, err := t.TxPipelined(ctx, func(pipe Pipeliner) error {
