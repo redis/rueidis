@@ -49,7 +49,7 @@ import (
 // To avoid this: it is good idea to use reasonable bigger read/write timeouts
 // depends on your batch size and/or use TxPipeline.
 type Pipeliner interface {
-	Cmdable
+	CoreCmdable
 
 	// Len is to obtain the number of commands in the pipeline that have not yet been executed.
 	Len() int
@@ -94,10 +94,6 @@ func newPipeline(real rueidis.Client) *Pipeline {
 type Pipeline struct {
 	comp Compat
 	rets []Cmder
-}
-
-func (c *Pipeline) Cache(ttl time.Duration) CacheCompat {
-	return c.comp.Cache(ttl)
 }
 
 func (c *Pipeline) Command(ctx context.Context) *CommandsInfoCmd {
@@ -2434,18 +2430,6 @@ func (c *Pipeline) TDigestTrimmedMean(ctx context.Context, key string, lowCutQua
 	return ret
 }
 
-func (c *Pipeline) Subscribe(ctx context.Context, channels ...string) PubSub {
-	return c.comp.Subscribe(ctx, channels...)
-}
-
-func (c *Pipeline) PSubscribe(ctx context.Context, patterns ...string) PubSub {
-	return c.comp.PSubscribe(ctx, patterns...)
-}
-
-func (c *Pipeline) SSubscribe(ctx context.Context, channels ...string) PubSub {
-	return c.comp.SSubscribe(ctx, channels...)
-}
-
 func (c *Pipeline) TSAdd(ctx context.Context, key string, timestamp interface{}, value float64) *IntCmd {
 	ret := c.comp.TSAdd(ctx, key, timestamp, value)
 	c.rets = append(c.rets, ret)
@@ -2788,7 +2772,7 @@ func (c *Pipeline) Len() int {
 }
 
 // Do queues the custom command for later execution.
-func (c *Pipeline) Do(ctx context.Context, args ...interface{}) *Cmd {
+func (c *Pipeline) Do(_ context.Context, args ...interface{}) *Cmd {
 	ret := &Cmd{}
 	if len(args) == 0 {
 		ret.SetErr(errors.New("redis: please enter the command to be executed"))
