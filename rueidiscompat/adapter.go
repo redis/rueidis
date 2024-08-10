@@ -50,8 +50,17 @@ const (
 )
 
 type Cmdable interface {
+	CoreCmdable
 	Cache(ttl time.Duration) CacheCompat
 
+	Subscribe(ctx context.Context, channels ...string) PubSub
+	PSubscribe(ctx context.Context, patterns ...string) PubSub
+	SSubscribe(ctx context.Context, channels ...string) PubSub
+
+	Watch(ctx context.Context, fn func(Tx) error, keys ...string) error
+}
+
+type CoreCmdable interface {
 	Command(ctx context.Context) *CommandsInfoCmd
 	CommandList(ctx context.Context, filter FilterBy) *StringSliceCmd
 	CommandGetKeys(ctx context.Context, commands ...any) *StringSliceCmd
@@ -470,12 +479,11 @@ type ProbabilisticCmdable interface {
 	TDigestRevRank(ctx context.Context, key string, values ...float64) *IntSliceCmd
 	TDigestTrimmedMean(ctx context.Context, key string, lowCutQuantile, highCutQuantile float64) *FloatCmd
 
-	Subscribe(ctx context.Context, channels ...string) PubSub
-	PSubscribe(ctx context.Context, patterns ...string) PubSub
-	SSubscribe(ctx context.Context, channels ...string) PubSub
-
 	Pipeline() Pipeliner
 	Pipelined(ctx context.Context, fn func(Pipeliner) error) ([]Cmder, error)
+
+	TxPipeline() Pipeliner
+	TxPipelined(ctx context.Context, fn func(Pipeliner) error) ([]Cmder, error)
 }
 
 // Align with go-redis
@@ -4627,6 +4635,24 @@ func (c *Compat) Pipelined(ctx context.Context, fn func(Pipeliner) error) ([]Cmd
 
 func (c *Compat) Pipeline() Pipeliner {
 	return newPipeline(c.client)
+}
+
+func (c *Compat) TxPipelined(ctx context.Context, fn func(Pipeliner) error) ([]Cmder, error) {
+	return newTxPipeline(c.client).Pipelined(ctx, fn)
+}
+
+func (c *Compat) TxPipeline() Pipeliner {
+	return newTxPipeline(c.client)
+}
+
+func (c *Compat) Watch(ctx context.Context, fn func(Tx) error, keys ...string) error {
+	dc, cancel := c.client.Dedicate()
+	defer cancel()
+	tx := newTx(dc, cancel)
+	if err := tx.Watch(ctx, keys...).Err(); err != nil {
+		return err
+	}
+	return fn(newTx(dc, cancel))
 }
 
 func (c CacheCompat) BitCount(ctx context.Context, key string, bitCount *BitCount) *IntCmd {
