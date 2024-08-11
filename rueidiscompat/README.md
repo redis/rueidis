@@ -166,6 +166,45 @@ func main() {
 }
 ```
 
+### Lua script example
+
+```golang
+package main
+
+import (
+	"context"
+	"fmt"
+	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/rueidiscompat"
+)
+
+var incrBy = rueidiscompat.NewScript(`
+local key = KEYS[1]
+local change = ARGV[1]
+local value = redis.call("GET", key)
+if not value then
+  value = 0
+end
+value = value + change
+redis.call("SET", key, value)
+return value
+`)
+
+func main() {
+	ctx := context.Background()
+	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
+	if err != nil {
+		panic(err)
+	}
+	defer client.Close()
+
+	rdb := rueidiscompat.NewAdapter(client)
+	keys := []string{"my_counter"}
+	values := []interface{}{+1}
+	fmt.Println(incrBy.Run(ctx, rdb, keys, values...).Int())
+}
+```
+
 ### Methods not yet implemented in the adapter
 
 * `HExpire`, `HPExpire`, `HTTL`, and `HPTTL` related methods.
