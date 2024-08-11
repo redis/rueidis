@@ -110,7 +110,7 @@ func (s *Script) RunRO(ctx context.Context, c Scripter, keys []string, args ...i
 		msg := err.Error()
 		msg = strings.TrimPrefix(msg, "ERR ")
 		if strings.HasPrefix(msg, "NOSCRIPT") {
-			return s.Eval(ctx, c, keys, args...)
+			return s.EvalRO(ctx, c, keys, args...)
 		}
 	}
 	return r
