@@ -226,7 +226,7 @@ To receive messages from channels, `client.Receive()` should be used. It support
 
 ```golang
 err = client.Receive(context.Background(), client.B().Subscribe().Channel("ch1", "ch2").Build(), func(msg rueidis.PubSubMessage) {
-    // handle the msg
+    // Handle the message. Note that if you want to call another `client.Do()` here, you need to do it in another goroutine or the `client` will be blocked.
 })
 ```
 
@@ -253,7 +253,7 @@ defer cancel()
 
 wait := c.SetPubSubHooks(rueidis.PubSubHooks{
 	OnMessage: func(m rueidis.PubSubMessage) {
-		// Handle message. This callback will be called sequentially but in another goroutine.
+		// Handle the message. Note that if you want to call another `c.Do()` here, you need to do it in another goroutine or the `c` will be blocked.
 	}
 })
 c.Do(ctx, c.B().Subscribe().Channel("ch").Build())
