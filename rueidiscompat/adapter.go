@@ -3855,7 +3855,7 @@ func (c *Compat) TSCreateRule(ctx context.Context, sourceKey string, destKey str
 
 // TSCreateRuleWithArgs - Creates a compaction rule from sourceKey to destKey with additional option.
 // This function allows for specifying additional option such as:
-// alignTimestamp.
+// AlignTimestamp.
 // For more information - https://redis.io/commands/ts.createrule/
 func (c *Compat) TSCreateRuleWithArgs(ctx context.Context, sourceKey string, destKey string, aggregator Aggregator, bucketDuration int, options *TSCreateRuleOptions) *StatusCmd {
 	_cmd := c.client.B().TsCreaterule().Sourcekey(sourceKey).Destkey(destKey)
@@ -3888,8 +3888,8 @@ func (c *Compat) TSCreateRuleWithArgs(ctx context.Context, sourceKey string, des
 	case Twa:
 		duration = _cmd.AggregationTwa().Bucketduration(int64(bucketDuration))
 	}
-	if options != nil && options.alignTimestamp != 0 {
-		duration.Aligntimestamp(options.alignTimestamp)
+	if options != nil && options.AlignTimestamp != 0 {
+		duration.Aligntimestamp(options.AlignTimestamp)
 	}
 	cmd := duration.Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))

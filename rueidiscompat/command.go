@@ -2893,7 +2893,7 @@ type TSAlterOptions struct {
 }
 
 type TSCreateRuleOptions struct {
-	alignTimestamp int64
+	AlignTimestamp int64
 }
 
 type TSGetOptions struct {
