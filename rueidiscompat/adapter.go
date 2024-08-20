@@ -621,6 +621,7 @@ var _ Cmdable = (*Compat)(nil)
 type Compat struct {
 	client rueidis.Client
 	maxp   int
+	pOnly  bool
 }
 
 // CacheCompat implements commands that support client-side caching.
@@ -3045,6 +3046,9 @@ func (c *Compat) ACLDryRun(ctx context.Context, username string, command ...any)
 }
 
 func (c *Compat) doPrimaries(ctx context.Context, fn func(c rueidis.Client) error) error {
+	if c.pOnly {
+		return fn(c.client)
+	}
 	var firsterr atomic.Value
 	util.ParallelVals(c.maxp, c.client.Nodes(), func(client rueidis.Client) {
 		msgs, err := client.Do(ctx, client.B().Role().Build()).ToArray()
