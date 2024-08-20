@@ -29,6 +29,7 @@ package rueidiscompat
 import (
 	"context"
 	"errors"
+	"runtime"
 	"time"
 	"unsafe"
 
@@ -85,7 +86,7 @@ func (p *proxy) Do(_ context.Context, cmd rueidis.Completed) rueidis.RedisResult
 }
 
 func newPipeline(real rueidis.Client) *Pipeline {
-	return &Pipeline{comp: Compat{client: &proxy{Client: real}}}
+	return &Pipeline{comp: Compat{client: &proxy{Client: real}, maxp: runtime.GOMAXPROCS(0), pOnly: true}}
 }
 
 // Pipeline implements pipelining as described in
