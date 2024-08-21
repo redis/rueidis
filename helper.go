@@ -6,40 +6,7 @@ import (
 	"time"
 
 	intl "github.com/redis/rueidis/internal/cmds"
-	"github.com/redis/rueidis/internal/util"
 )
-
-type mgetcachecmds struct {
-	s []CacheableTTL
-}
-
-func (r *mgetcachecmds) Capacity() int {
-	return cap(r.s)
-}
-
-func (r *mgetcachecmds) ResetLen(n int) {
-	r.s = r.s[:n]
-}
-
-var mgetcachecmdsp = util.NewPool(func(capacity int) *mgetcachecmds {
-	return &mgetcachecmds{s: make([]CacheableTTL, 0, capacity)}
-})
-
-type mgetcmds struct {
-	s []Completed
-}
-
-func (r *mgetcmds) Capacity() int {
-	return cap(r.s)
-}
-
-func (r *mgetcmds) ResetLen(n int) {
-	r.s = r.s[:n]
-}
-
-var mgetcmdsp = util.NewPool(func(capacity int) *mgetcmds {
-	return &mgetcmds{s: make([]Completed, 0, capacity)}
-})
 
 // MGetCache is a helper that consults the client-side caches with multiple keys by grouping keys within same slot into multiple GETs
 func MGetCache(client Client, ctx context.Context, ttl time.Duration, keys []string) (ret map[string]RedisMessage, err error) {

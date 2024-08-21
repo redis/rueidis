@@ -329,6 +329,7 @@ next:
 			lr.R = i
 			lr.N = n
 			n, err = io.Copy(w, lr)
+			lr.R = nil
 			lrs.Put(lr)
 		} else if typ == typeChunk {
 			return n, err, true

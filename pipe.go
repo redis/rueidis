@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"github.com/redis/rueidis/internal/cmds"
-	"github.com/redis/rueidis/internal/util"
 )
 
 const LibName = "rueidis"
@@ -42,44 +41,6 @@ type wire interface {
 	SetPubSubHooks(hooks PubSubHooks) <-chan error
 	SetOnCloseHook(fn func(error))
 }
-
-type redisresults struct {
-	s []RedisResult
-}
-
-func (r *redisresults) Capacity() int {
-	return cap(r.s)
-}
-
-func (r *redisresults) ResetLen(n int) {
-	r.s = r.s[:n]
-	for i := 0; i < n; i++ {
-		r.s[i] = RedisResult{}
-	}
-}
-
-var resultsp = util.NewPool(func(capacity int) *redisresults {
-	return &redisresults{s: make([]RedisResult, 0, capacity)}
-})
-
-type cacheentries struct {
-	e map[int]CacheEntry
-	c int
-}
-
-func (c *cacheentries) Capacity() int {
-	return c.c
-}
-
-func (c *cacheentries) ResetLen(n int) {
-	for k := range c.e {
-		delete(c.e, k)
-	}
-}
-
-var entriesp = util.NewPool(func(capacity int) *cacheentries {
-	return &cacheentries{e: make(map[int]CacheEntry, capacity), c: capacity}
-})
 
 var _ wire = (*pipe)(nil)
 
