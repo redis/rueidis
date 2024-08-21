@@ -22,27 +22,6 @@ type singleconnect struct {
 	g sync.WaitGroup
 }
 
-type batchcache struct {
-	cIndexes []int
-	commands []CacheableTTL
-}
-
-func (r *batchcache) Capacity() int {
-	return cap(r.commands)
-}
-
-func (r *batchcache) ResetLen(n int) {
-	r.cIndexes = r.cIndexes[:n]
-	r.commands = r.commands[:n]
-}
-
-var batchcachep = util.NewPool(func(capacity int) *batchcache {
-	return &batchcache{
-		cIndexes: make([]int, 0, capacity),
-		commands: make([]CacheableTTL, 0, capacity),
-	}
-})
-
 type conn interface {
 	Do(ctx context.Context, cmd Completed) RedisResult
 	DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) RedisResult
@@ -399,53 +378,3 @@ func slotfn(n int, ks uint16, noreply bool) uint16 {
 	}
 	return uint16(util.FastRand(n))
 }
-
-type muxslots struct {
-	s []int
-}
-
-func (r *muxslots) Capacity() int {
-	return cap(r.s)
-}
-
-func (r *muxslots) ResetLen(n int) {
-	r.s = r.s[:n]
-	for i := 0; i < n; i++ {
-		r.s[i] = 0
-	}
-}
-
-func (r *muxslots) LessThen(n int) bool {
-	count := 0
-	for _, value := range r.s {
-		if value > 0 {
-			if count++; count == n {
-				return false
-			}
-		}
-	}
-	return true
-}
-
-var muxslotsp = util.NewPool(func(capacity int) *muxslots {
-	return &muxslots{s: make([]int, 0, capacity)}
-})
-
-type batchcachemap struct {
-	m map[uint16]*batchcache
-	n int
-}
-
-func (r *batchcachemap) Capacity() int {
-	return r.n
-}
-
-func (r *batchcachemap) ResetLen(n int) {
-	for k := range r.m {
-		delete(r.m, k)
-	}
-}
-
-var batchcachemaps = util.NewPool(func(capacity int) *batchcachemap {
-	return &batchcachemap{m: make(map[uint16]*batchcache, capacity), n: capacity}
-})
