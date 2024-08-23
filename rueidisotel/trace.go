@@ -221,7 +221,7 @@ func (d *dedicated) B() rueidis.Builder {
 }
 
 func (d *dedicated) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult) {
-	ctx, span := d.start(ctx, first(cmd.Commands()), sum(cmd.Commands()), d.tAttrs)
+	ctx, span := d.start(ctx, first(cmd.Commands()), sum(cmd.Commands()))
 	if d.dbStmtFunc != nil {
 		span.SetAttributes(dbstmt.String(d.dbStmtFunc(cmd.Commands())))
 	}
@@ -232,14 +232,14 @@ func (d *dedicated) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis
 }
 
 func (d *dedicated) DoMulti(ctx context.Context, multi ...rueidis.Completed) (resp []rueidis.RedisResult) {
-	ctx, span := d.start(ctx, multiFirst(multi), multiSum(multi), d.tAttrs)
+	ctx, span := d.start(ctx, multiFirst(multi), multiSum(multi))
 	resp = d.client.DoMulti(ctx, multi...)
 	d.end(span, firstError(resp))
 	return
 }
 
 func (d *dedicated) Receive(ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
-	ctx, span := d.start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()), d.tAttrs)
+	ctx, span := d.start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()))
 	if d.dbStmtFunc != nil {
 		span.SetAttributes(dbstmt.String(d.dbStmtFunc(subscribe.Commands())))
 	}
@@ -350,8 +350,8 @@ func (o *otelclient) end(span trace.Span, err error) {
 	endSpan(span, err)
 }
 
-func (d *dedicated) start(ctx context.Context, op string, size int, attrs trace.SpanStartEventOption) (context.Context, trace.Span) {
-	return startSpan(d.tracer, ctx, op, size, attrs)
+func (d *dedicated) start(ctx context.Context, op string, size int) (context.Context, trace.Span) {
+	return startSpan(d.tracer, ctx, op, size, d.tAttrs)
 }
 
 func (d *dedicated) end(span trace.Span, err error) {
