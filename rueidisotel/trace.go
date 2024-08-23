@@ -69,7 +69,8 @@ type otelclient struct {
 	meter           metric.Meter
 	cscMiss         metric.Int64Counter
 	cscHits         metric.Int64Counter
-	mAttrs          metric.MeasurementOption
+	addOpts         []metric.AddOption
+	recordOpts      []metric.RecordOption
 	tAttrs          trace.SpanStartEventOption
 	histogramOption HistogramOption
 	dbStmtFunc      StatementFunc
@@ -124,9 +125,9 @@ func (o *otelclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl tim
 	resp = o.client.DoCache(ctx, cmd, ttl)
 	if resp.NonRedisError() == nil {
 		if resp.IsCacheHit() {
-			o.cscHits.Add(ctx, 1, o.mAttrs)
+			o.cscHits.Add(ctx, 1, o.addOpts...)
 		} else {
-			o.cscMiss.Add(ctx, 1, o.mAttrs)
+			o.cscMiss.Add(ctx, 1, o.addOpts...)
 		}
 	}
 	o.end(span, resp.Error())
@@ -139,9 +140,9 @@ func (o *otelclient) DoMultiCache(ctx context.Context, multi ...rueidis.Cacheabl
 	for _, resp := range resps {
 		if resp.NonRedisError() == nil {
 			if resp.IsCacheHit() {
-				o.cscHits.Add(ctx, 1, o.mAttrs)
+				o.cscHits.Add(ctx, 1, o.addOpts...)
 			} else {
-				o.cscMiss.Add(ctx, 1, o.mAttrs)
+				o.cscMiss.Add(ctx, 1, o.addOpts...)
 			}
 		}
 	}
@@ -186,14 +187,15 @@ func (o *otelclient) Nodes() map[string]rueidis.Client {
 	for addr, client := range nodes {
 		nodes[addr] = &otelclient{
 			client:          client,
-			mAttrs:          o.mAttrs,
-			tAttrs:          o.tAttrs,
 			meterProvider:   o.meterProvider,
 			tracerProvider:  o.tracerProvider,
 			tracer:          o.tracer,
 			meter:           o.meter,
 			cscMiss:         o.cscMiss,
 			cscHits:         o.cscHits,
+			addOpts:         o.addOpts,
+			recordOpts:      o.recordOpts,
+			tAttrs:          o.tAttrs,
 			histogramOption: o.histogramOption,
 			dbStmtFunc:      o.dbStmtFunc,
 		}
