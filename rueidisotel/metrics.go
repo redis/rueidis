@@ -23,7 +23,7 @@ var (
 // MetricAttrs set additional attributes to append to each metric.
 func MetricAttrs(attrs ...attribute.KeyValue) Option {
 	return func(o *otelclient) {
-		o.mAttrs = metric.WithAttributes(attrs...)
+		o.mAttrs = metric.WithAttributeSet(attribute.NewSet(attrs...))
 	}
 }
 
@@ -108,7 +108,7 @@ func NewClient(clientOption rueidis.ClientOption, opts ...Option) (rueidis.Clien
 
 func newClient(opts ...Option) (*otelclient, error) {
 	cli := &otelclient{
-		mAttrs: metric.WithAttributes(),
+		mAttrs: metric.WithAttributeSet(attribute.NewSet()),
 		tAttrs: trace.WithAttributes(),
 	}
 	for _, opt := range opts {
