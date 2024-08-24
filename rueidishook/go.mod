@@ -13,4 +13,4 @@ require (
 	go.uber.org/mock v0.4.0
 )
 
-require golang.org/x/sys v0.19.0 // indirect
+require golang.org/x/sys v0.24.0 // indirect
