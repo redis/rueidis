@@ -457,7 +457,7 @@ func TestLocker_TryWithContext(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, _, err := locker.TryWithContext(ctx, lck); err != ErrNotLocked {
+		if _, _, err := locker.TryWithContext(ctx, lck); !errors.Is(err, ErrNotLocked) {
 			t.Fatal(err)
 		}
 		cancel()
@@ -486,7 +486,7 @@ func TestLocker_ForceWithContextThenTryWithContext(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, _, err := locker.TryWithContext(ctx, lck); err != ErrNotLocked {
+		if _, _, err := locker.TryWithContext(ctx, lck); !errors.Is(err, ErrNotLocked) {
 			t.Fatal(err)
 		}
 		cancel()
@@ -528,7 +528,7 @@ func TestLocker_TryWithContext_MultipleLocker(t *testing.T) {
 				for j := 0; j < cnt; j++ {
 					for {
 						_, cancel, err := l.TryWithContext(ctx, lck)
-						if err != nil && err != ErrNotLocked {
+						if err != nil && !errors.Is(err, ErrNotLocked) {
 							t.Error(err)
 							return
 						}
@@ -663,7 +663,7 @@ func TestLocker_Close(t *testing.T) {
 		wg.Add(10)
 		for i := 0; i < 10; i++ {
 			go func() {
-				if _, _, err := locker.WithContext(context.Background(), lck); err != ErrLockerClosed {
+				if _, _, err := locker.WithContext(context.Background(), lck); !errors.Is(err, ErrLockerClosed) {
 					t.Error(err)
 				}
 				wg.Done()
@@ -676,7 +676,7 @@ func TestLocker_Close(t *testing.T) {
 		if err := ctx.Err(); !errors.Is(err, context.Canceled) {
 			t.Fatal(err)
 		}
-		if _, _, err := locker.WithContext(context.Background(), lck); err != ErrLockerClosed {
+		if _, _, err := locker.WithContext(context.Background(), lck); !errors.Is(err, ErrLockerClosed) {
 			t.Fatal(err)
 		}
 	}
