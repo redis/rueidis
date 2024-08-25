@@ -3,6 +3,7 @@ package rueidislock
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"
@@ -168,7 +169,7 @@ func (m *locker) acquire(ctx context.Context, key, val string, deadline time.Tim
 	}
 	cancel()
 	if err = resp.Error(); rueidis.IsRedisNil(err) {
-		return ErrNotLocked
+		return fmt.Errorf("%w: key %s is held by others", ErrNotLocked, key)
 	}
 	return err
 }
@@ -286,7 +287,7 @@ func (m *locker) onInvalidations(messages []rueidis.RedisMessage) {
 	}
 }
 
-func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string, g *gate, force bool) context.CancelFunc {
+func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string, g *gate, force bool) (context.CancelFunc, error) {
 	var err error
 
 	val := random()
@@ -354,7 +355,7 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 		case <-ch:
 		default:
 		}
-		if err != ErrNotLocked {
+		if !errors.Is(err, ErrNotLocked) {
 			if err = m.acquire(ctx, key, val, deadline, force); force && err == nil {
 				m.mu.RLock()
 				if m.gates != nil {
@@ -389,16 +390,20 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 		return func() {
 			cancel()
 			<-done
-		}
+		}, nil
 	}
 	<-done
-	return nil
+	if err == nil {
+		err = fmt.Errorf("%w: failed to acquire the majority of keys (%d/%d)", ErrNotLocked, atomic.LoadInt32(&acquired), m.totalcnt)
+	}
+	return cancel, err
 }
 
 func (m *locker) ForceWithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error) {
+	var err error
 	ctx, cancel := context.WithCancel(ctx)
 	if g := m.forcegate(name); g != nil {
-		if cancel := m.try(ctx, cancel, name, g, true); cancel != nil {
+		if cancel, err = m.try(ctx, cancel, name, g, true); err == nil {
 			return ctx, cancel, nil
 		}
 		m.mu.Lock()
@@ -410,13 +415,17 @@ func (m *locker) ForceWithContext(ctx context.Context, name string) (context.Con
 		m.mu.Unlock()
 	}
 	cancel()
-	return ctx, cancel, ErrNotLocked
+	if err == nil {
+		err = ErrLockerClosed
+	}
+	return ctx, cancel, err
 }
 
 func (m *locker) TryWithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error) {
+	var err error
 	ctx, cancel := context.WithCancel(ctx)
 	if g := m.trygate(name); g != nil {
-		if cancel := m.try(ctx, cancel, name, g, false); cancel != nil {
+		if cancel, err = m.try(ctx, cancel, name, g, false); err == nil {
 			return ctx, cancel, nil
 		}
 		m.mu.Lock()
@@ -428,23 +437,22 @@ func (m *locker) TryWithContext(ctx context.Context, name string) (context.Conte
 		m.mu.Unlock()
 	}
 	cancel()
-	return ctx, cancel, ErrNotLocked
+	if err == nil {
+		err = fmt.Errorf("%w: the lock is held by others or the locker is closed", ErrNotLocked)
+	}
+	return ctx, cancel, err
 }
 
-func (m *locker) WithContext(ctx context.Context, name string) (context.Context, context.CancelFunc, error) {
+func (m *locker) WithContext(src context.Context, name string) (context.Context, context.CancelFunc, error) {
 	for {
-		ctx, cancel := context.WithCancel(ctx)
+		ctx, cancel := context.WithCancel(src)
 		g, err := m.waitgate(ctx, name)
 		if g != nil {
-			if cancel := m.try(ctx, cancel, name, g, false); cancel != nil {
+			if cancel, err := m.try(ctx, cancel, name, g, false); err == nil {
 				return ctx, cancel, nil
 			}
 			m.mu.Lock()
-			if g.w--; g.w == 0 && err != nil { // delete g from m.gates only when exiting with an error.
-				if m.gates[name] == g {
-					delete(m.gates, name)
-				}
-			}
+			g.w-- // do not delete g from m.gates here.
 			m.mu.Unlock()
 		}
 		if cancel(); err != nil {
