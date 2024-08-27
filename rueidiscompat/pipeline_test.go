@@ -217,6 +217,35 @@ func TestPipeliner(t *testing.T) {
 		p.HVals(ctx, "1")
 		p.HRandField(ctx, "1", 1)
 		p.HRandFieldWithValues(ctx, "1", 1)
+		p.HExpire(ctx, "1", time.Second, "2", "3")
+		p.HExpireWithArgs(ctx, "1", time.Second, HExpireArgs{NX: true}, "2", "3")
+		p.HExpireWithArgs(ctx, "1", time.Second, HExpireArgs{XX: true}, "2", "3")
+		p.HExpireWithArgs(ctx, "1", time.Second, HExpireArgs{GT: true}, "2", "3")
+		p.HExpireWithArgs(ctx, "1", time.Second, HExpireArgs{LT: true}, "2", "3")
+		p.HExpireWithArgs(ctx, "1", time.Second, HExpireArgs{}, "2", "3")
+		p.HPExpire(ctx, "1", time.Second, "2", "3")
+		p.HPExpireWithArgs(ctx, "1", time.Second, HExpireArgs{NX: true}, "2", "3")
+		p.HPExpireWithArgs(ctx, "1", time.Second, HExpireArgs{XX: true}, "2", "3")
+		p.HPExpireWithArgs(ctx, "1", time.Second, HExpireArgs{GT: true}, "2", "3")
+		p.HPExpireWithArgs(ctx, "1", time.Second, HExpireArgs{LT: true}, "2", "3")
+		p.HPExpireWithArgs(ctx, "1", time.Second, HExpireArgs{}, "2", "3")
+		p.HExpireAt(ctx, "1", time.UnixMilli(1724164643), "2", "3")
+		p.HExpireAtWithArgs(ctx, "1", time.UnixMilli(1724164643), HExpireArgs{NX: true}, "2", "3")
+		p.HExpireAtWithArgs(ctx, "1", time.UnixMilli(1724164643), HExpireArgs{XX: true}, "2", "3")
+		p.HExpireAtWithArgs(ctx, "1", time.UnixMilli(1724164643), HExpireArgs{GT: true}, "2", "3")
+		p.HExpireAtWithArgs(ctx, "1", time.UnixMilli(1724164643), HExpireArgs{LT: true}, "2", "3")
+		p.HExpireAtWithArgs(ctx, "1", time.UnixMilli(1724164643), HExpireArgs{}, "2", "3")
+		p.HPExpireAt(ctx, "1", time.UnixMilli(1724164643), "2", "3")
+		p.HPExpireAtWithArgs(ctx, "1", time.UnixMilli(1724164643), HExpireArgs{NX: true}, "2", "3")
+		p.HPExpireAtWithArgs(ctx, "1", time.UnixMilli(1724164643), HExpireArgs{XX: true}, "2", "3")
+		p.HPExpireAtWithArgs(ctx, "1", time.UnixMilli(1724164643), HExpireArgs{GT: true}, "2", "3")
+		p.HPExpireAtWithArgs(ctx, "1", time.UnixMilli(1724164643), HExpireArgs{LT: true}, "2", "3")
+		p.HPExpireAtWithArgs(ctx, "1", time.UnixMilli(1724164643), HExpireArgs{}, "2", "3")
+		p.HPersist(ctx, "1", "2", "3")
+		p.HExpireTime(ctx, "1", "2", "3")
+		p.HPExpireTime(ctx, "1", "2", "3")
+		p.HTTL(ctx, "1", "2", "3")
+		p.HPTTL(ctx, "1", "2", "3")
 		p.BLPop(ctx, time.Second, "1", "2")
 		p.BLMPop(ctx, time.Second, "1", 1, "1", "2")
 		p.BRPop(ctx, time.Second, "1", "2")
@@ -569,7 +598,7 @@ func TestPipeliner(t *testing.T) {
 		p.JSONToggle(ctx, "1", "1")
 		p.JSONType(ctx, "1", "1")
 
-		if n := len(p.rets); n != 445 {
+		if n := len(p.rets); n != 474 {
 			t.Fatalf("unexpected pipeline calls: %v", n)
 		}
 		for i, cmd := range p.rets {
@@ -577,7 +606,7 @@ func TestPipeliner(t *testing.T) {
 				t.Fatalf("unexpected pipeline placeholder err(%d): %v", i, err)
 			}
 		}
-		if n := len(p.comp.client.(*proxy).cmds); n != 445 {
+		if n := len(p.comp.client.(*proxy).cmds); n != 474 {
 			t.Fatalf("unexpected pipeline commands: %v", n)
 		}
 		var pipeline [][]string
@@ -703,6 +732,35 @@ var golden = `[
     ["HVALS","1"],
     ["HRANDFIELD","1","1"],
     ["HRANDFIELD","1","1","WITHVALUES"],
+    ["HEXPIRE","1","1","FIELDS","2","2","3"],
+    ["HEXPIRE","1","1","NX","FIELDS","2","2","3"],
+    ["HEXPIRE","1","1","XX","FIELDS","2","2","3"],
+    ["HEXPIRE","1","1","GT","FIELDS","2","2","3"],
+    ["HEXPIRE","1","1","LT","FIELDS","2","2","3"],
+    ["HEXPIRE","1","1","FIELDS","2","2","3"],
+    ["HPEXPIRE","1","1000","FIELDS","2","2","3"],
+    ["HPEXPIRE","1","1000","NX","FIELDS","2","2","3"],
+    ["HPEXPIRE","1","1000","XX","FIELDS","2","2","3"],
+    ["HPEXPIRE","1","1000","GT","FIELDS","2","2","3"],
+    ["HPEXPIRE","1","1000","LT","FIELDS","2","2","3"],
+    ["HPEXPIRE","1","1000","FIELDS","2","2","3"],
+    ["HEXPIREAT","1","1724164","FIELDS","2","2","3"],
+    ["HEXPIREAT","1","1724164","NX","FIELDS","2","2","3"],
+    ["HEXPIREAT","1","1724164","XX","FIELDS","2","2","3"],
+    ["HEXPIREAT","1","1724164","GT","FIELDS","2","2","3"],
+    ["HEXPIREAT","1","1724164","LT","FIELDS","2","2","3"],
+    ["HEXPIREAT","1","1724164","FIELDS","2","2","3"],
+    ["HPEXPIREAT","1","1724164643","FIELDS","2","2","3"],
+    ["HPEXPIREAT","1","1724164643","NX","FIELDS","2","2","3"],
+    ["HPEXPIREAT","1","1724164643","XX","FIELDS","2","2","3"],
+    ["HPEXPIREAT","1","1724164643","GT","FIELDS","2","2","3"],
+    ["HPEXPIREAT","1","1724164643","LT","FIELDS","2","2","3"],
+    ["HPEXPIREAT","1","1724164643","FIELDS","2","2","3"],
+    ["HPERSIST","1","FIELDS","2","2","3"],
+    ["HEXPIRETIME","1","FIELDS","2","2","3"],
+    ["HPEXPIRETIME","1","FIELDS","2","2","3"],
+    ["HTTL","1","FIELDS","2","2","3"],
+    ["HPTTL","1","FIELDS","2","2","3"],
     ["BLPOP","1","2","1"],
     ["BLMPOP","1","2","1","2","1","COUNT","1"],
     ["BRPOP","1","2","1"],

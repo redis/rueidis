@@ -2132,6 +2132,13 @@ func newCommandsInfoCmd(res rueidis.RedisResult) *CommandsInfoCmd {
 	return cmd
 }
 
+type HExpireArgs struct {
+	NX bool
+	XX bool
+	GT bool
+	LT bool
+}
+
 type Sort struct {
 	By     string
 	Order  string

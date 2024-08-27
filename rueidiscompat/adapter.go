@@ -162,19 +162,19 @@ type CoreCmdable interface {
 	HVals(ctx context.Context, key string) *StringSliceCmd
 	HRandField(ctx context.Context, key string, count int64) *StringSliceCmd
 	HRandFieldWithValues(ctx context.Context, key string, count int64) *KeyValueSliceCmd
-	// TODO HExpire(ctx context.Context, key string, expiration time.Duration, fields ...string) *IntSliceCmd
-	// TODO HExpireWithArgs(ctx context.Context, key string, expiration time.Duration, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd
-	// TODO HPExpire(ctx context.Context, key string, expiration time.Duration, fields ...string) *IntSliceCmd
-	// TODO HPExpireWithArgs(ctx context.Context, key string, expiration time.Duration, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd
-	// TODO HExpireAt(ctx context.Context, key string, tm time.Time, fields ...string) *IntSliceCmd
-	// TODO HExpireAtWithArgs(ctx context.Context, key string, tm time.Time, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd
-	// TODO HPExpireAt(ctx context.Context, key string, tm time.Time, fields ...string) *IntSliceCmd
-	// TODO HPExpireAtWithArgs(ctx context.Context, key string, tm time.Time, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd
-	// TODO HPersist(ctx context.Context, key string, fields ...string) *IntSliceCmd
-	// TODO HExpireTime(ctx context.Context, key string, fields ...string) *IntSliceCmd
-	// TODO HPExpireTime(ctx context.Context, key string, fields ...string) *IntSliceCmd
-	// TODO HTTL(ctx context.Context, key string, fields ...string) *IntSliceCmd
-	// TODO HPTTL(ctx context.Context, key string, fields ...string) *IntSliceCmd
+	HExpire(ctx context.Context, key string, expiration time.Duration, fields ...string) *IntSliceCmd
+	HExpireWithArgs(ctx context.Context, key string, expiration time.Duration, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd
+	HPExpire(ctx context.Context, key string, expiration time.Duration, fields ...string) *IntSliceCmd
+	HPExpireWithArgs(ctx context.Context, key string, expiration time.Duration, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd
+	HExpireAt(ctx context.Context, key string, tm time.Time, fields ...string) *IntSliceCmd
+	HExpireAtWithArgs(ctx context.Context, key string, tm time.Time, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd
+	HPExpireAt(ctx context.Context, key string, tm time.Time, fields ...string) *IntSliceCmd
+	HPExpireAtWithArgs(ctx context.Context, key string, tm time.Time, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd
+	HPersist(ctx context.Context, key string, fields ...string) *IntSliceCmd
+	HExpireTime(ctx context.Context, key string, fields ...string) *IntSliceCmd
+	HPExpireTime(ctx context.Context, key string, fields ...string) *IntSliceCmd
+	HTTL(ctx context.Context, key string, fields ...string) *IntSliceCmd
+	HPTTL(ctx context.Context, key string, fields ...string) *IntSliceCmd
 
 	BLPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd
 	BLMPop(ctx context.Context, timeout time.Duration, direction string, count int64, keys ...string) *KeyValuesCmd
@@ -1406,6 +1406,128 @@ func (c *Compat) HRandField(ctx context.Context, key string, count int64) *Strin
 
 func (c *Compat) HRandFieldWithValues(ctx context.Context, key string, count int64) *KeyValueSliceCmd {
 	return newKeyValueSliceCmd(c.client.Do(ctx, c.client.B().Hrandfield().Key(key).Count(count).Withvalues().Build()))
+}
+
+func (c *Compat) HExpire(ctx context.Context, key string, expiration time.Duration, fields ...string) *IntSliceCmd {
+	cmd := c.client.B().Hexpire().Key(key).Seconds(formatSec(expiration)).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntSliceCmd(resp)
+}
+
+func (c *Compat) HExpireWithArgs(ctx context.Context, key string, expiration time.Duration, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd {
+	var cmd rueidis.Completed
+	if expirationArgs.NX {
+		cmd = c.client.B().Hexpire().Key(key).Seconds(formatSec(expiration)).Nx().Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	} else if expirationArgs.XX {
+		cmd = c.client.B().Hexpire().Key(key).Seconds(formatSec(expiration)).Xx().Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	} else if expirationArgs.GT {
+		cmd = c.client.B().Hexpire().Key(key).Seconds(formatSec(expiration)).Gt().Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	} else if expirationArgs.LT {
+		cmd = c.client.B().Hexpire().Key(key).Seconds(formatSec(expiration)).Lt().Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	} else {
+		cmd = c.client.B().Hexpire().Key(key).Seconds(formatSec(expiration)).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	}
+	resp := c.client.Do(ctx, cmd)
+	return newIntSliceCmd(resp)
+}
+
+func (c *Compat) HPExpire(ctx context.Context, key string, expiration time.Duration, fields ...string) *IntSliceCmd {
+	cmd := c.client.B().Hpexpire().Key(key).Milliseconds(formatMs(expiration)).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntSliceCmd(resp)
+}
+
+func (c *Compat) HPExpireWithArgs(ctx context.Context, key string, expiration time.Duration, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd {
+	var cmd rueidis.Completed
+	if expirationArgs.NX {
+		cmd = c.client.B().Hpexpire().Key(key).Milliseconds(formatMs(expiration)).Nx().Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	} else if expirationArgs.XX {
+		cmd = c.client.B().Hpexpire().Key(key).Milliseconds(formatMs(expiration)).Xx().Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	} else if expirationArgs.GT {
+		cmd = c.client.B().Hpexpire().Key(key).Milliseconds(formatMs(expiration)).Gt().Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	} else if expirationArgs.LT {
+		cmd = c.client.B().Hpexpire().Key(key).Milliseconds(formatMs(expiration)).Lt().Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	} else {
+		cmd = c.client.B().Hpexpire().Key(key).Milliseconds(formatMs(expiration)).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	}
+	resp := c.client.Do(ctx, cmd)
+	return newIntSliceCmd(resp)
+}
+
+func (c *Compat) HExpireAt(ctx context.Context, key string, tm time.Time, fields ...string) *IntSliceCmd {
+	cmd := c.client.B().Hexpireat().Key(key).UnixTimeSeconds(tm.Unix()).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntSliceCmd(resp)
+}
+
+func (c *Compat) HExpireAtWithArgs(ctx context.Context, key string, tm time.Time, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd {
+	var cmd rueidis.Completed
+	if expirationArgs.NX {
+		cmd = c.client.B().Hexpireat().Key(key).UnixTimeSeconds(tm.Unix()).Nx().Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	} else if expirationArgs.XX {
+		cmd = c.client.B().Hexpireat().Key(key).UnixTimeSeconds(tm.Unix()).Xx().Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	} else if expirationArgs.GT {
+		cmd = c.client.B().Hexpireat().Key(key).UnixTimeSeconds(tm.Unix()).Gt().Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	} else if expirationArgs.LT {
+		cmd = c.client.B().Hexpireat().Key(key).UnixTimeSeconds(tm.Unix()).Lt().Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	} else {
+		cmd = c.client.B().Hexpireat().Key(key).UnixTimeSeconds(tm.Unix()).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	}
+	resp := c.client.Do(ctx, cmd)
+	return newIntSliceCmd(resp)
+}
+
+func (c *Compat) HPExpireAt(ctx context.Context, key string, tm time.Time, fields ...string) *IntSliceCmd {
+	cmd := c.client.B().Hpexpireat().Key(key).UnixTimeMilliseconds(tm.UnixMilli()).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntSliceCmd(resp)
+}
+
+func (c *Compat) HPExpireAtWithArgs(ctx context.Context, key string, tm time.Time, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd {
+	var cmd rueidis.Completed
+	if expirationArgs.NX {
+		cmd = c.client.B().Hpexpireat().Key(key).UnixTimeMilliseconds(tm.UnixMilli()).Nx().Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	} else if expirationArgs.XX {
+		cmd = c.client.B().Hpexpireat().Key(key).UnixTimeMilliseconds(tm.UnixMilli()).Xx().Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	} else if expirationArgs.GT {
+		cmd = c.client.B().Hpexpireat().Key(key).UnixTimeMilliseconds(tm.UnixMilli()).Gt().Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	} else if expirationArgs.LT {
+		cmd = c.client.B().Hpexpireat().Key(key).UnixTimeMilliseconds(tm.UnixMilli()).Lt().Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	} else {
+		cmd = c.client.B().Hpexpireat().Key(key).UnixTimeMilliseconds(tm.UnixMilli()).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	}
+	resp := c.client.Do(ctx, cmd)
+	return newIntSliceCmd(resp)
+}
+
+func (c *Compat) HPersist(ctx context.Context, key string, fields ...string) *IntSliceCmd {
+	cmd := c.client.B().Hpersist().Key(key).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntSliceCmd(resp)
+}
+
+func (c *Compat) HExpireTime(ctx context.Context, key string, fields ...string) *IntSliceCmd {
+	cmd := c.client.B().Hexpiretime().Key(key).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntSliceCmd(resp)
+}
+
+func (c *Compat) HPExpireTime(ctx context.Context, key string, fields ...string) *IntSliceCmd {
+	cmd := c.client.B().Hpexpiretime().Key(key).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntSliceCmd(resp)
+}
+
+func (c *Compat) HTTL(ctx context.Context, key string, fields ...string) *IntSliceCmd {
+	cmd := c.client.B().Httl().Key(key).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntSliceCmd(resp)
+}
+
+func (c *Compat) HPTTL(ctx context.Context, key string, fields ...string) *IntSliceCmd {
+	cmd := c.client.B().Hpttl().Key(key).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntSliceCmd(resp)
 }
 
 func (c *Compat) BLPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd {

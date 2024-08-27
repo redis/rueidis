@@ -661,6 +661,84 @@ func (c *Pipeline) HRandFieldWithValues(ctx context.Context, key string, count i
 	return ret
 }
 
+func (c *Pipeline) HExpire(ctx context.Context, key string, expiration time.Duration, fields ...string) *IntSliceCmd {
+	ret := c.comp.HExpire(ctx, key, expiration, fields...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) HExpireWithArgs(ctx context.Context, key string, expiration time.Duration, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd {
+	ret := c.comp.HExpireWithArgs(ctx, key, expiration, expirationArgs, fields...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) HPExpire(ctx context.Context, key string, expiration time.Duration, fields ...string) *IntSliceCmd {
+	ret := c.comp.HPExpire(ctx, key, expiration, fields...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) HPExpireWithArgs(ctx context.Context, key string, expiration time.Duration, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd {
+	ret := c.comp.HPExpireWithArgs(ctx, key, expiration, expirationArgs, fields...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) HExpireAt(ctx context.Context, key string, tm time.Time, fields ...string) *IntSliceCmd {
+	ret := c.comp.HExpireAt(ctx, key, tm, fields...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) HExpireAtWithArgs(ctx context.Context, key string, tm time.Time, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd {
+	ret := c.comp.HExpireAtWithArgs(ctx, key, tm, expirationArgs, fields...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) HPExpireAt(ctx context.Context, key string, tm time.Time, fields ...string) *IntSliceCmd {
+	ret := c.comp.HPExpireAt(ctx, key, tm, fields...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) HPExpireAtWithArgs(ctx context.Context, key string, tm time.Time, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd {
+	ret := c.comp.HPExpireAtWithArgs(ctx, key, tm, expirationArgs, fields...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) HPersist(ctx context.Context, key string, fields ...string) *IntSliceCmd {
+	ret := c.comp.HPersist(ctx, key, fields...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) HExpireTime(ctx context.Context, key string, fields ...string) *IntSliceCmd {
+	ret := c.comp.HExpireTime(ctx, key, fields...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) HPExpireTime(ctx context.Context, key string, fields ...string) *IntSliceCmd {
+	ret := c.comp.HPExpireTime(ctx, key, fields...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) HTTL(ctx context.Context, key string, fields ...string) *IntSliceCmd {
+	ret := c.comp.HTTL(ctx, key, fields...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) HPTTL(ctx context.Context, key string, fields ...string) *IntSliceCmd {
+	ret := c.comp.HPTTL(ctx, key, fields...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) BLPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd {
 	ret := c.comp.BLPop(ctx, timeout, keys...)
 	c.rets = append(c.rets, ret)
