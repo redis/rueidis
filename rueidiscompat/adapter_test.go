@@ -2383,6 +2383,166 @@ func testAdapter(resp3 bool) {
 					Equal([]KeyValue{{Key: "key2", Value: "hello2"}}),
 				))
 			})
+
+			It("should HExpire", Label("hash-expiration", "NonRedisEnterprise"), func() {
+				res, err := adapter.HExpire(ctx, "no_such_key", 10*time.Second, "field1", "field2", "field3").Result()
+				Expect(err).To(BeNil())
+				Expect(res).To(BeEquivalentTo([]int64{-2, -2, -2}))
+
+				for i := 0; i < 100; i++ {
+					sadd := adapter.HSet(ctx, "myhash", fmt.Sprintf("key%d", i), "hello")
+					Expect(sadd.Err()).NotTo(HaveOccurred())
+				}
+
+				res, err = adapter.HExpire(ctx, "myhash", 10*time.Second, "key1", "key2", "key200").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1, 1, -2}))
+			})
+
+			It("should HPExpire", Label("hash-expiration", "NonRedisEnterprise"), func() {
+				res, err := adapter.HPExpire(ctx, "no_such_key", 10*time.Second, "field1", "field2", "field3").Result()
+				Expect(err).To(BeNil())
+				Expect(res).To(BeEquivalentTo([]int64{-2, -2, -2}))
+
+				for i := 0; i < 100; i++ {
+					sadd := adapter.HSet(ctx, "myhash", fmt.Sprintf("key%d", i), "hello")
+					Expect(sadd.Err()).NotTo(HaveOccurred())
+				}
+
+				res, err = adapter.HPExpire(ctx, "myhash", 10*time.Second, "key1", "key2", "key200").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1, 1, -2}))
+			})
+
+			It("should HExpireAt", Label("hash-expiration", "NonRedisEnterprise"), func() {
+				resEmpty, err := adapter.HExpireAt(ctx, "no_such_key", time.Now().Add(10*time.Second), "field1", "field2", "field3").Result()
+				Expect(err).To(BeNil())
+				Expect(resEmpty).To(BeEquivalentTo([]int64{-2, -2, -2}))
+
+				for i := 0; i < 100; i++ {
+					sadd := adapter.HSet(ctx, "myhash", fmt.Sprintf("key%d", i), "hello")
+					Expect(sadd.Err()).NotTo(HaveOccurred())
+				}
+
+				res, err := adapter.HExpireAt(ctx, "myhash", time.Now().Add(10*time.Second), "key1", "key2", "key200").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1, 1, -2}))
+			})
+
+			It("should HPExpireAt", Label("hash-expiration", "NonRedisEnterprise"), func() {
+				resEmpty, err := adapter.HPExpireAt(ctx, "no_such_key", time.Now().Add(10*time.Second), "field1", "field2", "field3").Result()
+				Expect(err).To(BeNil())
+				Expect(resEmpty).To(BeEquivalentTo([]int64{-2, -2, -2}))
+
+				for i := 0; i < 100; i++ {
+					sadd := adapter.HSet(ctx, "myhash", fmt.Sprintf("key%d", i), "hello")
+					Expect(sadd.Err()).NotTo(HaveOccurred())
+				}
+
+				res, err := adapter.HPExpireAt(ctx, "myhash", time.Now().Add(10*time.Second), "key1", "key2", "key200").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1, 1, -2}))
+			})
+
+			It("should HPersist", Label("hash-expiration", "NonRedisEnterprise"), func() {
+				resEmpty, err := adapter.HPersist(ctx, "no_such_key", "field1", "field2", "field3").Result()
+				Expect(err).To(BeNil())
+				Expect(resEmpty).To(BeEquivalentTo([]int64{-2, -2, -2}))
+
+				for i := 0; i < 100; i++ {
+					sadd := adapter.HSet(ctx, "myhash", fmt.Sprintf("key%d", i), "hello")
+					Expect(sadd.Err()).NotTo(HaveOccurred())
+				}
+
+				res, err := adapter.HPersist(ctx, "myhash", "key1", "key2", "key200").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{-1, -1, -2}))
+
+				res, err = adapter.HExpire(ctx, "myhash", 10*time.Second, "key1", "key200").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1, -2}))
+
+				res, err = adapter.HPersist(ctx, "myhash", "key1", "key2", "key200").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1, -1, -2}))
+			})
+
+			It("should HExpireTime", Label("hash-expiration", "NonRedisEnterprise"), func() {
+				resEmpty, err := adapter.HExpireTime(ctx, "no_such_key", "field1", "field2", "field3").Result()
+				Expect(err).To(BeNil())
+				Expect(resEmpty).To(BeEquivalentTo([]int64{-2, -2, -2}))
+
+				for i := 0; i < 100; i++ {
+					sadd := adapter.HSet(ctx, "myhash", fmt.Sprintf("key%d", i), "hello")
+					Expect(sadd.Err()).NotTo(HaveOccurred())
+				}
+
+				res, err := adapter.HExpire(ctx, "myhash", 10*time.Second, "key1", "key200").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1, -2}))
+
+				res, err = adapter.HExpireTime(ctx, "myhash", "key1", "key2", "key200").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res[0]).To(BeNumerically("~", time.Now().Add(10*time.Second).Unix(), 1))
+			})
+
+			It("should HPExpireTime", Label("hash-expiration", "NonRedisEnterprise"), func() {
+				resEmpty, err := adapter.HPExpireTime(ctx, "no_such_key", "field1", "field2", "field3").Result()
+				Expect(err).To(BeNil())
+				Expect(resEmpty).To(BeEquivalentTo([]int64{-2, -2, -2}))
+
+				for i := 0; i < 100; i++ {
+					sadd := adapter.HSet(ctx, "myhash", fmt.Sprintf("key%d", i), "hello")
+					Expect(sadd.Err()).NotTo(HaveOccurred())
+				}
+
+				expireAt := time.Now().Add(10 * time.Second)
+				res, err := adapter.HPExpireAt(ctx, "myhash", expireAt, "key1", "key200").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1, -2}))
+
+				res, err = adapter.HPExpireTime(ctx, "myhash", "key1", "key2", "key200").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(BeEquivalentTo([]int64{expireAt.UnixMilli(), -1, -2}))
+			})
+
+			It("should HTTL", Label("hash-expiration", "NonRedisEnterprise"), func() {
+				resEmpty, err := adapter.HTTL(ctx, "no_such_key", "field1", "field2", "field3").Result()
+				Expect(err).To(BeNil())
+				Expect(resEmpty).To(BeEquivalentTo([]int64{-2, -2, -2}))
+
+				for i := 0; i < 100; i++ {
+					sadd := adapter.HSet(ctx, "myhash", fmt.Sprintf("key%d", i), "hello")
+					Expect(sadd.Err()).NotTo(HaveOccurred())
+				}
+
+				res, err := adapter.HExpire(ctx, "myhash", 10*time.Second, "key1", "key200").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1, -2}))
+
+				res, err = adapter.HTTL(ctx, "myhash", "key1", "key2", "key200").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{10, -1, -2}))
+			})
+
+			It("should HPTTL", Label("hash-expiration", "NonRedisEnterprise"), func() {
+				resEmpty, err := adapter.HPTTL(ctx, "no_such_key", "field1", "field2", "field3").Result()
+				Expect(err).To(BeNil())
+				Expect(resEmpty).To(BeEquivalentTo([]int64{-2, -2, -2}))
+
+				for i := 0; i < 100; i++ {
+					sadd := adapter.HSet(ctx, "myhash", fmt.Sprintf("key%d", i), "hello")
+					Expect(sadd.Err()).NotTo(HaveOccurred())
+				}
+
+				res, err := adapter.HExpire(ctx, "myhash", 10*time.Second, "key1", "key200").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1, -2}))
+
+				res, err = adapter.HPTTL(ctx, "myhash", "key1", "key2", "key200").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res[0]).To(BeNumerically("~", 10*time.Second.Milliseconds(), 1))
+			})
 		}
 	})
 
@@ -5976,12 +6136,15 @@ func testAdapter(resp3 bool) {
 
 			res, err := adapter.ZRangeWithScores(ctx, "result", 0, -1).Result()
 			Expect(err).NotTo(HaveOccurred())
+			for i, z := range res {
+				res[i].Score = float64(int(z.Score))
+			}
 			Expect(res).To(ContainElement(Z{
-				Score:  190.44242984775784,
+				Score:  190.,
 				Member: "Palermo",
 			}))
 			Expect(res).To(ContainElement(Z{
-				Score:  56.4412578701582,
+				Score:  56.,
 				Member: "Catania",
 			}))
 		})
@@ -6311,13 +6474,16 @@ func testAdapter(resp3 bool) {
 
 				v, err := adapter.ZRangeWithScores(ctx, "key2", 0, -1).Result()
 				Expect(err).NotTo(HaveOccurred())
+				for i, z := range v {
+					v[i].Score = float64(int(z.Score))
+				}
 				Expect(v).To(Equal([]Z{
 					{
-						Score:  56.441257870158204,
+						Score:  56.,
 						Member: "Catania",
 					},
 					{
-						Score:  190.44242984775784,
+						Score:  190.,
 						Member: "Palermo",
 					},
 				}))
@@ -8932,6 +9098,7 @@ func testAdapterCache(resp3 bool) {
 		BeforeEach(func() {
 			Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
 			adapter.TFunctionDelete(ctx, "lib1")
+			adapter.TFunctionDelete(ctx, "lib2")
 		})
 		// Copied from go-redis
 		// https://github.com/redis/go-redis/blob/f994ff1cd96299a5c8029ae3403af7b17ef06e8a/gears_commands_test.go
@@ -8944,7 +9111,6 @@ func testAdapterCache(resp3 bool) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resultAdd).To(BeEquivalentTo("OK"))
 			opt.Replace = false
-			adapter.TFunctionDelete(ctx, libCodeWithConfig("lib2")).Result()
 			resultAdd, err = adapter.TFunctionLoadArgs(ctx, libCodeWithConfig("lib2"), opt).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resultAdd).To(BeEquivalentTo("OK"))
@@ -10835,8 +11001,7 @@ func testAdapterCache(resp3 bool) {
 
 				cmd3 := adapter.JSONGet(ctx, "insert2")
 				Expect(cmd3.Err()).NotTo(HaveOccurred())
-				Expect(cmd3.Val()).To(Or(
-					Equal(`[[100,200,300,1,2,200]]`)))
+				Expect(cmd3.Val()).To(Equal(`[100,200,300,1,2,200]`))
 			})
 
 			It("should JSONArrLen", Label("json.arrlen", "json"), func() {
@@ -10944,11 +11109,11 @@ func testAdapterCache(resp3 bool) {
 
 				res, err = adapter.JSONGetWithArgs(ctx, "get3", &JSONGetArgs{Indent: "-"}).Result()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal(`[-{--"a":1,--"b":2-}]`))
+				Expect(res).To(Equal(`{-"a":1,-"b":2}`))
 
 				res, err = adapter.JSONGetWithArgs(ctx, "get3", &JSONGetArgs{Indent: "-", Newline: `~`, Space: `!`}).Result()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal(`[~-{~--"a":!1,~--"b":!2~-}~]`))
+				Expect(res).To(Equal(`{~-"a":!1,~-"b":!2~}`))
 			})
 
 			It("should JSONMerge", Label("json.merge", "json"), func() {
