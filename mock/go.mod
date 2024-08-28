@@ -5,7 +5,7 @@ go 1.21
 replace github.com/redis/rueidis => ../
 
 require (
-	github.com/redis/rueidis v1.0.44
+	github.com/redis/rueidis v1.0.45
 	go.uber.org/mock v0.4.0
 )
 
