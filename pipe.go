@@ -281,7 +281,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 				count -= 2
 			}
 
-			for i, r := range resp.s[:len(resp.s)-2] {
+			for i, r := range resp.s[:count] {
 				if init[i][0] == "READONLY" {
 					// ignore READONLY command error
 					continue
