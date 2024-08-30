@@ -168,10 +168,14 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 	if option.ClientNoEvict {
 		init = append(init, []string{"CLIENT", "NO-EVICT", "ON"})
 	}
+
+	addClientSetInfoCmds := true
 	if len(option.ClientSetInfo) == 2 {
 		init = append(init, []string{"CLIENT", "SETINFO", "LIB-NAME", option.ClientSetInfo[0]}, []string{"CLIENT", "SETINFO", "LIB-VER", option.ClientSetInfo[1]})
-	} else {
+	} else if option.ClientSetInfo == nil {
 		init = append(init, []string{"CLIENT", "SETINFO", "LIB-NAME", LibName}, []string{"CLIENT", "SETINFO", "LIB-VER", LibVer})
+	} else {
+		addClientSetInfoCmds = false
 	}
 
 	timeout := option.Dialer.Timeout
@@ -186,7 +190,14 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 	if !r2 && !r2ps {
 		resp := p.DoMulti(ctx, cmds.NewMultiCompleted(init)...)
 		defer resultsp.Put(resp)
-		for i, r := range resp.s[:len(resp.s)-2] { // skip error checking on the last CLIENT SETINFO
+
+		count := len(resp.s)
+		if addClientSetInfoCmds {
+			// skip error checking on the last CLIENT SETINFO
+			count -= 2
+		}
+
+		for i, r := range resp.s[:count] {
 			if i == 0 {
 				p.info, err = r.AsMap()
 			} else {
@@ -249,16 +260,28 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 		if option.ClientNoEvict {
 			init = append(init, []string{"CLIENT", "NO-EVICT", "ON"})
 		}
+
+		addClientSetInfoCmds := true
 		if len(option.ClientSetInfo) == 2 {
 			init = append(init, []string{"CLIENT", "SETINFO", "LIB-NAME", option.ClientSetInfo[0]}, []string{"CLIENT", "SETINFO", "LIB-VER", option.ClientSetInfo[1]})
-		} else {
+		} else if option.ClientSetInfo == nil {
 			init = append(init, []string{"CLIENT", "SETINFO", "LIB-NAME", LibName}, []string{"CLIENT", "SETINFO", "LIB-VER", LibVer})
+		} else {
+			addClientSetInfoCmds = false
 		}
+
 		p.version = 5
 		if len(init) != 0 {
 			resp := p.DoMulti(ctx, cmds.NewMultiCompleted(init)...)
 			defer resultsp.Put(resp)
-			for i, r := range resp.s[:len(resp.s)-2] { // skip error checking on the last CLIENT SETINFO
+
+			count := len(resp.s)
+			if addClientSetInfoCmds {
+				// skip error checking on the last CLIENT SETINFO
+				count -= 2
+			}
+
+			for i, r := range resp.s[:count] {
 				if init[i][0] == "READONLY" {
 					// ignore READONLY command error
 					continue

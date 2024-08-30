@@ -53,6 +53,8 @@ var (
 	ErrWrongPipelineMultiplex = errors.New("ClientOption.PipelineMultiplex must not be bigger than MaxPipelineMultiplex")
 	// ErrDedicatedClientRecycled means the caller attempted to use the dedicated client which has been already recycled (after canceled/closed).
 	ErrDedicatedClientRecycled = errors.New("dedicated client should not be used after recycled")
+	// DisableClientSetInfo is the value that can be used for ClientOption.ClientSetInfo to disable making the CLIENT SETINFO command
+	DisableClientSetInfo = make([]string, 0)
 )
 
 // ClientOption should be passed to NewClient to construct a Client
