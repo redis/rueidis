@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         module: ${{fromJson(needs.prepare-matrix.outputs.matrix)}}
-        go-version: ['1.21.0', '1.22.0']
+        go-version: ['1.21.0', '1.22.0', '1.23.0']
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
