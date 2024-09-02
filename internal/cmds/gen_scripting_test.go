@@ -68,6 +68,7 @@ func scripting0(s Builder) {
 	s.ScriptFlush().Build()
 	s.ScriptKill().Build()
 	s.ScriptLoad().Script("1").Build()
+	s.ScriptShow().Sha1("1").Build()
 }
 
 func TestCommand_InitSlot_scripting(t *testing.T) {

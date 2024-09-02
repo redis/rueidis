@@ -636,6 +636,17 @@
     "since": "6.0.0",
     "group": "connection"
   },
+  "CLIENT CAPA": {
+    "arguments": [
+      {
+        "name": "capability",
+        "type": "string",
+        "multiple": true
+      }
+    ],
+    "since": "8.0.0",
+    "group": "connection"
+  },
   "CLIENT GETNAME": {
     "summary": "Get the current connection name",
     "complexity": "O(1)",
@@ -1242,6 +1253,12 @@
         "name": "node-id",
         "type": "string",
         "optional": true
+      },
+      {
+        "name": "timeout",
+        "command": "TIMEOUT",
+        "type": "integer",
+        "optional": true
       }
     ],
     "since": "3.0.0",
@@ -1266,6 +1283,73 @@
     "summary": "Get array of Cluster slot to node mappings",
     "complexity": "O(N) where N is the total number of Cluster nodes",
     "since": "3.0.0",
+    "group": "cluster"
+  },
+  "CLUSTER SLOT-STATS": {
+    "arguments": [
+      {
+        "name": "filter",
+        "type": "oneof",
+        "arguments": [
+          {
+            "type": "block",
+            "arguments": [
+              {
+                "token": "SLOTSRANGE",
+                "type": "pure-token",
+                "name": "slotsrange"
+              },
+              {
+                "name": "start-slot",
+                "type": "integer"
+              },
+              {
+                "name": "end-slot",
+                "type": "integer"
+              }
+            ]
+          },
+          {
+            "type": "block",
+            "arguments": [
+              {
+                "token": "ORDERBY",
+                "type": "pure-token",
+                "name": "orderby"
+              },
+              {
+                "name": "metric",
+                "type": "string"
+              },
+              {
+                "token": "LIMIT",
+                "name": "limit",
+                "type": "integer",
+                "optional": true
+              },
+              {
+                "name": "order",
+                "type": "oneof",
+                "optional": true,
+                "arguments": [
+                  {
+                    "name": "asc",
+                    "type": "pure-token",
+                    "token": "ASC"
+                  },
+                  {
+                    "name": "desc",
+                    "type": "pure-token",
+                    "token": "DESC"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "since": "8.0.0",
     "group": "cluster"
   },
   "COMMAND COUNT": {
@@ -4866,6 +4950,16 @@
     "since": "2.6.0",
     "group": "scripting"
   },
+  "SCRIPT SHOW": {
+    "arguments": [
+      {
+        "name": "sha1",
+        "type": "string"
+      }
+    ],
+    "since": "8.0.0",
+    "group": "scripting"
+  },
   "SCRIPT FLUSH": {
     "summary": "Remove all the scripts from the script cache.",
     "arguments": [
@@ -7227,6 +7321,12 @@
         "command": "COUNT",
         "name": "count",
         "type": "integer",
+        "optional": true
+      },
+      {
+        "token": "NOSCORES",
+        "name": "noscores",
+        "type": "pure-token",
         "optional": true
       }
     ],

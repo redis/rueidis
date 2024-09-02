@@ -68,6 +68,31 @@ func (c ClientCachingModeYes) Build() Completed {
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
+type ClientCapa Incomplete
+
+func (b Builder) ClientCapa() (c ClientCapa) {
+	c = ClientCapa{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "CLIENT", "CAPA")
+	return c
+}
+
+func (c ClientCapa) Capability(capability ...string) ClientCapaCapability {
+	c.cs.s = append(c.cs.s, capability...)
+	return (ClientCapaCapability)(c)
+}
+
+type ClientCapaCapability Incomplete
+
+func (c ClientCapaCapability) Capability(capability ...string) ClientCapaCapability {
+	c.cs.s = append(c.cs.s, capability...)
+	return c
+}
+
+func (c ClientCapaCapability) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
 type ClientGetname Incomplete
 
 func (b Builder) ClientGetname() (c ClientGetname) {
