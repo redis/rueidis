@@ -9,6 +9,7 @@ func connection0(s Builder) {
 	s.Auth().Password("1").Build()
 	s.ClientCaching().Yes().Build()
 	s.ClientCaching().No().Build()
+	s.ClientCapa().Capability("1").Capability("1").Build()
 	s.ClientGetname().Build()
 	s.ClientGetredir().Build()
 	s.ClientId().Build()
@@ -104,10 +105,10 @@ func connection0(s Builder) {
 	s.ClientPause().Timeout(1).Build()
 	s.ClientReply().On().Build()
 	s.ClientReply().Off().Build()
-	s.ClientReply().Skip().Build()
 }
 
 func connection1(s Builder) {
+	s.ClientReply().Skip().Build()
 	s.ClientSetinfo().Libname("1").Build()
 	s.ClientSetinfo().Libver("1").Build()
 	s.ClientSetname().ConnectionName("1").Build()
