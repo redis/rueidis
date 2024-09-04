@@ -29,6 +29,9 @@ func setupMuxWithOption(wires []*mockWire, option *ClientOption) (conn *mux, che
 		count++
 		return wires[count]
 	}
+	if option.BlockingPipeline == 0 {
+		option.BlockingPipeline = DefaultBlockingPipeline
+	}
 	return newMux("", option, (*mockWire)(nil), (*mockWire)(nil), wfn, wfn), func(t *testing.T) {
 		if count != len(wires)-1 {
 			t.Fatalf("there is %d remaining unused wires", len(wires)-count-1)
@@ -678,6 +681,59 @@ func TestMuxDelegation(t *testing.T) {
 					cmds.NewReadOnlyCompleted([]string{"READONLY"}),
 					cmds.NewBlockingCompleted([]string{"BLOCK"}),
 				).s[0].ToString(); err != nil {
+					t.Errorf("unexpected error %v", err)
+				} else if val != "BLOCK_COMMANDS_RESPONSE" {
+					t.Errorf("unexpected response %v", val)
+				} else {
+					wg.Done()
+				}
+			}()
+		}
+		for i := 0; i < 2; i++ {
+			<-blocked
+		}
+		for i := 0; i < 2; i++ {
+			responses <- newResult(RedisMessage{typ: '+', string: "BLOCK_COMMANDS_RESPONSE"}, nil)
+		}
+		wg.Wait()
+	})
+
+	t.Run("multiple long pipeline", func(t *testing.T) {
+		blocked := make(chan struct{})
+		responses := make(chan RedisResult)
+
+		m, checkClean := setupMux([]*mockWire{
+			{
+				// leave first wire for pipeline calls
+			},
+			{
+				DoMultiFn: func(cmd ...Completed) *redisresults {
+					blocked <- struct{}{}
+					return &redisresults{s: []RedisResult{<-responses}}
+				},
+			},
+			{
+				DoMultiFn: func(cmd ...Completed) *redisresults {
+					blocked <- struct{}{}
+					return &redisresults{s: []RedisResult{<-responses}}
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+		if err := m.Dial(); err != nil {
+			t.Fatalf("unexpected dial error %v", err)
+		}
+
+		wg := sync.WaitGroup{}
+		wg.Add(2)
+		for i := 0; i < 2; i++ {
+			go func() {
+				pipeline := make(Commands, DefaultBlockingPipeline)
+				for i := 0; i < len(pipeline); i++ {
+					pipeline[i] = cmds.NewCompleted([]string{"SET"})
+				}
+				if val, err := m.DoMulti(context.Background(), pipeline...).s[0].ToString(); err != nil {
 					t.Errorf("unexpected error %v", err)
 				} else if val != "BLOCK_COMMANDS_RESPONSE" {
 					t.Errorf("unexpected response %v", val)
