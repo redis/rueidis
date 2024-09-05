@@ -23,6 +23,8 @@ const (
 	DefaultRingScale = 10
 	// DefaultPoolSize is the default value of ClientOption.BlockingPoolSize
 	DefaultPoolSize = 1000
+	// DefaultBlockingPipeline is the default value of ClientOption.BlockingPipeline
+	DefaultBlockingPipeline = 2000
 	// DefaultDialTimeout is the default value of ClientOption.Dialer.Timeout
 	DefaultDialTimeout = 5 * time.Second
 	// DefaultTCPKeepAlive is the default value of ClientOption.Dialer.KeepAlive
@@ -132,6 +134,8 @@ type ClientOption struct {
 	// BlockingPoolSize is the size of the connection pool shared by blocking commands (ex BLPOP, XREAD with BLOCK).
 	// The default is DefaultPoolSize.
 	BlockingPoolSize int
+	// BlockingPipeline is the threshold of a pipeline that will be treated as blocking commands when exceeding it.
+	BlockingPipeline int
 
 	// PipelineMultiplex determines how many tcp connections used to pipeline commands to one redis instance.
 	// The default for single and sentinel clients is 2, which means 4 connections (2^2).
@@ -335,6 +339,9 @@ func NewClient(option ClientOption) (client Client, err error) {
 	}
 	if option.ConnWriteTimeout == 0 {
 		option.ConnWriteTimeout = option.Dialer.KeepAlive * 10
+	}
+	if option.BlockingPipeline == 0 {
+		option.BlockingPipeline = DefaultBlockingPipeline
 	}
 	if option.ShuffleInit {
 		util.Shuffle(len(option.InitAddress), func(i, j int) {

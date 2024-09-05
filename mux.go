@@ -56,6 +56,7 @@ type mux struct {
 	sc     []*singleconnect
 	mu     []sync.Mutex
 	maxp   int
+	maxm   int
 }
 
 func makeMux(dst string, option *ClientOption, dialFn dialFn) *mux {
@@ -88,6 +89,7 @@ func newMux(dst string, option *ClientOption, init, dead wire, wireFn wireFn, wi
 		mu:   make([]sync.Mutex, multiplex),
 		sc:   make([]*singleconnect, multiplex),
 		maxp: runtime.GOMAXPROCS(0),
+		maxm: option.BlockingPipeline,
 	}
 	m.clhks.Store(emptyclhks)
 	for i := 0; i < len(m.wire); i++ {
@@ -207,6 +209,9 @@ func (m *mux) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 }
 
 func (m *mux) DoMulti(ctx context.Context, multi ...Completed) (resp *redisresults) {
+	if len(multi) >= m.maxm && m.maxm > 0 {
+		goto block // use a dedicated connection if the pipeline is too large
+	}
 	for _, cmd := range multi {
 		if cmd.IsBlock() {
 			goto block
