@@ -233,7 +233,7 @@ err = client.Receive(context.Background(), client.B().Subscribe().Channel("ch1",
 The provided handler will be called with the received message.
 
 It is important to note that `client.Receive()` will keep blocking until returning a value in the following cases:
-1. return `nil` when receiving any unsubscribe/punsubscribe message related to the provided `subscribe` command.
+1. return `nil` when receiving any unsubscribe/punsubscribe message related to the provided `subscribe` command, including `sunsubscribe` messages caused by slot migrations.
 2. return `rueidis.ErrClosing` when the client is closed manually.
 3. return `ctx.Err()` when the `ctx` is done.
 4. return non-nil `err` when the provided `subscribe` command fails.
