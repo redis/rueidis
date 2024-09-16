@@ -282,7 +282,7 @@ func (p *pubsub) resubscribe(ctx context.Context) rueidis.DedicatedClient {
 	defer p.mu.Unlock()
 retry:
 	c := p.mconn()
-	ok := false
+	ok := len(p.schannels) == 0 && len(p.channels) == 0 && len(p.patterns) == 0
 	if len(p.schannels) != 0 {
 		builder := c.B().Ssubscribe().Channel()
 		for channel, ok := range p.schannels {
