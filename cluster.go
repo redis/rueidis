@@ -18,19 +18,21 @@ import (
 // ErrNoSlot indicates that there is no redis node owns the key slot.
 var ErrNoSlot = errors.New("the slot has no redis node")
 var ErrReplicaOnlyConflict = errors.New("ReplicaOnly conflicts with SendToReplicas option")
+var ErrInvalidScanInterval = errors.New("scan interval must be greater than or equal to 0")
 
 type clusterClient struct {
-	pslots [16384]conn
-	rslots []conn
-	opt    *ClientOption
-	rOpt   *ClientOption
-	conns  map[string]connrole
-	connFn connFn
-	sc     call
-	mu     sync.RWMutex
-	stop   uint32
-	cmd    Builder
-	retry  bool
+	pslots      [16384]conn
+	rslots      []conn
+	opt         *ClientOption
+	rOpt        *ClientOption
+	conns       map[string]connrole
+	connFn      connFn
+	sc          call
+	mu          sync.RWMutex
+	stop        uint32
+	cmd         Builder
+	retry       bool
+	refreshStop chan struct{}
 }
 
 // NOTE: connrole and conn must be initialized at the same time
@@ -41,11 +43,12 @@ type connrole struct {
 
 func newClusterClient(opt *ClientOption, connFn connFn) (*clusterClient, error) {
 	client := &clusterClient{
-		cmd:    cmds.NewBuilder(cmds.InitSlot),
-		connFn: connFn,
-		opt:    opt,
-		conns:  make(map[string]connrole),
-		retry:  !opt.DisableRetry,
+		cmd:         cmds.NewBuilder(cmds.InitSlot),
+		connFn:      connFn,
+		opt:         opt,
+		conns:       make(map[string]connrole),
+		retry:       !opt.DisableRetry,
+		refreshStop: make(chan struct{}),
 	}
 
 	if opt.ReplicaOnly && opt.SendToReplicas != nil {
@@ -72,6 +75,12 @@ func newClusterClient(opt *ClientOption, connFn connFn) (*clusterClient, error) 
 
 	if err := client.refresh(context.Background()); err != nil {
 		return client, err
+	}
+
+	if opt.ClusterTopologyRefreshmentOption.ScanInterval > 0 {
+		go client.runClusterTopologyRefreshment()
+	} else if opt.ClusterTopologyRefreshmentOption.ScanInterval < 0 {
+		return nil, ErrInvalidScanInterval
 	}
 
 	return client, nil
@@ -144,54 +153,14 @@ func getClusterSlots(c conn, timeout time.Duration) clusterslots {
 }
 
 func (c *clusterClient) _refresh() (err error) {
-	c.mu.RLock()
-	results := make(chan clusterslots, len(c.conns))
-	pending := make([]conn, 0, len(c.conns))
-	for _, cc := range c.conns {
-		pending = append(pending, cc.conn)
-	}
-	c.mu.RUnlock()
-
-	var result clusterslots
-	for i := 0; i < cap(results); i++ {
-		if i&3 == 0 { // batch CLUSTER SLOTS/CLUSTER SHARDS for every 4 connections
-			for j := i; j < i+4 && j < len(pending); j++ {
-				go func(c conn, timeout time.Duration) {
-					results <- getClusterSlots(c, timeout)
-				}(pending[j], c.opt.ConnWriteTimeout)
-			}
-		}
-		result = <-results
-		err = result.reply.Error()
-		if len(result.reply.val.values) != 0 {
-			break
-		}
-	}
+	result, err := c.getClusterTopology()
 	if err != nil {
 		return err
 	}
-	pending = nil
 
 	groups := result.parse(c.opt.TLSConfig != nil)
-	conns := make(map[string]connrole, len(groups))
-	for master, g := range groups {
-		conns[master] = connrole{conn: c.connFn(master, c.opt), replica: false}
-		for _, addr := range g.nodes[1:] {
-			if c.rOpt != nil {
-				conns[addr] = connrole{conn: c.connFn(addr, c.rOpt), replica: true}
-			} else {
-				conns[addr] = connrole{conn: c.connFn(addr, c.opt), replica: true}
-			}
-		}
-	}
-	// make sure InitAddress always be present
-	for _, addr := range c.opt.InitAddress {
-		if _, ok := conns[addr]; !ok {
-			conns[addr] = connrole{
-				conn: c.connFn(addr, c.opt),
-			}
-		}
-	}
+
+	conns := c.newConns(groups)
 
 	var removes []conn
 
@@ -264,6 +233,60 @@ func (c *clusterClient) _refresh() (err error) {
 	}
 
 	return nil
+}
+
+func (c *clusterClient) getClusterTopology() (result clusterslots, err error) {
+	c.mu.RLock()
+	results := make(chan clusterslots, len(c.conns))
+	pending := make([]conn, 0, len(c.conns))
+	for _, cc := range c.conns {
+		pending = append(pending, cc.conn)
+	}
+	c.mu.RUnlock()
+
+	for i := 0; i < cap(results); i++ {
+		if i&3 == 0 { // batch CLUSTER SLOTS/CLUSTER SHARDS for every 4 connections
+			for j := i; j < i+4 && j < len(pending); j++ {
+				go func(c conn, timeout time.Duration) {
+					results <- getClusterSlots(c, timeout)
+				}(pending[j], c.opt.ConnWriteTimeout)
+			}
+		}
+		result = <-results
+		err = result.reply.Error()
+		if len(result.reply.val.values) != 0 {
+			break
+		}
+	}
+	if err != nil {
+		return
+	}
+
+	pending = nil
+	return result, nil
+}
+
+func (c *clusterClient) newConns(groups map[string]group) map[string]connrole {
+	conns := make(map[string]connrole, len(groups))
+	for master, g := range groups {
+		conns[master] = connrole{conn: c.connFn(master, c.opt), replica: false}
+		for _, addr := range g.nodes[1:] {
+			if c.rOpt != nil {
+				conns[addr] = connrole{conn: c.connFn(addr, c.rOpt), replica: true}
+			} else {
+				conns[addr] = connrole{conn: c.connFn(addr, c.opt), replica: true}
+			}
+		}
+	}
+	// make sure InitAddress always be present
+	for _, addr := range c.opt.InitAddress {
+		if _, ok := conns[addr]; !ok {
+			conns[addr] = connrole{
+				conn: c.connFn(addr, c.opt),
+			}
+		}
+	}
+	return conns
 }
 
 func (c *clusterClient) single() (conn conn) {
@@ -356,6 +379,53 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 		}
 	}
 	return groups
+}
+
+func (c *clusterClient) runClusterTopologyRefreshment() {
+	ticker := time.NewTicker(c.opt.ClusterTopologyRefreshmentOption.ScanInterval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-c.refreshStop:
+			return
+		case <-ticker.C:
+			result, err := c.getClusterTopology()
+			if err != nil {
+				c.lazyRefresh()
+				continue
+			}
+
+			groups := result.parse(c.opt.TLSConfig != nil)
+
+			conns := c.newConns(groups)
+
+			isChanged := false
+			c.mu.RLock()
+			// check if the new topology is different from the current one
+			for addr, cc := range conns {
+				old, ok := c.conns[addr]
+				if !ok || old.replica != cc.replica {
+					isChanged = true
+					break
+				}
+			}
+
+			// check if the current topology is different from the new one
+			if !isChanged {
+				for addr := range c.conns {
+					if _, ok := conns[addr]; !ok {
+						isChanged = true
+						break
+					}
+				}
+			}
+			c.mu.RUnlock()
+
+			if isChanged {
+				c.lazyRefresh()
+			}
+		}
+	}
 }
 
 func (c *clusterClient) _pick(slot uint16, toReplica bool) (p conn) {
@@ -1018,6 +1088,8 @@ func (c *clusterClient) Nodes() map[string]Client {
 }
 
 func (c *clusterClient) Close() {
+	close(c.refreshStop)
+
 	atomic.StoreUint32(&c.stop, 1)
 	c.mu.RLock()
 	for _, cc := range c.conns {

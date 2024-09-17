@@ -33,6 +33,23 @@ var slotsResp = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 	}},
 }}, nil)
 
+var slotsRespWithChangedRoll = newResult(RedisMessage{typ: '*', values: []RedisMessage{
+	{typ: '*', values: []RedisMessage{
+		{typ: ':', integer: 0},
+		{typ: ':', integer: 16383},
+		{typ: '*', values: []RedisMessage{ // master
+			{typ: '+', string: "127.0.1.1"},
+			{typ: ':', integer: 1},
+			{typ: '+', string: ""},
+		}},
+		{typ: '*', values: []RedisMessage{ // replica
+			{typ: '+', string: "127.0.0.1"},
+			{typ: ':', integer: 0},
+			{typ: '+', string: ""},
+		}},
+	}},
+}}, nil)
+
 var slotsMultiResp = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 	{typ: '*', values: []RedisMessage{
 		{typ: ':', integer: 0},
@@ -897,6 +914,27 @@ func TestClusterClientInit(t *testing.T) {
 			t.Fatalf("unexpected node assigned to rslot 16383")
 		}
 	})
+
+	t.Run("Negative Cluster Topology Scan Interval", func(t *testing.T) {
+		_, err := newClusterClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
+					ScanInterval: -1 * time.Millisecond,
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						return singleSlotResp
+					},
+				}
+			},
+		)
+		if !errors.Is(err, ErrInvalidScanInterval) {
+			t.Fatalf("unexpected err %v", err)
+		}
+	})
 }
 
 //gocyclo:ignore
@@ -1153,6 +1191,12 @@ func TestClusterClient(t *testing.T) {
 		}
 		client.Close()
 		<-called
+		select {
+		case _, ok := <-client.refreshStop:
+			if ok {
+				t.Fatalf("refreshStop should be closed")
+			}
+		}
 	})
 
 	t.Run("Dedicated Err", func(t *testing.T) {
@@ -4476,4 +4520,242 @@ func TestConnectToNonAvailableCluster(t *testing.T) {
 		}()
 	}
 	wg.Wait()
+}
+
+func TestClusterTopologyRefreshment(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+
+	t.Run("nothing changed", func(t *testing.T) {
+		var callCount int64
+		var client *clusterClient
+		refreshWaitCh := make(chan struct{})
+		client, err := newClusterClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
+					ScanInterval: 100 * time.Millisecond,
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						// initial call
+						if atomic.CompareAndSwapInt64(&callCount, 0, 1) {
+							return singleSlotResp
+						}
+
+						// call in refreshment scan
+						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
+							close(client.refreshStop) // stop refreshment
+							go func() {
+								time.Sleep(100 * time.Millisecond) // verify that refreshment is stopped
+								close(refreshWaitCh)
+							}()
+							return singleSlotResp
+						}
+
+						t.Fatalf("unexpected call")
+						return singleSlotResp
+					},
+				}
+			},
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		select {
+		case <-refreshWaitCh:
+		case <-time.After(5 * time.Second):
+			t.Fatal("timeout waiting for refresh")
+		}
+	})
+
+	t.Run("replicas are changed", func(t *testing.T) {
+		var callCount int64
+		var client *clusterClient
+		refreshWaitCh := make(chan struct{})
+		client, err := newClusterClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
+					ScanInterval: 100 * time.Millisecond,
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						// initial call
+						if atomic.CompareAndSwapInt64(&callCount, 0, 1) {
+							return singleSlotResp2
+						}
+
+						// call in refreshment scan
+						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
+							close(client.refreshStop) // stop refreshment
+							return slotsResp
+						}
+
+						// call in _refresh
+						if atomic.CompareAndSwapInt64(&callCount, 2, 3) {
+							close(refreshWaitCh)
+							return slotsResp
+						}
+
+						return slotsResp
+					},
+				}
+			},
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		select {
+		case <-refreshWaitCh:
+		case <-time.After(5 * time.Second):
+			t.Fatal("timeout waiting for refresh")
+		}
+	})
+
+	t.Run("shards are changed", func(t *testing.T) {
+		var callCount int64
+		var client *clusterClient
+		refreshWaitCh := make(chan struct{})
+		client, err := newClusterClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
+					ScanInterval: 100 * time.Millisecond,
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						// initial call
+						if atomic.CompareAndSwapInt64(&callCount, 0, 1) {
+							return singleSlotResp
+						}
+
+						// call in refreshment scan
+						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
+							close(client.refreshStop) // stop refreshment
+							return slotsMultiRespWithoutReplicas
+						}
+
+						// call in _refresh
+						if atomic.CompareAndSwapInt64(&callCount, 2, 3) {
+							close(refreshWaitCh)
+							return slotsMultiRespWithoutReplicas
+						}
+
+						return slotsMultiRespWithoutReplicas
+					},
+				}
+			},
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		select {
+		case <-refreshWaitCh:
+		case <-time.After(5 * time.Second):
+			t.Fatal("timeout waiting for refresh")
+		}
+	})
+
+	t.Run("node roll are changed", func(t *testing.T) {
+		var callCount int64
+		var client *clusterClient
+		refreshWaitCh := make(chan struct{})
+		client, err := newClusterClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
+					ScanInterval: 100 * time.Millisecond,
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						// initial call
+						if atomic.CompareAndSwapInt64(&callCount, 0, 1) {
+							return slotsResp
+						}
+
+						// call in refreshment scan
+						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
+							close(client.refreshStop) // stop refreshment
+							return slotsRespWithChangedRoll
+						}
+
+						// call in _refresh
+						if atomic.CompareAndSwapInt64(&callCount, 2, 3) {
+							close(refreshWaitCh)
+							return slotsRespWithChangedRoll
+						}
+
+						return slotsRespWithChangedRoll
+					},
+				}
+			},
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		select {
+		case <-refreshWaitCh:
+		case <-time.After(190 * time.Second):
+			t.Fatal("timeout waiting for refresh")
+		}
+	})
+
+	t.Run("failed to get cluster topology", func(t *testing.T) {
+		var callCount int64
+		var client *clusterClient
+		refreshWaitCh := make(chan struct{})
+		client, err := newClusterClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
+					ScanInterval: 100 * time.Millisecond,
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						// initial call
+						if atomic.CompareAndSwapInt64(&callCount, 0, 1) {
+							return singleSlotResp
+						}
+
+						// call in refreshment scan
+						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
+							close(client.refreshStop) // stop refreshment
+							return newErrResult(errors.New("failed to get cluster topology"))
+						}
+
+						// call in _refresh
+						if atomic.CompareAndSwapInt64(&callCount, 2, 3) {
+							close(refreshWaitCh)
+							return slotsMultiRespWithoutReplicas
+						}
+
+						return slotsMultiRespWithoutReplicas
+					},
+				}
+			},
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		select {
+		case <-refreshWaitCh:
+		case <-time.After(5 * time.Second):
+			t.Fatal("timeout waiting for refresh")
+		}
+	})
 }
