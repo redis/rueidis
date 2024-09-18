@@ -4525,16 +4525,13 @@ func TestConnectToNonAvailableCluster(t *testing.T) {
 func TestClusterTopologyRefreshment(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 
-	t.Run("nothing changed", func(t *testing.T) {
+	t.Run("no refreshment", func(t *testing.T) {
 		var callCount int64
-		var cli *clusterClient
-		var err error
-		refreshWaitCh := make(chan struct{})
-		cli, err = newClusterClient(
+		_, err := newClusterClient(
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
 				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
-					ScanInterval: 100 * time.Millisecond,
+					ScanInterval: 0,
 				},
 			},
 			func(dst string, opt *ClientOption) conn {
@@ -4542,16 +4539,6 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 					DoFn: func(cmd Completed) RedisResult {
 						// initial call
 						if atomic.CompareAndSwapInt64(&callCount, 0, 1) {
-							return singleSlotResp
-						}
-
-						// call in refreshment scan
-						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
-							close(cli.stopCh) // stop refreshment
-							go func() {
-								time.Sleep(100 * time.Millisecond) // verify that refreshment is stopped
-								close(refreshWaitCh)
-							}()
 							return singleSlotResp
 						}
 
@@ -4565,23 +4552,21 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 
-		select {
-		case <-refreshWaitCh:
-		case <-time.After(5 * time.Second):
-			t.Fatal("timeout waiting for refresh")
+		time.Sleep(2 * time.Second) // verify that no refreshment is called
+
+		if atomic.LoadInt64(&callCount) != 1 {
+			t.Fatalf("unexpected call count %d", callCount)
 		}
 	})
 
-	t.Run("replicas are changed", func(t *testing.T) {
+	t.Run("nothing changed", func(t *testing.T) {
 		var callCount int64
-		var cli *clusterClient
-		var err error
 		refreshWaitCh := make(chan struct{})
-		cli, err = newClusterClient(
+		cli, err := newClusterClient(
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
 				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
-					ScanInterval: 100 * time.Millisecond,
+					ScanInterval: 2 * time.Second,
 				},
 			},
 			func(dst string, opt *ClientOption) conn {
@@ -4589,21 +4574,77 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 					DoFn: func(cmd Completed) RedisResult {
 						// initial call
 						if atomic.CompareAndSwapInt64(&callCount, 0, 1) {
-							return singleSlotResp2
+							return singleSlotResp
 						}
 
 						// call in refreshment scan
 						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
-							close(cli.stopCh) // stop refreshment
+							return singleSlotResp
+						}
+
+						// call in refreshment scan
+						if atomic.CompareAndSwapInt64(&callCount, 2, 3) {
+							close(refreshWaitCh)
+							return singleSlotResp
+						}
+
+						atomic.AddInt64(&callCount, 1)
+						return singleSlotResp
+					},
+				}
+			},
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		select {
+		case <-refreshWaitCh:
+			cli.Close()
+
+			conns := cli.conns
+			if len(conns) != 1 {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+			if _, ok := conns["127.0.0.1:0"]; !ok {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+		case <-time.After(5 * time.Second):
+			t.Fatal("timeout waiting for refresh")
+		}
+	})
+
+	t.Run("replicas are changed", func(t *testing.T) {
+		var callCount int64
+		refreshWaitCh := make(chan struct{})
+		cli, err := newClusterClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
+					ScanInterval: 2 * time.Second,
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						// initial call
+						if atomic.CompareAndSwapInt64(&callCount, 0, 1) {
+							return singleSlotResp
+						}
+
+						// call in refreshment scan
+						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
 							return slotsResp
 						}
 
-						// call in _refresh
-						if atomic.CompareAndSwapInt64(&callCount, 2, 3) {
+						// call in _refresh or refreshment scan
+						if atomic.CompareAndSwapInt64(&callCount, 5, 6) {
 							close(refreshWaitCh)
 							return slotsResp
 						}
 
+						// call in _refresh or refreshment scan
+						atomic.AddInt64(&callCount, 1)
 						return slotsResp
 					},
 				}
@@ -4615,21 +4656,31 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 
 		select {
 		case <-refreshWaitCh:
-		case <-time.After(5 * time.Second):
+			cli.Close()
+
+			conns := cli.conns
+			if len(conns) != 2 {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+			if _, ok := conns["127.0.0.1:0"]; !ok {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+			if _, ok := conns["127.0.1.1:1"]; !ok {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+		case <-time.After(30 * time.Second):
 			t.Fatal("timeout waiting for refresh")
 		}
 	})
 
 	t.Run("shards are changed", func(t *testing.T) {
 		var callCount int64
-		var cli *clusterClient
-		var err error
 		refreshWaitCh := make(chan struct{})
-		cli, err = newClusterClient(
+		cli, err := newClusterClient(
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
 				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
-					ScanInterval: 100 * time.Millisecond,
+					ScanInterval: 2 * time.Second,
 				},
 			},
 			func(dst string, opt *ClientOption) conn {
@@ -4642,16 +4693,17 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 
 						// call in refreshment scan
 						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
-							close(cli.stopCh) // stop refreshment
 							return slotsMultiRespWithoutReplicas
 						}
 
-						// call in _refresh
-						if atomic.CompareAndSwapInt64(&callCount, 2, 3) {
+						// call in _refresh or refreshment scan
+						if atomic.CompareAndSwapInt64(&callCount, 5, 6) {
 							close(refreshWaitCh)
 							return slotsMultiRespWithoutReplicas
 						}
 
+						// call in _refresh or refreshment scan
+						atomic.AddInt64(&callCount, 1)
 						return slotsMultiRespWithoutReplicas
 					},
 				}
@@ -4663,21 +4715,31 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 
 		select {
 		case <-refreshWaitCh:
-		case <-time.After(5 * time.Second):
+			cli.Close()
+
+			conns := cli.conns
+			if len(conns) != 2 {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+			if _, ok := conns["127.0.0.1:0"]; !ok {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+			if _, ok := conns["127.0.1.1:0"]; !ok {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+		case <-time.After(30 * time.Second):
 			t.Fatal("timeout waiting for refresh")
 		}
 	})
 
 	t.Run("node roll are changed", func(t *testing.T) {
 		var callCount int64
-		var cli *clusterClient
-		var err error
 		refreshWaitCh := make(chan struct{})
-		cli, err = newClusterClient(
+		cli, err := newClusterClient(
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
 				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
-					ScanInterval: 100 * time.Millisecond,
+					ScanInterval: 2 * time.Second,
 				},
 			},
 			func(dst string, opt *ClientOption) conn {
@@ -4690,16 +4752,17 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 
 						// call in refreshment scan
 						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
-							close(cli.stopCh) // stop refreshment
 							return slotsRespWithChangedRoll
 						}
 
-						// call in _refresh
-						if atomic.CompareAndSwapInt64(&callCount, 2, 3) {
+						// call in _refresh or refreshment scan
+						if atomic.CompareAndSwapInt64(&callCount, 5, 6) {
 							close(refreshWaitCh)
 							return slotsRespWithChangedRoll
 						}
 
+						// call in _refresh or refreshment scan
+						atomic.AddInt64(&callCount, 1)
 						return slotsRespWithChangedRoll
 					},
 				}
@@ -4711,55 +4774,19 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 
 		select {
 		case <-refreshWaitCh:
-		case <-time.After(190 * time.Second):
-			t.Fatal("timeout waiting for refresh")
-		}
-	})
+			cli.Close()
 
-	t.Run("failed to get cluster topology", func(t *testing.T) {
-		var callCount int64
-		var cli *clusterClient
-		var err error
-		refreshWaitCh := make(chan struct{})
-		cli, err = newClusterClient(
-			&ClientOption{
-				InitAddress: []string{"127.0.0.1:0"},
-				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
-					ScanInterval: 100 * time.Millisecond,
-				},
-			},
-			func(dst string, opt *ClientOption) conn {
-				return &mockConn{
-					DoFn: func(cmd Completed) RedisResult {
-						// initial call
-						if atomic.CompareAndSwapInt64(&callCount, 0, 1) {
-							return singleSlotResp
-						}
-
-						// call in refreshment scan
-						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
-							close(cli.stopCh) // stop refreshment
-							return newErrResult(errors.New("failed to get cluster topology"))
-						}
-
-						// call in _refresh
-						if atomic.CompareAndSwapInt64(&callCount, 2, 3) {
-							close(refreshWaitCh)
-							return slotsMultiRespWithoutReplicas
-						}
-
-						return slotsMultiRespWithoutReplicas
-					},
-				}
-			},
-		)
-		if err != nil {
-			t.Fatalf("unexpected err %v", err)
-		}
-
-		select {
-		case <-refreshWaitCh:
-		case <-time.After(5 * time.Second):
+			conns := cli.conns
+			if len(conns) != 2 {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+			if conn, ok := conns["127.0.0.1:0"]; !ok || !conn.replica {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+			if conn, ok := conns["127.0.1.1:1"]; !ok || conn.replica {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+		case <-time.After(30 * time.Second):
 			t.Fatal("timeout waiting for refresh")
 		}
 	})
