@@ -4527,9 +4527,10 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 
 	t.Run("nothing changed", func(t *testing.T) {
 		var callCount int64
-		var client *clusterClient
+		var cli *clusterClient
+		var err error
 		refreshWaitCh := make(chan struct{})
-		client, err := newClusterClient(
+		cli, err = newClusterClient(
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
 				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
@@ -4546,7 +4547,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 
 						// call in refreshment scan
 						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
-							close(client.stopCh) // stop refreshment
+							close(cli.stopCh) // stop refreshment
 							go func() {
 								time.Sleep(100 * time.Millisecond) // verify that refreshment is stopped
 								close(refreshWaitCh)
@@ -4573,9 +4574,10 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 
 	t.Run("replicas are changed", func(t *testing.T) {
 		var callCount int64
-		var client *clusterClient
+		var cli *clusterClient
+		var err error
 		refreshWaitCh := make(chan struct{})
-		client, err := newClusterClient(
+		cli, err = newClusterClient(
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
 				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
@@ -4592,7 +4594,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 
 						// call in refreshment scan
 						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
-							close(client.stopCh) // stop refreshment
+							close(cli.stopCh) // stop refreshment
 							return slotsResp
 						}
 
@@ -4620,9 +4622,10 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 
 	t.Run("shards are changed", func(t *testing.T) {
 		var callCount int64
-		var client *clusterClient
+		var cli *clusterClient
+		var err error
 		refreshWaitCh := make(chan struct{})
-		client, err := newClusterClient(
+		cli, err = newClusterClient(
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
 				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
@@ -4639,7 +4642,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 
 						// call in refreshment scan
 						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
-							close(client.stopCh) // stop refreshment
+							close(cli.stopCh) // stop refreshment
 							return slotsMultiRespWithoutReplicas
 						}
 
@@ -4667,9 +4670,10 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 
 	t.Run("node roll are changed", func(t *testing.T) {
 		var callCount int64
-		var client *clusterClient
+		var cli *clusterClient
+		var err error
 		refreshWaitCh := make(chan struct{})
-		client, err := newClusterClient(
+		cli, err = newClusterClient(
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
 				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
@@ -4686,7 +4690,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 
 						// call in refreshment scan
 						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
-							close(client.stopCh) // stop refreshment
+							close(cli.stopCh) // stop refreshment
 							return slotsRespWithChangedRoll
 						}
 
@@ -4714,9 +4718,10 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 
 	t.Run("failed to get cluster topology", func(t *testing.T) {
 		var callCount int64
-		var client *clusterClient
+		var cli *clusterClient
+		var err error
 		refreshWaitCh := make(chan struct{})
-		client, err := newClusterClient(
+		cli, err = newClusterClient(
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
 				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
@@ -4733,7 +4738,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 
 						// call in refreshment scan
 						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
-							close(client.stopCh) // stop refreshment
+							close(cli.stopCh) // stop refreshment
 							return newErrResult(errors.New("failed to get cluster topology"))
 						}
 
