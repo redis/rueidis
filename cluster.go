@@ -389,42 +389,46 @@ func (c *clusterClient) runClusterTopologyRefreshment() {
 		case <-c.stopCh:
 			return
 		case <-ticker.C:
-			result, err := c.getClusterTopology()
-			if err != nil {
-				c.lazyRefresh()
-				continue
-			}
+			c.conditionalRefresh()
+		}
+	}
+}
 
-			groups := result.parse(c.opt.TLSConfig != nil)
+func (c *clusterClient) conditionalRefresh() {
+	result, err := c.getClusterTopology()
+	if err != nil {
+		c.lazyRefresh()
+		return
+	}
 
-			conns := c.newConns(groups)
+	groups := result.parse(c.opt.TLSConfig != nil)
 
-			isChanged := false
-			c.mu.RLock()
-			// check if the new topology is different from the current one
-			for addr, cc := range conns {
-				old, ok := c.conns[addr]
-				if !ok || old.replica != cc.replica {
-					isChanged = true
-					break
-				}
-			}
+	conns := c.newConns(groups)
 
-			// check if the current topology is different from the new one
-			if !isChanged {
-				for addr := range c.conns {
-					if _, ok := conns[addr]; !ok {
-						isChanged = true
-						break
-					}
-				}
-			}
-			c.mu.RUnlock()
+	isChanged := false
+	c.mu.RLock()
+	// check if the new topology is different from the current one
+	for addr, cc := range conns {
+		old, ok := c.conns[addr]
+		if !ok || old.replica != cc.replica {
+			isChanged = true
+			break
+		}
+	}
 
-			if isChanged {
-				c.lazyRefresh()
+	// check if the current topology is different from the new one
+	if !isChanged {
+		for addr := range c.conns {
+			if _, ok := conns[addr]; !ok {
+				isChanged = true
+				break
 			}
 		}
+	}
+	c.mu.RUnlock()
+
+	if isChanged {
+		c.lazyRefresh()
 	}
 }
 
