@@ -1192,9 +1192,9 @@ func TestClusterClient(t *testing.T) {
 		client.Close()
 		<-called
 		select {
-		case _, ok := <-client.refreshStop:
+		case _, ok := <-client.stopCh:
 			if ok {
-				t.Fatalf("refreshStop should be closed")
+				t.Fatalf("stopCh should be closed")
 			}
 		}
 	})
@@ -4546,7 +4546,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 
 						// call in refreshment scan
 						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
-							close(client.refreshStop) // stop refreshment
+							close(client.stopCh) // stop refreshment
 							go func() {
 								time.Sleep(100 * time.Millisecond) // verify that refreshment is stopped
 								close(refreshWaitCh)
@@ -4592,7 +4592,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 
 						// call in refreshment scan
 						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
-							close(client.refreshStop) // stop refreshment
+							close(client.stopCh) // stop refreshment
 							return slotsResp
 						}
 
@@ -4639,7 +4639,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 
 						// call in refreshment scan
 						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
-							close(client.refreshStop) // stop refreshment
+							close(client.stopCh) // stop refreshment
 							return slotsMultiRespWithoutReplicas
 						}
 
@@ -4686,7 +4686,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 
 						// call in refreshment scan
 						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
-							close(client.refreshStop) // stop refreshment
+							close(client.stopCh) // stop refreshment
 							return slotsRespWithChangedRoll
 						}
 
@@ -4733,7 +4733,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 
 						// call in refreshment scan
 						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
-							close(client.refreshStop) // stop refreshment
+							close(client.stopCh) // stop refreshment
 							return newErrResult(errors.New("failed to get cluster topology"))
 						}
 

@@ -21,18 +21,18 @@ var ErrReplicaOnlyConflict = errors.New("ReplicaOnly conflicts with SendToReplic
 var ErrInvalidScanInterval = errors.New("scan interval must be greater than or equal to 0")
 
 type clusterClient struct {
-	pslots      [16384]conn
-	rslots      []conn
-	opt         *ClientOption
-	rOpt        *ClientOption
-	conns       map[string]connrole
-	connFn      connFn
-	sc          call
-	mu          sync.RWMutex
-	stop        uint32
-	cmd         Builder
-	retry       bool
-	refreshStop chan struct{}
+	pslots [16384]conn
+	rslots []conn
+	opt    *ClientOption
+	rOpt   *ClientOption
+	conns  map[string]connrole
+	connFn connFn
+	sc     call
+	mu     sync.RWMutex
+	stop   uint32
+	cmd    Builder
+	retry  bool
+	stopCh chan struct{}
 }
 
 // NOTE: connrole and conn must be initialized at the same time
@@ -43,12 +43,12 @@ type connrole struct {
 
 func newClusterClient(opt *ClientOption, connFn connFn) (*clusterClient, error) {
 	client := &clusterClient{
-		cmd:         cmds.NewBuilder(cmds.InitSlot),
-		connFn:      connFn,
-		opt:         opt,
-		conns:       make(map[string]connrole),
-		retry:       !opt.DisableRetry,
-		refreshStop: make(chan struct{}),
+		cmd:    cmds.NewBuilder(cmds.InitSlot),
+		connFn: connFn,
+		opt:    opt,
+		conns:  make(map[string]connrole),
+		retry:  !opt.DisableRetry,
+		stopCh: make(chan struct{}),
 	}
 
 	if opt.ReplicaOnly && opt.SendToReplicas != nil {
@@ -386,7 +386,7 @@ func (c *clusterClient) runClusterTopologyRefreshment() {
 	defer ticker.Stop()
 	for {
 		select {
-		case <-c.refreshStop:
+		case <-c.stopCh:
 			return
 		case <-ticker.C:
 			result, err := c.getClusterTopology()
@@ -1088,9 +1088,10 @@ func (c *clusterClient) Nodes() map[string]Client {
 }
 
 func (c *clusterClient) Close() {
-	close(c.refreshStop)
+	if atomic.CompareAndSwapUint32(&c.stop, 0, 1) {
+		close(c.stopCh)
+	}
 
-	atomic.StoreUint32(&c.stop, 1)
 	c.mu.RLock()
 	for _, cc := range c.conns {
 		go cc.conn.Close()
