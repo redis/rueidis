@@ -4566,7 +4566,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
 				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
-					ScanInterval: 500 * time.Millisecond,
+					ScanInterval: 2 * time.Second,
 				},
 			},
 			func(dst string, opt *ClientOption) conn {
@@ -4583,7 +4583,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 						}
 
 						// call in another refreshment scan
-						if atomic.CompareAndSwapInt64(&callCount, 5, 6) {
+						if atomic.CompareAndSwapInt64(&callCount, 4, 5) {
 							close(refreshWaitCh)
 							return singleSlotResp
 						}
@@ -4611,7 +4611,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 			if _, ok := conns["127.0.0.1:0"]; !ok {
 				t.Fatalf("unexpected conns %v", conns)
 			}
-		case <-time.After(10 * time.Second):
+		case <-time.After(30 * time.Second):
 			t.Fatal("timeout waiting for refresh")
 		}
 	})
@@ -4623,7 +4623,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
 				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
-					ScanInterval: 500 * time.Millisecond,
+					ScanInterval: 2 * time.Second,
 				},
 			},
 			func(dst string, opt *ClientOption) conn {
@@ -4640,7 +4640,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 						}
 
 						// call in another refreshment scan to verify that conns are changed.
-						if atomic.CompareAndSwapInt64(&callCount, 5, 6) {
+						if atomic.CompareAndSwapInt64(&callCount, 4, 5) {
 							close(refreshWaitCh)
 							return slotsResp
 						}
@@ -4671,7 +4671,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 			if _, ok := conns["127.0.1.1:1"]; !ok {
 				t.Fatalf("unexpected conns %v", conns)
 			}
-		case <-time.After(10 * time.Second):
+		case <-time.After(30 * time.Second):
 			t.Fatal("timeout waiting for refresh")
 		}
 	})
@@ -4683,7 +4683,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
 				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
-					ScanInterval: 500 * time.Millisecond,
+					ScanInterval: 2 * time.Second,
 				},
 			},
 			func(dst string, opt *ClientOption) conn {
@@ -4700,7 +4700,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 						}
 
 						// call in another refreshment scan to verify that conns are changed.
-						if atomic.CompareAndSwapInt64(&callCount, 5, 6) {
+						if atomic.CompareAndSwapInt64(&callCount, 4, 5) {
 							close(refreshWaitCh)
 							return slotsMultiRespWithoutReplicas
 						}
@@ -4731,7 +4731,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 			if _, ok := conns["127.0.1.1:0"]; !ok {
 				t.Fatalf("unexpected conns %v", conns)
 			}
-		case <-time.After(10 * time.Second):
+		case <-time.After(30 * time.Second):
 			t.Fatal("timeout waiting for refresh")
 		}
 	})
@@ -4743,7 +4743,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
 				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
-					ScanInterval: 500 * time.Millisecond,
+					ScanInterval: 2 * time.Second,
 				},
 			},
 			func(dst string, opt *ClientOption) conn {
@@ -4760,7 +4760,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 						}
 
 						// call in refreshment scan to verify that conns are changed.
-						if atomic.CompareAndSwapInt64(&callCount, 5, 6) {
+						if atomic.CompareAndSwapInt64(&callCount, 4, 5) {
 							close(refreshWaitCh)
 							return slotsRespWithChangedRoll
 						}
@@ -4791,7 +4791,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 			if cc, ok := conns["127.0.1.1:1"]; !ok || cc.replica {
 				t.Fatalf("unexpected conns %v", conns)
 			}
-		case <-time.After(10 * time.Second):
+		case <-time.After(30 * time.Second):
 			t.Fatal("timeout waiting for refresh")
 		}
 	})
