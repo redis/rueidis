@@ -424,7 +424,7 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn, slot uint16, mode 
 		}
 	}
 	c.mu.Unlock()
-	return p
+	return cc.conn
 }
 
 func (c *clusterClient) B() Builder {
