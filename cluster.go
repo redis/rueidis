@@ -77,9 +77,9 @@ func newClusterClient(opt *ClientOption, connFn connFn) (*clusterClient, error) 
 		return client, err
 	}
 
-	if opt.ClusterTopologyRefreshmentOption.ScanInterval > 0 {
+	if opt.ClusterOption.ScanInterval > 0 {
 		go client.runClusterTopologyRefreshment()
-	} else if opt.ClusterTopologyRefreshmentOption.ScanInterval < 0 {
+	} else if opt.ClusterOption.ScanInterval < 0 {
 		return nil, ErrInvalidScanInterval
 	}
 
@@ -411,7 +411,7 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 }
 
 func (c *clusterClient) runClusterTopologyRefreshment() {
-	ticker := time.NewTicker(c.opt.ClusterTopologyRefreshmentOption.ScanInterval)
+	ticker := time.NewTicker(c.opt.ClusterOption.ScanInterval)
 	defer ticker.Stop()
 	for {
 		select {

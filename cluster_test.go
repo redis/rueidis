@@ -919,7 +919,7 @@ func TestClusterClientInit(t *testing.T) {
 		_, err := newClusterClient(
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
-				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
+				ClusterOption: ClusterOption{
 					ScanInterval: -1 * time.Millisecond,
 				},
 			},
@@ -4530,7 +4530,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 		_, err := newClusterClient(
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
-				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
+				ClusterOption: ClusterOption{
 					ScanInterval: 0,
 				},
 			},
@@ -4565,7 +4565,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 		cli, err := newClusterClient(
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
-				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
+				ClusterOption: ClusterOption{
 					ScanInterval: 2 * time.Second,
 				},
 			},
@@ -4622,7 +4622,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 		cli, err := newClusterClient(
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
-				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
+				ClusterOption: ClusterOption{
 					ScanInterval: 2 * time.Second,
 				},
 			},
@@ -4682,7 +4682,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 		cli, err := newClusterClient(
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
-				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
+				ClusterOption: ClusterOption{
 					ScanInterval: 2 * time.Second,
 				},
 			},
@@ -4742,7 +4742,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 		cli, err := newClusterClient(
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
-				ClusterTopologyRefreshmentOption: ClusterTopologyRefreshmentOption{
+				ClusterOption: ClusterOption{
 					ScanInterval: 2 * time.Second,
 				},
 			},

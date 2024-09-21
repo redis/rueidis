@@ -184,8 +184,8 @@ type ClientOption struct {
 	// even if we're above the configured client eviction threshold.
 	ClientNoEvict bool
 
-	// ClusterTopologyRefreshmentOption is the options for the cluster topology refreshment.
-	ClusterTopologyRefreshmentOption ClusterTopologyRefreshmentOption
+	// ClusterOption is the options for the redis cluster client.
+	ClusterOption ClusterOption
 }
 
 // SentinelOption contains MasterSet,
@@ -204,11 +204,11 @@ type SentinelOption struct {
 	ClientName string
 }
 
-// ClusterTopologyRefreshmentOption is the options for the cluster topology refreshment.
-// Cluster Refresh happens only when the cluster topology is not up-to-date.
-type ClusterTopologyRefreshmentOption struct {
+// ClusterOption is the options for the redis cluster client.
+type ClusterOption struct {
 	// ScanInterval is the interval to scan the cluster topology.
 	// If the value is zero, refreshment will be disabled.
+	// Cluster Refresh happens only when the cluster topology is not up-to-date.
 	ScanInterval time.Duration
 }
 
