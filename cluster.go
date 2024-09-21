@@ -182,23 +182,66 @@ func (c *clusterClient) _refresh() (err error) {
 	pending = nil
 
 	groups := result.parse(c.opt.TLSConfig != nil)
+
+	// we need to check whether the new topology is different from the current one.
+	// so we don't need to early re-create the connections.
 	conns := make(map[string]connrole, len(groups))
 	for master, g := range groups {
-		conns[master] = connrole{conn: c.connFn(master, c.opt), replica: false}
+		conns[master] = connrole{replica: false}
 		for _, addr := range g.nodes[1:] {
 			if c.rOpt != nil {
-				conns[addr] = connrole{conn: c.connFn(addr, c.rOpt), replica: true}
+				conns[addr] = connrole{replica: true}
 			} else {
-				conns[addr] = connrole{conn: c.connFn(addr, c.opt), replica: true}
+				conns[addr] = connrole{replica: true}
 			}
 		}
 	}
 	// make sure InitAddress always be present
 	for _, addr := range c.opt.InitAddress {
 		if _, ok := conns[addr]; !ok {
-			conns[addr] = connrole{
-				conn: c.connFn(addr, c.opt),
+			conns[addr] = connrole{}
+		}
+	}
+
+	isChanged := false
+	c.mu.RLock()
+	// check if the new topology is different from the current one
+	for addr, cc := range conns {
+		old, ok := c.conns[addr]
+		if !ok || old.replica != cc.replica {
+			isChanged = true
+			break
+		}
+	}
+	// check if the current topology is different from the new one
+	if !isChanged {
+		for addr := range c.conns {
+			if _, ok := conns[addr]; !ok {
+				isChanged = true
+				break
 			}
+		}
+	}
+	c.mu.RUnlock()
+
+	if !isChanged {
+		return nil
+	}
+
+	for addr, cc := range conns {
+		if cc.replica {
+			if c.rOpt != nil {
+				cc.conn = c.connFn(addr, c.rOpt)
+			} else {
+				cc.conn = c.connFn(addr, c.opt)
+			}
+		} else {
+			cc.conn = c.connFn(addr, c.opt)
+		}
+
+		conns[addr] = connrole{
+			conn:    cc.conn,
+			replica: cc.replica,
 		}
 	}
 

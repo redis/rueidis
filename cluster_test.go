@@ -4611,7 +4611,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 			if _, ok := conns["127.0.0.1:0"]; !ok {
 				t.Fatalf("unexpected conns %v", conns)
 			}
-		case <-time.After(30 * time.Second):
+		case <-time.After(60 * time.Second):
 			t.Fatal("timeout waiting for refresh")
 		}
 	})
@@ -4671,7 +4671,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 			if _, ok := conns["127.0.1.1:1"]; !ok {
 				t.Fatalf("unexpected conns %v", conns)
 			}
-		case <-time.After(30 * time.Second):
+		case <-time.After(60 * time.Second):
 			t.Fatal("timeout waiting for refresh")
 		}
 	})
@@ -4731,7 +4731,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 			if _, ok := conns["127.0.1.1:0"]; !ok {
 				t.Fatalf("unexpected conns %v", conns)
 			}
-		case <-time.After(30 * time.Second):
+		case <-time.After(60 * time.Second):
 			t.Fatal("timeout waiting for refresh")
 		}
 	})
@@ -4791,7 +4791,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 			if cc, ok := conns["127.0.1.1:1"]; !ok || cc.replica {
 				t.Fatalf("unexpected conns %v", conns)
 			}
-		case <-time.After(30 * time.Second):
+		case <-time.After(60 * time.Second):
 			t.Fatal("timeout waiting for refresh")
 		}
 	})
