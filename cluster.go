@@ -389,7 +389,7 @@ func (c *clusterClient) pick(ctx context.Context, slot uint16, toReplica bool) (
 	return p, nil
 }
 
-func (c *clusterClient) redirectOrNew(addr string, prev conn, slot uint16, mode RedirectMode) (p conn) {
+func (c *clusterClient) redirectOrNew(addr string, prev conn, slot uint16, mode RedirectMode) conn {
 	c.mu.RLock()
 	cc := c.conns[addr]
 	c.mu.RUnlock()
@@ -397,10 +397,10 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn, slot uint16, mode 
 		return cc.conn
 	}
 	c.mu.Lock()
-
 	if cc = c.conns[addr]; cc.conn == nil {
-		p = c.connFn(addr, c.opt)
-		c.conns[addr] = connrole{conn: p, replica: false}
+		p := c.connFn(addr, c.opt)
+		cc = connrole{conn: p, replica: false}
+		c.conns[addr] = cc
 		if mode == RedirectMove {
 			c.pslots[slot] = p
 		}
@@ -412,9 +412,9 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn, slot uint16, mode 
 			time.Sleep(time.Second * 5)
 			prev.Close()
 		}(prev)
-		p = c.connFn(addr, c.opt)
-		c.conns[addr] = connrole{conn: p, replica: cc.replica}
-
+		p := c.connFn(addr, c.opt)
+		cc = connrole{conn: p, replica: cc.replica}
+		c.conns[addr] = cc
 		if mode == RedirectMove {
 			if cc.replica {
 				c.rslots[slot] = p
@@ -424,7 +424,7 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn, slot uint16, mode 
 		}
 	}
 	c.mu.Unlock()
-	return p
+	return cc.conn
 }
 
 func (c *clusterClient) B() Builder {
