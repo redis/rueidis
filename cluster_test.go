@@ -718,7 +718,7 @@ func TestClusterClientInit(t *testing.T) {
 
 			atomic.AddInt64(num, 1)
 
-			if err := client.refresh(context.Background()); err != nil {
+			if err := client.refresh(context.Background(), true); err != nil {
 				t.Fatalf("unexpected err %v", err)
 			}
 

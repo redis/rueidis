@@ -73,7 +73,7 @@ func newClusterClient(opt *ClientOption, connFn connFn) (*clusterClient, error) 
 		return nil, err
 	}
 
-	if err := client.refresh(context.Background()); err != nil {
+	if err := client.refresh(context.Background(), true); err != nil {
 		return client, err
 	}
 
@@ -121,12 +121,16 @@ func (c *clusterClient) init() error {
 	return es[0]
 }
 
-func (c *clusterClient) refresh(ctx context.Context) (err error) {
-	return c.sc.Do(ctx, c._refresh)
+func (c *clusterClient) refresh(ctx context.Context, forceRefresh bool) (err error) {
+	return c.sc.Do(ctx, func() error {
+		return c._refresh(forceRefresh)
+	})
 }
 
 func (c *clusterClient) lazyRefresh() {
-	c.sc.LazyDo(time.Second, c._refresh)
+	c.sc.LazyDo(time.Second, func() error {
+		return c._refresh(false)
+	})
 }
 
 type clusterslots struct {
@@ -152,7 +156,7 @@ func getClusterSlots(c conn, timeout time.Duration) clusterslots {
 	return clusterslots{reply: c.Do(ctx, cmds.ShardsCmd), addr: c.Addr(), ver: v}
 }
 
-func (c *clusterClient) _refresh() (err error) {
+func (c *clusterClient) _refresh(forceRefresh bool) (err error) {
 	c.mu.RLock()
 	results := make(chan clusterslots, len(c.conns))
 	pending := make([]conn, 0, len(c.conns))
@@ -202,55 +206,41 @@ func (c *clusterClient) _refresh() (err error) {
 		}
 	}
 
-	shouldRefresh := false
-	c.mu.RLock()
-	// check if the new topology is different from the current one
-	for addr, cc := range conns {
-		old, ok := c.conns[addr]
-		if !ok || old.replica != cc.replica {
-			shouldRefresh = true
-			break
-		}
-	}
-	// check if the current topology is different from the new one
-	if !shouldRefresh {
-		for addr := range c.conns {
-			if _, ok := conns[addr]; !ok {
-				shouldRefresh = true
-				break
-			}
-		}
-	}
-	// check if cluster client is initialized.
-	if !shouldRefresh {
-		for _, cc := range c.pslots {
-			if cc == nil {
-				shouldRefresh = true
-				break
-			}
-		}
-	}
-	c.mu.RUnlock()
-
-	if !shouldRefresh {
-		return nil
-	}
-
 	var removes []conn
 
-	c.mu.RLock()
-	for addr, cc := range c.conns {
-		fresh, ok := conns[addr]
-		if ok && (cc.replica == fresh.replica || c.rOpt == nil) {
-			conns[addr] = connrole{
-				conn:    cc.conn,
-				replica: fresh.replica,
+	if !forceRefresh {
+		shouldRefresh := false
+
+		c.mu.RLock()
+		// check if the current topology is different from the new one
+		for addr, cc := range c.conns {
+			fresh, ok := conns[addr]
+			if ok && (cc.replica == fresh.replica || c.rOpt == nil) {
+				conns[addr] = connrole{
+					conn:    cc.conn,
+					replica: fresh.replica,
+				}
+			} else {
+				shouldRefresh = true
+				removes = append(removes, cc.conn)
 			}
-		} else {
-			removes = append(removes, cc.conn)
+		}
+		// check if the new topology is different from the current one
+		if !shouldRefresh {
+			for addr, cc := range conns {
+				old, ok := c.conns[addr]
+				if !ok || old.replica != cc.replica {
+					shouldRefresh = true
+					break
+				}
+			}
+		}
+		c.mu.RUnlock()
+
+		if !shouldRefresh {
+			return nil
 		}
 	}
-	c.mu.RUnlock()
 
 	pslots := [16384]conn{}
 	var rslots []conn
@@ -435,7 +425,7 @@ func (c *clusterClient) _pick(slot uint16, toReplica bool) (p conn) {
 
 func (c *clusterClient) pick(ctx context.Context, slot uint16, toReplica bool) (p conn, err error) {
 	if p = c._pick(slot, toReplica); p == nil {
-		if err := c.refresh(ctx); err != nil {
+		if err := c.refresh(ctx, false); err != nil {
 			return nil, err
 		}
 		if p = c._pick(slot, toReplica); p == nil {
@@ -617,7 +607,7 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, last 
 func (c *clusterClient) pickMulti(ctx context.Context, multi []Completed) (*connretry, uint16, bool, error) {
 	conns, slot, toReplica := c._pickMulti(multi)
 	if conns == nil {
-		if err := c.refresh(ctx); err != nil {
+		if err := c.refresh(ctx, false); err != nil {
 			return nil, 0, false, err
 		}
 		if conns, slot, toReplica = c._pickMulti(multi); conns == nil {
@@ -897,7 +887,7 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 func (c *clusterClient) pickMultiCache(ctx context.Context, multi []CacheableTTL) (*connretrycache, error) {
 	conns := c._pickMultiCache(multi)
 	if conns == nil {
-		if err := c.refresh(ctx); err != nil {
+		if err := c.refresh(ctx, false); err != nil {
 			return nil, err
 		}
 		if conns = c._pickMultiCache(multi); conns == nil {
