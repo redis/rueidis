@@ -183,6 +183,9 @@ type ClientOption struct {
 	// the current connection will be excluded from the client eviction process
 	// even if we're above the configured client eviction threshold.
 	ClientNoEvict bool
+
+	// ClusterOption is the options for the redis cluster client.
+	ClusterOption ClusterOption
 }
 
 // SentinelOption contains MasterSet,
@@ -199,6 +202,14 @@ type SentinelOption struct {
 	Username   string
 	Password   string
 	ClientName string
+}
+
+// ClusterOption is the options for the redis cluster client.
+type ClusterOption struct {
+	// ShardsRefreshInterval is the interval to scan the cluster topology.
+	// If the value is zero, refreshment will be disabled.
+	// Cluster topology cache refresh happens always in the background after successful scan.
+	ShardsRefreshInterval time.Duration
 }
 
 // Client is the redis client interface for both single redis instance and redis cluster. It should be created from the NewClient()

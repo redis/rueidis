@@ -33,6 +33,23 @@ var slotsResp = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 	}},
 }}, nil)
 
+var slotsRespWithChangedRoll = newResult(RedisMessage{typ: '*', values: []RedisMessage{
+	{typ: '*', values: []RedisMessage{
+		{typ: ':', integer: 0},
+		{typ: ':', integer: 16383},
+		{typ: '*', values: []RedisMessage{ // master
+			{typ: '+', string: "127.0.1.1"},
+			{typ: ':', integer: 1},
+			{typ: '+', string: ""},
+		}},
+		{typ: '*', values: []RedisMessage{ // replica
+			{typ: '+', string: "127.0.0.1"},
+			{typ: ':', integer: 0},
+			{typ: '+', string: ""},
+		}},
+	}},
+}}, nil)
+
 var slotsMultiResp = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 	{typ: '*', values: []RedisMessage{
 		{typ: ':', integer: 0},
@@ -897,6 +914,27 @@ func TestClusterClientInit(t *testing.T) {
 			t.Fatalf("unexpected node assigned to rslot 16383")
 		}
 	})
+
+	t.Run("Negative ShardRefreshInterval", func(t *testing.T) {
+		_, err := newClusterClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				ClusterOption: ClusterOption{
+					ShardsRefreshInterval: -1 * time.Millisecond,
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						return singleSlotResp
+					},
+				}
+			},
+		)
+		if !errors.Is(err, ErrInvalidShardsRefreshInterval) {
+			t.Fatalf("unexpected err %v", err)
+		}
+	})
 }
 
 //gocyclo:ignore
@@ -1153,6 +1191,12 @@ func TestClusterClient(t *testing.T) {
 		}
 		client.Close()
 		<-called
+		select {
+		case _, ok := <-client.stopCh:
+			if ok {
+				t.Fatalf("stopCh should be closed")
+			}
+		}
 	})
 
 	t.Run("Dedicated Err", func(t *testing.T) {
@@ -4476,4 +4520,279 @@ func TestConnectToNonAvailableCluster(t *testing.T) {
 		}()
 	}
 	wg.Wait()
+}
+
+func TestClusterTopologyRefreshment(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+
+	t.Run("no refreshment", func(t *testing.T) {
+		var callCount int64
+		_, err := newClusterClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				ClusterOption: ClusterOption{
+					ShardsRefreshInterval: 0,
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						// initial call
+						if atomic.CompareAndSwapInt64(&callCount, 0, 1) {
+							return singleSlotResp
+						}
+
+						t.Fatalf("unexpected call")
+						return singleSlotResp
+					},
+				}
+			},
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		time.Sleep(3 * time.Second) // verify that no refreshment is called
+
+		if atomic.LoadInt64(&callCount) != 1 {
+			t.Fatalf("unexpected call count %d", callCount)
+		}
+	})
+
+	t.Run("nothing changed", func(t *testing.T) {
+		var callCount int64
+		refreshWaitCh := make(chan struct{})
+		cli, err := newClusterClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				ClusterOption: ClusterOption{
+					ShardsRefreshInterval: 2 * time.Second,
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						// initial call
+						if atomic.CompareAndSwapInt64(&callCount, 0, 1) {
+							return singleSlotResp
+						}
+
+						// call in refreshment scan
+						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
+							return singleSlotResp
+						}
+
+						// call in another refreshment scan
+						if atomic.CompareAndSwapInt64(&callCount, 4, 5) {
+							close(refreshWaitCh)
+							return singleSlotResp
+						}
+
+						atomic.AddInt64(&callCount, 1)
+						return singleSlotResp
+					},
+				}
+			},
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		select {
+		case <-refreshWaitCh:
+			cli.Close()
+
+			cli.mu.Lock()
+			conns := cli.conns
+			cli.mu.Unlock()
+			if len(conns) != 1 {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+			if _, ok := conns["127.0.0.1:0"]; !ok {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+		case <-time.After(60 * time.Second):
+			t.Fatal("timeout waiting for refresh")
+		}
+	})
+
+	t.Run("replicas are changed", func(t *testing.T) {
+		var callCount int64
+		refreshWaitCh := make(chan struct{})
+		cli, err := newClusterClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				ClusterOption: ClusterOption{
+					ShardsRefreshInterval: 2 * time.Second,
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						// initial call
+						if atomic.CompareAndSwapInt64(&callCount, 0, 1) {
+							return singleSlotResp
+						}
+
+						// call in refreshment scan
+						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
+							return slotsResp
+						}
+
+						// call in another refreshment scan to verify that conns are changed.
+						if atomic.CompareAndSwapInt64(&callCount, 4, 5) {
+							close(refreshWaitCh)
+							return slotsResp
+						}
+
+						atomic.AddInt64(&callCount, 1)
+						return slotsResp
+					},
+				}
+			},
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		select {
+		case <-refreshWaitCh:
+			cli.Close()
+
+			cli.mu.Lock()
+			conns := cli.conns
+			cli.mu.Unlock()
+			if len(conns) != 2 {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+			if _, ok := conns["127.0.0.1:0"]; !ok {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+			if _, ok := conns["127.0.1.1:1"]; !ok {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+		case <-time.After(60 * time.Second):
+			t.Fatal("timeout waiting for refresh")
+		}
+	})
+
+	t.Run("shards are changed", func(t *testing.T) {
+		var callCount int64
+		refreshWaitCh := make(chan struct{})
+		cli, err := newClusterClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				ClusterOption: ClusterOption{
+					ShardsRefreshInterval: 2 * time.Second,
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						// initial call
+						if atomic.CompareAndSwapInt64(&callCount, 0, 1) {
+							return singleSlotResp
+						}
+
+						// call in refreshment scan
+						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
+							return slotsMultiRespWithoutReplicas
+						}
+
+						// call in another refreshment scan to verify that conns are changed.
+						if atomic.CompareAndSwapInt64(&callCount, 4, 5) {
+							close(refreshWaitCh)
+							return slotsMultiRespWithoutReplicas
+						}
+
+						atomic.AddInt64(&callCount, 1)
+						return slotsMultiRespWithoutReplicas
+					},
+				}
+			},
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		select {
+		case <-refreshWaitCh:
+			cli.Close()
+
+			cli.mu.Lock()
+			conns := cli.conns
+			cli.mu.Unlock()
+			if len(conns) != 2 {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+			if _, ok := conns["127.0.0.1:0"]; !ok {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+			if _, ok := conns["127.0.1.1:0"]; !ok {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+		case <-time.After(60 * time.Second):
+			t.Fatal("timeout waiting for refresh")
+		}
+	})
+
+	t.Run("node roll are changed", func(t *testing.T) {
+		var callCount int64
+		refreshWaitCh := make(chan struct{})
+		cli, err := newClusterClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				ClusterOption: ClusterOption{
+					ShardsRefreshInterval: 2 * time.Second,
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					DoFn: func(cmd Completed) RedisResult {
+						// initial call
+						if atomic.CompareAndSwapInt64(&callCount, 0, 1) {
+							return slotsResp
+						}
+
+						// call in refreshment scan
+						if atomic.CompareAndSwapInt64(&callCount, 1, 2) {
+							return slotsRespWithChangedRoll
+						}
+
+						// call in refreshment scan to verify that conns are changed.
+						if atomic.CompareAndSwapInt64(&callCount, 4, 5) {
+							close(refreshWaitCh)
+							return slotsRespWithChangedRoll
+						}
+
+						atomic.AddInt64(&callCount, 1)
+						return slotsRespWithChangedRoll
+					},
+				}
+			},
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		select {
+		case <-refreshWaitCh:
+			cli.Close()
+
+			cli.mu.Lock()
+			conns := cli.conns
+			cli.mu.Unlock()
+			if len(conns) != 2 {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+			if cc, ok := conns["127.0.0.1:0"]; !ok || !cc.replica {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+			if cc, ok := conns["127.0.1.1:1"]; !ok || cc.replica {
+				t.Fatalf("unexpected conns %v", conns)
+			}
+		case <-time.After(60 * time.Second):
+			t.Fatal("timeout waiting for refresh")
+		}
+	})
 }

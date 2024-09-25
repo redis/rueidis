@@ -18,6 +18,7 @@ import (
 // ErrNoSlot indicates that there is no redis node owns the key slot.
 var ErrNoSlot = errors.New("the slot has no redis node")
 var ErrReplicaOnlyConflict = errors.New("ReplicaOnly conflicts with SendToReplicas option")
+var ErrInvalidShardsRefreshInterval = errors.New("ShardsRefreshInterval must be greater than or equal to 0")
 
 type clusterClient struct {
 	pslots [16384]conn
@@ -31,6 +32,7 @@ type clusterClient struct {
 	stop   uint32
 	cmd    Builder
 	retry  bool
+	stopCh chan struct{}
 }
 
 // NOTE: connrole and conn must be initialized at the same time
@@ -46,6 +48,7 @@ func newClusterClient(opt *ClientOption, connFn connFn) (*clusterClient, error) 
 		opt:    opt,
 		conns:  make(map[string]connrole),
 		retry:  !opt.DisableRetry,
+		stopCh: make(chan struct{}),
 	}
 
 	if opt.ReplicaOnly && opt.SendToReplicas != nil {
@@ -72,6 +75,12 @@ func newClusterClient(opt *ClientOption, connFn connFn) (*clusterClient, error) 
 
 	if err := client.refresh(context.Background()); err != nil {
 		return client, err
+	}
+
+	if opt.ClusterOption.ShardsRefreshInterval > 0 {
+		go client.runClusterTopologyRefreshment()
+	} else if opt.ClusterOption.ShardsRefreshInterval < 0 {
+		return nil, ErrInvalidShardsRefreshInterval
 	}
 
 	return client, nil
@@ -356,6 +365,19 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 		}
 	}
 	return groups
+}
+
+func (c *clusterClient) runClusterTopologyRefreshment() {
+	ticker := time.NewTicker(c.opt.ClusterOption.ShardsRefreshInterval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-c.stopCh:
+			return
+		case <-ticker.C:
+			c.lazyRefresh()
+		}
+	}
 }
 
 func (c *clusterClient) _pick(slot uint16, toReplica bool) (p conn) {
@@ -1018,7 +1040,10 @@ func (c *clusterClient) Nodes() map[string]Client {
 }
 
 func (c *clusterClient) Close() {
-	atomic.StoreUint32(&c.stop, 1)
+	if atomic.CompareAndSwapUint32(&c.stop, 0, 1) {
+		close(c.stopCh)
+	}
+
 	c.mu.RLock()
 	for _, cc := range c.conns {
 		go cc.conn.Close()
