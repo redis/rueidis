@@ -208,7 +208,7 @@ type SentinelOption struct {
 type ClusterOption struct {
 	// ScanInterval is the interval to scan the cluster topology.
 	// If the value is zero, refreshment will be disabled.
-	// Cluster Refresh happens only when the cluster topology is not up-to-date.
+	// Cluster topology cache refresh happens always in the background after successful scan.
 	ScanInterval time.Duration
 }
 
