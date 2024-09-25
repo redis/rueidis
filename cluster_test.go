@@ -915,12 +915,12 @@ func TestClusterClientInit(t *testing.T) {
 		}
 	})
 
-	t.Run("Negative Cluster Topology Scan Interval", func(t *testing.T) {
+	t.Run("Negative ShardRefreshInterval", func(t *testing.T) {
 		_, err := newClusterClient(
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
 				ClusterOption: ClusterOption{
-					ScanInterval: -1 * time.Millisecond,
+					ShardsRefreshInterval: -1 * time.Millisecond,
 				},
 			},
 			func(dst string, opt *ClientOption) conn {
@@ -931,7 +931,7 @@ func TestClusterClientInit(t *testing.T) {
 				}
 			},
 		)
-		if !errors.Is(err, ErrInvalidScanInterval) {
+		if !errors.Is(err, ErrInvalidShardsRefreshInterval) {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
@@ -4531,7 +4531,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
 				ClusterOption: ClusterOption{
-					ScanInterval: 0,
+					ShardsRefreshInterval: 0,
 				},
 			},
 			func(dst string, opt *ClientOption) conn {
@@ -4566,7 +4566,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
 				ClusterOption: ClusterOption{
-					ScanInterval: 2 * time.Second,
+					ShardsRefreshInterval: 2 * time.Second,
 				},
 			},
 			func(dst string, opt *ClientOption) conn {
@@ -4623,7 +4623,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
 				ClusterOption: ClusterOption{
-					ScanInterval: 2 * time.Second,
+					ShardsRefreshInterval: 2 * time.Second,
 				},
 			},
 			func(dst string, opt *ClientOption) conn {
@@ -4683,7 +4683,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
 				ClusterOption: ClusterOption{
-					ScanInterval: 2 * time.Second,
+					ShardsRefreshInterval: 2 * time.Second,
 				},
 			},
 			func(dst string, opt *ClientOption) conn {
@@ -4743,7 +4743,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
 				ClusterOption: ClusterOption{
-					ScanInterval: 2 * time.Second,
+					ShardsRefreshInterval: 2 * time.Second,
 				},
 			},
 			func(dst string, opt *ClientOption) conn {

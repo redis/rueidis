@@ -206,10 +206,10 @@ type SentinelOption struct {
 
 // ClusterOption is the options for the redis cluster client.
 type ClusterOption struct {
-	// ScanInterval is the interval to scan the cluster topology.
+	// ShardsRefreshInterval is the interval to scan the cluster topology.
 	// If the value is zero, refreshment will be disabled.
 	// Cluster topology cache refresh happens always in the background after successful scan.
-	ScanInterval time.Duration
+	ShardsRefreshInterval time.Duration
 }
 
 // Client is the redis client interface for both single redis instance and redis cluster. It should be created from the NewClient()

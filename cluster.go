@@ -18,7 +18,7 @@ import (
 // ErrNoSlot indicates that there is no redis node owns the key slot.
 var ErrNoSlot = errors.New("the slot has no redis node")
 var ErrReplicaOnlyConflict = errors.New("ReplicaOnly conflicts with SendToReplicas option")
-var ErrInvalidScanInterval = errors.New("scan interval must be greater than or equal to 0")
+var ErrInvalidShardsRefreshInterval = errors.New("ShardsRefreshInterval must be greater than or equal to 0")
 
 type clusterClient struct {
 	pslots [16384]conn
@@ -77,10 +77,10 @@ func newClusterClient(opt *ClientOption, connFn connFn) (*clusterClient, error) 
 		return client, err
 	}
 
-	if opt.ClusterOption.ScanInterval > 0 {
+	if opt.ClusterOption.ShardsRefreshInterval > 0 {
 		go client.runClusterTopologyRefreshment()
-	} else if opt.ClusterOption.ScanInterval < 0 {
-		return nil, ErrInvalidScanInterval
+	} else if opt.ClusterOption.ShardsRefreshInterval < 0 {
+		return nil, ErrInvalidShardsRefreshInterval
 	}
 
 	return client, nil
@@ -368,7 +368,7 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 }
 
 func (c *clusterClient) runClusterTopologyRefreshment() {
-	ticker := time.NewTicker(c.opt.ClusterOption.ScanInterval)
+	ticker := time.NewTicker(c.opt.ClusterOption.ShardsRefreshInterval)
 	defer ticker.Stop()
 	for {
 		select {
