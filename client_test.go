@@ -185,18 +185,20 @@ func (m *mockConn) Addr() string {
 
 func TestNewSingleClientNoNode(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
-	if _, err := newSingleClient(&ClientOption{}, nil, func(dst string, opt *ClientOption) conn {
-		return nil
-	}); err != ErrNoAddr {
+	if _, err := newSingleClient(
+		&ClientOption{}, nil, func(dst string, opt *ClientOption) conn {
+			return nil
+		}, newRetryer(defaultRetryDelay),
+	); err != ErrNoAddr {
 		t.Fatalf("unexpected err %v", err)
 	}
 }
 
 func TestNewSingleClientReplicaOnlyNotSupported(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
-	if _, err := newSingleClient(&ClientOption{ReplicaOnly: true, InitAddress: []string{"localhost"}}, nil, func(dst string, opt *ClientOption) conn {
-		return nil
-	}); err != ErrReplicaOnlyNotSupported {
+	if _, err := newSingleClient(
+		&ClientOption{ReplicaOnly: true, InitAddress: []string{"localhost"}}, nil, func(dst string, opt *ClientOption) conn { return nil }, newRetryer(defaultRetryDelay),
+	); err != ErrReplicaOnlyNotSupported {
 		t.Fatalf("unexpected err %v", err)
 	}
 }
@@ -204,9 +206,9 @@ func TestNewSingleClientReplicaOnlyNotSupported(t *testing.T) {
 func TestNewSingleClientError(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	v := errors.New("dail err")
-	if _, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, nil, func(dst string, opt *ClientOption) conn {
-		return &mockConn{DialFn: func() error { return v }}
-	}); err != v {
+	if _, err := newSingleClient(
+		&ClientOption{InitAddress: []string{""}}, nil, func(dst string, opt *ClientOption) conn { return &mockConn{DialFn: func() error { return v }} }, newRetryer(defaultRetryDelay),
+	); err != v {
 		t.Fatalf("unexpected err %v", err)
 	}
 }
@@ -215,9 +217,14 @@ func TestNewSingleClientOverride(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	m1 := &mockConn{}
 	var m2 conn
-	if _, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m1, func(dst string, opt *ClientOption) conn {
-		return &mockConn{OverrideFn: func(c conn) { m2 = c }}
-	}); err != nil {
+	if _, err := newSingleClient(
+		&ClientOption{InitAddress: []string{""}},
+		m1,
+		func(dst string, opt *ClientOption) conn {
+			return &mockConn{OverrideFn: func(c conn) { m2 = c }}
+		},
+		newRetryer(defaultRetryDelay),
+	); err != nil {
 		t.Fatalf("unexpected err %v", err)
 	}
 	if m2.(*mockConn) != m1 {
@@ -231,9 +238,12 @@ func TestSingleClient(t *testing.T) {
 	m := &mockConn{
 		AddrFn: func() string { return "myaddr" },
 	}
-	client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
-		return m
-	})
+	client, err := newSingleClient(
+		&ClientOption{InitAddress: []string{""}},
+		m,
+		func(dst string, opt *ClientOption) conn { return m },
+		newRetryer(defaultRetryDelay),
+	)
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
 	}
@@ -594,9 +604,12 @@ func TestSingleClient(t *testing.T) {
 func TestSingleClientRetry(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	SetupClientRetry(t, func(m *mockConn) Client {
-		c, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		c, err := newSingleClient(
+			&ClientOption{InitAddress: []string{""}},
+			m,
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelay),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -662,6 +675,38 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		}
 	})
 
+	t.Run("Delegate Do ReadOnly Retry - abort waiting", func(t *testing.T) {
+		c, m := setup()
+		if cli, ok := c.(*sentinelClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, context.Canceled
+				},
+			}
+		}
+		if cli, ok := c.(*clusterClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, context.Canceled
+				},
+			}
+		}
+		if cli, ok := c.(*singleClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, context.Canceled
+				},
+			}
+		}
+		m.DoFn = makeDoFn(
+			newErrResult(ErrClosing),
+			newResult(RedisMessage{typ: '+', string: "Do"}, nil),
+		)
+		if v, err := c.Do(context.Background(), c.B().Get().Key("Do").Build()).ToString(); !errors.Is(err, context.Canceled) {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
 	t.Run("Delegate Do ReadOnly NoRetry - closed", func(t *testing.T) {
 		c, m := setup()
 		m.DoFn = makeDoFn(newErrResult(ErrClosing))
@@ -677,6 +722,38 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 		if v, err := c.Do(ctx, c.B().Get().Key("Do").Build()).ToString(); err != ErrClosing {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate Do ReadOnly NoRetry - always not retryable", func(t *testing.T) {
+		c, m := setup()
+		if cli, ok := c.(*sentinelClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, nil
+				},
+			}
+		}
+		if cli, ok := c.(*clusterClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, nil
+				},
+			}
+		}
+		if cli, ok := c.(*singleClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, nil
+				},
+			}
+		}
+		m.DoFn = makeDoFn(
+			newErrResult(ErrClosing),
+			newResult(RedisMessage{typ: '+', string: "Do"}, nil),
+		)
+		if v, err := c.Do(context.Background(), c.B().Get().Key("Do").Build()).ToString(); !errors.Is(err, ErrClosing) {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
 	})
@@ -700,6 +777,38 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		}
 	})
 
+	t.Run("Delegate DoMulti ReadOnly Retry - abort waiting", func(t *testing.T) {
+		c, m := setup()
+		if cli, ok := c.(*sentinelClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, context.Canceled
+				},
+			}
+		}
+		if cli, ok := c.(*clusterClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, context.Canceled
+				},
+			}
+		}
+		if cli, ok := c.(*singleClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, context.Canceled
+				},
+			}
+		}
+		m.DoMultiFn = makeDoMultiFn(
+			[]RedisResult{newErrResult(ErrClosing)},
+			[]RedisResult{newResult(RedisMessage{typ: '+', string: "Do"}, nil)},
+		)
+		if v, err := c.DoMulti(context.Background(), c.B().Get().Key("Do").Build())[0].ToString(); !errors.Is(err, context.Canceled) {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
 	t.Run("Delegate DoMulti ReadOnly NoRetry - closed", func(t *testing.T) {
 		c, m := setup()
 		m.DoMultiFn = makeDoMultiFn([]RedisResult{newErrResult(ErrClosing)})
@@ -715,6 +824,38 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 		if v, err := c.DoMulti(ctx, c.B().Get().Key("Do").Build())[0].ToString(); err != ErrClosing {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoMulti ReadOnly NoRetry - always not retryable", func(t *testing.T) {
+		c, m := setup()
+		if cli, ok := c.(*sentinelClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, nil
+				},
+			}
+		}
+		if cli, ok := c.(*clusterClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, nil
+				},
+			}
+		}
+		if cli, ok := c.(*singleClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, nil
+				},
+			}
+		}
+		m.DoMultiFn = makeDoMultiFn(
+			[]RedisResult{newErrResult(ErrClosing)},
+			[]RedisResult{newResult(RedisMessage{typ: '+', string: "Do"}, nil)},
+		)
+		if v, err := c.DoMulti(context.Background(), c.B().Get().Key("Do").Build())[0].ToString(); !errors.Is(err, ErrClosing) {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
 	})
@@ -738,6 +879,38 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		}
 	})
 
+	t.Run("Delegate DoCache Retry - abort waiting", func(t *testing.T) {
+		c, m := setup()
+		if cli, ok := c.(*sentinelClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, context.Canceled
+				},
+			}
+		}
+		if cli, ok := c.(*clusterClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, context.Canceled
+				},
+			}
+		}
+		if cli, ok := c.(*singleClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, context.Canceled
+				},
+			}
+		}
+		m.DoCacheFn = makeDoCacheFn(
+			newErrResult(ErrClosing),
+			newResult(RedisMessage{typ: '+', string: "Do"}, nil),
+		)
+		if v, err := c.DoCache(context.Background(), c.B().Get().Key("Do").Cache(), 0).ToString(); !errors.Is(err, context.Canceled) {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
 	t.Run("Delegate DoCache NoRetry - closed", func(t *testing.T) {
 		c, m := setup()
 		m.DoCacheFn = makeDoCacheFn(newErrResult(ErrClosing))
@@ -757,6 +930,38 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		}
 	})
 
+	t.Run("Delegate DoCache ReadOnly NoRetry - always not retryable", func(t *testing.T) {
+		c, m := setup()
+		if cli, ok := c.(*sentinelClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, nil
+				},
+			}
+		}
+		if cli, ok := c.(*clusterClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, nil
+				},
+			}
+		}
+		if cli, ok := c.(*singleClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, nil
+				},
+			}
+		}
+		m.DoCacheFn = makeDoCacheFn(
+			newErrResult(ErrClosing),
+			newResult(RedisMessage{typ: '+', string: "Do"}, nil),
+		)
+		if v, err := c.DoCache(context.Background(), c.B().Get().Key("Do").Cache(), 0).ToString(); !errors.Is(err, ErrClosing) {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
 	t.Run("Delegate DoMultiCache Retry", func(t *testing.T) {
 		c, m := setup()
 		m.DoMultiCacheFn = makeDoMultiCacheFn(
@@ -764,6 +969,38 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 			[]RedisResult{newResult(RedisMessage{typ: '+', string: "Do"}, nil)},
 		)
 		if v, err := c.DoMultiCache(context.Background(), CT(c.B().Get().Key("Do").Cache(), 0))[0].ToString(); err != nil || v != "Do" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoMultiCache Retry - abort waiting", func(t *testing.T) {
+		c, m := setup()
+		if cli, ok := c.(*sentinelClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, context.Canceled
+				},
+			}
+		}
+		if cli, ok := c.(*clusterClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, context.Canceled
+				},
+			}
+		}
+		if cli, ok := c.(*singleClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, context.Canceled
+				},
+			}
+		}
+		m.DoMultiCacheFn = makeDoMultiCacheFn(
+			[]RedisResult{newErrResult(ErrClosing)},
+			[]RedisResult{newResult(RedisMessage{typ: '+', string: "Do"}, nil)},
+		)
+		if v, err := c.DoMultiCache(context.Background(), CT(c.B().Get().Key("Do").Cache(), 0))[0].ToString(); !errors.Is(err, context.Canceled) {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
 	})
@@ -787,10 +1024,71 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		}
 	})
 
+	t.Run("Delegate DoMultiCache ReadOnly NoRetry - always not retryable", func(t *testing.T) {
+		c, m := setup()
+		if cli, ok := c.(*sentinelClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, nil
+				},
+			}
+		}
+		if cli, ok := c.(*clusterClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, nil
+				},
+			}
+		}
+		if cli, ok := c.(*singleClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, nil
+				},
+			}
+		}
+		m.DoMultiCacheFn = makeDoMultiCacheFn(
+			[]RedisResult{newErrResult(ErrClosing)},
+			[]RedisResult{newResult(RedisMessage{typ: '+', string: "Do"}, nil)},
+		)
+		if v, err := c.DoMultiCache(context.Background(), CT(c.B().Get().Key("Do").Cache(), 0))[0].ToString(); !errors.Is(err, ErrClosing) {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
 	t.Run("Delegate Receive Retry", func(t *testing.T) {
 		c, m := setup()
 		m.ReceiveFn = makeReceiveFn(ErrClosing, nil)
 		if err := c.Receive(context.Background(), c.B().Subscribe().Channel("ch").Build(), nil); err != nil {
+			t.Fatalf("unexpected response %v", err)
+		}
+	})
+
+	t.Run("Delegate Receive Retry - abort waiting", func(t *testing.T) {
+		c, m := setup()
+		if cli, ok := c.(*sentinelClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, context.Canceled
+				},
+			}
+		}
+		if cli, ok := c.(*clusterClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, context.Canceled
+				},
+			}
+		}
+		if cli, ok := c.(*singleClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, context.Canceled
+				},
+			}
+		}
+		m.ReceiveFn = makeReceiveFn(ErrClosing, nil)
+		if err := c.Receive(context.Background(), c.B().Subscribe().Channel("ch").Build(), nil); !errors.Is(err, context.Canceled) {
 			t.Fatalf("unexpected response %v", err)
 		}
 	})
@@ -814,6 +1112,35 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		}
 	})
 
+	t.Run("Delegate Receive NoRetry - always not retryable", func(t *testing.T) {
+		c, m := setup()
+		if cli, ok := c.(*sentinelClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, nil
+				},
+			}
+		}
+		if cli, ok := c.(*clusterClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, nil
+				},
+			}
+		}
+		if cli, ok := c.(*singleClient); ok {
+			cli.retryHandler = &mockRetryHandler{
+				WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+					return false, nil
+				},
+			}
+		}
+		m.ReceiveFn = makeReceiveFn(ErrClosing, nil)
+		if err := c.Receive(context.Background(), c.B().Subscribe().Channel("ch").Build(), nil); !errors.Is(err, ErrClosing) {
+			t.Fatalf("unexpected response %v", err)
+		}
+	})
+
 	t.Run("Dedicate Delegate Do ReadOnly Retry", func(t *testing.T) {
 		c, m := setup()
 		m.DoFn = makeDoFn(
@@ -823,6 +1150,38 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		m.AcquireFn = func() wire { return &mockWire{DoFn: m.DoFn} }
 		if ret := c.Dedicated(func(cc DedicatedClient) error {
 			if v, err := cc.Do(context.Background(), c.B().Get().Key("Do").Build()).ToString(); err != nil || v != "Do" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+			return errors.New("done")
+		}); ret.Error() != "done" {
+			t.Fatalf("Dedicated not executed")
+		}
+	})
+
+	t.Run("Dedicate Delegate Do ReadOnly Retry - abort waiting", func(t *testing.T) {
+		c, m := setup()
+		m.DoFn = makeDoFn(
+			newErrResult(ErrClosing),
+			newResult(RedisMessage{typ: '+', string: "Do"}, nil),
+		)
+		m.AcquireFn = func() wire { return &mockWire{DoFn: m.DoFn} }
+		if ret := c.Dedicated(func(cc DedicatedClient) error {
+			if cli, ok := cc.(*dedicatedClusterClient); ok {
+				cli.retryHandler = &mockRetryHandler{
+					WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+						return false, context.Canceled
+					},
+				}
+			}
+			if cli, ok := cc.(*dedicatedSingleClient); ok {
+				cli.retryHandler = &mockRetryHandler{
+					WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+						return false, context.Canceled
+					},
+				}
+			}
+
+			if v, err := cc.Do(context.Background(), c.B().Get().Key("Do").Build()).ToString(); !errors.Is(err, context.Canceled) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
 			return errors.New("done")
@@ -856,6 +1215,38 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		}
 	})
 
+	t.Run("Dedicate Delegate Do ReadOnly NoRetry - always not retryable", func(t *testing.T) {
+		c, m := setup()
+		m.DoFn = makeDoFn(
+			newErrResult(ErrClosing),
+			newResult(RedisMessage{typ: '+', string: "Do"}, nil),
+		)
+		m.AcquireFn = func() wire { return &mockWire{DoFn: m.DoFn} }
+		if ret := c.Dedicated(func(cc DedicatedClient) error {
+			if cli, ok := cc.(*dedicatedClusterClient); ok {
+				cli.retryHandler = &mockRetryHandler{
+					WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+						return false, nil
+					},
+				}
+			}
+			if cli, ok := cc.(*dedicatedSingleClient); ok {
+				cli.retryHandler = &mockRetryHandler{
+					WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+						return false, nil
+					},
+				}
+			}
+
+			if v, err := cc.Do(context.Background(), c.B().Get().Key("Do").Build()).ToString(); !errors.Is(err, ErrClosing) {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+			return errors.New("done")
+		}); ret.Error() != "done" {
+			t.Fatalf("Dedicated not executed")
+		}
+	})
+
 	t.Run("Dedicate Delegate Do Write NoRetry", func(t *testing.T) {
 		c, m := setup()
 		m.DoFn = makeDoFn(newErrResult(ErrClosing))
@@ -876,6 +1267,38 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		m.AcquireFn = func() wire { return &mockWire{DoMultiFn: m.DoMultiFn} }
 		if ret := c.Dedicated(func(cc DedicatedClient) error {
 			if v, err := cc.DoMulti(context.Background(), c.B().Get().Key("Do").Build())[0].ToString(); err != nil || v != "Do" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+			return errors.New("done")
+		}); ret.Error() != "done" {
+			t.Fatalf("Dedicated not executed")
+		}
+	})
+
+	t.Run("Dedicate Delegate DoMulti ReadOnly Retry - abort waiting", func(t *testing.T) {
+		c, m := setup()
+		m.DoMultiFn = makeDoMultiFn(
+			[]RedisResult{newErrResult(ErrClosing)},
+			[]RedisResult{newResult(RedisMessage{typ: '+', string: "Do"}, nil)},
+		)
+		m.AcquireFn = func() wire { return &mockWire{DoMultiFn: m.DoMultiFn} }
+		if ret := c.Dedicated(func(cc DedicatedClient) error {
+			if cli, ok := cc.(*dedicatedClusterClient); ok {
+				cli.retryHandler = &mockRetryHandler{
+					WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+						return false, context.Canceled
+					},
+				}
+			}
+			if cli, ok := cc.(*dedicatedSingleClient); ok {
+				cli.retryHandler = &mockRetryHandler{
+					WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+						return false, context.Canceled
+					},
+				}
+			}
+
+			if v, err := cc.DoMulti(context.Background(), c.B().Get().Key("Do").Build())[0].ToString(); !errors.Is(err, context.Canceled) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
 			return errors.New("done")
@@ -909,6 +1332,38 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		}
 	})
 
+	t.Run("Dedicate Delegate DoMulti ReadOnly NoRetry - always not retryable", func(t *testing.T) {
+		c, m := setup()
+		m.DoMultiFn = makeDoMultiFn(
+			[]RedisResult{newErrResult(ErrClosing)},
+			[]RedisResult{newResult(RedisMessage{typ: '+', string: "Do"}, nil)},
+		)
+		m.AcquireFn = func() wire { return &mockWire{DoMultiFn: m.DoMultiFn} }
+		if ret := c.Dedicated(func(cc DedicatedClient) error {
+			if cli, ok := cc.(*dedicatedClusterClient); ok {
+				cli.retryHandler = &mockRetryHandler{
+					WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+						return false, nil
+					},
+				}
+			}
+			if cli, ok := cc.(*dedicatedSingleClient); ok {
+				cli.retryHandler = &mockRetryHandler{
+					WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+						return false, nil
+					},
+				}
+			}
+
+			if v, err := cc.DoMulti(context.Background(), c.B().Get().Key("Do").Build())[0].ToString(); !errors.Is(err, ErrClosing) {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+			return errors.New("done")
+		}); ret.Error() != "done" {
+			t.Fatalf("Dedicated not executed")
+		}
+	})
+
 	t.Run("Dedicate Delegate DoMulti Write NoRetry", func(t *testing.T) {
 		c, m := setup()
 		m.DoMultiFn = makeDoMultiFn([]RedisResult{newErrResult(ErrClosing)})
@@ -926,6 +1381,35 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		m.AcquireFn = func() wire { return &mockWire{ReceiveFn: m.ReceiveFn} }
 		if ret := c.Dedicated(func(cc DedicatedClient) error {
 			if err := cc.Receive(context.Background(), c.B().Subscribe().Channel("Do").Build(), nil); err != nil {
+				t.Fatalf("unexpected response %v", err)
+			}
+			return errors.New("done")
+		}); ret.Error() != "done" {
+			t.Fatalf("Dedicated not executed")
+		}
+	})
+
+	t.Run("Delegate Receive Retry - abort waiting", func(t *testing.T) {
+		c, m := setup()
+		m.ReceiveFn = makeReceiveFn(ErrClosing, nil)
+		m.AcquireFn = func() wire { return &mockWire{ReceiveFn: m.ReceiveFn} }
+		if ret := c.Dedicated(func(cc DedicatedClient) error {
+			if cli, ok := cc.(*dedicatedClusterClient); ok {
+				cli.retryHandler = &mockRetryHandler{
+					WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+						return false, context.Canceled
+					},
+				}
+			}
+			if cli, ok := cc.(*dedicatedSingleClient); ok {
+				cli.retryHandler = &mockRetryHandler{
+					WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+						return false, context.Canceled
+					},
+				}
+			}
+
+			if err := cc.Receive(context.Background(), c.B().Subscribe().Channel("Do").Build(), nil); !errors.Is(err, context.Canceled) {
 				t.Fatalf("unexpected response %v", err)
 			}
 			return errors.New("done")
@@ -956,6 +1440,35 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 			return cc.Receive(ctx, c.B().Subscribe().Channel("Do").Build(), nil)
 		}); ret != ErrClosing {
 			t.Fatalf("unexpected response %v", ret)
+		}
+	})
+
+	t.Run("Delegate Receive NoRetry - always not retryable", func(t *testing.T) {
+		c, m := setup()
+		m.ReceiveFn = makeReceiveFn(ErrClosing, nil)
+		m.AcquireFn = func() wire { return &mockWire{ReceiveFn: m.ReceiveFn} }
+		if ret := c.Dedicated(func(cc DedicatedClient) error {
+			if cli, ok := cc.(*dedicatedClusterClient); ok {
+				cli.retryHandler = &mockRetryHandler{
+					WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+						return false, nil
+					},
+				}
+			}
+			if cli, ok := cc.(*dedicatedSingleClient); ok {
+				cli.retryHandler = &mockRetryHandler{
+					WaitUntilNextRetryFunc: func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
+						return false, nil
+					},
+				}
+			}
+
+			if err := cc.Receive(context.Background(), c.B().Subscribe().Channel("Do").Build(), nil); !errors.Is(err, ErrClosing) {
+				t.Fatalf("unexpected response %v", err)
+			}
+			return errors.New("done")
+		}); ret.Error() != "done" {
+			t.Fatalf("Dedicated not executed")
 		}
 	})
 }

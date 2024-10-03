@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"net"
-	"runtime"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -21,18 +20,19 @@ var ErrReplicaOnlyConflict = errors.New("ReplicaOnly conflicts with SendToReplic
 var ErrInvalidShardsRefreshInterval = errors.New("ShardsRefreshInterval must be greater than or equal to 0")
 
 type clusterClient struct {
-	pslots [16384]conn
-	rslots []conn
-	opt    *ClientOption
-	rOpt   *ClientOption
-	conns  map[string]connrole
-	connFn connFn
-	sc     call
-	mu     sync.RWMutex
-	stop   uint32
-	cmd    Builder
-	retry  bool
-	stopCh chan struct{}
+	pslots       [16384]conn
+	rslots       []conn
+	opt          *ClientOption
+	rOpt         *ClientOption
+	conns        map[string]connrole
+	connFn       connFn
+	sc           call
+	mu           sync.RWMutex
+	stop         uint32
+	cmd          Builder
+	retry        bool
+	retryHandler retryHandler
+	stopCh       chan struct{}
 }
 
 // NOTE: connrole and conn must be initialized at the same time
@@ -41,14 +41,15 @@ type connrole struct {
 	replica bool
 }
 
-func newClusterClient(opt *ClientOption, connFn connFn) (*clusterClient, error) {
+func newClusterClient(opt *ClientOption, connFn connFn, retryer retryHandler) (*clusterClient, error) {
 	client := &clusterClient{
-		cmd:    cmds.NewBuilder(cmds.InitSlot),
-		connFn: connFn,
-		opt:    opt,
-		conns:  make(map[string]connrole),
-		retry:  !opt.DisableRetry,
-		stopCh: make(chan struct{}),
+		cmd:          cmds.NewBuilder(cmds.InitSlot),
+		connFn:       connFn,
+		opt:          opt,
+		conns:        make(map[string]connrole),
+		retry:        !opt.DisableRetry,
+		retryHandler: retryer,
+		stopCh:       make(chan struct{}),
 	}
 
 	if opt.ReplicaOnly && opt.SendToReplicas != nil {
@@ -461,6 +462,7 @@ func (c *clusterClient) Do(ctx context.Context, cmd Completed) (resp RedisResult
 }
 
 func (c *clusterClient) do(ctx context.Context, cmd Completed) (resp RedisResult) {
+	attempts := 1
 retry:
 	cc, err := c.pick(ctx, cmd.Slot(), c.toReplica(cmd))
 	if err != nil {
@@ -478,9 +480,15 @@ process:
 		resultsp.Put(results)
 		goto process
 	case RedirectRetry:
-		if c.retry && cmd.IsReadOnly() {
-			runtime.Gosched()
+		shouldRetry, err := c.retryHandler.WaitUntilNextRetry(
+			ctx, func() bool { return c.retry && cmd.IsReadOnly() }, attempts, resp.Error(),
+		)
+		if shouldRetry {
+			attempts++
 			goto retry
+		}
+		if err != nil {
+			return newErrResult(err)
 		}
 	}
 	return resp
@@ -593,7 +601,10 @@ func (c *clusterClient) pickMulti(ctx context.Context, multi []Completed) (*conn
 	return conns, slot, toReplica, nil
 }
 
-func (c *clusterClient) doresultfn(ctx context.Context, results *redisresults, retries *connretry, mu *sync.Mutex, cc conn, cIndexes []int, commands []Completed, resps []RedisResult) {
+func (c *clusterClient) doresultfn(
+	ctx context.Context, results *redisresults, retries *connretry, mu *sync.Mutex, cc conn, cIndexes []int, commands []Completed, resps []RedisResult, attempts int, abortRetryWaitingErrCh chan<- error,
+) {
+	isWaitingForRetry := false // NOTE: mitigate duplicate waiting for retry
 	for i, resp := range resps {
 		ii := cIndexes[i]
 		cm := commands[i]
@@ -602,8 +613,23 @@ func (c *clusterClient) doresultfn(ctx context.Context, results *redisresults, r
 		if mode != RedirectNone {
 			nc := cc
 			if mode == RedirectRetry {
-				if !c.retry || !cm.IsReadOnly() {
-					continue
+				if !isWaitingForRetry {
+					shouldRetry, errAbortingWaiting := c.retryHandler.WaitUntilNextRetry(
+						ctx, func() bool { return c.retry && cm.IsReadOnly() }, attempts, resp.Error(),
+					)
+					if errAbortingWaiting != nil {
+						select {
+						case abortRetryWaitingErrCh <- errAbortingWaiting:
+						default:
+						}
+						break
+					}
+
+					if !shouldRetry {
+						continue
+					}
+
+					isWaitingForRetry = true
 				}
 			} else {
 				nc = c.redirectOrNew(addr, cc, cm.Slot(), mode)
@@ -626,15 +652,17 @@ func (c *clusterClient) doresultfn(ctx context.Context, results *redisresults, r
 	}
 }
 
-func (c *clusterClient) doretry(ctx context.Context, cc conn, results *redisresults, retries *connretry, re *retry, mu *sync.Mutex, wg *sync.WaitGroup) {
+func (c *clusterClient) doretry(
+	ctx context.Context, cc conn, results *redisresults, retries *connretry, re *retry, mu *sync.Mutex, wg *sync.WaitGroup, attempts int, abortingRetryWaitingErrCh chan<- error,
+) {
 	if len(re.commands) != 0 {
 		resps := cc.DoMulti(ctx, re.commands...)
-		c.doresultfn(ctx, results, retries, mu, cc, re.cIndexes, re.commands, resps.s)
+		c.doresultfn(ctx, results, retries, mu, cc, re.cIndexes, re.commands, resps.s, attempts, abortingRetryWaitingErrCh)
 		resultsp.Put(resps)
 	}
 	if len(re.cAskings) != 0 {
 		resps := askingMulti(cc, ctx, re.cAskings)
-		c.doresultfn(ctx, results, retries, mu, cc, re.aIndexes, re.cAskings, resps.s)
+		c.doresultfn(ctx, results, retries, mu, cc, re.aIndexes, re.cAskings, resps.s, attempts, abortingRetryWaitingErrCh)
 		resultsp.Put(resps)
 	}
 	if ctx.Err() == nil {
@@ -666,17 +694,30 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...Completed) []Redis
 
 	results := resultsp.Get(len(multi), len(multi))
 
+	attempts := 1
+
 retry:
+	abortingRetryWaitingErrCh := make(chan error, 1)
+	var errAbortingRetryWaitingResps []RedisResult
+
 	wg.Add(len(retries.m))
 	mu.Lock()
 	for cc, re := range retries.m {
 		delete(retries.m, cc)
-		go c.doretry(ctx, cc, results, retries, re, &mu, &wg)
+		go c.doretry(ctx, cc, results, retries, re, &mu, &wg, attempts, abortingRetryWaitingErrCh)
 	}
 	mu.Unlock()
 	wg.Wait()
 
-	if len(retries.m) != 0 {
+	close(abortingRetryWaitingErrCh)
+	for err := range abortingRetryWaitingErrCh {
+		if err != nil {
+			errAbortingRetryWaitingResps = fillErrs(len(multi), err)
+			break
+		}
+	}
+	if len(errAbortingRetryWaitingResps) == 0 && len(retries.m) != 0 {
+		attempts++
 		goto retry
 	}
 
@@ -684,6 +725,10 @@ retry:
 		if results.s[i].NonRedisError() == nil {
 			cmds.PutCompleted(cmd)
 		}
+	}
+
+	if len(errAbortingRetryWaitingResps) > 0 {
+		return errAbortingRetryWaitingResps
 	}
 	return results.s
 }
@@ -697,6 +742,8 @@ func fillErrs(n int, err error) (results []RedisResult) {
 }
 
 func (c *clusterClient) doMulti(ctx context.Context, slot uint16, multi []Completed, toReplica bool) []RedisResult {
+	attempts := 1
+
 retry:
 	cc, err := c.pick(ctx, slot, toReplica)
 	if err != nil {
@@ -719,10 +766,19 @@ process:
 				goto process
 			}
 		case RedirectRetry:
-			if c.retry && allReadOnly(multi) {
+			shouldRetry, errAbortWaiting := c.retryHandler.WaitUntilNextRetry(
+				ctx,
+				func() bool { return c.retry && allReadOnly(multi) },
+				attempts,
+				resp.Error(),
+			)
+			if shouldRetry {
 				resultsp.Put(resps)
-				runtime.Gosched()
+				attempts++
 				goto retry
+			}
+			if errAbortWaiting != nil {
+				return fillErrs(len(multi), errAbortWaiting)
 			}
 		}
 	}
@@ -730,6 +786,8 @@ process:
 }
 
 func (c *clusterClient) doCache(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult) {
+	attempts := 1
+
 retry:
 	cc, err := c.pick(ctx, cmd.Slot(), c.toReplica(Completed(cmd)))
 	if err != nil {
@@ -747,9 +805,15 @@ process:
 		resultsp.Put(results)
 		goto process
 	case RedirectRetry:
-		if c.retry {
-			runtime.Gosched()
+		shouldRetry, err := c.retryHandler.WaitUntilNextRetry(
+			ctx, func() bool { return c.retry }, attempts, resp.Error(),
+		)
+		if shouldRetry {
+			attempts++
 			goto retry
+		}
+		if err != nil {
+			return newErrResult(err)
 		}
 	}
 	return resp
@@ -873,7 +937,10 @@ func (c *clusterClient) pickMultiCache(ctx context.Context, multi []CacheableTTL
 	return conns, nil
 }
 
-func (c *clusterClient) resultcachefn(ctx context.Context, results *redisresults, retries *connretrycache, mu *sync.Mutex, cc conn, cIndexes []int, commands []CacheableTTL, resps []RedisResult) {
+func (c *clusterClient) resultcachefn(
+	ctx context.Context, results *redisresults, retries *connretrycache, mu *sync.Mutex, cc conn, cIndexes []int, commands []CacheableTTL, resps []RedisResult, attempts int, abortingRetryWaitingErrCh chan<- error,
+) {
+	isWaitingForRetry := false // NOTE: mitigate duplicate waiting for retry
 	for i, resp := range resps {
 		ii := cIndexes[i]
 		cm := commands[i]
@@ -882,8 +949,23 @@ func (c *clusterClient) resultcachefn(ctx context.Context, results *redisresults
 		if mode != RedirectNone {
 			nc := cc
 			if mode == RedirectRetry {
-				if !c.retry {
-					continue
+				if !isWaitingForRetry {
+					shouldRetry, errAbortingWaiting := c.retryHandler.WaitUntilNextRetry(
+						ctx, func() bool { return c.retry }, attempts, resp.Error(),
+					)
+					if errAbortingWaiting != nil {
+						select {
+						case abortingRetryWaitingErrCh <- errAbortingWaiting:
+						default:
+						}
+						break
+					}
+
+					if !shouldRetry {
+						continue
+					}
+
+					isWaitingForRetry = true
 				}
 			} else {
 				nc = c.redirectOrNew(addr, cc, cm.Cmd.Slot(), mode)
@@ -906,15 +988,17 @@ func (c *clusterClient) resultcachefn(ctx context.Context, results *redisresults
 	}
 }
 
-func (c *clusterClient) doretrycache(ctx context.Context, cc conn, results *redisresults, retries *connretrycache, re *retrycache, mu *sync.Mutex, wg *sync.WaitGroup) {
+func (c *clusterClient) doretrycache(
+	ctx context.Context, cc conn, results *redisresults, retries *connretrycache, re *retrycache, mu *sync.Mutex, wg *sync.WaitGroup, attempts int, abortingRetryWaitingErrCh chan<- error,
+) {
 	if len(re.commands) != 0 {
 		resps := cc.DoMultiCache(ctx, re.commands...)
-		c.resultcachefn(ctx, results, retries, mu, cc, re.cIndexes, re.commands, resps.s)
+		c.resultcachefn(ctx, results, retries, mu, cc, re.cIndexes, re.commands, resps.s, attempts, abortingRetryWaitingErrCh)
 		resultsp.Put(resps)
 	}
 	if len(re.cAskings) != 0 {
 		resps := askingMultiCache(cc, ctx, re.cAskings)
-		c.resultcachefn(ctx, results, retries, mu, cc, re.aIndexes, re.cAskings, resps.s)
+		c.resultcachefn(ctx, results, retries, mu, cc, re.aIndexes, re.cAskings, resps.s, attempts, abortingRetryWaitingErrCh)
 		resultsp.Put(resps)
 	}
 	if ctx.Err() == nil {
@@ -939,17 +1023,30 @@ func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL)
 
 	results := resultsp.Get(len(multi), len(multi))
 
+	attempts := 1
+
 retry:
+	abortingRetryWaitingErrCh := make(chan error, 1)
+	var errAbortingRetryWaitingResps []RedisResult
+
 	wg.Add(len(retries.m))
 	mu.Lock()
 	for cc, re := range retries.m {
 		delete(retries.m, cc)
-		go c.doretrycache(ctx, cc, results, retries, re, &mu, &wg)
+		go c.doretrycache(ctx, cc, results, retries, re, &mu, &wg, attempts, abortingRetryWaitingErrCh)
 	}
 	mu.Unlock()
 	wg.Wait()
 
-	if len(retries.m) != 0 {
+	close(abortingRetryWaitingErrCh)
+	for err := range abortingRetryWaitingErrCh {
+		if err != nil {
+			errAbortingRetryWaitingResps = fillErrs(len(multi), err)
+			break
+		}
+	}
+	if len(errAbortingRetryWaitingResps) == 0 && len(retries.m) != 0 {
+		attempts++
 		goto retry
 	}
 
@@ -958,19 +1055,38 @@ retry:
 			cmds.PutCacheable(cmd.Cmd)
 		}
 	}
+
+	if len(errAbortingRetryWaitingResps) > 0 {
+		return errAbortingRetryWaitingResps
+	}
 	return results.s
 }
 
 func (c *clusterClient) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) (err error) {
+	attempts := 1
 retry:
 	cc, err := c.pick(ctx, subscribe.Slot(), c.toReplica(subscribe))
 	if err != nil {
 		goto ret
 	}
 	err = cc.Receive(ctx, subscribe, fn)
-	if _, mode := c.shouldRefreshRetry(err, ctx); c.retry && mode != RedirectNone {
-		runtime.Gosched()
-		goto retry
+	if _, mode := c.shouldRefreshRetry(err, ctx); mode != RedirectNone {
+		shouldRetry, errAborting := c.retryHandler.WaitUntilNextRetry(
+			ctx,
+			func() bool {
+				return c.retry
+			},
+			attempts,
+			err,
+		)
+		if shouldRetry {
+			attempts++
+			goto retry
+		}
+
+		if errAborting != nil {
+			err = errAborting
+		}
 	}
 ret:
 	if err == nil {
@@ -1017,14 +1133,14 @@ func (c *clusterClient) DoMultiStream(ctx context.Context, multi ...Completed) M
 }
 
 func (c *clusterClient) Dedicated(fn func(DedicatedClient) error) (err error) {
-	dcc := &dedicatedClusterClient{cmd: c.cmd, client: c, slot: cmds.NoSlot, retry: c.retry}
+	dcc := &dedicatedClusterClient{cmd: c.cmd, client: c, slot: cmds.NoSlot, retry: c.retry, retryHandler: c.retryHandler}
 	err = fn(dcc)
 	dcc.release()
 	return err
 }
 
 func (c *clusterClient) Dedicate() (DedicatedClient, func()) {
-	dcc := &dedicatedClusterClient{cmd: c.cmd, client: c, slot: cmds.NoSlot, retry: c.retry}
+	dcc := &dedicatedClusterClient{cmd: c.cmd, client: c, slot: cmds.NoSlot, retry: c.retry, retryHandler: c.retryHandler}
 	return dcc, dcc.release
 }
 
@@ -1033,7 +1149,7 @@ func (c *clusterClient) Nodes() map[string]Client {
 	nodes := make(map[string]Client, len(c.conns))
 	disableCache := c.opt != nil && c.opt.DisableCache
 	for addr, cc := range c.conns {
-		nodes[addr] = newSingleClientWithConn(cc.conn, c.cmd, c.retry, disableCache)
+		nodes[addr] = newSingleClientWithConn(cc.conn, c.cmd, c.retry, disableCache, c.retryHandler)
 	}
 	c.mu.RUnlock()
 	return nodes
@@ -1077,11 +1193,12 @@ type dedicatedClusterClient struct {
 	wire   wire
 	pshks  *pshks
 
-	mu    sync.Mutex
-	cmd   Builder
-	slot  uint16
-	mark  bool
-	retry bool
+	mu           sync.Mutex
+	cmd          Builder
+	slot         uint16
+	mark         bool
+	retry        bool
+	retryHandler retryHandler
 }
 
 func (c *dedicatedClusterClient) acquire(ctx context.Context, slot uint16) (wire wire, err error) {
@@ -1140,6 +1257,11 @@ func (c *dedicatedClusterClient) B() Builder {
 }
 
 func (c *dedicatedClusterClient) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
+	var (
+		shouldRetry     bool
+		attempts        = 1
+		errAbortWaiting error
+	)
 retry:
 	if w, err := c.acquire(ctx, cmd.Slot()); err != nil {
 		resp = newErrResult(err)
@@ -1147,14 +1269,20 @@ retry:
 		resp = w.Do(ctx, cmd)
 		switch _, mode := c.client.shouldRefreshRetry(resp.Error(), ctx); mode {
 		case RedirectRetry:
-			if c.retry && cmd.IsReadOnly() && w.Error() == nil {
-				runtime.Gosched()
+			shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+				ctx, func() bool { return c.retry && cmd.IsReadOnly() && w.Error() == nil }, attempts, resp.Error(),
+			)
+			if shouldRetry {
+				attempts++
 				goto retry
 			}
 		}
 	}
 	if resp.NonRedisError() == nil {
 		cmds.PutCompleted(cmd)
+	}
+	if errAbortWaiting != nil {
+		return newErrResult(errAbortWaiting)
 	}
 	return resp
 }
@@ -1171,13 +1299,21 @@ func (c *dedicatedClusterClient) DoMulti(ctx context.Context, multi ...Completed
 	if retryable {
 		retryable = allReadOnly(multi)
 	}
+	var (
+		shouldRetry     bool
+		attempts        = 1
+		errAbortWaiting error
+	)
 retry:
 	if w, err := c.acquire(ctx, slot); err == nil {
 		resp = w.DoMulti(ctx, multi...).s
 		for _, r := range resp {
 			_, mode := c.client.shouldRefreshRetry(r.Error(), ctx)
-			if mode == RedirectRetry && retryable && w.Error() == nil {
-				runtime.Gosched()
+			shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+				ctx, func() bool { return mode == RedirectRetry && retryable && w.Error() == nil }, attempts, r.Error(),
+			)
+			if shouldRetry {
+				attempts++
 				goto retry
 			}
 			if mode != RedirectNone {
@@ -1195,21 +1331,36 @@ retry:
 			cmds.PutCompleted(cmd)
 		}
 	}
+	if errAbortWaiting != nil {
+		return fillErrs(len(multi), errAbortWaiting)
+	}
 	return resp
 }
 
 func (c *dedicatedClusterClient) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) (err error) {
-	var w wire
+	var (
+		w               wire
+		shouldRetry     bool
+		attempts        = 1
+		errAbortWaiting error
+	)
 retry:
 	if w, err = c.acquire(ctx, subscribe.Slot()); err == nil {
 		err = w.Receive(ctx, subscribe, fn)
-		if _, mode := c.client.shouldRefreshRetry(err, ctx); c.retry && mode == RedirectRetry && w.Error() == nil {
-			runtime.Gosched()
+		_, mode := c.client.shouldRefreshRetry(err, ctx)
+		shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+			ctx, func() bool { return c.retry && mode == RedirectRetry && w.Error() == nil }, attempts, err,
+		)
+		if shouldRetry {
+			attempts++
 			goto retry
 		}
 	}
 	if err == nil {
 		cmds.PutCompleted(subscribe)
+	}
+	if errAbortWaiting != nil {
+		return errAbortWaiting
 	}
 	return err
 }

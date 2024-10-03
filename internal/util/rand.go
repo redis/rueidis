@@ -42,3 +42,10 @@ func RandomBytes() []byte {
 	sources.Put(src)
 	return val
 }
+
+func FastRandFloat64() float64 {
+	s := rngPool.Get().(*rand.Rand)
+	r := s.Float64()
+	rngPool.Put(s)
+	return r
+}

@@ -16,15 +16,16 @@ import (
 	"github.com/redis/rueidis/internal/util"
 )
 
-func newSentinelClient(opt *ClientOption, connFn connFn) (client *sentinelClient, err error) {
+func newSentinelClient(opt *ClientOption, connFn connFn, retryer retryHandler) (client *sentinelClient, err error) {
 	client = &sentinelClient{
-		cmd:       cmds.NewBuilder(cmds.NoSlot),
-		mOpt:      opt,
-		sOpt:      newSentinelOpt(opt),
-		connFn:    connFn,
-		sentinels: list.New(),
-		retry:     !opt.DisableRetry,
-		replica:   opt.ReplicaOnly,
+		cmd:          cmds.NewBuilder(cmds.NoSlot),
+		mOpt:         opt,
+		sOpt:         newSentinelOpt(opt),
+		connFn:       connFn,
+		sentinels:    list.New(),
+		retry:        !opt.DisableRetry,
+		retryHandler: retryer,
+		replica:      opt.ReplicaOnly,
 	}
 
 	for _, sentinel := range opt.InitAddress {
@@ -40,20 +41,21 @@ func newSentinelClient(opt *ClientOption, connFn connFn) (client *sentinelClient
 }
 
 type sentinelClient struct {
-	mConn     atomic.Value
-	sConn     conn
-	mOpt      *ClientOption
-	sOpt      *ClientOption
-	connFn    connFn
-	sentinels *list.List
-	mAddr     string
-	sAddr     string
-	sc        call
-	mu        sync.Mutex
-	stop      uint32
-	cmd       Builder
-	retry     bool
-	replica   bool
+	mConn        atomic.Value
+	sConn        conn
+	mOpt         *ClientOption
+	sOpt         *ClientOption
+	connFn       connFn
+	sentinels    *list.List
+	mAddr        string
+	sAddr        string
+	sc           call
+	mu           sync.Mutex
+	stop         uint32
+	cmd          Builder
+	retry        bool
+	retryHandler retryHandler
+	replica      bool
 }
 
 func (c *sentinelClient) B() Builder {
@@ -61,13 +63,24 @@ func (c *sentinelClient) B() Builder {
 }
 
 func (c *sentinelClient) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
+	attempts := 1
 retry:
 	resp = c.mConn.Load().(conn).Do(ctx, cmd)
-	if c.retry && cmd.IsReadOnly() && c.isRetryable(resp.NonRedisError(), ctx) {
+	shouldRetry, errAbortWaiting := c.retryHandler.WaitUntilNextRetry(
+		ctx,
+		func() bool { return c.retry && cmd.IsReadOnly() && c.isRetryable(resp.NonRedisError(), ctx) },
+		attempts,
+		resp.Error(),
+	)
+	if shouldRetry {
+		attempts++
 		goto retry
 	}
 	if resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
 		cmds.PutCompleted(cmd)
+	}
+	if errAbortWaiting != nil {
+		return newErrResult(errAbortWaiting)
 	}
 	return resp
 }
@@ -76,13 +89,25 @@ func (c *sentinelClient) DoMulti(ctx context.Context, multi ...Completed) []Redi
 	if len(multi) == 0 {
 		return nil
 	}
+	var (
+		attempts        = 1
+		shouldRetry     bool
+		errAbortWaiting error
+	)
 retry:
 	resps := c.mConn.Load().(conn).DoMulti(ctx, multi...)
 	if c.retry && allReadOnly(multi) {
 		for _, resp := range resps.s {
-			if c.isRetryable(resp.NonRedisError(), ctx) {
+			shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+				ctx, func() bool { return c.isRetryable(resp.NonRedisError(), ctx) }, attempts, resp.Error(),
+			)
+			if shouldRetry {
 				resultsp.Put(resps)
+				attempts++
 				goto retry
+			}
+			if errAbortWaiting != nil {
+				break
 			}
 		}
 	}
@@ -91,17 +116,31 @@ retry:
 			cmds.PutCompleted(cmd)
 		}
 	}
+	if errAbortWaiting != nil {
+		return fillErrs(len(multi), errAbortWaiting)
+	}
 	return resps.s
 }
 
 func (c *sentinelClient) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult) {
+	attempts := 1
 retry:
 	resp = c.mConn.Load().(conn).DoCache(ctx, cmd, ttl)
-	if c.retry && c.isRetryable(resp.NonRedisError(), ctx) {
+	shouldRetry, errAbortWaiting := c.retryHandler.WaitUntilNextRetry(
+		ctx,
+		func() bool { return c.retry && c.isRetryable(resp.NonRedisError(), ctx) },
+		attempts,
+		resp.Error(),
+	)
+	if shouldRetry {
+		attempts++
 		goto retry
 	}
 	if err := resp.NonRedisError(); err == nil || err == ErrDoCacheAborted {
 		cmds.PutCacheable(cmd)
+	}
+	if errAbortWaiting != nil {
+		return newErrResult(errAbortWaiting)
 	}
 	return resp
 }
@@ -110,34 +149,62 @@ func (c *sentinelClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL
 	if len(multi) == 0 {
 		return nil
 	}
+	var (
+		attempts        = 1
+		shouldRetry     bool
+		errAbortWaiting error
+	)
 retry:
 	resps := c.mConn.Load().(conn).DoMultiCache(ctx, multi...)
 	if c.retry {
 		for _, resp := range resps.s {
-			if c.isRetryable(resp.NonRedisError(), ctx) {
+			shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+				ctx, func() bool { return c.isRetryable(resp.NonRedisError(), ctx) }, attempts, resp.Error(),
+			)
+			if shouldRetry {
 				resultsp.Put(resps)
+				attempts++
 				goto retry
 			}
 		}
 	}
 	for i, cmd := range multi {
-		if err := resps.s[i].NonRedisError(); err == nil || err == ErrDoCacheAborted {
+		if nonRedisErr := resps.s[i].NonRedisError(); nonRedisErr == nil || nonRedisErr == ErrDoCacheAborted {
 			cmds.PutCacheable(cmd.Cmd)
 		}
+	}
+	if errAbortWaiting != nil {
+		return fillErrs(len(multi), errAbortWaiting)
 	}
 	return resps.s
 }
 
 func (c *sentinelClient) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) (err error) {
+	var (
+		attempts        = 1
+		shouldRetry     bool
+		errAbortWaiting error
+	)
 retry:
 	err = c.mConn.Load().(conn).Receive(ctx, subscribe, fn)
-	if c.retry {
-		if _, ok := err.(*RedisError); !ok && c.isRetryable(err, ctx) {
-			goto retry
-		}
+	shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+		ctx,
+		func() bool {
+			_, ok := err.(*RedisError)
+			return !ok && c.retry && c.isRetryable(err, ctx)
+		},
+		attempts,
+		err,
+	)
+	if shouldRetry {
+		attempts++
+		goto retry
 	}
 	if err == nil {
 		cmds.PutCompleted(subscribe)
+	}
+	if errAbortWaiting != nil {
+		return errAbortWaiting
 	}
 	return err
 }
@@ -162,7 +229,7 @@ func (c *sentinelClient) DoMultiStream(ctx context.Context, multi ...Completed) 
 func (c *sentinelClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 	master := c.mConn.Load().(conn)
 	wire := master.Acquire()
-	dsc := &dedicatedSingleClient{cmd: c.cmd, conn: master, wire: wire, retry: c.retry}
+	dsc := &dedicatedSingleClient{cmd: c.cmd, conn: master, wire: wire, retry: c.retry, retryHandler: c.retryHandler}
 	err = fn(dsc)
 	dsc.release()
 	return err
@@ -171,14 +238,14 @@ func (c *sentinelClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 func (c *sentinelClient) Dedicate() (DedicatedClient, func()) {
 	master := c.mConn.Load().(conn)
 	wire := master.Acquire()
-	dsc := &dedicatedSingleClient{cmd: c.cmd, conn: master, wire: wire, retry: c.retry}
+	dsc := &dedicatedSingleClient{cmd: c.cmd, conn: master, wire: wire, retry: c.retry, retryHandler: c.retryHandler}
 	return dsc, dsc.release
 }
 
 func (c *sentinelClient) Nodes() map[string]Client {
 	conn := c.mConn.Load().(conn)
 	disableCache := c.mOpt != nil && c.mOpt.DisableCache
-	return map[string]Client{conn.Addr(): newSingleClientWithConn(conn, c.cmd, c.retry, disableCache)}
+	return map[string]Client{conn.Addr(): newSingleClientWithConn(conn, c.cmd, c.retry, disableCache, c.retryHandler)}
 }
 
 func (c *sentinelClient) Close() {
