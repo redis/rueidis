@@ -613,7 +613,11 @@ func (c *clusterClient) doresultfn(
 		if mode != RedirectNone {
 			nc := cc
 			if mode == RedirectRetry {
-				if c.retry && cm.IsReadOnly() && !isWaitingForRetry {
+				if !c.retry || !cm.IsReadOnly() {
+					continue
+				}
+
+				if !isWaitingForRetry {
 					shouldRetry, errAbortingWaiting := c.retryHandler.WaitUntilNextRetry(
 						ctx, attempts, resp.Error(),
 					)
@@ -946,7 +950,11 @@ func (c *clusterClient) resultcachefn(
 		if mode != RedirectNone {
 			nc := cc
 			if mode == RedirectRetry {
-				if c.retry && !isWaitingForRetry {
+				if !c.retry {
+					continue
+				}
+
+				if !isWaitingForRetry {
 					shouldRetry, errAbortingWaiting := c.retryHandler.WaitUntilNextRetry(ctx, attempts, resp.Error())
 					if errAbortingWaiting != nil {
 						select {
@@ -1065,17 +1073,15 @@ retry:
 		goto ret
 	}
 	err = cc.Receive(ctx, subscribe, fn)
-	if _, mode := c.shouldRefreshRetry(err, ctx); mode != RedirectNone {
-		if c.retry {
-			shouldRetry, errAborting := c.retryHandler.WaitUntilNextRetry(ctx, attempts, err)
-			if shouldRetry {
-				attempts++
-				goto retry
-			}
+	if _, mode := c.shouldRefreshRetry(err, ctx); c.retry && mode != RedirectNone {
+		shouldRetry, errAborting := c.retryHandler.WaitUntilNextRetry(ctx, attempts, err)
+		if shouldRetry {
+			attempts++
+			goto retry
+		}
 
-			if errAborting != nil {
-				err = errAborting
-			}
+		if errAborting != nil {
+			err = errAborting
 		}
 	}
 ret:
@@ -1309,9 +1315,9 @@ retry:
 					attempts++
 					goto retry
 				}
-				if mode != RedirectNone {
-					break
-				}
+			}
+			if mode != RedirectNone {
+				break
 			}
 		}
 	} else {
@@ -1341,8 +1347,7 @@ func (c *dedicatedClusterClient) Receive(ctx context.Context, subscribe Complete
 retry:
 	if w, err = c.acquire(ctx, subscribe.Slot()); err == nil {
 		err = w.Receive(ctx, subscribe, fn)
-		_, mode := c.client.shouldRefreshRetry(err, ctx)
-		if c.retry && mode == RedirectRetry && w.Error() == nil {
+		if _, mode := c.client.shouldRefreshRetry(err, ctx); c.retry && mode == RedirectRetry && w.Error() == nil {
 			shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(ctx, attempts, err)
 			if shouldRetry {
 				attempts++

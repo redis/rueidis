@@ -194,11 +194,13 @@ func (c *singleClient) Receive(ctx context.Context, subscribe Completed, fn func
 	)
 retry:
 	err = c.conn.Receive(ctx, subscribe, fn)
-	if _, ok := err.(*RedisError); !ok && c.retry && c.isRetryable(err, ctx) {
-		shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(ctx, attempts, err)
-		if shouldRetry {
-			attempts++
-			goto retry
+	if c.retry {
+		if _, ok := err.(*RedisError); !ok && c.isRetryable(err, ctx) {
+			shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(ctx, attempts, err)
+			if shouldRetry {
+				attempts++
+				goto retry
+			}
 		}
 	}
 	if err == nil {
@@ -328,15 +330,16 @@ retry:
 		return err
 	}
 	err = c.wire.Receive(ctx, subscribe, fn)
-	if _, ok := err.(*RedisError); !ok && c.retry && isRetryable(err, c.wire, ctx) {
-		shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
-			ctx, attempts, err,
-		)
-		if shouldRetry {
-			attempts++
-			goto retry
+	if c.retry {
+		if _, ok := err.(*RedisError); !ok && isRetryable(err, c.wire, ctx) {
+			shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+				ctx, attempts, err,
+			)
+			if shouldRetry {
+				attempts++
+				goto retry
+			}
 		}
-
 	}
 	if err == nil {
 		cmds.PutCompleted(subscribe)
