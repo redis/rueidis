@@ -26,16 +26,12 @@ func defaultRetryDelay(attempts int, _ error) time.Duration {
 	return time.Duration(math.Min(jitter, float64(defaultMaxRetryDelay)))
 }
 
-// retryableCheckFunc is a function that checks if the command should be retried.
-// Returns true if the command should be retried.
-type retryableCheckFunc func() bool
-
 type retryHandler interface {
 	// WaitUntilNextRetry waits until the next retry should be attempted.
 	// Returns false without error immediately if the command should not be retried.
 	// Returns false and an error if waiting for the next retry was interrupted.
 	// Returns true after the delay if the command should be retried.
-	WaitUntilNextRetry(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error)
+	WaitUntilNextRetry(ctx context.Context, attempts int, err error) (bool, error)
 }
 
 type retryer struct {
@@ -47,12 +43,8 @@ func newRetryer(retryDelay RetryDelay) *retryer {
 }
 
 func (r *retryer) WaitUntilNextRetry(
-	ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error,
+	ctx context.Context, attempts int, err error,
 ) (bool, error) {
-	if !isRetryable() {
-		return false, nil
-	}
-
 	delay := r.RetryDelay(attempts, err)
 	if delay < 0 {
 		return false, nil

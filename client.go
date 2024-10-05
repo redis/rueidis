@@ -44,24 +44,27 @@ func (c *singleClient) B() Builder {
 }
 
 func (c *singleClient) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
-	attempts := 1
+	var (
+		attempts        = 1
+		shouldRetry     bool
+		errAbortWaiting error
+	)
 retry:
 	resp = c.conn.Do(ctx, cmd)
-	shouldRetry, err := c.retryHandler.WaitUntilNextRetry(
-		ctx,
-		func() bool { return c.retry && cmd.IsReadOnly() && c.isRetryable(resp.NonRedisError(), ctx) },
-		attempts,
-		resp.Error(),
-	)
-	if shouldRetry {
-		attempts++
-		goto retry
+	if c.retry && cmd.IsReadOnly() && c.isRetryable(resp.NonRedisError(), ctx) {
+		shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+			ctx, attempts, resp.Error(),
+		)
+		if shouldRetry {
+			attempts++
+			goto retry
+		}
 	}
 	if resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
 		cmds.PutCompleted(cmd)
 	}
-	if err != nil {
-		return newErrResult(err)
+	if errAbortWaiting != nil {
+		return newErrResult(errAbortWaiting)
 	}
 	return resp
 }
@@ -96,15 +99,17 @@ retry:
 	resps = c.conn.DoMulti(ctx, multi...).s
 	if c.retry && allReadOnly(multi) {
 		for _, resp := range resps {
-			shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
-				ctx, func() bool { return c.isRetryable(resp.NonRedisError(), ctx) }, attempts, resp.Error(),
-			)
-			if shouldRetry {
-				attempts++
-				goto retry
-			}
-			if errAbortWaiting != nil {
-				break
+			if c.isRetryable(resp.NonRedisError(), ctx) {
+				shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+					ctx, attempts, resp.Error(),
+				)
+				if shouldRetry {
+					attempts++
+					goto retry
+				}
+				if errAbortWaiting != nil {
+					break
+				}
 			}
 		}
 	}
@@ -132,15 +137,17 @@ retry:
 	resps = c.conn.DoMultiCache(ctx, multi...).s
 	if c.retry {
 		for _, resp := range resps {
-			shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
-				ctx, func() bool { return c.isRetryable(resp.NonRedisError(), ctx) }, attempts, resp.Error(),
-			)
-			if shouldRetry {
-				attempts++
-				goto retry
-			}
-			if errAbortWaiting != nil {
-				break
+			if c.isRetryable(resp.NonRedisError(), ctx) {
+				shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+					ctx, attempts, resp.Error(),
+				)
+				if shouldRetry {
+					attempts++
+					goto retry
+				}
+				if errAbortWaiting != nil {
+					break
+				}
 			}
 		}
 	}
@@ -163,12 +170,12 @@ func (c *singleClient) DoCache(ctx context.Context, cmd Cacheable, ttl time.Dura
 	)
 retry:
 	resp = c.conn.DoCache(ctx, cmd, ttl)
-	shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
-		ctx, func() bool { return c.retry && c.isRetryable(resp.NonRedisError(), ctx) }, attempts, resp.Error(),
-	)
-	if shouldRetry {
-		attempts++
-		goto retry
+	if c.retry && c.isRetryable(resp.NonRedisError(), ctx) {
+		shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(ctx, attempts, resp.Error())
+		if shouldRetry {
+			attempts++
+			goto retry
+		}
 	}
 	if err := resp.NonRedisError(); err == nil || err == ErrDoCacheAborted {
 		cmds.PutCacheable(cmd)
@@ -187,18 +194,12 @@ func (c *singleClient) Receive(ctx context.Context, subscribe Completed, fn func
 	)
 retry:
 	err = c.conn.Receive(ctx, subscribe, fn)
-	shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
-		ctx,
-		func() bool {
-			_, ok := err.(*RedisError)
-			return c.retry && !ok && c.isRetryable(err, ctx)
-		},
-		attempts,
-		err,
-	)
-	if shouldRetry {
-		attempts++
-		goto retry
+	if _, ok := err.(*RedisError); !ok && c.retry && c.isRetryable(err, ctx) {
+		shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(ctx, attempts, err)
+		if shouldRetry {
+			attempts++
+			goto retry
+		}
 	}
 	if err == nil {
 		cmds.PutCompleted(subscribe)
@@ -257,15 +258,14 @@ retry:
 		return newErrResult(err)
 	}
 	resp = c.wire.Do(ctx, cmd)
-	shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
-		ctx,
-		func() bool { return c.retry && cmd.IsReadOnly() && isRetryable(resp.NonRedisError(), c.wire, ctx) },
-		attempts,
-		resp.Error(),
-	)
-	if shouldRetry {
-		attempts++
-		goto retry
+	if c.retry && cmd.IsReadOnly() && isRetryable(resp.NonRedisError(), c.wire, ctx) {
+		shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+			ctx, attempts, resp.Error(),
+		)
+		if shouldRetry {
+			attempts++
+			goto retry
+		}
 	}
 	if resp.NonRedisError() == nil {
 		cmds.PutCompleted(cmd)
@@ -295,18 +295,17 @@ retry:
 	}
 	resp = c.wire.DoMulti(ctx, multi...).s
 	for i, cmd := range multi {
-		shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
-			ctx,
-			func() bool { return retryable && isRetryable(resp[i].NonRedisError(), c.wire, ctx) },
-			attempts,
-			resp[i].Error(),
-		)
-		if shouldRetry {
-			attempts++
-			goto retry
-		}
-		if errAbortWaiting != nil {
-			break
+		if retryable && isRetryable(resp[i].NonRedisError(), c.wire, ctx) {
+			shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+				ctx, attempts, resp[i].Error(),
+			)
+			if shouldRetry {
+				attempts++
+				goto retry
+			}
+			if errAbortWaiting != nil {
+				break
+			}
 		}
 		if resp[i].NonRedisError() == nil {
 			cmds.PutCompleted(cmd)
@@ -329,18 +328,15 @@ retry:
 		return err
 	}
 	err = c.wire.Receive(ctx, subscribe, fn)
-	shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
-		ctx,
-		func() bool {
-			_, ok := err.(*RedisError)
-			return c.retry && !ok && isRetryable(err, c.wire, ctx)
-		},
-		attempts,
-		err,
-	)
-	if shouldRetry {
-		attempts++
-		goto retry
+	if _, ok := err.(*RedisError); !ok && c.retry && isRetryable(err, c.wire, ctx) {
+		shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+			ctx, attempts, err,
+		)
+		if shouldRetry {
+			attempts++
+			goto retry
+		}
+
 	}
 	if err == nil {
 		cmds.PutCompleted(subscribe)

@@ -480,15 +480,15 @@ process:
 		resultsp.Put(results)
 		goto process
 	case RedirectRetry:
-		shouldRetry, err := c.retryHandler.WaitUntilNextRetry(
-			ctx, func() bool { return c.retry && cmd.IsReadOnly() }, attempts, resp.Error(),
-		)
-		if shouldRetry {
-			attempts++
-			goto retry
-		}
-		if err != nil {
-			return newErrResult(err)
+		if c.retry && cmd.IsReadOnly() {
+			shouldRetry, err := c.retryHandler.WaitUntilNextRetry(ctx, attempts, resp.Error())
+			if shouldRetry {
+				attempts++
+				goto retry
+			}
+			if err != nil {
+				return newErrResult(err)
+			}
 		}
 	}
 	return resp
@@ -613,9 +613,9 @@ func (c *clusterClient) doresultfn(
 		if mode != RedirectNone {
 			nc := cc
 			if mode == RedirectRetry {
-				if !isWaitingForRetry {
+				if c.retry && cm.IsReadOnly() && !isWaitingForRetry {
 					shouldRetry, errAbortingWaiting := c.retryHandler.WaitUntilNextRetry(
-						ctx, func() bool { return c.retry && cm.IsReadOnly() }, attempts, resp.Error(),
+						ctx, attempts, resp.Error(),
 					)
 					if errAbortingWaiting != nil {
 						select {
@@ -766,19 +766,16 @@ process:
 				goto process
 			}
 		case RedirectRetry:
-			shouldRetry, errAbortWaiting := c.retryHandler.WaitUntilNextRetry(
-				ctx,
-				func() bool { return c.retry && allReadOnly(multi) },
-				attempts,
-				resp.Error(),
-			)
-			if shouldRetry {
-				resultsp.Put(resps)
-				attempts++
-				goto retry
-			}
-			if errAbortWaiting != nil {
-				return fillErrs(len(multi), errAbortWaiting)
+			if c.retry && allReadOnly(multi) {
+				shouldRetry, err := c.retryHandler.WaitUntilNextRetry(ctx, attempts, resp.Error())
+				if shouldRetry {
+					resultsp.Put(resps)
+					attempts++
+					goto retry
+				}
+				if err != nil {
+					return fillErrs(len(multi), err)
+				}
 			}
 		}
 	}
@@ -805,15 +802,15 @@ process:
 		resultsp.Put(results)
 		goto process
 	case RedirectRetry:
-		shouldRetry, err := c.retryHandler.WaitUntilNextRetry(
-			ctx, func() bool { return c.retry }, attempts, resp.Error(),
-		)
-		if shouldRetry {
-			attempts++
-			goto retry
-		}
-		if err != nil {
-			return newErrResult(err)
+		if c.retry {
+			shouldRetry, err := c.retryHandler.WaitUntilNextRetry(ctx, attempts, resp.Error())
+			if shouldRetry {
+				attempts++
+				goto retry
+			}
+			if err != nil {
+				return newErrResult(err)
+			}
 		}
 	}
 	return resp
@@ -949,10 +946,8 @@ func (c *clusterClient) resultcachefn(
 		if mode != RedirectNone {
 			nc := cc
 			if mode == RedirectRetry {
-				if !isWaitingForRetry {
-					shouldRetry, errAbortingWaiting := c.retryHandler.WaitUntilNextRetry(
-						ctx, func() bool { return c.retry }, attempts, resp.Error(),
-					)
+				if c.retry && !isWaitingForRetry {
+					shouldRetry, errAbortingWaiting := c.retryHandler.WaitUntilNextRetry(ctx, attempts, resp.Error())
 					if errAbortingWaiting != nil {
 						select {
 						case abortingRetryWaitingErrCh <- errAbortingWaiting:
@@ -1071,21 +1066,16 @@ retry:
 	}
 	err = cc.Receive(ctx, subscribe, fn)
 	if _, mode := c.shouldRefreshRetry(err, ctx); mode != RedirectNone {
-		shouldRetry, errAborting := c.retryHandler.WaitUntilNextRetry(
-			ctx,
-			func() bool {
-				return c.retry
-			},
-			attempts,
-			err,
-		)
-		if shouldRetry {
-			attempts++
-			goto retry
-		}
+		if c.retry {
+			shouldRetry, errAborting := c.retryHandler.WaitUntilNextRetry(ctx, attempts, err)
+			if shouldRetry {
+				attempts++
+				goto retry
+			}
 
-		if errAborting != nil {
-			err = errAborting
+			if errAborting != nil {
+				err = errAborting
+			}
 		}
 	}
 ret:
@@ -1269,12 +1259,14 @@ retry:
 		resp = w.Do(ctx, cmd)
 		switch _, mode := c.client.shouldRefreshRetry(resp.Error(), ctx); mode {
 		case RedirectRetry:
-			shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
-				ctx, func() bool { return c.retry && cmd.IsReadOnly() && w.Error() == nil }, attempts, resp.Error(),
-			)
-			if shouldRetry {
-				attempts++
-				goto retry
+			if c.retry && cmd.IsReadOnly() && w.Error() == nil {
+				shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+					ctx, attempts, resp.Error(),
+				)
+				if shouldRetry {
+					attempts++
+					goto retry
+				}
 			}
 		}
 	}
@@ -1309,15 +1301,17 @@ retry:
 		resp = w.DoMulti(ctx, multi...).s
 		for _, r := range resp {
 			_, mode := c.client.shouldRefreshRetry(r.Error(), ctx)
-			shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
-				ctx, func() bool { return mode == RedirectRetry && retryable && w.Error() == nil }, attempts, r.Error(),
-			)
-			if shouldRetry {
-				attempts++
-				goto retry
-			}
-			if mode != RedirectNone {
-				break
+			if mode == RedirectRetry && retryable && w.Error() == nil {
+				shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+					ctx, attempts, r.Error(),
+				)
+				if shouldRetry {
+					attempts++
+					goto retry
+				}
+				if mode != RedirectNone {
+					break
+				}
 			}
 		}
 	} else {
@@ -1348,12 +1342,12 @@ retry:
 	if w, err = c.acquire(ctx, subscribe.Slot()); err == nil {
 		err = w.Receive(ctx, subscribe, fn)
 		_, mode := c.client.shouldRefreshRetry(err, ctx)
-		shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
-			ctx, func() bool { return c.retry && mode == RedirectRetry && w.Error() == nil }, attempts, err,
-		)
-		if shouldRetry {
-			attempts++
-			goto retry
+		if c.retry && mode == RedirectRetry && w.Error() == nil {
+			shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(ctx, attempts, err)
+			if shouldRetry {
+				attempts++
+				goto retry
+			}
 		}
 	}
 	if err == nil {

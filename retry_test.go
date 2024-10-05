@@ -8,11 +8,11 @@ import (
 )
 
 type mockRetryHandler struct {
-	WaitUntilNextRetryFunc func(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error)
+	WaitUntilNextRetryFunc func(ctx context.Context, attempts int, err error) (bool, error)
 }
 
-func (m *mockRetryHandler) WaitUntilNextRetry(ctx context.Context, isRetryable retryableCheckFunc, attempts int, err error) (bool, error) {
-	return m.WaitUntilNextRetryFunc(ctx, isRetryable, attempts, err)
+func (m *mockRetryHandler) WaitUntilNextRetry(ctx context.Context, attempts int, err error) (bool, error) {
+	return m.WaitUntilNextRetryFunc(ctx, attempts, err)
 }
 
 func TestDefaultRetryDelay(t *testing.T) {
@@ -27,32 +27,14 @@ func TestDefaultRetryDelay(t *testing.T) {
 }
 
 func TestRetrier_WaitUntilNextRetry(t *testing.T) {
-	t.Run("retryableCheck returns false", func(t *testing.T) {
-		r := &retryer{}
-		retryableCheck := func() bool {
-			return false
-		}
-
-		shouldRetry, err := r.WaitUntilNextRetry(nil, retryableCheck, 0, nil)
-		if shouldRetry {
-			t.Error("WaitUntilNextRetry() = true; want false")
-		}
-		if err != nil {
-			t.Errorf("WaitUntilNextRetry() = %v; want nil", err)
-		}
-	})
-
 	t.Run("RetryDelay returns negative delay", func(t *testing.T) {
 		r := &retryer{
 			RetryDelay: func(attempts int, err error) time.Duration {
 				return -1 * time.Second
 			},
 		}
-		retryableCheck := func() bool {
-			return true
-		}
 
-		shouldRetry, err := r.WaitUntilNextRetry(nil, retryableCheck, 0, nil)
+		shouldRetry, err := r.WaitUntilNextRetry(nil, 0, nil)
 		if shouldRetry {
 			t.Error("WaitUntilNextRetry() = true; want false")
 		}
@@ -67,14 +49,11 @@ func TestRetrier_WaitUntilNextRetry(t *testing.T) {
 				return time.Second
 			},
 		}
-		retryableCheck := func() bool {
-			return true
-		}
 
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 
-		shouldRetry, err := r.WaitUntilNextRetry(ctx, retryableCheck, 0, nil)
+		shouldRetry, err := r.WaitUntilNextRetry(ctx, 0, nil)
 		if shouldRetry {
 			t.Error("WaitUntilNextRetry() = true; want false")
 		}
@@ -89,15 +68,12 @@ func TestRetrier_WaitUntilNextRetry(t *testing.T) {
 				return 10 * time.Millisecond
 			},
 		}
-		retryableCheck := func() bool {
-			return true
-		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 
 		start := time.Now()
-		shouldRetry, err := r.WaitUntilNextRetry(ctx, retryableCheck, 0, nil)
+		shouldRetry, err := r.WaitUntilNextRetry(ctx, 0, nil)
 		if !shouldRetry {
 			t.Error("WaitUntilNextRetry() = false; want true")
 		}
