@@ -2,8 +2,9 @@ package rueidis
 
 import (
 	"context"
-	"math/rand/v2"
 	"time"
+
+	"github.com/redis/rueidis/internal/util"
 )
 
 const (
@@ -19,7 +20,7 @@ type RetryDelay func(attempts int, err error) time.Duration
 // max delay is 1 second.
 func defaultRetryDelay(attempts int, _ error) time.Duration {
 	base := time.Microsecond * (1 << min(defaultMaxRetries, attempts))
-	jitter := time.Microsecond * time.Duration(rand.Int64N(1<<min(defaultMaxRetries, attempts)))
+	jitter := time.Microsecond * time.Duration(util.FastRand(1<<min(defaultMaxRetries, attempts)))
 	return min(defaultMaxRetryDelay, base+jitter)
 }
 
