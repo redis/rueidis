@@ -28,10 +28,3 @@ func TestRandomBytes(t *testing.T) {
 		t.Errorf("Expected length 24, got %d", len(val))
 	}
 }
-
-func TestFastRandFloat64(t *testing.T) {
-	res := FastRandFloat64()
-	if res < 0 || res >= 1 {
-		t.Errorf("Expected result between 0 and 1, got %f", res)
-	}
-}

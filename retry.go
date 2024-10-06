@@ -2,15 +2,13 @@ package rueidis
 
 import (
 	"context"
-	"math"
+	"math/rand/v2"
 	"time"
-
-	"github.com/redis/rueidis/internal/util"
 )
 
 const (
+	defaultMaxRetries    = 20
 	defaultMaxRetryDelay = 1 * time.Second
-	maxAttemptsShift     = 63 // Avoid excessive shifts
 )
 
 // RetryDelay returns the delay that should be used before retrying the
@@ -20,10 +18,9 @@ type RetryDelay func(attempts int, err error) time.Duration
 // defaultRetryDelay delays the next retry exponentially without considering the error.
 // max delay is 1 second.
 func defaultRetryDelay(attempts int, _ error) time.Duration {
-	base := util.FastRandFloat64()
-	backoff := uint64(1 << uint64(math.Min(float64(attempts), maxAttemptsShift)))
-	jitter := base * float64(backoff) * float64(time.Millisecond)
-	return time.Duration(math.Min(jitter, float64(defaultMaxRetryDelay)))
+	base := time.Microsecond * (1 << min(defaultMaxRetries, attempts))
+	jitter := time.Microsecond * time.Duration(rand.Int64N(1<<min(defaultMaxRetries, attempts)))
+	return min(defaultMaxRetryDelay, base+jitter)
 }
 
 type retryHandler interface {

@@ -23,7 +23,3 @@ func RandomBytes() []byte {
 	binary.BigEndian.PutUint64(val[16:24], rand.Uint64())
 	return val
 }
-
-func FastRandFloat64() float64 {
-	return rand.Float64()
-}
