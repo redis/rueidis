@@ -63,15 +63,11 @@ func (c *sentinelClient) B() Builder {
 }
 
 func (c *sentinelClient) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
-	var (
-		attempts        = 1
-		shouldRetry     bool
-		errAbortWaiting error
-	)
+	attempts := 1
 retry:
 	resp = c.mConn.Load().(conn).Do(ctx, cmd)
 	if c.retry && cmd.IsReadOnly() && c.isRetryable(resp.NonRedisError(), ctx) {
-		shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+		shouldRetry := c.retryHandler.WaitUntilNextRetry(
 			ctx, attempts, resp.Error(),
 		)
 		if shouldRetry {
@@ -82,9 +78,6 @@ retry:
 	if resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
 		cmds.PutCompleted(cmd)
 	}
-	if errAbortWaiting != nil {
-		return newErrResult(errAbortWaiting)
-	}
 	return resp
 }
 
@@ -92,26 +85,20 @@ func (c *sentinelClient) DoMulti(ctx context.Context, multi ...Completed) []Redi
 	if len(multi) == 0 {
 		return nil
 	}
-	var (
-		attempts        = 1
-		shouldRetry     bool
-		errAbortWaiting error
-	)
+
+	attempts := 1
 retry:
 	resps := c.mConn.Load().(conn).DoMulti(ctx, multi...)
 	if c.retry && allReadOnly(multi) {
 		for _, resp := range resps.s {
 			if c.isRetryable(resp.NonRedisError(), ctx) {
-				shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+				shouldRetry := c.retryHandler.WaitUntilNextRetry(
 					ctx, attempts, resp.Error(),
 				)
 				if shouldRetry {
 					resultsp.Put(resps)
 					attempts++
 					goto retry
-				}
-				if errAbortWaiting != nil {
-					break
 				}
 			}
 		}
@@ -121,22 +108,15 @@ retry:
 			cmds.PutCompleted(cmd)
 		}
 	}
-	if errAbortWaiting != nil {
-		return fillErrs(len(multi), errAbortWaiting)
-	}
 	return resps.s
 }
 
 func (c *sentinelClient) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult) {
-	var (
-		attempts        = 1
-		shouldRetry     bool
-		errAbortWaiting error
-	)
+	attempts := 1
 retry:
 	resp = c.mConn.Load().(conn).DoCache(ctx, cmd, ttl)
 	if c.retry && c.isRetryable(resp.NonRedisError(), ctx) {
-		shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(ctx, attempts, resp.Error())
+		shouldRetry := c.retryHandler.WaitUntilNextRetry(ctx, attempts, resp.Error())
 		if shouldRetry {
 			attempts++
 			goto retry
@@ -146,9 +126,6 @@ retry:
 	if err := resp.NonRedisError(); err == nil || err == ErrDoCacheAborted {
 		cmds.PutCacheable(cmd)
 	}
-	if errAbortWaiting != nil {
-		return newErrResult(errAbortWaiting)
-	}
 	return resp
 }
 
@@ -156,26 +133,19 @@ func (c *sentinelClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL
 	if len(multi) == 0 {
 		return nil
 	}
-	var (
-		attempts        = 1
-		shouldRetry     bool
-		errAbortWaiting error
-	)
+	attempts := 1
 retry:
 	resps := c.mConn.Load().(conn).DoMultiCache(ctx, multi...)
 	if c.retry {
 		for _, resp := range resps.s {
 			if c.isRetryable(resp.NonRedisError(), ctx) {
-				shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+				shouldRetry := c.retryHandler.WaitUntilNextRetry(
 					ctx, attempts, resp.Error(),
 				)
 				if shouldRetry {
 					resultsp.Put(resps)
 					attempts++
 					goto retry
-				}
-				if errAbortWaiting != nil {
-					break
 				}
 			}
 		}
@@ -185,22 +155,15 @@ retry:
 			cmds.PutCacheable(cmd.Cmd)
 		}
 	}
-	if errAbortWaiting != nil {
-		return fillErrs(len(multi), errAbortWaiting)
-	}
 	return resps.s
 }
 
 func (c *sentinelClient) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) (err error) {
-	var (
-		attempts        = 1
-		shouldRetry     bool
-		errAbortWaiting error
-	)
+	attempts := 1
 retry:
 	err = c.mConn.Load().(conn).Receive(ctx, subscribe, fn)
 	if _, ok := err.(*RedisError); !ok && c.retry && c.isRetryable(err, ctx) {
-		shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+		shouldRetry := c.retryHandler.WaitUntilNextRetry(
 			ctx, attempts, err,
 		)
 		if shouldRetry {
@@ -210,9 +173,6 @@ retry:
 	}
 	if err == nil {
 		cmds.PutCompleted(subscribe)
-	}
-	if errAbortWaiting != nil {
-		return errAbortWaiting
 	}
 	return err
 }

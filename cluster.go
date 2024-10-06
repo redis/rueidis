@@ -481,7 +481,7 @@ process:
 		goto process
 	case RedirectRetry:
 		if c.retry && cmd.IsReadOnly() {
-			shouldRetry, err := c.retryHandler.WaitUntilNextRetry(ctx, attempts, resp.Error())
+			shouldRetry := c.retryHandler.WaitUntilNextRetry(ctx, attempts, resp.Error())
 			if shouldRetry {
 				attempts++
 				goto retry
@@ -602,7 +602,7 @@ func (c *clusterClient) pickMulti(ctx context.Context, multi []Completed) (*conn
 }
 
 func (c *clusterClient) doresultfn(
-	ctx context.Context, results *redisresults, retries *connretry, mu *sync.Mutex, cc conn, cIndexes []int, commands []Completed, resps []RedisResult, attempts int, abortRetryWaitingErrCh chan<- error,
+	ctx context.Context, results *redisresults, retries *connretry, mu *sync.Mutex, cc conn, cIndexes []int, commands []Completed, resps []RedisResult, attempts int,
 ) {
 	isWaitingForRetry := false // NOTE: mitigate duplicate waiting for retry
 	for i, resp := range resps {
@@ -618,16 +618,9 @@ func (c *clusterClient) doresultfn(
 				}
 
 				if !isWaitingForRetry {
-					shouldRetry, errAbortingWaiting := c.retryHandler.WaitUntilNextRetry(
+					shouldRetry := c.retryHandler.WaitUntilNextRetry(
 						ctx, attempts, resp.Error(),
 					)
-					if errAbortingWaiting != nil {
-						select {
-						case abortRetryWaitingErrCh <- errAbortingWaiting:
-						default:
-						}
-						break
-					}
 
 					if !shouldRetry {
 						continue
@@ -657,16 +650,16 @@ func (c *clusterClient) doresultfn(
 }
 
 func (c *clusterClient) doretry(
-	ctx context.Context, cc conn, results *redisresults, retries *connretry, re *retry, mu *sync.Mutex, wg *sync.WaitGroup, attempts int, abortingRetryWaitingErrCh chan<- error,
+	ctx context.Context, cc conn, results *redisresults, retries *connretry, re *retry, mu *sync.Mutex, wg *sync.WaitGroup, attempts int,
 ) {
 	if len(re.commands) != 0 {
 		resps := cc.DoMulti(ctx, re.commands...)
-		c.doresultfn(ctx, results, retries, mu, cc, re.cIndexes, re.commands, resps.s, attempts, abortingRetryWaitingErrCh)
+		c.doresultfn(ctx, results, retries, mu, cc, re.cIndexes, re.commands, resps.s, attempts)
 		resultsp.Put(resps)
 	}
 	if len(re.cAskings) != 0 {
 		resps := askingMulti(cc, ctx, re.cAskings)
-		c.doresultfn(ctx, results, retries, mu, cc, re.aIndexes, re.cAskings, resps.s, attempts, abortingRetryWaitingErrCh)
+		c.doresultfn(ctx, results, retries, mu, cc, re.aIndexes, re.cAskings, resps.s, attempts)
 		resultsp.Put(resps)
 	}
 	if ctx.Err() == nil {
@@ -701,26 +694,18 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...Completed) []Redis
 	attempts := 1
 
 retry:
-	abortingRetryWaitingErrCh := make(chan error, 1)
 	var errAbortingRetryWaitingResps []RedisResult
 
 	wg.Add(len(retries.m))
 	mu.Lock()
 	for cc, re := range retries.m {
 		delete(retries.m, cc)
-		go c.doretry(ctx, cc, results, retries, re, &mu, &wg, attempts, abortingRetryWaitingErrCh)
+		go c.doretry(ctx, cc, results, retries, re, &mu, &wg, attempts)
 	}
 	mu.Unlock()
 	wg.Wait()
 
-	close(abortingRetryWaitingErrCh)
-	for err := range abortingRetryWaitingErrCh {
-		if err != nil {
-			errAbortingRetryWaitingResps = fillErrs(len(multi), err)
-			break
-		}
-	}
-	if len(errAbortingRetryWaitingResps) == 0 && len(retries.m) != 0 {
+	if len(retries.m) != 0 {
 		attempts++
 		goto retry
 	}
@@ -771,7 +756,7 @@ process:
 			}
 		case RedirectRetry:
 			if c.retry && allReadOnly(multi) {
-				shouldRetry, err := c.retryHandler.WaitUntilNextRetry(ctx, attempts, resp.Error())
+				shouldRetry := c.retryHandler.WaitUntilNextRetry(ctx, attempts, resp.Error())
 				if shouldRetry {
 					resultsp.Put(resps)
 					attempts++
@@ -807,7 +792,7 @@ process:
 		goto process
 	case RedirectRetry:
 		if c.retry {
-			shouldRetry, err := c.retryHandler.WaitUntilNextRetry(ctx, attempts, resp.Error())
+			shouldRetry := c.retryHandler.WaitUntilNextRetry(ctx, attempts, resp.Error())
 			if shouldRetry {
 				attempts++
 				goto retry
@@ -939,7 +924,7 @@ func (c *clusterClient) pickMultiCache(ctx context.Context, multi []CacheableTTL
 }
 
 func (c *clusterClient) resultcachefn(
-	ctx context.Context, results *redisresults, retries *connretrycache, mu *sync.Mutex, cc conn, cIndexes []int, commands []CacheableTTL, resps []RedisResult, attempts int, abortingRetryWaitingErrCh chan<- error,
+	ctx context.Context, results *redisresults, retries *connretrycache, mu *sync.Mutex, cc conn, cIndexes []int, commands []CacheableTTL, resps []RedisResult, attempts int,
 ) {
 	isWaitingForRetry := false // NOTE: mitigate duplicate waiting for retry
 	for i, resp := range resps {
@@ -955,14 +940,7 @@ func (c *clusterClient) resultcachefn(
 				}
 
 				if !isWaitingForRetry {
-					shouldRetry, errAbortingWaiting := c.retryHandler.WaitUntilNextRetry(ctx, attempts, resp.Error())
-					if errAbortingWaiting != nil {
-						select {
-						case abortingRetryWaitingErrCh <- errAbortingWaiting:
-						default:
-						}
-						break
-					}
+					shouldRetry := c.retryHandler.WaitUntilNextRetry(ctx, attempts, resp.Error())
 
 					if !shouldRetry {
 						continue
@@ -992,16 +970,16 @@ func (c *clusterClient) resultcachefn(
 }
 
 func (c *clusterClient) doretrycache(
-	ctx context.Context, cc conn, results *redisresults, retries *connretrycache, re *retrycache, mu *sync.Mutex, wg *sync.WaitGroup, attempts int, abortingRetryWaitingErrCh chan<- error,
+	ctx context.Context, cc conn, results *redisresults, retries *connretrycache, re *retrycache, mu *sync.Mutex, wg *sync.WaitGroup, attempts int,
 ) {
 	if len(re.commands) != 0 {
 		resps := cc.DoMultiCache(ctx, re.commands...)
-		c.resultcachefn(ctx, results, retries, mu, cc, re.cIndexes, re.commands, resps.s, attempts, abortingRetryWaitingErrCh)
+		c.resultcachefn(ctx, results, retries, mu, cc, re.cIndexes, re.commands, resps.s, attempts)
 		resultsp.Put(resps)
 	}
 	if len(re.cAskings) != 0 {
 		resps := askingMultiCache(cc, ctx, re.cAskings)
-		c.resultcachefn(ctx, results, retries, mu, cc, re.aIndexes, re.cAskings, resps.s, attempts, abortingRetryWaitingErrCh)
+		c.resultcachefn(ctx, results, retries, mu, cc, re.aIndexes, re.cAskings, resps.s, attempts)
 		resultsp.Put(resps)
 	}
 	if ctx.Err() == nil {
@@ -1029,26 +1007,16 @@ func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL)
 	attempts := 1
 
 retry:
-	abortingRetryWaitingErrCh := make(chan error, 1)
-	var errAbortingRetryWaitingResps []RedisResult
-
 	wg.Add(len(retries.m))
 	mu.Lock()
 	for cc, re := range retries.m {
 		delete(retries.m, cc)
-		go c.doretrycache(ctx, cc, results, retries, re, &mu, &wg, attempts, abortingRetryWaitingErrCh)
+		go c.doretrycache(ctx, cc, results, retries, re, &mu, &wg, attempts)
 	}
 	mu.Unlock()
 	wg.Wait()
 
-	close(abortingRetryWaitingErrCh)
-	for err := range abortingRetryWaitingErrCh {
-		if err != nil {
-			errAbortingRetryWaitingResps = fillErrs(len(multi), err)
-			break
-		}
-	}
-	if len(errAbortingRetryWaitingResps) == 0 && len(retries.m) != 0 {
+	if len(retries.m) != 0 {
 		attempts++
 		goto retry
 	}
@@ -1059,9 +1027,6 @@ retry:
 		}
 	}
 
-	if len(errAbortingRetryWaitingResps) > 0 {
-		return errAbortingRetryWaitingResps
-	}
 	return results.s
 }
 
@@ -1074,14 +1039,10 @@ retry:
 	}
 	err = cc.Receive(ctx, subscribe, fn)
 	if _, mode := c.shouldRefreshRetry(err, ctx); c.retry && mode != RedirectNone {
-		shouldRetry, errAborting := c.retryHandler.WaitUntilNextRetry(ctx, attempts, err)
+		shouldRetry := c.retryHandler.WaitUntilNextRetry(ctx, attempts, err)
 		if shouldRetry {
 			attempts++
 			goto retry
-		}
-
-		if errAborting != nil {
-			err = errAborting
 		}
 	}
 ret:
@@ -1253,11 +1214,7 @@ func (c *dedicatedClusterClient) B() Builder {
 }
 
 func (c *dedicatedClusterClient) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
-	var (
-		shouldRetry     bool
-		attempts        = 1
-		errAbortWaiting error
-	)
+	attempts := 1
 retry:
 	if w, err := c.acquire(ctx, cmd.Slot()); err != nil {
 		resp = newErrResult(err)
@@ -1266,7 +1223,7 @@ retry:
 		switch _, mode := c.client.shouldRefreshRetry(resp.Error(), ctx); mode {
 		case RedirectRetry:
 			if c.retry && cmd.IsReadOnly() && w.Error() == nil {
-				shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+				shouldRetry := c.retryHandler.WaitUntilNextRetry(
 					ctx, attempts, resp.Error(),
 				)
 				if shouldRetry {
@@ -1278,9 +1235,6 @@ retry:
 	}
 	if resp.NonRedisError() == nil {
 		cmds.PutCompleted(cmd)
-	}
-	if errAbortWaiting != nil {
-		return newErrResult(errAbortWaiting)
 	}
 	return resp
 }
@@ -1297,18 +1251,14 @@ func (c *dedicatedClusterClient) DoMulti(ctx context.Context, multi ...Completed
 	if retryable {
 		retryable = allReadOnly(multi)
 	}
-	var (
-		shouldRetry     bool
-		attempts        = 1
-		errAbortWaiting error
-	)
+	attempts := 1
 retry:
 	if w, err := c.acquire(ctx, slot); err == nil {
 		resp = w.DoMulti(ctx, multi...).s
 		for _, r := range resp {
 			_, mode := c.client.shouldRefreshRetry(r.Error(), ctx)
 			if mode == RedirectRetry && retryable && w.Error() == nil {
-				shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(
+				shouldRetry := c.retryHandler.WaitUntilNextRetry(
 					ctx, attempts, r.Error(),
 				)
 				if shouldRetry {
@@ -1331,24 +1281,19 @@ retry:
 			cmds.PutCompleted(cmd)
 		}
 	}
-	if errAbortWaiting != nil {
-		return fillErrs(len(multi), errAbortWaiting)
-	}
 	return resp
 }
 
 func (c *dedicatedClusterClient) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) (err error) {
 	var (
-		w               wire
-		shouldRetry     bool
-		attempts        = 1
-		errAbortWaiting error
+		w        wire
+		attempts = 1
 	)
 retry:
 	if w, err = c.acquire(ctx, subscribe.Slot()); err == nil {
 		err = w.Receive(ctx, subscribe, fn)
 		if _, mode := c.client.shouldRefreshRetry(err, ctx); c.retry && mode == RedirectRetry && w.Error() == nil {
-			shouldRetry, errAbortWaiting = c.retryHandler.WaitUntilNextRetry(ctx, attempts, err)
+			shouldRetry := c.retryHandler.WaitUntilNextRetry(ctx, attempts, err)
 			if shouldRetry {
 				attempts++
 				goto retry
@@ -1357,9 +1302,6 @@ retry:
 	}
 	if err == nil {
 		cmds.PutCompleted(subscribe)
-	}
-	if errAbortWaiting != nil {
-		return errAbortWaiting
 	}
 	return err
 }

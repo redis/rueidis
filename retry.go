@@ -28,10 +28,9 @@ func defaultRetryDelay(attempts int, _ error) time.Duration {
 
 type retryHandler interface {
 	// WaitUntilNextRetry waits until the next retry should be attempted.
-	// Returns false without error immediately if the command should not be retried.
-	// Returns false and an error if waiting for the next retry was interrupted.
+	// Returns false immediately if the command should not be retried.
 	// Returns true after the delay if the command should be retried.
-	WaitUntilNextRetry(ctx context.Context, attempts int, err error) (bool, error)
+	WaitUntilNextRetry(ctx context.Context, attempts int, err error) bool
 }
 
 type retryer struct {
@@ -44,19 +43,24 @@ func newRetryer(retryDelay RetryDelay) *retryer {
 
 func (r *retryer) WaitUntilNextRetry(
 	ctx context.Context, attempts int, err error,
-) (bool, error) {
+) bool {
 	delay := r.RetryDelay(attempts, err)
 	if delay < 0 {
-		return false, nil
+		return false
 	}
 
-	timer := time.NewTimer(delay)
-	defer timer.Stop()
-
-	select {
-	case <-ctx.Done():
-		return false, ctx.Err()
-	case <-timer.C:
-		return true, nil
+	if dl, ok := ctx.Deadline(); !ok || time.Until(dl) > delay {
+		if ch := ctx.Done(); ch != nil {
+			tm := time.NewTimer(delay)
+			defer tm.Stop()
+			select {
+			case <-ch:
+			case <-tm.C:
+			}
+		} else {
+			time.Sleep(delay)
+		}
+		return true
 	}
+	return false
 }
