@@ -691,8 +691,6 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...Completed) []Redis
 	attempts := 1
 
 retry:
-	var errAbortingRetryWaitingResps []RedisResult
-
 	wg.Add(len(retries.m))
 	mu.Lock()
 	for cc, re := range retries.m {
@@ -711,10 +709,6 @@ retry:
 		if results.s[i].NonRedisError() == nil {
 			cmds.PutCompleted(cmd)
 		}
-	}
-
-	if len(errAbortingRetryWaitingResps) > 0 {
-		return errAbortingRetryWaitingResps
 	}
 	return results.s
 }
@@ -1017,7 +1011,6 @@ retry:
 			cmds.PutCacheable(cmd.Cmd)
 		}
 	}
-
 	return results.s
 }
 
