@@ -486,9 +486,6 @@ process:
 				attempts++
 				goto retry
 			}
-			if err != nil {
-				return newErrResult(err)
-			}
 		}
 	}
 	return resp
@@ -762,9 +759,6 @@ process:
 					attempts++
 					goto retry
 				}
-				if err != nil {
-					return fillErrs(len(multi), err)
-				}
 			}
 		}
 	}
@@ -796,9 +790,6 @@ process:
 			if shouldRetry {
 				attempts++
 				goto retry
-			}
-			if err != nil {
-				return newErrResult(err)
 			}
 		}
 	}
