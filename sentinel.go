@@ -151,7 +151,7 @@ retry:
 		}
 	}
 	for i, cmd := range multi {
-		if nonRedisErr := resps.s[i].NonRedisError(); nonRedisErr == nil || nonRedisErr == ErrDoCacheAborted {
+		if err := resps.s[i].NonRedisError(); err == nil || err == ErrDoCacheAborted {
 			cmds.PutCacheable(cmd.Cmd)
 		}
 	}
@@ -162,13 +162,15 @@ func (c *sentinelClient) Receive(ctx context.Context, subscribe Completed, fn fu
 	attempts := 1
 retry:
 	err = c.mConn.Load().(conn).Receive(ctx, subscribe, fn)
-	if _, ok := err.(*RedisError); !ok && c.retry && c.isRetryable(err, ctx) {
-		shouldRetry := c.retryHandler.WaitUntilNextRetry(
-			ctx, attempts, err,
-		)
-		if shouldRetry {
-			attempts++
-			goto retry
+	if c.retry {
+		if _, ok := err.(*RedisError); !ok && c.isRetryable(err, ctx) {
+			shouldRetry := c.retryHandler.WaitUntilNextRetry(
+				ctx, attempts, err,
+			)
+			if shouldRetry {
+				attempts++
+				goto retry
+			}
 		}
 	}
 	if err == nil {
