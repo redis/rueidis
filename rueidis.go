@@ -165,6 +165,10 @@ type ClientOption struct {
 	ClientNoTouch bool
 	// DisableRetry disables retrying read-only commands under network errors
 	DisableRetry bool
+	// RetryDelay is the function that returns the delay that should be used before retrying the attempt.
+	// The default is an exponential backoff with a maximum delay of 1 second.
+	// Only used when DisableRetry is false.
+	RetryDelay RetryDelay
 	// DisableCache falls back Client.DoCache/Client.DoMultiCache to Client.Do/Client.DoMulti
 	DisableCache bool
 	// AlwaysPipelining makes rueidis.Client always pipeline redis commands even if they are not issued concurrently.
@@ -362,21 +366,24 @@ func NewClient(option ClientOption) (client Client, err error) {
 	if option.PipelineMultiplex > MaxPipelineMultiplex {
 		return nil, ErrWrongPipelineMultiplex
 	}
+	if option.RetryDelay == nil {
+		option.RetryDelay = defaultRetryDelay
+	}
 	if option.Sentinel.MasterSet != "" {
 		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
-		return newSentinelClient(&option, makeConn)
+		return newSentinelClient(&option, makeConn, newRetryer(option.RetryDelay))
 	}
 	if option.ForceSingleClient {
 		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
-		return newSingleClient(&option, nil, makeConn)
+		return newSingleClient(&option, nil, makeConn, newRetryer(option.RetryDelay))
 	}
-	if client, err = newClusterClient(&option, makeConn); err != nil {
+	if client, err = newClusterClient(&option, makeConn, newRetryer(option.RetryDelay)); err != nil {
 		if client == (*clusterClient)(nil) {
 			return nil, err
 		}
 		if len(option.InitAddress) == 1 && (err.Error() == redisErrMsgCommandNotAllow || strings.Contains(strings.ToUpper(err.Error()), "CLUSTER")) {
 			option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
-			client, err = newSingleClient(&option, client.(*clusterClient).single(), makeConn)
+			client, err = newSingleClient(&option, client.(*clusterClient).single(), makeConn, newRetryer(option.RetryDelay))
 		} else {
 			client.Close()
 			return nil, err
