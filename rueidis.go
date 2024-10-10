@@ -167,6 +167,8 @@ type ClientOption struct {
 	DisableRetry bool
 	// DisableCache falls back Client.DoCache/Client.DoMultiCache to Client.Do/Client.DoMulti
 	DisableCache bool
+	// DisableAutoPipelining makes rueidis.Client always pick a connection from the BlockingPool to serve each request.
+	DisableAutoPipelining bool
 	// AlwaysPipelining makes rueidis.Client always pipeline redis commands even if they are not issued concurrently.
 	AlwaysPipelining bool
 	// AlwaysRESP2 makes rueidis.Client always uses RESP2, otherwise it will try using RESP3 first.
@@ -353,6 +355,9 @@ func NewClient(option ClientOption) (client Client, err error) {
 	}
 	if option.BlockingPipeline == 0 {
 		option.BlockingPipeline = DefaultBlockingPipeline
+	}
+	if option.DisableAutoPipelining {
+		option.AlwaysPipelining = false
 	}
 	if option.ShuffleInit {
 		util.Shuffle(len(option.InitAddress), func(i, j int) {
