@@ -3033,6 +3033,22 @@ func TestPubSub(t *testing.T) {
 		}
 	})
 
+	t.Run("PubSub blocking mixed", func(t *testing.T) {
+		p, _, cancel, _ := setup(t, ClientOption{})
+		defer cancel()
+
+		commands := []Completed{
+			builder.Subscribe().Channel("a").Build(),
+			builder.Psubscribe().Pattern("b").Build(),
+			builder.Blpop().Key("c").Timeout(0).Build(),
+		}
+		for _, resp := range p.DoMulti(context.Background(), commands...).s {
+			if e := resp.Error(); e != ErrBlockingPubSubMixed {
+				t.Fatalf("unexpected err %v", e)
+			}
+		}
+	})
+
 	t.Run("RESP2 pubsub mixed", func(t *testing.T) {
 		p, _, cancel, _ := setup(t, ClientOption{})
 		p.version = 5
