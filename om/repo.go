@@ -16,6 +16,8 @@ type (
 	FtSearchIndex = cmds.FtSearchIndex
 	// FtAggregateIndex is the FT.AGGREGATE command builder
 	FtAggregateIndex = cmds.FtAggregateIndex
+	// FtAlterSchema is the FT.ALTERINDEX command builder
+	FtAlterSchema = cmds.FtAlterSchema
 	// Arbitrary is alias to cmds.Arbitrary. This allows user build arbitrary command in Repository.CreateIndex
 	Arbitrary = cmds.Arbitrary
 )
@@ -43,6 +45,7 @@ type Repository[T any] interface {
 	SaveMulti(ctx context.Context, entity ...*T) (errs []error)
 	Remove(ctx context.Context, id string) error
 	CreateIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) rueidis.Completed) error
+	AlterIndex(ctx context.Context, cmdFn func(schema FtAlterSchema) rueidis.Completed) error
 	DropIndex(ctx context.Context) error
 	IndexName() string
 }
