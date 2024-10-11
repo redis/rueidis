@@ -1,6 +1,10 @@
 package rueidis
 
-import "github.com/redis/rueidis/internal/util"
+import (
+	"sync/atomic"
+
+	"github.com/redis/rueidis/internal/util"
+)
 
 var (
 	resultsp = util.NewPool(func(capacity int) *redisresults {
@@ -215,8 +219,9 @@ func (r *conncount) ResetLen(n int) {
 }
 
 type connretry struct {
-	m map[conn]*retry
-	n int
+	m         map[conn]*retry
+	n         int
+	Redirects atomic.Uint64
 }
 
 func (r *connretry) Capacity() int {
@@ -228,8 +233,9 @@ func (r *connretry) ResetLen(n int) {
 }
 
 type connretrycache struct {
-	m map[conn]*retrycache
-	n int
+	m         map[conn]*retrycache
+	n         int
+	Redirects atomic.Uint64
 }
 
 func (r *connretrycache) Capacity() int {

@@ -599,9 +599,8 @@ func (c *clusterClient) pickMulti(ctx context.Context, multi []Completed) (*conn
 }
 
 func (c *clusterClient) doresultfn(
-	ctx context.Context, results *redisresults, retries *connretry, mu *sync.Mutex, cc conn, cIndexes []int, commands []Completed, resps []RedisResult, attempts int,
+	ctx context.Context, results *redisresults, retries *connretry, mu *sync.Mutex, cc conn, cIndexes []int, commands []Completed, resps []RedisResult, retryErrCh chan<- error,
 ) {
-	isWaitingForRetry := false // NOTE: mitigate duplicate waiting for retry
 	for i, resp := range resps {
 		ii := cIndexes[i]
 		cm := commands[i]
@@ -614,21 +613,17 @@ func (c *clusterClient) doresultfn(
 					continue
 				}
 
-				if !isWaitingForRetry {
-					shouldRetry := c.retryHandler.WaitUntilNextRetry(
-						ctx, attempts, resp.Error(),
-					)
-
-					if !shouldRetry {
-						continue
-					}
-
-					isWaitingForRetry = true
+				select {
+				case retryErrCh <- resp.Error():
+				default:
 				}
 			} else {
 				nc = c.redirectOrNew(addr, cc, cm.Slot(), mode)
 			}
 			mu.Lock()
+			if mode != RedirectRetry {
+				retries.Redirects.Add(1)
+			}
 			nr := retries.m[nc]
 			if nr == nil {
 				nr = retryp.Get(0, len(commands))
@@ -647,16 +642,16 @@ func (c *clusterClient) doresultfn(
 }
 
 func (c *clusterClient) doretry(
-	ctx context.Context, cc conn, results *redisresults, retries *connretry, re *retry, mu *sync.Mutex, wg *sync.WaitGroup, attempts int,
+	ctx context.Context, cc conn, results *redisresults, retries *connretry, re *retry, mu *sync.Mutex, wg *sync.WaitGroup, retryErrCh chan<- error,
 ) {
 	if len(re.commands) != 0 {
 		resps := cc.DoMulti(ctx, re.commands...)
-		c.doresultfn(ctx, results, retries, mu, cc, re.cIndexes, re.commands, resps.s, attempts)
+		c.doresultfn(ctx, results, retries, mu, cc, re.cIndexes, re.commands, resps.s, retryErrCh)
 		resultsp.Put(resps)
 	}
 	if len(re.cAskings) != 0 {
 		resps := askingMulti(cc, ctx, re.cAskings)
-		c.doresultfn(ctx, results, retries, mu, cc, re.aIndexes, re.cAskings, resps.s, attempts)
+		c.doresultfn(ctx, results, retries, mu, cc, re.aIndexes, re.cAskings, resps.s, retryErrCh)
 		resultsp.Put(resps)
 	}
 	if ctx.Err() == nil {
@@ -691,18 +686,32 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...Completed) []Redis
 	attempts := 1
 
 retry:
+	retryErrCh := make(chan error, len(multi))
+
 	wg.Add(len(retries.m))
 	mu.Lock()
 	for cc, re := range retries.m {
 		delete(retries.m, cc)
-		go c.doretry(ctx, cc, results, retries, re, &mu, &wg, attempts)
+		go c.doretry(ctx, cc, results, retries, re, &mu, &wg, retryErrCh)
 	}
 	mu.Unlock()
 	wg.Wait()
 
+	close(retryErrCh)
+
 	if len(retries.m) != 0 {
-		attempts++
-		goto retry
+		for retryableErr := range retryErrCh {
+			shouldRetry := c.retryHandler.WaitUntilNextRetry(ctx, attempts, retryableErr)
+			if shouldRetry {
+				attempts++
+				goto retry
+			}
+		}
+
+		if retries.Redirects.Load() > 0 {
+			retries.Redirects.Store(0) // reset
+			goto retry
+		}
 	}
 
 	for i, cmd := range multi {
@@ -909,9 +918,8 @@ func (c *clusterClient) pickMultiCache(ctx context.Context, multi []CacheableTTL
 }
 
 func (c *clusterClient) resultcachefn(
-	ctx context.Context, results *redisresults, retries *connretrycache, mu *sync.Mutex, cc conn, cIndexes []int, commands []CacheableTTL, resps []RedisResult, attempts int,
+	ctx context.Context, results *redisresults, retries *connretrycache, mu *sync.Mutex, cc conn, cIndexes []int, commands []CacheableTTL, resps []RedisResult, retryErrCh chan<- error,
 ) {
-	isWaitingForRetry := false // NOTE: mitigate duplicate waiting for retry
 	for i, resp := range resps {
 		ii := cIndexes[i]
 		cm := commands[i]
@@ -924,19 +932,17 @@ func (c *clusterClient) resultcachefn(
 					continue
 				}
 
-				if !isWaitingForRetry {
-					shouldRetry := c.retryHandler.WaitUntilNextRetry(ctx, attempts, resp.Error())
-
-					if !shouldRetry {
-						continue
-					}
-
-					isWaitingForRetry = true
+				select {
+				case retryErrCh <- resp.Error():
+				default:
 				}
 			} else {
 				nc = c.redirectOrNew(addr, cc, cm.Cmd.Slot(), mode)
 			}
 			mu.Lock()
+			if mode != RedirectRetry {
+				retries.Redirects.Add(1)
+			}
 			nr := retries.m[nc]
 			if nr == nil {
 				nr = retrycachep.Get(0, len(commands))
@@ -955,16 +961,16 @@ func (c *clusterClient) resultcachefn(
 }
 
 func (c *clusterClient) doretrycache(
-	ctx context.Context, cc conn, results *redisresults, retries *connretrycache, re *retrycache, mu *sync.Mutex, wg *sync.WaitGroup, attempts int,
+	ctx context.Context, cc conn, results *redisresults, retries *connretrycache, re *retrycache, mu *sync.Mutex, wg *sync.WaitGroup, retryErrCh chan<- error,
 ) {
 	if len(re.commands) != 0 {
 		resps := cc.DoMultiCache(ctx, re.commands...)
-		c.resultcachefn(ctx, results, retries, mu, cc, re.cIndexes, re.commands, resps.s, attempts)
+		c.resultcachefn(ctx, results, retries, mu, cc, re.cIndexes, re.commands, resps.s, retryErrCh)
 		resultsp.Put(resps)
 	}
 	if len(re.cAskings) != 0 {
 		resps := askingMultiCache(cc, ctx, re.cAskings)
-		c.resultcachefn(ctx, results, retries, mu, cc, re.aIndexes, re.cAskings, resps.s, attempts)
+		c.resultcachefn(ctx, results, retries, mu, cc, re.aIndexes, re.cAskings, resps.s, retryErrCh)
 		resultsp.Put(resps)
 	}
 	if ctx.Err() == nil {
@@ -992,18 +998,32 @@ func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL)
 	attempts := 1
 
 retry:
+	retryErrCh := make(chan error, len(multi))
+
 	wg.Add(len(retries.m))
 	mu.Lock()
 	for cc, re := range retries.m {
 		delete(retries.m, cc)
-		go c.doretrycache(ctx, cc, results, retries, re, &mu, &wg, attempts)
+		go c.doretrycache(ctx, cc, results, retries, re, &mu, &wg, retryErrCh)
 	}
 	mu.Unlock()
 	wg.Wait()
 
+	close(retryErrCh)
+
 	if len(retries.m) != 0 {
-		attempts++
-		goto retry
+		for retryableErr := range retryErrCh {
+			shouldRetry := c.retryHandler.WaitUntilNextRetry(ctx, attempts, retryableErr)
+			if shouldRetry {
+				attempts++
+				goto retry
+			}
+		}
+
+		if retries.Redirects.Load() > 0 {
+			retries.Redirects.Store(0) // reset
+			goto retry
+		}
 	}
 
 	for i, cmd := range multi {
