@@ -19,7 +19,7 @@ func TestSentinelClientInit(t *testing.T) {
 		if _, err := newSentinelClient(
 			&ClientOption{InitAddress: []string{}},
 			func(dst string, opt *ClientOption) conn { return nil },
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		); err != ErrNoAddr {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -30,7 +30,7 @@ func TestSentinelClientInit(t *testing.T) {
 		if _, err := newSentinelClient(
 			&ClientOption{InitAddress: []string{":0"}},
 			func(dst string, opt *ClientOption) conn { return &mockConn{DialFn: func() error { return v }} },
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -45,7 +45,7 @@ func TestSentinelClientInit(t *testing.T) {
 					DoMultiFn: func(cmd ...Completed) *redisresults { return &redisresults{s: []RedisResult{newErrResult(v)}} },
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -163,7 +163,7 @@ func TestSentinelClientInit(t *testing.T) {
 				}
 				return nil
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -382,7 +382,7 @@ func TestSentinelClientInit(t *testing.T) {
 				}
 				return nil
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if client.sAddr != ":5" && err == nil {
 			t.Fatalf("expected error but got nil with sentinel %s", client.sAddr)
@@ -457,7 +457,7 @@ func TestSentinelClientInit(t *testing.T) {
 				}
 				return nil
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -580,7 +580,7 @@ func TestSentinelClientInit(t *testing.T) {
 				}
 				return nil
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -638,7 +638,7 @@ func TestSentinelRefreshAfterClose(t *testing.T) {
 			}
 			return nil
 		},
-		newRetryer(defaultRetryDelay),
+		newRetryer(defaultRetryDelayFn),
 	)
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
@@ -683,7 +683,7 @@ func TestSentinelSwitchAfterClose(t *testing.T) {
 			}
 			return nil
 		},
-		newRetryer(defaultRetryDelay),
+		newRetryer(defaultRetryDelayFn),
 	)
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
@@ -725,7 +725,7 @@ func TestSentinelClientDelegate(t *testing.T) {
 			}
 			return nil
 		},
-		newRetryer(defaultRetryDelay),
+		newRetryer(defaultRetryDelayFn),
 	)
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
@@ -743,7 +743,7 @@ func TestSentinelClientDelegate(t *testing.T) {
 			}
 			return nil
 		},
-		newRetryer(defaultRetryDelay),
+		newRetryer(defaultRetryDelayFn),
 	)
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
@@ -1088,7 +1088,7 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 				}
 				return nil
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -1254,7 +1254,7 @@ func TestSentinelClientPubSub(t *testing.T) {
 			}
 			return nil
 		},
-		newRetryer(defaultRetryDelay),
+		newRetryer(defaultRetryDelayFn),
 	)
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
@@ -1423,7 +1423,7 @@ func TestSentinelReplicaOnlyClientPubSub(t *testing.T) {
 			}
 			return nil
 		},
-		newRetryer(defaultRetryDelay),
+		newRetryer(defaultRetryDelayFn),
 	)
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
@@ -1536,7 +1536,7 @@ func TestSentinelClientRetry(t *testing.T) {
 			func(dst string, opt *ClientOption) conn {
 				return m
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)

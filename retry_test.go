@@ -8,41 +8,125 @@ import (
 )
 
 type mockRetryHandler struct {
-	WaitUntilNextRetryFunc func(ctx context.Context, attempts int, err error) bool
+	RetryDelayFn        func(attempts int, err error) time.Duration
+	WaitForRetryFn      func(ctx context.Context, duration time.Duration)
+	WaitOrSkipRetryFunc func(ctx context.Context, attempts int, err error) bool
 }
 
-func (m *mockRetryHandler) WaitUntilNextRetry(ctx context.Context, attempts int, err error) bool {
-	return m.WaitUntilNextRetryFunc(ctx, attempts, err)
+var _ retryHandler = (*mockRetryHandler)(nil)
+
+func (m *mockRetryHandler) WaitOrSkipRetry(ctx context.Context, attempts int, err error) bool {
+	return m.WaitOrSkipRetryFunc(ctx, attempts, err)
+}
+
+func (m *mockRetryHandler) RetryDelay(attempts int, err error) time.Duration {
+	return m.RetryDelayFn(attempts, err)
+}
+
+func (m *mockRetryHandler) WaitForRetry(ctx context.Context, duration time.Duration) {
+	m.WaitForRetryFn(ctx, duration)
 }
 
 func TestDefaultRetryDelay(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		err := errors.New("test")
-		got := defaultRetryDelay(i, err)
+		got := defaultRetryDelayFn(i, err)
 
 		if got < 0 || got > defaultMaxRetryDelay {
-			t.Errorf("defaultRetryDelay(%d, %v) = %v; want >= 0 and <= %v", i, err, got, defaultMaxRetryDelay)
+			t.Errorf("defaultRetryDelayFn(%d, %v) = %v; want >= 0 and <= %v", i, err, got, defaultMaxRetryDelay)
 		}
 	}
 }
 
-func TestRetrier_WaitUntilNextRetry(t *testing.T) {
-	t.Run("RetryDelay returns negative delay", func(t *testing.T) {
+func TestRetryer_RetryDelay(t *testing.T) {
+	r := &retryer{
+		RetryDelayFn: func(attempts int, err error) time.Duration {
+			return time.Second
+		},
+	}
+
+	got := r.RetryDelay(0, nil)
+	if got != time.Second {
+		t.Errorf("RetryDelay() = %v; want %v", got, time.Second)
+	}
+}
+
+func TestRetryer_WaitForRetry(t *testing.T) {
+	t.Run("context is canceled", func(t *testing.T) {
+		r := &retryer{}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+
+		start := time.Now()
+		r.WaitForRetry(ctx, time.Second)
+		elapsed := time.Since(start)
+
+		if elapsed > 100*time.Millisecond {
+			t.Errorf("WaitForRetry() took %v; want < 100ms", elapsed)
+		}
+	})
+
+	t.Run("context deadline is before duration", func(t *testing.T) {
+		r := &retryer{}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+		defer cancel()
+
+		start := time.Now()
+		r.WaitForRetry(ctx, time.Second)
+		elapsed := time.Since(start)
+
+		if elapsed > 100*time.Millisecond {
+			t.Errorf("WaitForRetry() took %v; want < 100ms", elapsed)
+		}
+	})
+
+	t.Run("wait until duration", func(t *testing.T) {
+		r := &retryer{}
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
+		start := time.Now()
+		r.WaitForRetry(ctx, 50*time.Millisecond)
+		elapsed := time.Since(start)
+
+		if elapsed > 100*time.Millisecond {
+			t.Errorf("WaitForRetry() took %v; want < 100ms", elapsed)
+		}
+	})
+
+	t.Run("empty context", func(t *testing.T) {
+		r := &retryer{}
+
+		start := time.Now()
+		r.WaitForRetry(context.Background(), 50*time.Millisecond)
+		elapsed := time.Since(start)
+
+		if elapsed > 100*time.Millisecond {
+			t.Errorf("WaitForRetry() took %v; want < 100ms", elapsed)
+		}
+	})
+}
+
+func TestRetrier_WaitOrSkipRetry(t *testing.T) {
+	t.Run("RetryDelayFn returns negative delay", func(t *testing.T) {
 		r := &retryer{
-			RetryDelay: func(attempts int, err error) time.Duration {
+			RetryDelayFn: func(attempts int, err error) time.Duration {
 				return -1 * time.Second
 			},
 		}
 
-		shouldRetry := r.WaitUntilNextRetry(nil, 0, nil)
+		shouldRetry := r.WaitOrSkipRetry(nil, 0, nil)
 		if shouldRetry {
-			t.Error("WaitUntilNextRetry() = true; want false")
+			t.Error("WaitOrSkipRetry() = true; want false")
 		}
 	})
 
 	t.Run("context is canceled", func(t *testing.T) {
 		r := &retryer{
-			RetryDelay: func(attempts int, err error) time.Duration {
+			RetryDelayFn: func(attempts int, err error) time.Duration {
 				return time.Second
 			},
 		}
@@ -50,15 +134,15 @@ func TestRetrier_WaitUntilNextRetry(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 
-		shouldRetry := r.WaitUntilNextRetry(ctx, 0, nil)
+		shouldRetry := r.WaitOrSkipRetry(ctx, 0, nil)
 		if !shouldRetry {
-			t.Error("WaitUntilNextRetry() = false; want true")
+			t.Error("WaitOrSkipRetry() = false; want true")
 		}
 	})
 
 	t.Run("context deadline is before delay", func(t *testing.T) {
 		r := &retryer{
-			RetryDelay: func(attempts int, err error) time.Duration {
+			RetryDelayFn: func(attempts int, err error) time.Duration {
 				return time.Second
 			},
 		}
@@ -67,20 +151,20 @@ func TestRetrier_WaitUntilNextRetry(t *testing.T) {
 		defer cancel()
 
 		start := time.Now()
-		shouldRetry := r.WaitUntilNextRetry(ctx, 0, nil)
+		shouldRetry := r.WaitOrSkipRetry(ctx, 0, nil)
 		if shouldRetry {
-			t.Error("WaitUntilNextRetry() = true; want false")
+			t.Error("WaitOrSkipRetry() = true; want false")
 		}
 		elapsed := time.Since(start)
 
 		if elapsed > 100*time.Millisecond {
-			t.Errorf("WaitUntilNextRetry() took %v; want < 100ms", elapsed)
+			t.Errorf("WaitOrSkipRetry() took %v; want < 100ms", elapsed)
 		}
 	})
 
 	t.Run("wait until next retry", func(t *testing.T) {
 		r := &retryer{
-			RetryDelay: func(attempts int, err error) time.Duration {
+			RetryDelayFn: func(attempts int, err error) time.Duration {
 				return 50 * time.Millisecond
 			},
 		}
@@ -89,33 +173,33 @@ func TestRetrier_WaitUntilNextRetry(t *testing.T) {
 		defer cancel()
 
 		start := time.Now()
-		shouldRetry := r.WaitUntilNextRetry(ctx, 0, nil)
+		shouldRetry := r.WaitOrSkipRetry(ctx, 0, nil)
 		if !shouldRetry {
-			t.Error("WaitUntilNextRetry() = false; want true")
+			t.Error("WaitOrSkipRetry() = false; want true")
 		}
 		elapsed := time.Since(start)
 
 		if elapsed > 100*time.Millisecond {
-			t.Errorf("WaitUntilNextRetry() took %v; want < 100ms", elapsed)
+			t.Errorf("WaitOrSkipRetry() took %v; want < 100ms", elapsed)
 		}
 	})
 
 	t.Run("empty context", func(t *testing.T) {
 		r := &retryer{
-			RetryDelay: func(attempts int, err error) time.Duration {
+			RetryDelayFn: func(attempts int, err error) time.Duration {
 				return 50 * time.Millisecond
 			},
 		}
 
 		start := time.Now()
-		shouldRetry := r.WaitUntilNextRetry(context.Background(), 0, nil)
+		shouldRetry := r.WaitOrSkipRetry(context.Background(), 0, nil)
 		if !shouldRetry {
-			t.Error("WaitUntilNextRetry() = false; want true")
+			t.Error("WaitOrSkipRetry() = false; want true")
 		}
 		elapsed := time.Since(start)
 
 		if elapsed > 100*time.Millisecond {
-			t.Errorf("WaitUntilNextRetry() took %v; want < 100ms", elapsed)
+			t.Errorf("WaitOrSkipRetry() took %v; want < 100ms", elapsed)
 		}
 	})
 }

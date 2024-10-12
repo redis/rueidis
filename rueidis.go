@@ -168,7 +168,7 @@ type ClientOption struct {
 	// RetryDelay is the function that returns the delay that should be used before retrying the attempt.
 	// The default is an exponential backoff with a maximum delay of 1 second.
 	// Only used when DisableRetry is false.
-	RetryDelay RetryDelay
+	RetryDelay RetryDelayFn
 	// DisableCache falls back Client.DoCache/Client.DoMultiCache to Client.Do/Client.DoMulti
 	DisableCache bool
 	// AlwaysPipelining makes rueidis.Client always pipeline redis commands even if they are not issued concurrently.
@@ -367,7 +367,7 @@ func NewClient(option ClientOption) (client Client, err error) {
 		return nil, ErrWrongPipelineMultiplex
 	}
 	if option.RetryDelay == nil {
-		option.RetryDelay = defaultRetryDelay
+		option.RetryDelay = defaultRetryDelayFn
 	}
 	if option.Sentinel.MasterSet != "" {
 		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)

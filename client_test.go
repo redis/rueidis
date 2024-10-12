@@ -188,7 +188,7 @@ func TestNewSingleClientNoNode(t *testing.T) {
 	if _, err := newSingleClient(
 		&ClientOption{}, nil, func(dst string, opt *ClientOption) conn {
 			return nil
-		}, newRetryer(defaultRetryDelay),
+		}, newRetryer(defaultRetryDelayFn),
 	); err != ErrNoAddr {
 		t.Fatalf("unexpected err %v", err)
 	}
@@ -197,7 +197,7 @@ func TestNewSingleClientNoNode(t *testing.T) {
 func TestNewSingleClientReplicaOnlyNotSupported(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	if _, err := newSingleClient(
-		&ClientOption{ReplicaOnly: true, InitAddress: []string{"localhost"}}, nil, func(dst string, opt *ClientOption) conn { return nil }, newRetryer(defaultRetryDelay),
+		&ClientOption{ReplicaOnly: true, InitAddress: []string{"localhost"}}, nil, func(dst string, opt *ClientOption) conn { return nil }, newRetryer(defaultRetryDelayFn),
 	); err != ErrReplicaOnlyNotSupported {
 		t.Fatalf("unexpected err %v", err)
 	}
@@ -207,7 +207,7 @@ func TestNewSingleClientError(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	v := errors.New("dail err")
 	if _, err := newSingleClient(
-		&ClientOption{InitAddress: []string{""}}, nil, func(dst string, opt *ClientOption) conn { return &mockConn{DialFn: func() error { return v }} }, newRetryer(defaultRetryDelay),
+		&ClientOption{InitAddress: []string{""}}, nil, func(dst string, opt *ClientOption) conn { return &mockConn{DialFn: func() error { return v }} }, newRetryer(defaultRetryDelayFn),
 	); err != v {
 		t.Fatalf("unexpected err %v", err)
 	}
@@ -223,7 +223,7 @@ func TestNewSingleClientOverride(t *testing.T) {
 		func(dst string, opt *ClientOption) conn {
 			return &mockConn{OverrideFn: func(c conn) { m2 = c }}
 		},
-		newRetryer(defaultRetryDelay),
+		newRetryer(defaultRetryDelayFn),
 	); err != nil {
 		t.Fatalf("unexpected err %v", err)
 	}
@@ -242,7 +242,7 @@ func TestSingleClient(t *testing.T) {
 		&ClientOption{InitAddress: []string{""}},
 		m,
 		func(dst string, opt *ClientOption) conn { return m },
-		newRetryer(defaultRetryDelay),
+		newRetryer(defaultRetryDelayFn),
 	)
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
@@ -608,7 +608,7 @@ func TestSingleClientRetry(t *testing.T) {
 			&ClientOption{InitAddress: []string{""}},
 			m,
 			func(dst string, opt *ClientOption) conn { return m },
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -698,21 +698,21 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		c, m := setup()
 		if cli, ok := c.(*sentinelClient); ok {
 			cli.retryHandler = &mockRetryHandler{
-				WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+				WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 					return false
 				},
 			}
 		}
 		if cli, ok := c.(*clusterClient); ok {
 			cli.retryHandler = &mockRetryHandler{
-				WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+				WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 					return false
 				},
 			}
 		}
 		if cli, ok := c.(*singleClient); ok {
 			cli.retryHandler = &mockRetryHandler{
-				WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+				WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 					return false
 				},
 			}
@@ -768,21 +768,29 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		c, m := setup()
 		if cli, ok := c.(*sentinelClient); ok {
 			cli.retryHandler = &mockRetryHandler{
-				WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+				WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 					return false
 				},
 			}
 		}
 		if cli, ok := c.(*clusterClient); ok {
 			cli.retryHandler = &mockRetryHandler{
-				WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+				WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 					return false
+				},
+				RetryDelayFn: func(attempts int, err error) time.Duration {
+					return -1
+				},
+				WaitForRetryFn: func(ctx context.Context, duration time.Duration) {
+					if duration != -1 {
+						t.Fatalf("unexpected duration %v", duration)
+					}
 				},
 			}
 		}
 		if cli, ok := c.(*singleClient); ok {
 			cli.retryHandler = &mockRetryHandler{
-				WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+				WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 					return false
 				},
 			}
@@ -838,21 +846,21 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		c, m := setup()
 		if cli, ok := c.(*sentinelClient); ok {
 			cli.retryHandler = &mockRetryHandler{
-				WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+				WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 					return false
 				},
 			}
 		}
 		if cli, ok := c.(*clusterClient); ok {
 			cli.retryHandler = &mockRetryHandler{
-				WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+				WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 					return false
 				},
 			}
 		}
 		if cli, ok := c.(*singleClient); ok {
 			cli.retryHandler = &mockRetryHandler{
-				WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+				WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 					return false
 				},
 			}
@@ -900,21 +908,29 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		c, m := setup()
 		if cli, ok := c.(*sentinelClient); ok {
 			cli.retryHandler = &mockRetryHandler{
-				WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+				WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 					return false
 				},
 			}
 		}
 		if cli, ok := c.(*clusterClient); ok {
 			cli.retryHandler = &mockRetryHandler{
-				WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+				WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 					return false
+				},
+				RetryDelayFn: func(attempts int, err error) time.Duration {
+					return -1
+				},
+				WaitForRetryFn: func(ctx context.Context, duration time.Duration) {
+					if duration != -1 {
+						t.Fatalf("unexpected duration %v", duration)
+					}
 				},
 			}
 		}
 		if cli, ok := c.(*singleClient); ok {
 			cli.retryHandler = &mockRetryHandler{
-				WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+				WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 					return false
 				},
 			}
@@ -959,21 +975,21 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		c, m := setup()
 		if cli, ok := c.(*sentinelClient); ok {
 			cli.retryHandler = &mockRetryHandler{
-				WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+				WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 					return false
 				},
 			}
 		}
 		if cli, ok := c.(*clusterClient); ok {
 			cli.retryHandler = &mockRetryHandler{
-				WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+				WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 					return false
 				},
 			}
 		}
 		if cli, ok := c.(*singleClient); ok {
 			cli.retryHandler = &mockRetryHandler{
-				WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+				WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 					return false
 				},
 			}
@@ -1036,14 +1052,14 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		if ret := c.Dedicated(func(cc DedicatedClient) error {
 			if cli, ok := cc.(*dedicatedClusterClient); ok {
 				cli.retryHandler = &mockRetryHandler{
-					WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+					WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 						return false
 					},
 				}
 			}
 			if cli, ok := cc.(*dedicatedSingleClient); ok {
 				cli.retryHandler = &mockRetryHandler{
-					WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+					WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 						return false
 					},
 				}
@@ -1121,14 +1137,14 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		if ret := c.Dedicated(func(cc DedicatedClient) error {
 			if cli, ok := cc.(*dedicatedClusterClient); ok {
 				cli.retryHandler = &mockRetryHandler{
-					WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+					WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 						return false
 					},
 				}
 			}
 			if cli, ok := cc.(*dedicatedSingleClient); ok {
 				cli.retryHandler = &mockRetryHandler{
-					WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+					WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 						return false
 					},
 				}
@@ -1200,14 +1216,14 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 		if ret := c.Dedicated(func(cc DedicatedClient) error {
 			if cli, ok := cc.(*dedicatedClusterClient); ok {
 				cli.retryHandler = &mockRetryHandler{
-					WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+					WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 						return false
 					},
 				}
 			}
 			if cli, ok := cc.(*dedicatedSingleClient); ok {
 				cli.retryHandler = &mockRetryHandler{
-					WaitUntilNextRetryFunc: func(ctx context.Context, attempts int, err error) bool {
+					WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, err error) bool {
 						return false
 					},
 				}

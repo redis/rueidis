@@ -584,7 +584,7 @@ func TestClusterClientInit(t *testing.T) {
 		if _, err := newClusterClient(
 			&ClientOption{InitAddress: []string{}},
 			func(dst string, opt *ClientOption) conn { return nil },
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		); err != ErrNoAddr {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -597,7 +597,7 @@ func TestClusterClientInit(t *testing.T) {
 			func(dst string, opt *ClientOption) conn {
 				return &mockConn{DialFn: func() error { return v }}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -610,7 +610,7 @@ func TestClusterClientInit(t *testing.T) {
 			func(dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult { return newErrResult(v) }}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -630,7 +630,7 @@ func TestClusterClientInit(t *testing.T) {
 					},
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		); err != nil || atomic.AddInt64(&first, 1) < 2 {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -651,7 +651,7 @@ func TestClusterClientInit(t *testing.T) {
 					VersionFn: func() int { return 7 },
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		); err != nil || atomic.AddInt64(&first, 1) < 2 {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -667,7 +667,7 @@ func TestClusterClientInit(t *testing.T) {
 					},
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		); err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -684,7 +684,7 @@ func TestClusterClientInit(t *testing.T) {
 					VersionFn: func() int { return 7 },
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		); err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -706,7 +706,7 @@ func TestClusterClientInit(t *testing.T) {
 						VersionFn: func() int { return version },
 					}
 				},
-				newRetryer(defaultRetryDelay),
+				newRetryer(defaultRetryDelayFn),
 			)
 		}
 
@@ -778,7 +778,7 @@ func TestClusterClientInit(t *testing.T) {
 						},
 					}
 				},
-				newRetryer(defaultRetryDelay),
+				newRetryer(defaultRetryDelayFn),
 			)
 			if err != nil {
 				t.Fatalf("unexpected err %v", err)
@@ -801,7 +801,7 @@ func TestClusterClientInit(t *testing.T) {
 						VersionFn: func() int { return 7 },
 					}
 				},
-				newRetryer(defaultRetryDelay),
+				newRetryer(defaultRetryDelayFn),
 			)
 			if err != nil {
 				t.Fatalf("unexpected err %v", err)
@@ -821,7 +821,7 @@ func TestClusterClientInit(t *testing.T) {
 					VersionFn: func() int { return 7 },
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -858,7 +858,7 @@ func TestClusterClientInit(t *testing.T) {
 				copiedM := *m
 				return &copiedM
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -929,7 +929,7 @@ func TestClusterClientInit(t *testing.T) {
 					return replicaNodeConn
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -976,7 +976,7 @@ func TestClusterClientInit(t *testing.T) {
 					},
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if !errors.Is(err, ErrInvalidShardsRefreshInterval) {
 			t.Fatalf("unexpected err %v", err)
@@ -1034,7 +1034,7 @@ func TestClusterClient(t *testing.T) {
 		func(dst string, opt *ClientOption) conn {
 			return m
 		},
-		newRetryer(defaultRetryDelay),
+		newRetryer(defaultRetryDelayFn),
 	)
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
@@ -1708,7 +1708,7 @@ func TestClusterClient_SendToOnlyPrimaryNodes(t *testing.T) {
 				return replicaNodeConn
 			}
 		},
-		newRetryer(defaultRetryDelay),
+		newRetryer(defaultRetryDelayFn),
 	)
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
@@ -2214,7 +2214,7 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 				return replicaNodeConn
 			}
 		},
-		newRetryer(defaultRetryDelay),
+		newRetryer(defaultRetryDelayFn),
 	)
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
@@ -2759,7 +2759,7 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 				return replicaNodeConn
 			}
 		},
-		newRetryer(defaultRetryDelay),
+		newRetryer(defaultRetryDelayFn),
 	)
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
@@ -3283,7 +3283,7 @@ func TestClusterClient_SendPrimaryNodeOnlyButOneSlotAssigned(t *testing.T) {
 		func(dst string, opt *ClientOption) conn {
 			return primaryNodeConn
 		},
-		newRetryer(defaultRetryDelay),
+		newRetryer(defaultRetryDelayFn),
 	)
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
@@ -3356,7 +3356,7 @@ func TestClusterClientErr(t *testing.T) {
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
 			func(dst string, opt *ClientOption) conn { return m },
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -3404,7 +3404,7 @@ func TestClusterClientErr(t *testing.T) {
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
 			func(dst string, opt *ClientOption) conn { return m },
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -3449,7 +3449,7 @@ func TestClusterClientErr(t *testing.T) {
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
 			func(dst string, opt *ClientOption) conn { return m },
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -3482,7 +3482,7 @@ func TestClusterClientErr(t *testing.T) {
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
 			func(dst string, opt *ClientOption) conn { return m },
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -3506,7 +3506,7 @@ func TestClusterClientErr(t *testing.T) {
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
 			func(dst string, opt *ClientOption) conn { return m },
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -3544,7 +3544,7 @@ func TestClusterClientErr(t *testing.T) {
 					return newResult(RedisMessage{typ: '+', string: "b"}, nil)
 				}}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -3572,7 +3572,7 @@ func TestClusterClientErr(t *testing.T) {
 					return newResult(RedisMessage{typ: '+', string: "b"}, nil)
 				}}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -3602,7 +3602,7 @@ func TestClusterClientErr(t *testing.T) {
 					},
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -3640,7 +3640,7 @@ func TestClusterClientErr(t *testing.T) {
 					return &redisresults{s: ret}
 				}}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -3677,7 +3677,7 @@ func TestClusterClientErr(t *testing.T) {
 					},
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -3715,7 +3715,7 @@ func TestClusterClientErr(t *testing.T) {
 					return &redisresults{s: ret}
 				}}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -3752,7 +3752,7 @@ func TestClusterClientErr(t *testing.T) {
 					return &redisresults{s: ret}
 				}}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -3784,7 +3784,7 @@ func TestClusterClientErr(t *testing.T) {
 					return newResult(RedisMessage{typ: '+', string: "b"}, nil)
 				}}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -3821,7 +3821,7 @@ func TestClusterClientErr(t *testing.T) {
 					return &redisresults{s: ret}
 				}}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -3858,7 +3858,7 @@ func TestClusterClientErr(t *testing.T) {
 					return &redisresults{s: ret}
 				}}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -3898,7 +3898,7 @@ func TestClusterClientErr(t *testing.T) {
 					return &redisresults{s: ret}
 				}}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -3929,7 +3929,7 @@ func TestClusterClientErr(t *testing.T) {
 					},
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -3958,7 +3958,7 @@ func TestClusterClientErr(t *testing.T) {
 					},
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -3996,7 +3996,7 @@ func TestClusterClientErr(t *testing.T) {
 					return &redisresults{s: ret}
 				}}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4033,7 +4033,7 @@ func TestClusterClientErr(t *testing.T) {
 					},
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4071,7 +4071,7 @@ func TestClusterClientErr(t *testing.T) {
 					return &redisresults{s: ret}
 				}}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4107,7 +4107,7 @@ func TestClusterClientErr(t *testing.T) {
 					},
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4142,7 +4142,7 @@ func TestClusterClientErr(t *testing.T) {
 					},
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4177,7 +4177,7 @@ func TestClusterClientErr(t *testing.T) {
 					},
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4213,7 +4213,7 @@ func TestClusterClientErr(t *testing.T) {
 					},
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4243,7 +4243,7 @@ func TestClusterClientErr(t *testing.T) {
 					},
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4279,7 +4279,7 @@ func TestClusterClientErr(t *testing.T) {
 					},
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4310,7 +4310,7 @@ func TestClusterClientErr(t *testing.T) {
 					return newResult(RedisMessage{typ: '+', string: "b"}, nil)
 				}}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4336,7 +4336,7 @@ func TestClusterClientErr(t *testing.T) {
 					return &redisresults{s: ret}
 				}}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4362,7 +4362,7 @@ func TestClusterClientErr(t *testing.T) {
 					return &redisresults{s: ret}
 				}}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4395,7 +4395,7 @@ func TestClusterClientErr(t *testing.T) {
 					},
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4419,7 +4419,7 @@ func TestClusterClientErr(t *testing.T) {
 					return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "b"}, nil)}}
 				}}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4446,7 +4446,7 @@ func TestClusterClientErr(t *testing.T) {
 					return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: multi[0].Cmd.Commands()[1]}, nil)}}
 				}}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4472,7 +4472,7 @@ func TestClusterClientRetry(t *testing.T) {
 		c, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
 			func(dst string, opt *ClientOption) conn { return m },
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4498,7 +4498,7 @@ func TestClusterClientReplicaOnly_PickReplica(t *testing.T) {
 			copiedM := *m
 			return &copiedM
 		},
-		newRetryer(defaultRetryDelay),
+		newRetryer(defaultRetryDelayFn),
 	)
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
@@ -4537,7 +4537,7 @@ func TestClusterClientReplicaOnly_PickMasterIfNoReplica(t *testing.T) {
 				copiedM := *m
 				return &copiedM
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4573,7 +4573,7 @@ func TestClusterClientReplicaOnly_PickMasterIfNoReplica(t *testing.T) {
 				copiedM := *m
 				return &copiedM
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4712,7 +4712,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 					},
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4759,7 +4759,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 					},
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4817,7 +4817,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 					},
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4878,7 +4878,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 					},
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
@@ -4939,7 +4939,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 					},
 				}
 			},
-			newRetryer(defaultRetryDelay),
+			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
