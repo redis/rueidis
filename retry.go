@@ -14,14 +14,15 @@ const (
 
 // RetryDelayFn returns the delay that should be used before retrying the
 // attempt. Will return negative delay if the delay could not be determined or do not retry.
-type RetryDelayFn func(attempts int, err error) time.Duration
+type RetryDelayFn func(attempts int, cmd Completed, err error) time.Duration
 
 // defaultRetryDelayFn delays the next retry exponentially without considering the error.
 // max delay is 1 second.
-func defaultRetryDelayFn(attempts int, _ error) time.Duration {
-	base := time.Microsecond * (1 << min(defaultMaxRetries, attempts))
-	jitter := time.Microsecond * time.Duration(util.FastRand(1<<min(defaultMaxRetries, attempts)))
-	return min(defaultMaxRetryDelay, base+jitter)
+// This "Equal Jitter" delay produced by this implementation is not monotonic increasing. ref: https://aws.amazon.com/ko/blogs/architecture/exponential-backoff-and-jitter/
+func defaultRetryDelayFn(attempts int, _ Completed, _ error) time.Duration {
+	base := 1 << min(defaultMaxRetries, attempts)
+	jitter := util.FastRand(base)
+	return min(defaultMaxRetryDelay, time.Duration(base+jitter)*time.Microsecond)
 }
 
 type retryHandler interface {
@@ -29,7 +30,7 @@ type retryHandler interface {
 	// attempt. Will return negative delay if the delay could not be determined or do
 	// not retry.
 	// If the delay is zero, the next retry should be attempted immediately.
-	RetryDelay(attempts int, err error) time.Duration
+	RetryDelay(attempts int, cmd Completed, err error) time.Duration
 
 	// WaitForRetry waits until the next retry should be attempted.
 	WaitForRetry(ctx context.Context, duration time.Duration)
@@ -38,7 +39,7 @@ type retryHandler interface {
 	// or returns false if the command should not be retried.
 	// Returns false immediately if the command should not be retried.
 	// Returns true after the delay if the command should be retried.
-	WaitOrSkipRetry(ctx context.Context, attempts int, err error) bool
+	WaitOrSkipRetry(ctx context.Context, attempts int, cmd Completed, err error) bool
 }
 
 type retryer struct {
@@ -51,8 +52,8 @@ func newRetryer(retryDelayFn RetryDelayFn) *retryer {
 	return &retryer{RetryDelayFn: retryDelayFn}
 }
 
-func (r *retryer) RetryDelay(attempts int, err error) time.Duration {
-	return r.RetryDelayFn(attempts, err)
+func (r *retryer) RetryDelay(attempts int, cmd Completed, err error) time.Duration {
+	return r.RetryDelayFn(attempts, cmd, err)
 }
 
 func (r *retryer) WaitForRetry(ctx context.Context, duration time.Duration) {
@@ -73,9 +74,9 @@ func (r *retryer) WaitForRetry(ctx context.Context, duration time.Duration) {
 }
 
 func (r *retryer) WaitOrSkipRetry(
-	ctx context.Context, attempts int, err error,
+	ctx context.Context, attempts int, cmd Completed, err error,
 ) bool {
-	delay := r.RetryDelay(attempts, err)
+	delay := r.RetryDelay(attempts, cmd, err)
 	if delay < 0 {
 		return false
 	}

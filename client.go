@@ -49,7 +49,7 @@ retry:
 	resp = c.conn.Do(ctx, cmd)
 	if c.retry && cmd.IsReadOnly() && c.isRetryable(resp.NonRedisError(), ctx) {
 		shouldRetry := c.retryHandler.WaitOrSkipRetry(
-			ctx, attempts, resp.Error(),
+			ctx, attempts, cmd, resp.Error(),
 		)
 		if shouldRetry {
 			attempts++
@@ -87,10 +87,10 @@ func (c *singleClient) DoMulti(ctx context.Context, multi ...Completed) (resps [
 retry:
 	resps = c.conn.DoMulti(ctx, multi...).s
 	if c.retry && allReadOnly(multi) {
-		for _, resp := range resps {
+		for i, resp := range resps {
 			if c.isRetryable(resp.NonRedisError(), ctx) {
 				shouldRetry := c.retryHandler.WaitOrSkipRetry(
-					ctx, attempts, resp.Error(),
+					ctx, attempts, multi[i], resp.Error(),
 				)
 				if shouldRetry {
 					attempts++
@@ -115,10 +115,10 @@ func (c *singleClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL) 
 retry:
 	resps = c.conn.DoMultiCache(ctx, multi...).s
 	if c.retry {
-		for _, resp := range resps {
+		for i, resp := range resps {
 			if c.isRetryable(resp.NonRedisError(), ctx) {
 				shouldRetry := c.retryHandler.WaitOrSkipRetry(
-					ctx, attempts, resp.Error(),
+					ctx, attempts, Completed(multi[i].Cmd), resp.Error(),
 				)
 				if shouldRetry {
 					attempts++
@@ -140,7 +140,7 @@ func (c *singleClient) DoCache(ctx context.Context, cmd Cacheable, ttl time.Dura
 retry:
 	resp = c.conn.DoCache(ctx, cmd, ttl)
 	if c.retry && c.isRetryable(resp.NonRedisError(), ctx) {
-		shouldRetry := c.retryHandler.WaitOrSkipRetry(ctx, attempts, resp.Error())
+		shouldRetry := c.retryHandler.WaitOrSkipRetry(ctx, attempts, Completed(cmd), resp.Error())
 		if shouldRetry {
 			attempts++
 			goto retry
@@ -158,7 +158,7 @@ retry:
 	err = c.conn.Receive(ctx, subscribe, fn)
 	if c.retry {
 		if _, ok := err.(*RedisError); !ok && c.isRetryable(err, ctx) {
-			shouldRetry := c.retryHandler.WaitOrSkipRetry(ctx, attempts, err)
+			shouldRetry := c.retryHandler.WaitOrSkipRetry(ctx, attempts, subscribe, err)
 			if shouldRetry {
 				attempts++
 				goto retry
@@ -217,7 +217,7 @@ retry:
 	resp = c.wire.Do(ctx, cmd)
 	if c.retry && cmd.IsReadOnly() && isRetryable(resp.NonRedisError(), c.wire, ctx) {
 		shouldRetry := c.retryHandler.WaitOrSkipRetry(
-			ctx, attempts, resp.Error(),
+			ctx, attempts, cmd, resp.Error(),
 		)
 		if shouldRetry {
 			attempts++
@@ -247,7 +247,7 @@ retry:
 	for i, cmd := range multi {
 		if retryable && isRetryable(resp[i].NonRedisError(), c.wire, ctx) {
 			shouldRetry := c.retryHandler.WaitOrSkipRetry(
-				ctx, attempts, resp[i].Error(),
+				ctx, attempts, multi[i], resp[i].Error(),
 			)
 			if shouldRetry {
 				attempts++
@@ -271,7 +271,7 @@ retry:
 	if c.retry {
 		if _, ok := err.(*RedisError); !ok && isRetryable(err, c.wire, ctx) {
 			shouldRetry := c.retryHandler.WaitOrSkipRetry(
-				ctx, attempts, err,
+				ctx, attempts, subscribe, err,
 			)
 			if shouldRetry {
 				attempts++

@@ -68,7 +68,7 @@ retry:
 	resp = c.mConn.Load().(conn).Do(ctx, cmd)
 	if c.retry && cmd.IsReadOnly() && c.isRetryable(resp.NonRedisError(), ctx) {
 		shouldRetry := c.retryHandler.WaitOrSkipRetry(
-			ctx, attempts, resp.Error(),
+			ctx, attempts, cmd, resp.Error(),
 		)
 		if shouldRetry {
 			attempts++
@@ -90,10 +90,10 @@ func (c *sentinelClient) DoMulti(ctx context.Context, multi ...Completed) []Redi
 retry:
 	resps := c.mConn.Load().(conn).DoMulti(ctx, multi...)
 	if c.retry && allReadOnly(multi) {
-		for _, resp := range resps.s {
+		for i, resp := range resps.s {
 			if c.isRetryable(resp.NonRedisError(), ctx) {
 				shouldRetry := c.retryHandler.WaitOrSkipRetry(
-					ctx, attempts, resp.Error(),
+					ctx, attempts, multi[i], resp.Error(),
 				)
 				if shouldRetry {
 					resultsp.Put(resps)
@@ -116,7 +116,7 @@ func (c *sentinelClient) DoCache(ctx context.Context, cmd Cacheable, ttl time.Du
 retry:
 	resp = c.mConn.Load().(conn).DoCache(ctx, cmd, ttl)
 	if c.retry && c.isRetryable(resp.NonRedisError(), ctx) {
-		shouldRetry := c.retryHandler.WaitOrSkipRetry(ctx, attempts, resp.Error())
+		shouldRetry := c.retryHandler.WaitOrSkipRetry(ctx, attempts, Completed(cmd), resp.Error())
 		if shouldRetry {
 			attempts++
 			goto retry
@@ -137,10 +137,10 @@ func (c *sentinelClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL
 retry:
 	resps := c.mConn.Load().(conn).DoMultiCache(ctx, multi...)
 	if c.retry {
-		for _, resp := range resps.s {
+		for i, resp := range resps.s {
 			if c.isRetryable(resp.NonRedisError(), ctx) {
 				shouldRetry := c.retryHandler.WaitOrSkipRetry(
-					ctx, attempts, resp.Error(),
+					ctx, attempts, Completed(multi[i].Cmd), resp.Error(),
 				)
 				if shouldRetry {
 					resultsp.Put(resps)
@@ -165,7 +165,7 @@ retry:
 	if c.retry {
 		if _, ok := err.(*RedisError); !ok && c.isRetryable(err, ctx) {
 			shouldRetry := c.retryHandler.WaitOrSkipRetry(
-				ctx, attempts, err,
+				ctx, attempts, subscribe, err,
 			)
 			if shouldRetry {
 				attempts++
