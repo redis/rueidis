@@ -91,21 +91,22 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 		return nil, err
 	}
 	p = &pipe{
-		conn:  conn,
-		queue: newRing(option.RingScaleEachConn),
-		r:     bufio.NewReaderSize(conn, option.ReadBufferEachConn),
-		w:     bufio.NewWriterSize(conn, option.WriteBufferEachConn),
-
-		nsubs: newSubs(),
-		psubs: newSubs(),
-		ssubs: newSubs(),
-		close: make(chan struct{}),
+		conn: conn,
+		r:    bufio.NewReaderSize(conn, option.ReadBufferEachConn),
+		w:    bufio.NewWriterSize(conn, option.WriteBufferEachConn),
 
 		timeout:       option.ConnWriteTimeout,
 		pinggap:       option.Dialer.KeepAlive,
 		maxFlushDelay: option.MaxFlushDelay,
 
 		r2ps: r2ps,
+	}
+	if !nobg {
+		p.queue = newRing(option.RingScaleEachConn)
+		p.nsubs = newSubs()
+		p.psubs = newSubs()
+		p.ssubs = newSubs()
+		p.close = make(chan struct{})
 	}
 	if !r2ps {
 		p.r2psFn = func() (p *pipe, err error) {
@@ -305,8 +306,10 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 }
 
 func (p *pipe) background() {
-	atomic.CompareAndSwapInt32(&p.state, 0, 1)
-	p.once.Do(func() { go p._background() })
+	if p.queue != nil {
+		atomic.CompareAndSwapInt32(&p.state, 0, 1)
+		p.once.Do(func() { go p._background() })
+	}
 }
 
 func (p *pipe) _exit(err error) {
@@ -825,7 +828,7 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 			goto queue
 		}
 		dl, ok := ctx.Deadline()
-		if !ok && ctx.Done() != nil {
+		if p.queue != nil && !ok && ctx.Done() != nil {
 			p.background()
 			goto queue
 		}
@@ -896,6 +899,12 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 
 	for _, cmd := range multi {
 		if cmd.IsBlock() {
+			if noReply != 0 {
+				for i := 0; i < len(resp.s); i++ {
+					resp.s[i] = newErrResult(ErrBlockingPubSubMixed)
+				}
+				return resp
+			}
 			atomic.AddInt32(&p.blcksig, 1)
 			defer func() {
 				for _, r := range resp.s {
@@ -925,7 +934,7 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 			goto queue
 		}
 		dl, ok := ctx.Deadline()
-		if !ok && ctx.Done() != nil {
+		if p.queue != nil && !ok && ctx.Done() != nil {
 			p.background()
 			goto queue
 		}

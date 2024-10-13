@@ -5,6 +5,7 @@ import (
 	"context"
 	"math/rand"
 	"net"
+	"os"
 	"reflect"
 	"strconv"
 	"sync"
@@ -805,10 +806,13 @@ func TestSingleClientIntegration(t *testing.T) {
 		t.Skip()
 	}
 	defer ShouldNotLeaked(SetupLeakDetection())
+
 	client, err := NewClient(ClientOption{
 		InitAddress:       []string{"127.0.0.1:6379"},
 		ConnWriteTimeout:  180 * time.Second,
 		PipelineMultiplex: 1,
+
+		DisableAutoPipelining: os.Getenv("DisableAutoPipelining") == "true",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -820,11 +824,18 @@ func TestSingleClientIntegration(t *testing.T) {
 	client.Close()
 }
 
+func TestSingleClientIntegrationWithPool(t *testing.T) {
+	os.Setenv("DisableAutoPipelining", "true")
+	defer os.Unsetenv("DisableAutoPipelining")
+	TestSingleClientIntegration(t)
+}
+
 func TestSentinelClientIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
 	defer ShouldNotLeaked(SetupLeakDetection())
+
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:26379"},
 		ConnWriteTimeout: 180 * time.Second,
@@ -833,6 +844,8 @@ func TestSentinelClientIntegration(t *testing.T) {
 		},
 		SelectDB:          2, // https://github.com/redis/rueidis/issues/138
 		PipelineMultiplex: 1,
+
+		DisableAutoPipelining: os.Getenv("DisableAutoPipelining") == "true",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -844,17 +857,26 @@ func TestSentinelClientIntegration(t *testing.T) {
 	client.Close()
 }
 
+func TestSentinelClientIntegrationWithPool(t *testing.T) {
+	os.Setenv("DisableAutoPipelining", "true")
+	defer os.Unsetenv("DisableAutoPipelining")
+	TestSentinelClientIntegration(t)
+}
+
 func TestClusterClientIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
 	defer ShouldNotLeaked(SetupLeakDetection())
+
 	client, err := NewClient(ClientOption{
 		InitAddress:       []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"},
 		ConnWriteTimeout:  180 * time.Second,
 		ShuffleInit:       true,
 		Dialer:            net.Dialer{KeepAlive: -1},
 		PipelineMultiplex: 1,
+
+		DisableAutoPipelining: os.Getenv("DisableAutoPipelining") == "true",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -862,6 +884,12 @@ func TestClusterClientIntegration(t *testing.T) {
 	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiSETGETCSCHelpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testPubSubSharded, testLua)
 
 	client.Close()
+}
+
+func TestClusterClientIntegrationWithPool(t *testing.T) {
+	os.Setenv("DisableAutoPipelining", "true")
+	defer os.Unsetenv("DisableAutoPipelining")
+	TestClusterClientIntegration(t)
 }
 
 func TestSingleClient5Integration(t *testing.T) {

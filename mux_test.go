@@ -202,7 +202,7 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 
-		wire1 := m.Acquire()
+		wire1 := m.spool.Acquire()
 
 		go func() {
 			// this should use the second wire
@@ -215,7 +215,7 @@ func TestMuxReuseWire(t *testing.T) {
 		}()
 		<-blocking
 
-		m.Store(wire1)
+		m.spool.Store(wire1)
 		// this should use the first wire
 		if val, err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"PING"})).ToString(); err != nil {
 			t.Fatalf("unexpected error %v", err)
