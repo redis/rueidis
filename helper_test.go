@@ -12,15 +12,21 @@ func TestMGetCache(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}
-		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		client, err := newSingleClient(
+			&ClientOption{InitAddress: []string{""}},
+			m,
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		disabledCacheClient, err := newSingleClient(&ClientOption{InitAddress: []string{""}, DisableCache: true}, m, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		disabledCacheClient, err := newSingleClient(
+			&ClientOption{InitAddress: []string{""}, DisableCache: true},
+			m,
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -73,15 +79,19 @@ func TestMGetCache(t *testing.T) {
 				return slotsResp
 			},
 		}
-		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		client, err := newClusterClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-		disabledCacheClient, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}, DisableCache: true}, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		disabledCacheClient, err := newClusterClient(
+			&ClientOption{InitAddress: []string{":0"}, DisableCache: true},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -165,9 +175,12 @@ func TestMGet(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}
-		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		client, err := newSingleClient(
+			&ClientOption{InitAddress: []string{""}},
+			m,
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -204,9 +217,11 @@ func TestMGet(t *testing.T) {
 				return slotsResp
 			},
 		}
-		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		client, err := newClusterClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -259,9 +274,12 @@ func TestMDel(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}
-		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		client, err := newSingleClient(
+			&ClientOption{InitAddress: []string{""}},
+			m,
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -298,9 +316,11 @@ func TestMDel(t *testing.T) {
 				return slotsResp
 			},
 		}
-		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		client, err := newClusterClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -349,9 +369,12 @@ func TestMSet(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}
-		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		client, err := newSingleClient(
+			&ClientOption{InitAddress: []string{""}},
+			m,
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -389,9 +412,11 @@ func TestMSet(t *testing.T) {
 				return slotsResp
 			},
 		}
-		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		client, err := newClusterClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -449,9 +474,12 @@ func TestMSetNX(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}
-		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		client, err := newSingleClient(
+			&ClientOption{InitAddress: []string{""}},
+			m,
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -489,9 +517,11 @@ func TestMSetNX(t *testing.T) {
 				return slotsResp
 			},
 		}
-		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		client, err := newClusterClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -549,9 +579,12 @@ func TestMSetNXNotSet(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}
-		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		client, err := newSingleClient(
+			&ClientOption{InitAddress: []string{""}},
+			m,
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -571,9 +604,12 @@ func TestJsonMGetCache(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}
-		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		client, err := newSingleClient(
+			&ClientOption{InitAddress: []string{""}},
+			m,
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -615,9 +651,11 @@ func TestJsonMGetCache(t *testing.T) {
 				return slotsResp
 			},
 		}
-		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		client, err := newClusterClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -674,9 +712,12 @@ func TestJsonMGet(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}
-		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		client, err := newSingleClient(
+			&ClientOption{InitAddress: []string{""}},
+			m,
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -713,9 +754,11 @@ func TestJsonMGet(t *testing.T) {
 				return slotsResp
 			},
 		}
-		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		client, err := newClusterClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -767,9 +810,12 @@ func TestJsonMSet(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("single client", func(t *testing.T) {
 		m := &mockConn{}
-		client, err := newSingleClient(&ClientOption{InitAddress: []string{""}}, m, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		client, err := newSingleClient(
+			&ClientOption{InitAddress: []string{""}},
+			m,
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -807,9 +853,11 @@ func TestJsonMSet(t *testing.T) {
 				return slotsResp
 			},
 		}
-		client, err := newClusterClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		client, err := newClusterClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
