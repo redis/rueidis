@@ -11,10 +11,10 @@ import (
 
 type singleClient struct {
 	conn         conn
-	stop         uint32
 	cmd          Builder
-	retry        bool
 	retryHandler retryHandler
+	stop         uint32
+	retry        bool
 	DisableCache bool
 }
 
@@ -195,13 +195,12 @@ func (c *singleClient) Close() {
 }
 
 type dedicatedSingleClient struct {
-	conn conn
-	wire wire
-	mark uint32
-	cmd  Builder
-
-	retry        bool
+	conn         conn
+	wire         wire
+	cmd          Builder
 	retryHandler retryHandler
+	mark         uint32
+	retry        bool
 }
 
 func (c *dedicatedSingleClient) B() Builder {
