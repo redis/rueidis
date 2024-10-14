@@ -22,17 +22,17 @@ var ErrInvalidShardsRefreshInterval = errors.New("ShardsRefreshInterval must be 
 type clusterClient struct {
 	pslots       [16384]conn
 	rslots       []conn
-	opt          *ClientOption
+	sc           call
 	rOpt         *ClientOption
 	conns        map[string]connrole
 	connFn       connFn
-	sc           call
-	mu           sync.RWMutex
-	stop         uint32
-	cmd          Builder
-	retry        bool
+	opt          *ClientOption
 	retryHandler retryHandler
 	stopCh       chan struct{}
+	cmd          Builder
+	mu           sync.RWMutex
+	stop         uint32
+	retry        bool
 }
 
 // NOTE: connrole and conn must be initialized at the same time
@@ -1143,17 +1143,16 @@ func (c *clusterClient) shouldRefreshRetry(err error, ctx context.Context) (addr
 }
 
 type dedicatedClusterClient struct {
-	client *clusterClient
-	conn   conn
-	wire   wire
-	pshks  *pshks
-
+	client       *clusterClient
+	conn         conn
+	wire         wire
+	pshks        *pshks
 	mu           sync.Mutex
 	cmd          Builder
+	retryHandler retryHandler
+	retry        bool
 	slot         uint16
 	mark         bool
-	retry        bool
-	retryHandler retryHandler
 }
 
 func (c *dedicatedClusterClient) acquire(ctx context.Context, slot uint16) (wire wire, err error) {
