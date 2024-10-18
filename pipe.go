@@ -113,7 +113,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 			return _newPipe(connFn, option, true, nobg)
 		}
 	}
-	if !option.DisableCache {
+	if !nobg && !option.DisableCache {
 		cacheStoreFn := option.NewCacheStoreFn
 		if cacheStoreFn == nil {
 			cacheStoreFn = newLRU
