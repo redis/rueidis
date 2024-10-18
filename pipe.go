@@ -321,6 +321,9 @@ func (p *pipe) _exit(err error) {
 
 func (p *pipe) _background() {
 	p.conn.SetDeadline(time.Time{})
+	if conn, ok := p.conn.(*net.TCPConn); ok {
+		conn.SetNoDelay(false)
+	}
 	go func() {
 		p._exit(p._backgroundWrite())
 		close(p.close)
