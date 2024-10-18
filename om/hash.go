@@ -134,6 +134,12 @@ func (r *HashRepository[T]) Remove(ctx context.Context, id string) error {
 	return r.client.Do(ctx, r.client.B().Del().Key(key(r.prefix, id)).Build()).Error()
 }
 
+// AlterIndex uses FT.ALTER from the RediSearch module to alter index under the name `hashidx:{prefix}`
+// You can use the cmdFn parameter to mutate the index alter command.
+func (r *HashRepository[T]) AlterIndex(ctx context.Context, cmdFn func(alter FtAlterIndex) rueidis.Completed) error {
+	return r.client.Do(ctx, cmdFn(r.client.B().FtAlter().Index(r.idx))).Error()
+}
+
 // CreateIndex uses FT.CREATE from the RediSearch module to create inverted index under the name `hashidx:{prefix}`
 // You can use the cmdFn parameter to mutate the index construction command.
 func (r *HashRepository[T]) CreateIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) rueidis.Completed) error {
