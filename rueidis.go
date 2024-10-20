@@ -161,6 +161,11 @@ type ClientOption struct {
 	// produce notable CPU usage reduction under load. Ref: https://github.com/redis/rueidis/issues/156
 	MaxFlushDelay time.Duration
 
+	// DisableTCPNoDelay turns on Nagle's algorithm in pipelining mode by using conn.SetNoDelay(false).
+	// Turning this on can result in lower p99 latencies and lower CPU usages if all your requests are small.
+	// But if you have large requests or fast network, this might degrade the performance. Ref: https://github.com/redis/rueidis/pull/650
+	DisableTCPNoDelay bool
+
 	// ShuffleInit is a handy flag that shuffles the InitAddress after passing to the NewClient() if it is true
 	ShuffleInit bool
 	// ClientNoTouch controls whether commands alter LRU/LFU stats
