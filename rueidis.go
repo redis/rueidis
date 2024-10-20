@@ -22,7 +22,7 @@ const (
 	// DefaultRingScale is the default value of ClientOption.RingScaleEachConn, which results into having a ring of size 2^10 for each connection
 	DefaultRingScale = 10
 	// DefaultPoolSize is the default value of ClientOption.BlockingPoolSize
-	DefaultPoolSize = 1000
+	DefaultPoolSize = 1024
 	// DefaultBlockingPipeline is the default value of ClientOption.BlockingPipeline
 	DefaultBlockingPipeline = 2000
 	// DefaultDialTimeout is the default value of ClientOption.Dialer.Timeout
