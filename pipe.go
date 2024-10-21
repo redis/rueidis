@@ -20,7 +20,7 @@ import (
 )
 
 const LibName = "rueidis"
-const LibVer = "1.0.47"
+const LibVer = "1.0.48"
 
 var noHello = regexp.MustCompile("unknown command .?(HELLO|hello).?")
 
