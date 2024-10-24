@@ -124,6 +124,19 @@ func TestRetrier_WaitOrSkipRetry(t *testing.T) {
 		}
 	})
 
+	t.Run("RetryDelayFn returns 0 delay", func(t *testing.T) {
+		r := &retryer{
+			RetryDelayFn: func(attempts int, _ Completed, err error) time.Duration {
+				return 0
+			},
+		}
+
+		shouldRetry := r.WaitOrSkipRetry(nil, 0, Completed{}, nil)
+		if !shouldRetry {
+			t.Error("WaitOrSkipRetry() = false; want true")
+		}
+	})
+
 	t.Run("context is canceled", func(t *testing.T) {
 		r := &retryer{
 			RetryDelayFn: func(attempts int, _ Completed, err error) time.Duration {
