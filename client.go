@@ -319,15 +319,6 @@ func isRetryable(err error, w wire, ctx context.Context) bool {
 	return err != nil && w.Error() == nil && ctx.Err() == nil
 }
 
-func anyRetryable(resp []RedisResult, w wire, ctx context.Context) bool {
-	for _, r := range resp {
-		if isRetryable(r.NonRedisError(), w, ctx) {
-			return true
-		}
-	}
-	return false
-}
-
 func allReadOnly(multi []Completed) bool {
 	for _, cmd := range multi {
 		if cmd.IsWrite() {
