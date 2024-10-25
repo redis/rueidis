@@ -249,9 +249,7 @@ func TestNewHashRepository(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-
 			time.Sleep(time.Second)
-
 			var entities []*HashTestStruct
 			for i := 3; i >= 1; i-- {
 				e := repo.NewEntity()
@@ -259,33 +257,19 @@ func TestNewHashRepository(t *testing.T) {
 				e.Vec32 = []float32{3, 2, 1}
 				e.Vec64 = []float64{1, 2, 3}
 				e.JSON = []byte(fmt.Sprintf("[%d]", i))
-
 				err = repo.Save(ctx, e)
 				if err != nil {
 					t.Fatal(err)
 				}
 				entities = append(entities, e)
 			}
-
 			time.Sleep(time.Second)
-
-			n, records, err := repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
-				return search.Query("*").Build()
+			_, _, err = repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
+				return search.Query("*").Sortby("JSON").Build()
 			})
-
-			if err != nil {
-				t.Fatal(err)
+			if err == nil {
+				t.Fatalf("search by property not loaded nor in schema")
 			}
-			if n != 3 {
-				t.Fatalf("unexpected total count %v", n)
-			}
-			if len(records) != 3 {
-				t.Fatalf("unexpected return count %v", n)
-			}
-			if !reflect.DeepEqual(entities[0], records[0]) {
-				t.Fatalf("entities[0] should be the same as records[0]")
-			}
-
 			err = repo.AlterIndex(ctx, func(alter FtAlterIndex) rueidis.Completed {
 				return alter.
 					Schema().Add().Field("JSON").Options("TEXT").
@@ -294,11 +278,10 @@ func TestNewHashRepository(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-
-			n, records, err = repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
+			time.Sleep(time.Second)
+			n, records, err := repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
 				return search.Query("*").Sortby("JSON").Build()
 			})
-
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -311,9 +294,6 @@ func TestNewHashRepository(t *testing.T) {
 			if !reflect.DeepEqual(entities[2], records[0]) {
 				t.Fatalf("entities[0] should be the same as records[2]")
 			}
-
-			time.Sleep(time.Second)
-
 			if err = repo.DropIndex(ctx); err != nil {
 				t.Fatal(err)
 			}
