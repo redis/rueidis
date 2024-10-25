@@ -206,7 +206,7 @@ func TestNewJSONRepository(t *testing.T) {
 			}
 		})
 
-		t.Run("AlterIndex", func(t *testing.T) {
+		t.Run("Alter Index", func(t *testing.T) {
 			err := repo.CreateIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
 				return schema.FieldName("$.Val").Text().Build()
 			})
@@ -219,7 +219,7 @@ func TestNewJSONRepository(t *testing.T) {
 			var entities []*JSONTestStruct
 			for i := 3; i >= 1; i-- {
 				e := repo.NewEntity()
-				e.Val = []byte("some")
+				e.Val = []byte("any")
 				e.Nested = struct {
 					F1 string
 				}{
@@ -249,7 +249,7 @@ func TestNewJSONRepository(t *testing.T) {
 				t.Fatalf("unexpected return count %v", n)
 			}
 			if !reflect.DeepEqual(entities[0], records[0]) {
-				t.Fatalf("entities[0] should be the same as e[0]")
+				t.Fatalf("entities[0] should be the same as records[0]")
 			}
 
 			err = repo.AlterIndex(ctx, func(alter FtAlterIndex) rueidis.Completed {
@@ -275,7 +275,7 @@ func TestNewJSONRepository(t *testing.T) {
 				t.Fatalf("unexpected return count %v", n)
 			}
 			if !reflect.DeepEqual(entities[2], records[0]) {
-				t.Fatalf("entities[0] should be the same as e[2]")
+				t.Fatalf("entities[0] should be the same as records[2]")
 			}
 
 			time.Sleep(time.Second)
