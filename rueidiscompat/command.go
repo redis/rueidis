@@ -3348,3 +3348,82 @@ func newJSONSliceCmd(res rueidis.RedisResult) *JSONSliceCmd {
 	cmd.from(res)
 	return cmd
 }
+
+type MapMapStringInterfaceCmd struct {
+	// FIXME: add impl
+}
+
+func (cmd *MapMapStringInterfaceCmd) from(res rueidis.RedisResult) {
+}
+
+func newMapMapStringInterfaceCmd(res rueidis.RedisResult) *MapMapStringInterfaceCmd {
+	cmd := &MapMapStringInterfaceCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+type FTAggregateOptions struct {
+	// FIXME
+}
+
+type AggregateCmd struct {
+	// FIXME
+}
+
+type FTCreateOptions struct{}
+type FieldSchema struct{}
+type FTDropIndexOptions struct{}
+type FTExplainOptions struct{}
+type FTInfoCmd struct{}
+
+func (cmd *FTInfoCmd) from(res rueidis.RedisResult) {
+	// FIXME: impl
+}
+
+func newFTInfoCmd(res rueidis.RedisResult) *FTInfoCmd {
+	cmd := &FTInfoCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+type FTSpellCheckOptions struct{}
+
+type FTSpellCheckCmd struct{}
+
+func (cmd *FTSpellCheckCmd) from(res rueidis.RedisResult) {
+	// FIXME: impl
+}
+
+func newFTSpellCheckCmd(res rueidis.RedisResult) *FTSpellCheckCmd {
+	cmd := &FTSpellCheckCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+type FTSearchCmd struct{}
+
+func (cmd *FTSearchCmd) from(res rueidis.RedisResult) {
+	// FIXME: impl
+}
+
+func newFTSearchCmd(res rueidis.RedisResult) *FTSearchCmd {
+	cmd := &FTSearchCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+type FTSearchOptions struct{}
+
+type FTSynDumpCmd struct{}
+
+func (cmd *FTSynDumpCmd) from(res rueidis.RedisResult) {
+	// FIXME: impl
+}
+
+func newFTSynDumpCmd(res rueidis.RedisResult) *FTSynDumpCmd {
+	cmd := &FTSynDumpCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+type FTSynUpdateOptions struct{}

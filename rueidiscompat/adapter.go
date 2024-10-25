@@ -425,40 +425,40 @@ type CoreCmdable interface {
 	ProbabilisticCmdable
 	TimeseriesCmdable
 	JSONCmdable
-	// TODO SearchCmdable
+	SearchCmdable
 }
 
 // TODO SearchCmdable
-//type SearchCmdable interface {
-//	FT_List(ctx context.Context) *StringSliceCmd
-//	FTAggregate(ctx context.Context, index string, query string) *MapStringInterfaceCmd
-//	FTAggregateWithArgs(ctx context.Context, index string, query string, options *FTAggregateOptions) *AggregateCmd
-//	FTAliasAdd(ctx context.Context, index string, alias string) *StatusCmd
-//	FTAliasDel(ctx context.Context, alias string) *StatusCmd
-//	FTAliasUpdate(ctx context.Context, index string, alias string) *StatusCmd
-//	FTAlter(ctx context.Context, index string, skipInitalScan bool, definition []interface{}) *StatusCmd
-//	FTConfigGet(ctx context.Context, option string) *MapMapStringInterfaceCmd
-//	FTConfigSet(ctx context.Context, option string, value interface{}) *StatusCmd
-//	FTCreate(ctx context.Context, index string, options *FTCreateOptions, schema ...*FieldSchema) *StatusCmd
-//	FTCursorDel(ctx context.Context, index string, cursorId int) *StatusCmd
-//	FTCursorRead(ctx context.Context, index string, cursorId int, count int) *MapStringInterfaceCmd
-//	FTDictAdd(ctx context.Context, dict string, term ...interface{}) *IntCmd
-//	FTDictDel(ctx context.Context, dict string, term ...interface{}) *IntCmd
-//	FTDictDump(ctx context.Context, dict string) *StringSliceCmd
-//	FTDropIndex(ctx context.Context, index string) *StatusCmd
-//	FTDropIndexWithArgs(ctx context.Context, index string, options *FTDropIndexOptions) *StatusCmd
-//	FTExplain(ctx context.Context, index string, query string) *StringCmd
-//	FTExplainWithArgs(ctx context.Context, index string, query string, options *FTExplainOptions) *StringCmd
-//	FTInfo(ctx context.Context, index string) *FTInfoCmd
-//	FTSpellCheck(ctx context.Context, index string, query string) *FTSpellCheckCmd
-//	FTSpellCheckWithArgs(ctx context.Context, index string, query string, options *FTSpellCheckOptions) *FTSpellCheckCmd
-//	FTSearch(ctx context.Context, index string, query string) *FTSearchCmd
-//	FTSearchWithArgs(ctx context.Context, index string, query string, options *FTSearchOptions) *FTSearchCmd
-//	FTSynDump(ctx context.Context, index string) *FTSynDumpCmd
-//	FTSynUpdate(ctx context.Context, index string, synGroupId interface{}, terms []interface{}) *StatusCmd
-//	FTSynUpdateWithArgs(ctx context.Context, index string, synGroupId interface{}, options *FTSynUpdateOptions, terms []interface{}) *StatusCmd
-//	FTTagVals(ctx context.Context, index string, field string) *StringSliceCmd
-//}
+type SearchCmdable interface {
+	FT_List(ctx context.Context) *StringSliceCmd
+	FTAggregate(ctx context.Context, index string, query string) *MapStringInterfaceCmd
+	FTAggregateWithArgs(ctx context.Context, index string, query string, options *FTAggregateOptions) *AggregateCmd
+	FTAliasAdd(ctx context.Context, index string, alias string) *StatusCmd
+	FTAliasDel(ctx context.Context, alias string) *StatusCmd
+	FTAliasUpdate(ctx context.Context, index string, alias string) *StatusCmd
+	FTAlter(ctx context.Context, index string, skipInitalScan bool, definition []interface{}) *StatusCmd
+	FTConfigGet(ctx context.Context, option string) *MapMapStringInterfaceCmd
+	FTConfigSet(ctx context.Context, option string, value interface{}) *StatusCmd
+	FTCreate(ctx context.Context, index string, options *FTCreateOptions, schema ...*FieldSchema) *StatusCmd
+	FTCursorDel(ctx context.Context, index string, cursorId int) *StatusCmd
+	FTCursorRead(ctx context.Context, index string, cursorId int, count int) *MapStringInterfaceCmd
+	FTDictAdd(ctx context.Context, dict string, term ...interface{}) *IntCmd
+	FTDictDel(ctx context.Context, dict string, term ...interface{}) *IntCmd
+	FTDictDump(ctx context.Context, dict string) *StringSliceCmd
+	FTDropIndex(ctx context.Context, index string) *StatusCmd
+	FTDropIndexWithArgs(ctx context.Context, index string, options *FTDropIndexOptions) *StatusCmd
+	FTExplain(ctx context.Context, index string, query string) *StringCmd
+	FTExplainWithArgs(ctx context.Context, index string, query string, options *FTExplainOptions) *StringCmd
+	FTInfo(ctx context.Context, index string) *FTInfoCmd
+	FTSpellCheck(ctx context.Context, index string, query string) *FTSpellCheckCmd
+	FTSpellCheckWithArgs(ctx context.Context, index string, query string, options *FTSpellCheckOptions) *FTSpellCheckCmd
+	FTSearch(ctx context.Context, index string, query string) *FTSearchCmd
+	FTSearchWithArgs(ctx context.Context, index string, query string, options *FTSearchOptions) *FTSearchCmd
+	FTSynDump(ctx context.Context, index string) *FTSynDumpCmd
+	FTSynUpdate(ctx context.Context, index string, synGroupId interface{}, terms []interface{}) *StatusCmd
+	FTSynUpdateWithArgs(ctx context.Context, index string, synGroupId interface{}, options *FTSynUpdateOptions, terms []interface{}) *StatusCmd
+	FTTagVals(ctx context.Context, index string, field string) *StringSliceCmd
+}
 
 // https://github.com/redis/go-redis/blob/af4872cbd0de349855ce3f0978929c2f56eb995f/probabilistic.go#L10
 type ProbabilisticCmdable interface {
