@@ -11,6 +11,7 @@ func iter0(s Builder) {
 	s.Hmset().Key("1").FieldValue().FieldValueIter(maps.All(map[string]string{"1": "1"})).Build()
 	s.Hset().Key("1").FieldValue().FieldValueIter(maps.All(map[string]string{"1": "1"})).Build()
 	s.Xadd().Key("1").Id("*").FieldValue().FieldValueIter(maps.All(map[string]string{"1": "1"})).Build()
+	s.Zadd().Key("1").ScoreMember().ScoreMemberIter(maps.All(map[string]float64{"1": float64(1)})).Build()
 }
 
 func TestIter(t *testing.T) {
