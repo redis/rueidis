@@ -2,6 +2,7 @@ package rueidis
 
 import (
 	"context"
+	"runtime"
 	"time"
 
 	"github.com/redis/rueidis/internal/util"
@@ -57,36 +58,31 @@ func (r *retryer) RetryDelay(attempts int, cmd Completed, err error) time.Durati
 }
 
 func (r *retryer) WaitForRetry(ctx context.Context, duration time.Duration) {
-	if duration <= 0 {
-		return
-	}
-
-	if ch := ctx.Done(); ch != nil {
-		tm := time.NewTimer(duration)
-		defer tm.Stop()
-		select {
-		case <-ch:
-		case <-tm.C:
+	if duration > 0 {
+		if ch := ctx.Done(); ch != nil {
+			tm := time.NewTimer(duration)
+			defer tm.Stop()
+			select {
+			case <-ch:
+			case <-tm.C:
+			}
+		} else {
+			time.Sleep(duration)
 		}
-	} else {
-		time.Sleep(duration)
 	}
 }
 
 func (r *retryer) WaitOrSkipRetry(
 	ctx context.Context, attempts int, cmd Completed, err error,
 ) bool {
-	delay := r.RetryDelay(attempts, cmd, err)
-	if delay < 0 {
-		return false
-	}
-	if delay == 0 {
+	if delay := r.RetryDelay(attempts, cmd, err); delay == 0 {
+		runtime.Gosched()
 		return true
-	}
-
-	if dl, ok := ctx.Deadline(); !ok || time.Until(dl) > delay {
-		r.WaitForRetry(ctx, delay)
-		return true
+	} else if delay > 0 {
+		if dl, ok := ctx.Deadline(); !ok || time.Until(dl) > delay {
+			r.WaitForRetry(ctx, delay)
+			return true
+		}
 	}
 	return false
 }

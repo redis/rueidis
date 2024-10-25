@@ -9,9 +9,10 @@ func newPool(cap int, dead wire, makeFn func() wire) *pool {
 
 	return &pool{
 		size: 0,
+		cap:  cap,
 		dead: dead,
 		make: makeFn,
-		list: make([]wire, 0, cap),
+		list: make([]wire, 0, 4),
 		cond: sync.NewCond(&sync.Mutex{}),
 	}
 }
@@ -22,12 +23,13 @@ type pool struct {
 	make func() wire
 	list []wire
 	size int
+	cap  int
 	down bool
 }
 
 func (p *pool) Acquire() (v wire) {
 	p.cond.L.Lock()
-	for len(p.list) == 0 && p.size == cap(p.list) && !p.down {
+	for len(p.list) == 0 && p.size == p.cap && !p.down {
 		p.cond.Wait()
 	}
 	if p.down {

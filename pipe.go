@@ -20,7 +20,7 @@ import (
 )
 
 const LibName = "rueidis"
-const LibVer = "1.0.47"
+const LibVer = "1.0.48"
 
 var noHello = regexp.MustCompile("unknown command .?(HELLO|hello).?")
 
@@ -73,6 +73,7 @@ type pipe struct {
 	waits           int32
 	recvs           int32
 	r2ps            bool // identify this pipe is used for resp2 pubsub or not
+	noNoDelay       bool
 }
 
 type pipeFn func(connFn func() (net.Conn, error), option *ClientOption) (p *pipe, err error)
@@ -98,6 +99,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 		timeout:       option.ConnWriteTimeout,
 		pinggap:       option.Dialer.KeepAlive,
 		maxFlushDelay: option.MaxFlushDelay,
+		noNoDelay:     option.DisableTCPNoDelay,
 
 		r2ps: r2ps,
 	}
@@ -113,7 +115,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 			return _newPipe(connFn, option, true, nobg)
 		}
 	}
-	if !option.DisableCache {
+	if !nobg && !option.DisableCache {
 		cacheStoreFn := option.NewCacheStoreFn
 		if cacheStoreFn == nil {
 			cacheStoreFn = newLRU
@@ -321,6 +323,9 @@ func (p *pipe) _exit(err error) {
 
 func (p *pipe) _background() {
 	p.conn.SetDeadline(time.Time{})
+	if conn, ok := p.conn.(*net.TCPConn); ok && p.noNoDelay {
+		conn.SetNoDelay(false)
+	}
 	go func() {
 		p._exit(p._backgroundWrite())
 		close(p.close)
