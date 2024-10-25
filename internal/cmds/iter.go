@@ -3,8 +3,8 @@
 package cmds
 
 import (
-	"fmt"
 	"iter"
+	"strconv"
 )
 
 func (c HmsetFieldValue) FieldValueIter(seq iter.Seq2[string, string]) HmsetFieldValue {
@@ -28,9 +28,9 @@ func (c XaddFieldValue) FieldValueIter(seq iter.Seq2[string, string]) XaddFieldV
 	return c
 }
 
-func (c ZaddScoreMember) ScoreMemberIter(seq iter.Seq2[float64, string]) ZaddScoreMember {
-	for score, member := range seq {
-		c.cs.s = append(c.cs.s, fmt.Sprintf("%f", score), member)
+func (c ZaddScoreMember) ScoreMemberIter(seq iter.Seq2[string, float64]) ZaddScoreMember {
+	for member, score := range seq {
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(score, 'f', -1, 64), member)
 	}
 	return c
 }
