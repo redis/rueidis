@@ -238,7 +238,7 @@ func TestNewJSONRepository(t *testing.T) {
 			}
 			err = repo.AlterIndex(ctx, func(alter FtAlterIndex) rueidis.Completed {
 				return alter.
-					Schema().Add().Field("$.Nested.F1").Options("TEXT").
+					Schema().Add().Field("$.Nested.F1").Options("TEXT", "SORTABLE").
 					Build()
 			})
 			if err != nil {

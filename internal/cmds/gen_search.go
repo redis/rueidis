@@ -1643,8 +1643,8 @@ func (c FtAlterAdd) Field(field string) FtAlterField {
 
 type FtAlterField Incomplete
 
-func (c FtAlterField) Options(options string) FtAlterOptions {
-	c.cs.s = append(c.cs.s, options)
+func (c FtAlterField) Options(options ...string) FtAlterOptions {
+	c.cs.s = append(c.cs.s, options...)
 	return (FtAlterOptions)(c)
 }
 
@@ -1661,6 +1661,11 @@ func (c FtAlterIndex) Schema() FtAlterSchema {
 }
 
 type FtAlterOptions Incomplete
+
+func (c FtAlterOptions) Options(options ...string) FtAlterOptions {
+	c.cs.s = append(c.cs.s, options...)
+	return c
+}
 
 func (c FtAlterOptions) Build() Completed {
 	c.cs.Build()

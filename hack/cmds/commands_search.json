@@ -356,7 +356,8 @@
       },
       {
         "name": "options",
-        "type": "string"
+        "type": "string",
+        "multiple": true
       }
     ],
     "since": "1.0.0",
