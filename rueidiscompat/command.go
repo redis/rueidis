@@ -3349,11 +3349,36 @@ func newJSONSliceCmd(res rueidis.RedisResult) *JSONSliceCmd {
 	return cmd
 }
 
+type mapStringInterface map[string]any
 type MapMapStringInterfaceCmd struct {
-	// FIXME: add impl
+	baseCmd[map[string]mapStringInterface]
 }
 
 func (cmd *MapMapStringInterfaceCmd) from(res rueidis.RedisResult) {
+	// outerMap: map[string]mapStringInterface
+	outerMap, err := res.ToMap()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.val = make(map[string]mapStringInterface, len(outerMap))
+	for k, v := range outerMap {
+		// _m: map[string]any
+		_m, err := v.ToMap()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		cmd.val[k] = make(map[string]any, len(_m))
+		for _k, _v := range _m {
+			val, err := _v.ToAny()
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+			cmd.val[k][_k] = val
+		}
+	}
 }
 
 func newMapMapStringInterfaceCmd(res rueidis.RedisResult) *MapMapStringInterfaceCmd {
@@ -3368,6 +3393,11 @@ type FTAggregateOptions struct {
 
 type AggregateCmd struct {
 	// FIXME
+	baseCmd[map[string]any]
+}
+
+func (cmd *AggregateCmd) from(res rueidis.RedisResult) {
+
 }
 
 type FTCreateOptions struct{}
