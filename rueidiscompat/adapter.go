@@ -4835,6 +4835,67 @@ func (c *Compat) Watch(ctx context.Context, fn func(Tx) error, keys ...string) e
 	return fn(newTx(dc, cancel))
 }
 
+func (c *Compat) FT_List(ctx context.Context) *StringSliceCmd
+func (c *Compat) FTAggregate(ctx context.Context, index string, query string) *MapStringInterfaceCmd {
+	return nil
+}
+func (c *Compat) FTAggregateWithArgs(ctx context.Context, index string, query string, options *FTAggregateOptions) *AggregateCmd {
+	return nil
+}
+func (c *Compat) FTAliasAdd(ctx context.Context, index string, alias string) *StatusCmd { return nil }
+func (c *Compat) FTAliasDel(ctx context.Context, alias string) *StatusCmd               { return nil }
+func (c *Compat) FTAliasUpdate(ctx context.Context, index string, alias string) *StatusCmd {
+	return nil
+}
+func (c *Compat) FTAlter(ctx context.Context, index string, skipInitalScan bool, definition []interface{}) *StatusCmd {
+	return nil
+}
+func (c *Compat) FTConfigGet(ctx context.Context, option string) *MapMapStringInterfaceCmd {
+	return nil
+}
+func (c *Compat) FTConfigSet(ctx context.Context, option string, value interface{}) *StatusCmd {
+	return nil
+}
+func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOptions, schema ...*FieldSchema) *StatusCmd {
+	return nil
+}
+func (c *Compat) FTCursorDel(ctx context.Context, index string, cursorId int) *StatusCmd { return nil }
+func (c *Compat) FTCursorRead(ctx context.Context, index string, cursorId int, count int) *MapStringInterfaceCmd {
+	return nil
+}
+func (c *Compat) FTDictAdd(ctx context.Context, dict string, term ...interface{}) *IntCmd { return nil }
+func (c *Compat) FTDictDel(ctx context.Context, dict string, term ...interface{}) *IntCmd { return nil }
+func (c *Compat) FTDictDump(ctx context.Context, dict string) *StringSliceCmd             { return nil }
+func (c *Compat) FTDropIndex(ctx context.Context, index string) *StatusCmd                { return nil }
+func (c *Compat) FTDropIndexWithArgs(ctx context.Context, index string, options *FTDropIndexOptions) *StatusCmd {
+	return nil
+}
+func (c *Compat) FTExplain(ctx context.Context, index string, query string) *StringCmd { return nil }
+func (c *Compat) FTExplainWithArgs(ctx context.Context, index string, query string, options *FTExplainOptions) *StringCmd {
+	return nil
+}
+func (c *Compat) FTInfo(ctx context.Context, index string) *FTInfoCmd { return nil }
+func (c *Compat) FTSpellCheck(ctx context.Context, index string, query string) *FTSpellCheckCmd {
+	return nil
+}
+func (c *Compat) FTSpellCheckWithArgs(ctx context.Context, index string, query string, options *FTSpellCheckOptions) *FTSpellCheckCmd {
+	return nil
+}
+func (c *Compat) FTSearch(ctx context.Context, index string, query string) *FTSearchCmd { return nil }
+func (c *Compat) FTSearchWithArgs(ctx context.Context, index string, query string, options *FTSearchOptions) *FTSearchCmd {
+	return nil
+}
+func (c *Compat) FTSynDump(ctx context.Context, index string) *FTSynDumpCmd { return nil }
+func (c *Compat) FTSynUpdate(ctx context.Context, index string, synGroupId interface{}, terms []interface{}) *StatusCmd {
+	return nil
+}
+func (c *Compat) FTSynUpdateWithArgs(ctx context.Context, index string, synGroupId interface{}, options *FTSynUpdateOptions, terms []interface{}) *StatusCmd {
+	return nil
+}
+func (c *Compat) FTTagVals(ctx context.Context, index string, field string) *StringSliceCmd {
+	return nil
+}
+
 func (c CacheCompat) BitCount(ctx context.Context, key string, bitCount *BitCount) *IntCmd {
 	var resp rueidis.RedisResult
 	if bitCount == nil {

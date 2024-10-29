@@ -3401,7 +3401,46 @@ func (cmd *AggregateCmd) from(res rueidis.RedisResult) {
 }
 
 type FTCreateOptions struct{}
-type FieldSchema struct{}
+
+type SearchFieldType int
+
+const (
+	SearchFieldTypeInvalid = SearchFieldType(iota)
+	SearchFieldTypeNumeric
+	SearchFieldTypeTag
+	SearchFieldTypeText
+	SearchFieldTypeGeo
+	SearchFieldTypeVector
+	SearchFieldTypeGeoShape
+)
+
+func (t SearchFieldType) String() string {
+	switch t {
+	case SearchFieldTypeInvalid:
+		return ""
+	case SearchFieldTypeNumeric:
+		return "NUMERIC"
+	case SearchFieldTypeTag:
+		return "TAG"
+	case SearchFieldTypeText:
+		return "TEXT"
+	case SearchFieldTypeGeo:
+		return "GEO"
+	case SearchFieldTypeVector:
+		return "VECTOR"
+	case SearchFieldTypeGeoShape:
+		return "GEOSHAPE"
+	default:
+		return "TEXT"
+	}
+}
+
+type FieldSchema struct {
+	FieldName string
+	// FIXME:
+	FieldType SearchFieldType
+}
+
 type FTDropIndexOptions struct{}
 type FTExplainOptions struct{}
 type FTInfoCmd struct{}
@@ -3430,7 +3469,17 @@ func newFTSpellCheckCmd(res rueidis.RedisResult) *FTSpellCheckCmd {
 	return cmd
 }
 
-type FTSearchCmd struct{}
+type FTSearchResult struct{}
+
+type FTSearchOptions struct {
+	WithScores bool
+}
+
+type FTSearchCmd struct {
+	// FIXME: any ?
+	baseCmd[FTSearchResult]
+	options *FTSearchOptions
+}
 
 func (cmd *FTSearchCmd) from(res rueidis.RedisResult) {
 	// FIXME: impl
@@ -3441,8 +3490,6 @@ func newFTSearchCmd(res rueidis.RedisResult) *FTSearchCmd {
 	cmd.from(res)
 	return cmd
 }
-
-type FTSearchOptions struct{}
 
 type FTSynDumpCmd struct{}
 
