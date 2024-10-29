@@ -1544,3 +1544,202 @@ func TestSentinelClientRetry(t *testing.T) {
 		return c
 	})
 }
+
+func TestSentinelClientLoadingRetry(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+
+	setup := func() (*sentinelClient, *mockConn, *mockConn) {
+		s0 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
+					{val: RedisMessage{typ: '*', values: []RedisMessage{}}},
+					{val: RedisMessage{typ: '*', values: []RedisMessage{
+						{typ: '+', string: ""}, {typ: '+', string: "1"},
+					}}},
+				}}
+			},
+		}
+		m1 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				if cmd == cmds.RoleCmd {
+					return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
+				}
+				return RedisResult{}
+			},
+		}
+		client, err := newSentinelClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn {
+				if dst == ":0" {
+					return s0
+				}
+				if dst == ":1" {
+					return m1
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		return client, s0, m1
+	}
+
+	t.Run("Do Retry on Loading", func(t *testing.T) {
+		client, _, m1 := setup()
+		attempts := 0
+		m1.DoFn = func(cmd Completed) RedisResult {
+			if cmd == cmds.RoleCmd {
+				return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
+			}
+			attempts++
+			if attempts == 1 {
+				return newResult(RedisMessage{typ: '-', string: "LOADING Redis is loading the dataset in memory"}, nil)
+			}
+			return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+		}
+
+		if v, err := client.Do(context.Background(), client.B().Get().Key("test").Build()).ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if attempts != 2 {
+			t.Fatalf("expected 2 attempts, got %v", attempts)
+		}
+	})
+
+	t.Run("Do not retry on non-loading errors", func(t *testing.T) {
+		client, _, m1 := setup()
+		attempts := 0
+		m1.DoFn = func(cmd Completed) RedisResult {
+			if cmd == cmds.RoleCmd {
+				return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
+			}
+			attempts++
+			if attempts == 1 {
+				return newResult(RedisMessage{typ: '-', string: "ERR some other error"}, nil)
+			}
+			return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+		}
+
+		if err := client.Do(context.Background(), client.B().Get().Key("test").Build()).Error(); err == nil {
+			t.Fatal("expected error but got nil")
+		}
+		if attempts != 1 {
+			t.Fatalf("unexpected attempts %v, expected no retry", attempts)
+		}
+	})
+
+	t.Run("DoMulti Retry on Loading", func(t *testing.T) {
+		client, _, m1 := setup()
+		attempts := 0
+		m1.DoMultiFn = func(multi ...Completed) *redisresults {
+			attempts++
+			if attempts == 1 {
+				return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '-', string: "LOADING Redis is loading the dataset in memory"}, nil)}}
+			}
+			return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "OK"}, nil)}}
+		}
+
+		cmd := client.B().Get().Key("test").Build()
+		resps := client.DoMulti(context.Background(), cmd)
+		if len(resps) != 1 {
+			t.Fatalf("unexpected response length %v", len(resps))
+		}
+		if v, err := resps[0].ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoCache Retry on Loading", func(t *testing.T) {
+		client, _, m1 := setup()
+		attempts := 0
+		m1.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
+			attempts++
+			if attempts == 1 {
+				return newResult(RedisMessage{typ: '-', string: "LOADING Redis is loading the dataset in memory"}, nil)
+			}
+			return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+		}
+
+		cmd := client.B().Get().Key("test").Cache()
+		if v, err := client.DoCache(context.Background(), cmd, time.Minute).ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMultiCache Retry on Loading", func(t *testing.T) {
+		client, _, m1 := setup()
+		attempts := 0
+		m1.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
+			attempts++
+			if attempts == 1 {
+				return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '-', string: "LOADING Redis is loading the dataset in memory"}, nil)}}
+			}
+			return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "OK"}, nil)}}
+		}
+
+		cmd := client.B().Get().Key("test").Cache()
+		resps := client.DoMultiCache(context.Background(), CT(cmd, time.Minute))
+		if len(resps) != 1 {
+			t.Fatalf("unexpected response length %v", len(resps))
+		}
+		if v, err := resps[0].ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Dedicated Do Retry on Loading", func(t *testing.T) {
+		client, _, m1 := setup()
+		attempts := 0
+		m1.DoFn = func(cmd Completed) RedisResult {
+			if cmd == cmds.RoleCmd {
+				return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
+			}
+			attempts++
+			if attempts == 1 {
+				return newResult(RedisMessage{typ: '-', string: "LOADING Redis is loading the dataset in memory"}, nil)
+			}
+			return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+		}
+		m1.AcquireFn = func() wire { return &mockWire{DoFn: m1.DoFn} }
+
+		err := client.Dedicated(func(c DedicatedClient) error {
+			if v, err := c.Do(context.Background(), c.B().Get().Key("test").Build()).ToString(); err != nil || v != "OK" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+	})
+
+	t.Run("Dedicated DoMulti Retry on Loading", func(t *testing.T) {
+		client, _, m1 := setup()
+		attempts := 0
+		m1.DoMultiFn = func(multi ...Completed) *redisresults {
+			attempts++
+			if attempts == 1 {
+				return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '-', string: "LOADING Redis is loading the dataset in memory"}, nil)}}
+			}
+			return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "OK"}, nil)}}
+		}
+		m1.AcquireFn = func() wire { return &mockWire{DoMultiFn: m1.DoMultiFn} }
+
+		err := client.Dedicated(func(c DedicatedClient) error {
+			resps := c.DoMulti(context.Background(), c.B().Get().Key("test").Build())
+			if len(resps) != 1 {
+				t.Fatalf("unexpected response length %v", len(resps))
+			}
+			if v, err := resps[0].ToString(); err != nil || v != "OK" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+	})
+}

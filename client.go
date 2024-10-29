@@ -47,7 +47,7 @@ func (c *singleClient) Do(ctx context.Context, cmd Completed) (resp RedisResult)
 	attempts := 1
 retry:
 	resp = c.conn.Do(ctx, cmd)
-	if c.retry && cmd.IsReadOnly() && c.isRetryable(resp.NonRedisError(), ctx) {
+	if c.retry && cmd.IsReadOnly() && c.isRetryable(resp.Error(), ctx) {
 		shouldRetry := c.retryHandler.WaitOrSkipRetry(
 			ctx, attempts, cmd, resp.Error(),
 		)
@@ -88,7 +88,7 @@ retry:
 	resps = c.conn.DoMulti(ctx, multi...).s
 	if c.retry && allReadOnly(multi) {
 		for i, resp := range resps {
-			if c.isRetryable(resp.NonRedisError(), ctx) {
+			if c.isRetryable(resp.Error(), ctx) {
 				shouldRetry := c.retryHandler.WaitOrSkipRetry(
 					ctx, attempts, multi[i], resp.Error(),
 				)
@@ -116,7 +116,7 @@ retry:
 	resps = c.conn.DoMultiCache(ctx, multi...).s
 	if c.retry {
 		for i, resp := range resps {
-			if c.isRetryable(resp.NonRedisError(), ctx) {
+			if c.isRetryable(resp.Error(), ctx) {
 				shouldRetry := c.retryHandler.WaitOrSkipRetry(
 					ctx, attempts, Completed(multi[i].Cmd), resp.Error(),
 				)
@@ -139,7 +139,7 @@ func (c *singleClient) DoCache(ctx context.Context, cmd Cacheable, ttl time.Dura
 	attempts := 1
 retry:
 	resp = c.conn.DoCache(ctx, cmd, ttl)
-	if c.retry && c.isRetryable(resp.NonRedisError(), ctx) {
+	if c.retry && c.isRetryable(resp.Error(), ctx) {
 		shouldRetry := c.retryHandler.WaitOrSkipRetry(ctx, attempts, Completed(cmd), resp.Error())
 		if shouldRetry {
 			attempts++
@@ -214,7 +214,7 @@ retry:
 		return newErrResult(err)
 	}
 	resp = c.wire.Do(ctx, cmd)
-	if c.retry && cmd.IsReadOnly() && isRetryable(resp.NonRedisError(), c.wire, ctx) {
+	if c.retry && cmd.IsReadOnly() && isRetryable(resp.Error(), c.wire, ctx) {
 		shouldRetry := c.retryHandler.WaitOrSkipRetry(
 			ctx, attempts, cmd, resp.Error(),
 		)
@@ -244,7 +244,7 @@ retry:
 	}
 	resp = c.wire.DoMulti(ctx, multi...).s
 	for i, cmd := range multi {
-		if retryable && isRetryable(resp[i].NonRedisError(), c.wire, ctx) {
+		if retryable && isRetryable(resp[i].Error(), c.wire, ctx) {
 			shouldRetry := c.retryHandler.WaitOrSkipRetry(
 				ctx, attempts, multi[i], resp[i].Error(),
 			)
@@ -312,11 +312,23 @@ func (c *dedicatedSingleClient) release() {
 }
 
 func (c *singleClient) isRetryable(err error, ctx context.Context) bool {
-	return err != nil && err != ErrDoCacheAborted && atomic.LoadUint32(&c.stop) == 0 && ctx.Err() == nil
+	if err == nil || err == ErrDoCacheAborted || atomic.LoadUint32(&c.stop) != 0 || ctx.Err() != nil {
+		return false
+	}
+	if redisErr, ok := err.(*RedisError); ok {
+		return redisErr.IsLoading()
+	}
+	return true
 }
 
 func isRetryable(err error, w wire, ctx context.Context) bool {
-	return err != nil && w.Error() == nil && ctx.Err() == nil
+	if err == nil || w.Error() != nil || ctx.Err() != nil {
+		return false
+	}
+	if redisErr, ok := err.(*RedisError); ok {
+		return redisErr.IsLoading()
+	}
+	return true
 }
 
 func allReadOnly(multi []Completed) bool {

@@ -1129,7 +1129,7 @@ func (c *clusterClient) shouldRefreshRetry(err error, ctx context.Context) (addr
 				mode = RedirectMove
 			} else if addr, ok = err.IsAsk(); ok {
 				mode = RedirectAsk
-			} else if err.IsClusterDown() || err.IsTryAgain() {
+			} else if err.IsClusterDown() || err.IsTryAgain() || err.IsLoading() {
 				mode = RedirectRetry
 			}
 		} else if ctx.Err() == nil {
