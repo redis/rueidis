@@ -3387,8 +3387,56 @@ func newMapMapStringInterfaceCmd(res rueidis.RedisResult) *MapMapStringInterface
 	return cmd
 }
 
+// Each AggregateReducer have different args.
+// Please follow https://redis.io/docs/interact/search-and-query/search/aggregations/#supported-groupby-reducers for more information.
+type FTAggregateReducer struct {
+	Reducer SearchAggregator
+	Args    []interface{}
+	As      string
+}
+
+type FTAggregateGroupBy struct {
+	Fields []interface{}
+	Reduce []FTAggregateReducer
+}
+
+type FTAggregateSortBy struct {
+	FieldName string
+	Asc       bool
+	Desc      bool
+}
+
+type FTAggregateApply struct {
+	Field string
+	As    string
+}
+
+type FTAggregateLoad struct {
+	Field string
+	As    string
+}
+
+type FTAggregateWithCursor struct {
+	Count   int
+	MaxIdle int
+}
+
 type FTAggregateOptions struct {
-	// FIXME
+	Verbatim          bool
+	LoadAll           bool
+	Load              []FTAggregateLoad
+	Timeout           int
+	GroupBy           []FTAggregateGroupBy
+	SortBy            []FTAggregateSortBy
+	SortByMax         int
+	Apply             []FTAggregateApply
+	LimitOffset       int
+	Limit             int
+	Filter            string
+	WithCursor        bool
+	WithCursorOptions *FTAggregateWithCursor
+	Params            map[string]interface{}
+	DialectVersion    int
 }
 
 type AggregateCmd struct {
@@ -3400,7 +3448,76 @@ func (cmd *AggregateCmd) from(res rueidis.RedisResult) {
 
 }
 
-type FTCreateOptions struct{}
+type FTCreateOptions struct {
+	OnHash          bool
+	OnJSON          bool
+	Prefix          []any
+	Filter          string
+	DefaultLanguage string
+	LanguageField   string
+	Score           float64
+	ScoreField      string
+	PayloadField    string
+	MaxTextFields   int
+	NoOffsets       bool
+	Temporary       int
+	NoHL            bool
+	NoFields        bool
+	NoFreqs         bool
+	StopWords       []any
+	SkipInitialScan bool
+}
+
+type SearchAggregator int
+
+const (
+	SearchInvalid = SearchAggregator(iota)
+	SearchAvg
+	SearchSum
+	SearchMin
+	SearchMax
+	SearchCount
+	SearchCountDistinct
+	SearchCountDistinctish
+	SearchStdDev
+	SearchQuantile
+	SearchToList
+	SearchFirstValue
+	SearchRandomSample
+)
+
+func (a SearchAggregator) String() string {
+	switch a {
+	case SearchInvalid:
+		return ""
+	case SearchAvg:
+		return "AVG"
+	case SearchSum:
+		return "SUM"
+	case SearchMin:
+		return "MIN"
+	case SearchMax:
+		return "MAX"
+	case SearchCount:
+		return "COUNT"
+	case SearchCountDistinct:
+		return "COUNT_DISTINCT"
+	case SearchCountDistinctish:
+		return "COUNT_DISTINCTISH"
+	case SearchStdDev:
+		return "STDDEV"
+	case SearchQuantile:
+		return "QUANTILE"
+	case SearchToList:
+		return "TOLIST"
+	case SearchFirstValue:
+		return "FIRST_VALUE"
+	case SearchRandomSample:
+		return "RANDOM_SAMPLE"
+	default:
+		return ""
+	}
+}
 
 type SearchFieldType int
 
@@ -3436,14 +3553,171 @@ func (t SearchFieldType) String() string {
 }
 
 type FieldSchema struct {
+	FieldName         string
+	As                string
+	FieldType         SearchFieldType
+	Sortable          bool
+	UNF               bool
+	NoStem            bool
+	NoIndex           bool
+	PhoneticMatcher   string
+	Weight            float64
+	Separator         string
+	CaseSensitive     bool
+	WithSuffixtrie    bool
+	VectorArgs        *FTVectorArgs
+	GeoShapeFieldType string
+	IndexEmpty        bool
+	IndexMissing      bool
+}
+
+type FTVectorArgs struct {
+	FlatOptions *FTFlatOptions
+	HNSWOptions *FTHNSWOptions
+}
+
+type FTFlatOptions struct {
+	Type            string
+	Dim             int
+	DistanceMetric  string
+	InitialCapacity int
+	BlockSize       int
+}
+
+type FTHNSWOptions struct {
+	Type                   string
+	Dim                    int
+	DistanceMetric         string
+	InitialCapacity        int
+	MaxEdgesPerNode        int
+	MaxAllowedEdgesPerNode int
+	EFRunTime              int
+	Epsilon                float64
+}
+
+type SpellCheckTerms struct {
+	Include    bool
+	Exclude    bool
+	Dictionary string
+}
+
+type FTSearchFilter struct {
+	FieldName any
+	Min       any
+	Max       any
+}
+
+type FTSearchGeoFilter struct {
 	FieldName string
-	// FIXME:
-	FieldType SearchFieldType
+	Longitude float64
+	Latitude  float64
+	Radius    float64
+	Unit      string
+}
+
+type FTSearchReturn struct {
+	FieldName string
+	As        string
+}
+
+type FTSearchSortBy struct {
+	FieldName string
+	Asc       bool
+	Desc      bool
 }
 
 type FTDropIndexOptions struct{}
 type FTExplainOptions struct{}
-type FTInfoCmd struct{}
+
+type IndexErrors struct {
+	IndexingFailures     int
+	LastIndexingError    string
+	LastIndexingErrorKey string
+}
+
+type FTAttribute struct {
+	Identifier      string
+	Attribute       string
+	Type            string
+	Weight          float64
+	Sortable        bool
+	NoStem          bool
+	NoIndex         bool
+	UNF             bool
+	PhoneticMatcher string
+	CaseSensitive   bool
+	WithSuffixtrie  bool
+}
+
+type CursorStats struct {
+	GlobalIdle    int
+	GlobalTotal   int
+	IndexCapacity int
+	IndexTotal    int
+}
+
+type FieldStatistic struct {
+	Identifier  string
+	Attribute   string
+	IndexErrors IndexErrors
+}
+
+type GCStats struct {
+	BytesCollected       int
+	TotalMsRun           int
+	TotalCycles          int
+	AverageCycleTimeMs   string
+	LastRunTimeMs        int
+	GCNumericTreesMissed int
+	GCBlocksDenied       int
+}
+
+type IndexDefinition struct {
+	KeyType      string
+	Prefixes     []string
+	DefaultScore float64
+}
+
+type FTInfoResult struct {
+	IndexErrors              IndexErrors
+	Attributes               []FTAttribute
+	BytesPerRecordAvg        string
+	Cleaning                 int
+	CursorStats              CursorStats
+	DialectStats             map[string]int
+	DocTableSizeMB           float64
+	FieldStatistics          []FieldStatistic
+	GCStats                  GCStats
+	GeoshapesSzMB            float64
+	HashIndexingFailures     int
+	IndexDefinition          IndexDefinition
+	IndexName                string
+	IndexOptions             []string
+	Indexing                 int
+	InvertedSzMB             float64
+	KeyTableSizeMB           float64
+	MaxDocID                 int
+	NumDocs                  int
+	NumRecords               int
+	NumTerms                 int
+	NumberOfUses             int
+	OffsetBitsPerRecordAvg   string
+	OffsetVectorsSzMB        float64
+	OffsetsPerTermAvg        string
+	PercentIndexed           float64
+	RecordsPerDocAvg         string
+	SortableValuesSizeMB     float64
+	TagOverheadSzMB          float64
+	TextOverheadSzMB         float64
+	TotalIndexMemorySzMB     float64
+	TotalIndexingTime        int
+	TotalInvertedIndexBlocks int
+	VectorIndexSzMB          float64
+}
+
+type FTInfoCmd struct {
+	baseCmd[FTInfoResult]
+}
 
 func (cmd *FTInfoCmd) from(res rueidis.RedisResult) {
 	// FIXME: impl
@@ -3457,7 +3731,26 @@ func newFTInfoCmd(res rueidis.RedisResult) *FTInfoCmd {
 
 type FTSpellCheckOptions struct{}
 
-type FTSpellCheckCmd struct{}
+type SpellCheckResult struct {
+	Term        string
+	Suggestions []SpellCheckSuggestion
+}
+
+type SpellCheckSuggestion struct {
+	Score      float64
+	Suggestion string
+}
+
+type FTSpellCheckCmd struct{ baseCmd[SpellCheckResult] }
+
+func (cmd *FTSpellCheckCmd) Val() []SpellCheckResult {
+	// fIXME: impl
+	return cmd.val.Suggestions
+}
+
+func (cmd *FTSpellCheckCmd) Result() ([]SpellCheckResult, error) {
+	return cmd.Val(), cmd.err
+}
 
 func (cmd *FTSpellCheckCmd) from(res rueidis.RedisResult) {
 	// FIXME: impl
@@ -3469,14 +3762,48 @@ func newFTSpellCheckCmd(res rueidis.RedisResult) *FTSpellCheckCmd {
 	return cmd
 }
 
-type FTSearchResult struct{}
+type Document struct {
+	ID      string
+	Score   *float64
+	Payload *string
+	SortKey *string
+	Fields  map[string]string
+}
+
+type FTSearchResult struct {
+	Total int
+	Docs  []Document
+}
 
 type FTSearchOptions struct {
-	WithScores bool
+	NoContent       bool
+	Verbatim        bool
+	NoStopWords     bool
+	WithScores      bool
+	WithPayloads    bool
+	WithSortKeys    bool
+	Filters         []FTSearchFilter
+	GeoFilter       []FTSearchGeoFilter
+	InKeys          []interface{}
+	InFields        []interface{}
+	Return          []FTSearchReturn
+	Slop            int
+	Timeout         int
+	InOrder         bool
+	Language        string
+	Expander        string
+	Scorer          string
+	ExplainScore    bool
+	Payload         string
+	SortBy          []FTSearchSortBy
+	SortByWithCount bool
+	LimitOffset     int
+	Limit           int
+	Params          map[string]interface{}
+	DialectVersion  int
 }
 
 type FTSearchCmd struct {
-	// FIXME: any ?
 	baseCmd[FTSearchResult]
 	options *FTSearchOptions
 }
@@ -3491,6 +3818,10 @@ func newFTSearchCmd(res rueidis.RedisResult) *FTSearchCmd {
 	return cmd
 }
 
+type FTSynUpdateOptions struct {
+	SkipInitialScan bool
+}
+
 type FTSynDumpCmd struct{}
 
 func (cmd *FTSynDumpCmd) from(res rueidis.RedisResult) {
@@ -3503,4 +3834,7 @@ func newFTSynDumpCmd(res rueidis.RedisResult) *FTSynDumpCmd {
 	return cmd
 }
 
-type FTSynUpdateOptions struct{}
+type FTSynDumpResult struct {
+	Term     string
+	Synonyms []string
+}

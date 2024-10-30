@@ -99,10 +99,6 @@ type Pipeline struct {
 
 var pp = Pipeline{}
 
-const a = 1
-
-var b = 3
-
 func (c *Pipeline) Command(ctx context.Context) *CommandsInfoCmd {
 	ret := c.comp.Command(ctx)
 	c.rets = append(c.rets, ret)
