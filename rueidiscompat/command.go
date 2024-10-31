@@ -3387,6 +3387,15 @@ func newMapMapStringInterfaceCmd(res rueidis.RedisResult) *MapMapStringInterface
 	return cmd
 }
 
+type FTAggregateResult struct {
+	Total int
+	Rows  []AggregateRow
+}
+
+type AggregateRow struct {
+	Fields map[string]any
+}
+
 // Each AggregateReducer have different args.
 // Please follow https://redis.io/docs/interact/search-and-query/search/aggregations/#supported-groupby-reducers for more information.
 type FTAggregateReducer struct {
@@ -3440,8 +3449,7 @@ type FTAggregateOptions struct {
 }
 
 type AggregateCmd struct {
-	// FIXME
-	baseCmd[map[string]any]
+	baseCmd[FTAggregateResult]
 }
 
 func (cmd *AggregateCmd) from(res rueidis.RedisResult) {
@@ -3729,7 +3737,17 @@ func newFTInfoCmd(res rueidis.RedisResult) *FTInfoCmd {
 	return cmd
 }
 
-type FTSpellCheckOptions struct{}
+type FTSpellCheckOptions struct {
+	Distance int
+	Terms    *FTSpellCheckTerms
+	Dialect  int
+}
+
+type FTSpellCheckTerms struct {
+	Inclusion  string // Either "INCLUDE" or "EXCLUDE"
+	Dictionary string
+	Terms      []interface{}
+}
 
 type SpellCheckResult struct {
 	Term        string
@@ -3744,8 +3762,8 @@ type SpellCheckSuggestion struct {
 type FTSpellCheckCmd struct{ baseCmd[SpellCheckResult] }
 
 func (cmd *FTSpellCheckCmd) Val() []SpellCheckResult {
-	// fIXME: impl
-	return cmd.val.Suggestions
+	// FIXME: impl
+	return []SpellCheckResult{}
 }
 
 func (cmd *FTSpellCheckCmd) Result() ([]SpellCheckResult, error) {
