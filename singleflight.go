@@ -48,10 +48,10 @@ func (c *call) LazyDo(threshold time.Duration, fn func() error) {
 	c.cn++
 	ts := c.ts
 	c.mu.Unlock()
-	go func(threshold time.Duration, ch chan struct{}, fn func() error) {
-		time.Sleep(time.Until(ts.Add(threshold)))
+	go func(ts time.Time, ch chan struct{}, fn func() error) {
+		time.Sleep(time.Until(ts))
 		c.do(ch, fn)
-	}(threshold, ch, fn)
+	}(ts.Add(threshold), ch, fn)
 }
 
 func (c *call) do(ch chan struct{}, fn func() error) (err error) {
