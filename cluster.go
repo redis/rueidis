@@ -1123,7 +1123,7 @@ func (c *clusterClient) Close() {
 }
 
 func (c *clusterClient) shouldRefreshRetry(err error, ctx context.Context) (addr string, mode RedirectMode) {
-	if err != nil && atomic.LoadUint32(&c.stop) == 0 {
+	if err != nil && err != Nil && err != ErrDoCacheAborted && atomic.LoadUint32(&c.stop) == 0 {
 		if err, ok := err.(*RedisError); ok {
 			if addr, ok = err.IsMoved(); ok {
 				mode = RedirectMove

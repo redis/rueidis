@@ -231,11 +231,11 @@ func (c *sentinelClient) Close() {
 }
 
 func (c *sentinelClient) isRetryable(err error, ctx context.Context) (should bool) {
-	if err == nil || atomic.LoadUint32(&c.stop) != 0 || ctx.Err() != nil {
+	if err == nil || err == Nil || err == ErrDoCacheAborted || atomic.LoadUint32(&c.stop) != 0 || ctx.Err() != nil {
 		return false
 	}
-	if redisErr, ok := err.(*RedisError); ok {
-		return redisErr.IsLoading()
+	if err, ok := err.(*RedisError); ok {
+		return err.IsLoading()
 	}
 	return true
 }

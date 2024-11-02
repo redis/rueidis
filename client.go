@@ -312,21 +312,21 @@ func (c *dedicatedSingleClient) release() {
 }
 
 func (c *singleClient) isRetryable(err error, ctx context.Context) bool {
-	if err == nil || err == ErrDoCacheAborted || atomic.LoadUint32(&c.stop) != 0 || ctx.Err() != nil {
+	if err == nil || err == Nil || err == ErrDoCacheAborted || atomic.LoadUint32(&c.stop) != 0 || ctx.Err() != nil {
 		return false
 	}
-	if redisErr, ok := err.(*RedisError); ok {
-		return redisErr.IsLoading()
+	if err, ok := err.(*RedisError); ok {
+		return err.IsLoading()
 	}
 	return true
 }
 
 func isRetryable(err error, w wire, ctx context.Context) bool {
-	if err == nil || w.Error() != nil || ctx.Err() != nil {
+	if err == nil || err == Nil || w.Error() != nil || ctx.Err() != nil {
 		return false
 	}
-	if redisErr, ok := err.(*RedisError); ok {
-		return redisErr.IsLoading()
+	if err, ok := err.(*RedisError); ok {
+		return err.IsLoading()
 	}
 	return true
 }
