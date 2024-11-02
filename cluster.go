@@ -349,7 +349,7 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 		}
 		for _, n := range nodes {
 			dict, _ := n.AsMap()
-			if dict["health"].string == "failed" {
+			if dict["health"].string == "fail" {
 				continue
 			}
 			port := dict["port"].integer
