@@ -92,6 +92,11 @@ func (r *RedisError) IsTryAgain() bool {
 	return strings.HasPrefix(r.string, "TRYAGAIN")
 }
 
+// IsLoading checks if it is a redis LOADING message
+func (r *RedisError) IsLoading() bool {
+	return strings.HasPrefix(r.string, "LOADING")
+}
+
 // IsClusterDown checks if it is a redis CLUSTERDOWN message and returns ask address.
 func (r *RedisError) IsClusterDown() bool {
 	return strings.HasPrefix(r.string, "CLUSTERDOWN")
