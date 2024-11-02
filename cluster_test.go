@@ -212,6 +212,28 @@ var shardsResp = newResult(RedisMessage{typ: typeArray, values: []RedisMessage{
 		}},
 		{typ: typeBlobString, string: "nodes"},
 		{typ: typeArray, values: []RedisMessage{
+			{typ: typeMap, values: []RedisMessage{ // failed master
+				{typ: typeBlobString, string: "id"},
+				{typ: typeBlobString, string: ""},
+
+				{typ: typeBlobString, string: "port"},
+				{typ: typeInteger, integer: 0},
+
+				{typ: typeBlobString, string: "ip"},
+				{typ: typeBlobString, string: "127.0.0.99"},
+
+				{typ: typeBlobString, string: "endpoint"},
+				{typ: typeBlobString, string: "127.0.0.99"},
+
+				{typ: typeBlobString, string: "role"},
+				{typ: typeBlobString, string: "master"},
+
+				{typ: typeBlobString, string: "replication-offset"},
+				{typ: typeInteger, integer: 72156},
+
+				{typ: typeBlobString, string: "health"},
+				{typ: typeBlobString, string: "failed"},
+			}},
 			{typ: typeMap, values: []RedisMessage{ // master
 				{typ: typeBlobString, string: "id"},
 				{typ: typeBlobString, string: ""},
@@ -291,6 +313,31 @@ var shardsRespTls = newResult(RedisMessage{typ: typeArray, values: []RedisMessag
 				{typ: typeBlobString, string: "health"},
 				{typ: typeBlobString, string: "online"},
 			}},
+			{typ: typeMap, values: []RedisMessage{ // failed master, tls + port
+				{typ: typeBlobString, string: "id"},
+				{typ: typeBlobString, string: ""},
+
+				{typ: typeBlobString, string: "port"},
+				{typ: typeInteger, integer: 0},
+
+				{typ: typeBlobString, string: "tls-port"},
+				{typ: typeInteger, integer: 1},
+
+				{typ: typeBlobString, string: "ip"},
+				{typ: typeBlobString, string: "127.0.1.99"},
+
+				{typ: typeBlobString, string: "endpoint"},
+				{typ: typeBlobString, string: "127.0.1.99"},
+
+				{typ: typeBlobString, string: "role"},
+				{typ: typeBlobString, string: "master"},
+
+				{typ: typeBlobString, string: "replication-offset"},
+				{typ: typeInteger, integer: 72156},
+
+				{typ: typeBlobString, string: "health"},
+				{typ: typeBlobString, string: "failed"},
+			}},
 			{typ: typeMap, values: []RedisMessage{ // master, tls + port
 				{typ: typeBlobString, string: "id"},
 				{typ: typeBlobString, string: ""},
@@ -351,6 +398,28 @@ var shardsMultiResp = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 		}},
 		{typ: typeBlobString, string: "nodes"},
 		{typ: typeArray, values: []RedisMessage{
+			{typ: typeMap, values: []RedisMessage{ // failed master
+				{typ: typeBlobString, string: "id"},
+				{typ: typeBlobString, string: ""},
+
+				{typ: typeBlobString, string: "port"},
+				{typ: typeInteger, integer: 0},
+
+				{typ: typeBlobString, string: "ip"},
+				{typ: typeBlobString, string: "127.0.0.99"},
+
+				{typ: typeBlobString, string: "endpoint"},
+				{typ: typeBlobString, string: "127.0.0.99"},
+
+				{typ: typeBlobString, string: "role"},
+				{typ: typeBlobString, string: "master"},
+
+				{typ: typeBlobString, string: "replication-offset"},
+				{typ: typeInteger, integer: 72156},
+
+				{typ: typeBlobString, string: "health"},
+				{typ: typeBlobString, string: "failed"},
+			}},
 			{typ: typeMap, values: []RedisMessage{ // master
 				{typ: typeBlobString, string: "id"},
 				{typ: typeBlobString, string: ""},
@@ -405,6 +474,28 @@ var shardsMultiResp = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 		}},
 		{typ: typeBlobString, string: "nodes"},
 		{typ: typeArray, values: []RedisMessage{
+			{typ: typeMap, values: []RedisMessage{ // failed master
+				{typ: typeBlobString, string: "id"},
+				{typ: typeBlobString, string: ""},
+
+				{typ: typeBlobString, string: "port"},
+				{typ: typeInteger, integer: 0},
+
+				{typ: typeBlobString, string: "ip"},
+				{typ: typeBlobString, string: "127.0.2.99"},
+
+				{typ: typeBlobString, string: "endpoint"},
+				{typ: typeBlobString, string: "127.0.2.99"},
+
+				{typ: typeBlobString, string: "role"},
+				{typ: typeBlobString, string: "master"},
+
+				{typ: typeBlobString, string: "replication-offset"},
+				{typ: typeInteger, integer: 72156},
+
+				{typ: typeBlobString, string: "health"},
+				{typ: typeBlobString, string: "failed"},
+			}},
 			{typ: typeMap, values: []RedisMessage{ // master
 				{typ: typeBlobString, string: "id"},
 				{typ: typeBlobString, string: ""},
@@ -462,6 +553,28 @@ var singleShardResp2 = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 		}},
 		{typ: typeBlobString, string: "nodes"},
 		{typ: typeArray, values: []RedisMessage{
+			{typ: typeMap, values: []RedisMessage{ // failed master
+				{typ: typeBlobString, string: "id"},
+				{typ: typeBlobString, string: ""},
+
+				{typ: typeBlobString, string: "port"},
+				{typ: typeInteger, integer: 3},
+
+				{typ: typeBlobString, string: "ip"},
+				{typ: typeBlobString, string: "127.0.3.99"},
+
+				{typ: typeBlobString, string: "endpoint"},
+				{typ: typeBlobString, string: "127.0.3.99"},
+
+				{typ: typeBlobString, string: "role"},
+				{typ: typeBlobString, string: "master"},
+
+				{typ: typeBlobString, string: "replication-offset"},
+				{typ: typeInteger, integer: 72156},
+
+				{typ: typeBlobString, string: "health"},
+				{typ: typeBlobString, string: "failed"},
+			}},
 			{typ: typeMap, values: []RedisMessage{ // master
 				{typ: typeBlobString, string: "id"},
 				{typ: typeBlobString, string: ""},
@@ -497,6 +610,28 @@ var singleShardWithoutIP = newResult(RedisMessage{typ: typeArray, values: []Redi
 		}},
 		{typ: typeBlobString, string: "nodes"},
 		{typ: typeArray, values: []RedisMessage{
+			{typ: typeMap, values: []RedisMessage{ // failed master
+				{typ: typeBlobString, string: "id"},
+				{typ: typeBlobString, string: ""},
+
+				{typ: typeBlobString, string: "port"},
+				{typ: typeInteger, integer: 4},
+
+				{typ: typeBlobString, string: "ip"},
+				{typ: typeBlobString, string: ""},
+
+				{typ: typeBlobString, string: "endpoint"},
+				{typ: typeBlobString, string: ""},
+
+				{typ: typeBlobString, string: "role"},
+				{typ: typeBlobString, string: "master"},
+
+				{typ: typeBlobString, string: "replication-offset"},
+				{typ: typeInteger, integer: 72156},
+
+				{typ: typeBlobString, string: "health"},
+				{typ: typeBlobString, string: "failed"},
+			}},
 			{typ: typeMap, values: []RedisMessage{ // master
 				{typ: typeBlobString, string: "id"},
 				{typ: typeBlobString, string: ""},
