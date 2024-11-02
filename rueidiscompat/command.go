@@ -3840,7 +3840,18 @@ type FTSynUpdateOptions struct {
 	SkipInitialScan bool
 }
 
-type FTSynDumpCmd struct{}
+type FTSynDumpCmd struct {
+	baseCmd[[]FTSynDumpResult]
+	rawVal any
+}
+
+func (cmd *FTSynDumpCmd) RawVal() any {
+	return cmd.rawVal
+}
+
+func (cmd *FTSynDumpCmd) RawResult() (any, error) {
+	return cmd.rawVal, cmd.Err()
+}
 
 func (cmd *FTSynDumpCmd) from(res rueidis.RedisResult) {
 	// FIXME: impl

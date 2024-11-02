@@ -4835,13 +4835,54 @@ func (c *Compat) Watch(ctx context.Context, fn func(Tx) error, keys ...string) e
 	return fn(newTx(dc, cancel))
 }
 
-func (c *Compat) FT_List(ctx context.Context) *StringSliceCmd
+func (c *Compat) FT_List(ctx context.Context) *StringSliceCmd {
+	cmd := c.client.B().FtList().Build()
+	return newStringSliceCmd(c.client.Do(ctx, cmd))
+}
+
 func (c *Compat) FTAggregate(ctx context.Context, index string, query string) *MapStringInterfaceCmd {
-	return nil
+	cmd := c.client.B().FtAggregate().Index(index).Query(query).Build()
+	return newMapStringInterfaceCmd(c.client.Do(ctx, cmd))
 }
+
+// type FTAggregateOptions struct {
+// 	Verbatim          bool
+// 	LoadAll           bool
+// 	Load              []FTAggregateLoad
+// 	Timeout           int
+// 	GroupBy           []FTAggregateGroupBy
+// 	SortBy            []FTAggregateSortBy
+// 	SortByMax         int
+// 	Apply             []FTAggregateApply
+// 	LimitOffset       int
+// 	Limit             int
+// 	Filter            string
+// 	WithCursor        bool
+// 	WithCursorOptions *FTAggregateWithCursor
+// 	Params            map[string]interface{}
+// 	DialectVersion    int
+// }
+
 func (c *Compat) FTAggregateWithArgs(ctx context.Context, index string, query string, options *FTAggregateOptions) *AggregateCmd {
-	return nil
+	_cmd := cmds.Incomplete(c.client.B().FtAggregate().Index(index).Query(query))
+	if options != nil {
+		if options.Verbatim {
+			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Verbatim())
+		}
+		if options.LoadAll {
+			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).LoadAll())
+		} else {
+			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Load(int64(len(options.Load))))
+			// for _, l := range options.Load {
+			// 	// FIXME: where is AS ?
+			// 	// https://redis.io/docs/latest/commands/ft.aggregate/
+
+			// 	_cmd = cmds.Incomplete(cmds.FtAggregateOpLoadLoad(_cmd).Field())
+			// }
+		}
+	}
 }
+
 func (c *Compat) FTAliasAdd(ctx context.Context, index string, alias string) *StatusCmd { return nil }
 func (c *Compat) FTAliasDel(ctx context.Context, alias string) *StatusCmd               { return nil }
 func (c *Compat) FTAliasUpdate(ctx context.Context, index string, alias string) *StatusCmd {

@@ -67,6 +67,7 @@ var (
 	adapterresp2    Cmdable
 	adaptercluster2 Cmdable
 	adapterresp3    Cmdable
+	adapter2resp3   Cmdable
 	adaptercluster3 Cmdable
 )
 
@@ -83,6 +84,7 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 	adapterresp3 = NewAdapter(clientresp3)
+	adapter2resp3 = NewAdapter(clientresp3)
 	adaptercluster3 = NewAdapter(clusterresp3)
 	clientresp2, err = rueidis.NewClient(rueidis.ClientOption{
 		InitAddress:  []string{"127.0.0.1:6356"},
@@ -12336,7 +12338,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{OnJSON: true, Prefix: []interface{}{"king:"}}, text1, num1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp2, "idx1")
 
 			adapter.JSONSet(ctx, "king:1", "$", `{"name": "henry", "num": 42}`)
 			adapter.JSONSet(ctx, "king:2", "$", `{"name": "james", "num": 3.14}`)
@@ -12429,7 +12431,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "name", FieldType: SearchFieldTypeText}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp3, "idx1")
 
 			adapter.HSet(ctx, "doc1", "name", "Alice")
 			adapter.HSet(ctx, "doc2", "name", "Bob")
@@ -12447,7 +12449,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "numval", FieldType: SearchFieldTypeNumeric}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp3, "idx1")
 
 			adapter.HSet(ctx, "doc1", "numval", 101)
 			adapter.HSet(ctx, "doc2", "numval", 102)
@@ -12465,7 +12467,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "g", FieldType: SearchFieldTypeGeo}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp3, "idx1")
 
 			adapter.HSet(ctx, "doc1", "g", "29.69465, 34.95126")
 			adapter.HSet(ctx, "doc2", "g", "29.69350, 34.94737")
@@ -12502,7 +12504,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp2, "idx1")
 
 			res, err := adapter.FTInfo(ctx, "idx1").Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -12516,7 +12518,7 @@ func testAdapterCache(resp3 bool) {
 			val, err = adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText, WithSuffixtrie: true}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp2, "idx1")
 
 			res, err = adapter.FTInfo(ctx, "idx1").Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -12530,7 +12532,7 @@ func testAdapterCache(resp3 bool) {
 			val, err = adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "t", FieldType: SearchFieldTypeTag, WithSuffixtrie: true}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp2, "idx1")
 
 			res, err = adapter.FTInfo(ctx, "idx1").Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -12645,7 +12647,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "geom", FieldType: SearchFieldTypeGeoShape, GeoShapeFieldType: "FLAT"}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp2, "idx1")
 
 			adapter.HSet(ctx, "small", "geom", "POLYGON((1 1, 1 100, 100 100, 100 1, 1 1))")
 			adapter.HSet(ctx, "large", "geom", "POLYGON((1 1, 1 200, 200 200, 200 1, 1 1))")
@@ -12675,7 +12677,7 @@ func testAdapterCache(resp3 bool) {
 			).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "index")
+			WaitForIndexing(clientresp2, "index")
 		})
 
 		It("should test geoshapes query intersects and disjoint", Label("NonRedisEnterprise"), func() {
@@ -12753,7 +12755,7 @@ func testAdapterCache(resp3 bool) {
 				&FieldSchema{FieldName: "description", FieldType: SearchFieldTypeText, IndexMissing: true}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp2, "idx1")
 
 			adapter.HSet(ctx, "property:1", map[string]interface{}{
 				"title":       "Luxury Villa in Malibu",
@@ -12797,7 +12799,7 @@ func testAdapterCache(resp3 bool) {
 				&FieldSchema{FieldName: "description", FieldType: SearchFieldTypeText, IndexEmpty: true}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp2, "idx1")
 
 			adapter.HSet(ctx, "property:1", map[string]interface{}{
 				"title":       "Luxury Villa in Malibu",
@@ -12839,8 +12841,6 @@ func testAdapterCache(resp3 bool) {
 
 	Describe("RediSearch commands Resp 3", Label("search"), func() {
 		ctx := context.TODO()
-		var client *redis.Client
-		var client2 *redis.Client
 
 		// BeforeEach(func() {
 		// 	client = redis.NewClient(&redis.Options{Addr: ":6379", Protocol: 3, UnstableResp3: true})
@@ -12848,30 +12848,26 @@ func testAdapterCache(resp3 bool) {
 		// 	Expect(client.FlushDB(ctx).Err()).NotTo(HaveOccurred())
 		// })
 
-		AfterEach(func() {
-			Expect(client.Close()).NotTo(HaveOccurred())
-		})
-
 		It("should handle FTAggregate with Unstable RESP3 Search Module and without stability", Label("search", "ftcreate", "ftaggregate"), func() {
 			text1 := &FieldSchema{FieldName: "PrimaryKey", FieldType: SearchFieldTypeText, Sortable: true}
 			num1 := &FieldSchema{FieldName: "CreatedDateTimeUTC", FieldType: SearchFieldTypeNumeric, Sortable: true}
-			val, err := client.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1, num1).Result()
+			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1, num1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp3, "idx1")
 
-			client.HSet(ctx, "doc1", "PrimaryKey", "9::362330", "CreatedDateTimeUTC", "637387878524969984")
-			client.HSet(ctx, "doc2", "PrimaryKey", "9::362329", "CreatedDateTimeUTC", "637387875859270016")
+			adapter.HSet(ctx, "doc1", "PrimaryKey", "9::362330", "CreatedDateTimeUTC", "637387878524969984")
+			adapter.HSet(ctx, "doc2", "PrimaryKey", "9::362329", "CreatedDateTimeUTC", "637387875859270016")
 
 			options := &FTAggregateOptions{Apply: []FTAggregateApply{{Field: "@CreatedDateTimeUTC * 10", As: "CreatedDateTimeUTC"}}}
-			res, err := client.FTAggregateWithArgs(ctx, "idx1", "*", options).RawResult()
+			res, err := adapter.FTAggregateWithArgs(ctx, "idx1", "*", options).RawResult()
 			results := res.(map[interface{}]interface{})["results"].([]interface{})
 			Expect(results[0].(map[interface{}]interface{})["extra_attributes"].(map[interface{}]interface{})["CreatedDateTimeUTC"]).
 				To(Or(BeEquivalentTo("6373878785249699840"), BeEquivalentTo("6373878758592700416")))
 			Expect(results[1].(map[interface{}]interface{})["extra_attributes"].(map[interface{}]interface{})["CreatedDateTimeUTC"]).
 				To(Or(BeEquivalentTo("6373878785249699840"), BeEquivalentTo("6373878758592700416")))
 
-			rawVal := client.FTAggregateWithArgs(ctx, "idx1", "*", options).RawVal()
+			rawVal := adapter.FTAggregateWithArgs(ctx, "idx1", "*", options).RawVal()
 			rawValResults := rawVal.(map[interface{}]interface{})["results"].([]interface{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(rawValResults[0]).To(Or(BeEquivalentTo(results[0]), BeEquivalentTo(results[1])))
@@ -12880,8 +12876,8 @@ func testAdapterCache(resp3 bool) {
 			// Test with UnstableResp3 false
 			Expect(func() {
 				options = &FTAggregateOptions{Apply: []FTAggregateApply{{Field: "@CreatedDateTimeUTC * 10", As: "CreatedDateTimeUTC"}}}
-				rawRes, _ := client2.FTAggregateWithArgs(ctx, "idx1", "*", options).RawResult()
-				rawVal = client2.FTAggregateWithArgs(ctx, "idx1", "*", options).RawVal()
+				rawRes, _ := adapter2resp3.FTAggregateWithArgs(ctx, "idx1", "*", options).RawResult()
+				rawVal = adapter2resp3.FTAggregateWithArgs(ctx, "idx1", "*", options).RawVal()
 				Expect(rawRes).To(BeNil())
 				Expect(rawVal).To(BeNil())
 			}).Should(Panic())
@@ -12889,26 +12885,26 @@ func testAdapterCache(resp3 bool) {
 		})
 
 		It("should handle FTInfo with Unstable RESP3 Search Module and without stability", Label("search", "ftcreate", "ftinfo"), func() {
-			val, err := client.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText, Sortable: true, NoStem: true}).Result()
+			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText, Sortable: true, NoStem: true}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp3, "idx1")
 
-			resInfo, err := client.FTInfo(ctx, "idx1").RawResult()
+			resInfo, err := adapter.FTInfo(ctx, "idx1").RawResult()
 			Expect(err).NotTo(HaveOccurred())
 			attributes := resInfo.(map[interface{}]interface{})["attributes"].([]interface{})
 			flags := attributes[0].(map[interface{}]interface{})["flags"].([]interface{})
 			Expect(flags).To(ConsistOf("SORTABLE", "NOSTEM"))
 
-			valInfo := client.FTInfo(ctx, "idx1").RawVal()
+			valInfo := adapter.FTInfo(ctx, "idx1").RawVal()
 			attributes = valInfo.(map[interface{}]interface{})["attributes"].([]interface{})
 			flags = attributes[0].(map[interface{}]interface{})["flags"].([]interface{})
 			Expect(flags).To(ConsistOf("SORTABLE", "NOSTEM"))
 
 			// Test with UnstableResp3 false
 			Expect(func() {
-				rawResInfo, _ := client2.FTInfo(ctx, "idx1").RawResult()
-				rawValInfo := client2.FTInfo(ctx, "idx1").RawVal()
+				rawResInfo, _ := adapter2resp3.FTInfo(ctx, "idx1").RawResult()
+				rawValInfo := adapter2resp3.FTInfo(ctx, "idx1").RawVal()
 				Expect(rawResInfo).To(BeNil())
 				Expect(rawValInfo).To(BeNil())
 			}).Should(Panic())
@@ -12917,16 +12913,16 @@ func testAdapterCache(resp3 bool) {
 		It("should handle FTSpellCheck with Unstable RESP3 Search Module and without stability", Label("search", "ftcreate", "ftspellcheck"), func() {
 			text1 := &FieldSchema{FieldName: "f1", FieldType: SearchFieldTypeText}
 			text2 := &FieldSchema{FieldName: "f2", FieldType: SearchFieldTypeText}
-			val, err := client.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1, text2).Result()
+			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1, text2).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(adapter, "idx1")
 
-			client.HSet(ctx, "doc1", "f1", "some valid content", "f2", "this is sample text")
-			client.HSet(ctx, "doc2", "f1", "very important", "f2", "lorem ipsum")
+			adapter.HSet(ctx, "doc1", "f1", "some valid content", "f2", "this is sample text")
+			adapter.HSet(ctx, "doc2", "f1", "very important", "f2", "lorem ipsum")
 
-			resSpellCheck, err := client.FTSpellCheck(ctx, "idx1", "impornant").RawResult()
-			valSpellCheck := client.FTSpellCheck(ctx, "idx1", "impornant").RawVal()
+			resSpellCheck, err := adapter.FTSpellCheck(ctx, "idx1", "impornant").RawResult()
+			valSpellCheck := adapter.FTSpellCheck(ctx, "idx1", "impornant").RawVal()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(valSpellCheck).To(BeEquivalentTo(resSpellCheck))
 			results := resSpellCheck.(map[interface{}]interface{})["results"].(map[interface{}]interface{})
@@ -12934,35 +12930,35 @@ func testAdapterCache(resp3 bool) {
 
 			// Test with UnstableResp3 false
 			Expect(func() {
-				rawResSpellCheck, _ := client2.FTSpellCheck(ctx, "idx1", "impornant").RawResult()
-				rawValSpellCheck := client2.FTSpellCheck(ctx, "idx1", "impornant").RawVal()
+				rawResSpellCheck, _ := adapter2resp3.FTSpellCheck(ctx, "idx1", "impornant").RawResult()
+				rawValSpellCheck := adapter2resp3.FTSpellCheck(ctx, "idx1", "impornant").RawVal()
 				Expect(rawResSpellCheck).To(BeNil())
 				Expect(rawValSpellCheck).To(BeNil())
 			}).Should(Panic())
 		})
 
 		It("should handle FTSearch with Unstable RESP3 Search Module and without stability", Label("search", "ftcreate", "ftsearch"), func() {
-			val, err := client.FTCreate(ctx, "txt", &FTCreateOptions{StopWords: []interface{}{"foo", "bar", "baz"}}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText}).Result()
+			val, err := adapter.FTCreate(ctx, "txt", &FTCreateOptions{StopWords: []interface{}{"foo", "bar", "baz"}}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "txt")
-			client.HSet(ctx, "doc1", "txt", "foo baz")
-			client.HSet(ctx, "doc2", "txt", "hello world")
-			res1, err := client.FTSearchWithArgs(ctx, "txt", "foo bar", &FTSearchOptions{NoContent: true}).RawResult()
-			val1 := client.FTSearchWithArgs(ctx, "txt", "foo bar", &FTSearchOptions{NoContent: true}).RawVal()
+			WaitForIndexing(adapter, "txt")
+			adapter.HSet(ctx, "doc1", "txt", "foo baz")
+			adapter.HSet(ctx, "doc2", "txt", "hello world")
+			res1, err := adapter.FTSearchWithArgs(ctx, "txt", "foo bar", &FTSearchOptions{NoContent: true}).RawResult()
+			val1 := adapter.FTSearchWithArgs(ctx, "txt", "foo bar", &FTSearchOptions{NoContent: true}).RawVal()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val1).To(BeEquivalentTo(res1))
 			totalResults := res1.(map[interface{}]interface{})["total_results"]
 			Expect(totalResults).To(BeEquivalentTo(int64(0)))
-			res2, err := client.FTSearchWithArgs(ctx, "txt", "foo bar hello world", &FTSearchOptions{NoContent: true}).RawResult()
+			res2, err := adapter.FTSearchWithArgs(ctx, "txt", "foo bar hello world", &FTSearchOptions{NoContent: true}).RawResult()
 			Expect(err).NotTo(HaveOccurred())
 			totalResults2 := res2.(map[interface{}]interface{})["total_results"]
 			Expect(totalResults2).To(BeEquivalentTo(int64(1)))
 
 			// Test with UnstableResp3 false
 			Expect(func() {
-				rawRes2, _ := client2.FTSearchWithArgs(ctx, "txt", "foo bar hello world", &FTSearchOptions{NoContent: true}).RawResult()
-				rawVal2 := client2.FTSearchWithArgs(ctx, "txt", "foo bar hello world", &FTSearchOptions{NoContent: true}).RawVal()
+				rawRes2, _ := adapter2resp3.FTSearchWithArgs(ctx, "txt", "foo bar hello world", &FTSearchOptions{NoContent: true}).RawResult()
+				rawVal2 := adapter2resp3.FTSearchWithArgs(ctx, "txt", "foo bar hello world", &FTSearchOptions{NoContent: true}).RawVal()
 				Expect(rawRes2).To(BeNil())
 				Expect(rawVal2).To(BeNil())
 			}).Should(Panic())
@@ -12970,33 +12966,33 @@ func testAdapterCache(resp3 bool) {
 		It("should handle FTSynDump with Unstable RESP3 Search Module and without stability", Label("search", "ftsyndump"), func() {
 			text1 := &FieldSchema{FieldName: "title", FieldType: SearchFieldTypeText}
 			text2 := &FieldSchema{FieldName: "body", FieldType: SearchFieldTypeText}
-			val, err := client.FTCreate(ctx, "idx1", &FTCreateOptions{OnHash: true}, text1, text2).Result()
+			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{OnHash: true}, text1, text2).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
 			WaitForIndexing(client, "idx1")
 
-			resSynUpdate, err := client.FTSynUpdate(ctx, "idx1", "id1", []interface{}{"boy", "child", "offspring"}).Result()
+			resSynUpdate, err := adapter.FTSynUpdate(ctx, "idx1", "id1", []interface{}{"boy", "child", "offspring"}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resSynUpdate).To(BeEquivalentTo("OK"))
 
-			resSynUpdate, err = client.FTSynUpdate(ctx, "idx1", "id1", []interface{}{"baby", "child"}).Result()
+			resSynUpdate, err = adapter.FTSynUpdate(ctx, "idx1", "id1", []interface{}{"baby", "child"}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resSynUpdate).To(BeEquivalentTo("OK"))
 
-			resSynUpdate, err = client.FTSynUpdate(ctx, "idx1", "id1", []interface{}{"tree", "wood"}).Result()
+			resSynUpdate, err = adapter.FTSynUpdate(ctx, "idx1", "id1", []interface{}{"tree", "wood"}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resSynUpdate).To(BeEquivalentTo("OK"))
 
-			resSynDump, err := client.FTSynDump(ctx, "idx1").RawResult()
-			valSynDump := client.FTSynDump(ctx, "idx1").RawVal()
+			resSynDump, err := adapter.FTSynDump(ctx, "idx1").RawResult()
+			valSynDump := adapter.FTSynDump(ctx, "idx1").RawVal()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(valSynDump).To(BeEquivalentTo(resSynDump))
 			Expect(resSynDump.(map[interface{}]interface{})["baby"]).To(BeEquivalentTo([]interface{}{"id1"}))
 
 			// Test with UnstableResp3 false
 			Expect(func() {
-				rawResSynDump, _ := client2.FTSynDump(ctx, "idx1").RawResult()
-				rawValSynDump := client2.FTSynDump(ctx, "idx1").RawVal()
+				rawResSynDump, _ := adapter2resp3.FTSynDump(ctx, "idx1").RawResult()
+				rawValSynDump := adapter2resp3.FTSynDump(ctx, "idx1").RawVal()
 				Expect(rawResSynDump).To(BeNil())
 				Expect(rawValSynDump).To(BeNil())
 			}).Should(Panic())
@@ -13006,17 +13002,17 @@ func testAdapterCache(resp3 bool) {
 			text1 := &FieldSchema{FieldName: "f1", FieldType: SearchFieldTypeText}
 			text2 := &FieldSchema{FieldName: "f2", FieldType: SearchFieldTypeText}
 			text3 := &FieldSchema{FieldName: "f3", FieldType: SearchFieldTypeText}
-			val, err := client.FTCreate(ctx, "txt", &FTCreateOptions{}, text1, text2, text3).Result()
+			val, err := adapter.FTCreate(ctx, "txt", &FTCreateOptions{}, text1, text2, text3).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "txt")
-			res1, err := client.FTExplain(ctx, "txt", "@f3:f3_val @f2:f2_val @f1:f1_val").Result()
+			WaitForIndexing(clientresp3, "txt")
+			res1, err := adapter.FTExplain(ctx, "txt", "@f3:f3_val @f2:f2_val @f1:f1_val").Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res1).ToNot(BeEmpty())
 
 			// Test with UnstableResp3 false
 			Expect(func() {
-				res2, err := client2.FTExplain(ctx, "txt", "@f3:f3_val @f2:f2_val @f1:f1_val").Result()
+				res2, err := adapter2resp3.FTExplain(ctx, "txt", "@f3:f3_val @f2:f2_val @f1:f1_val").Result()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(res2).ToNot(BeEmpty())
 			}).ShouldNot(Panic())
@@ -13061,10 +13057,11 @@ func (s *numberStruct) UnmarshalBinary(b []byte) error {
 }
 
 func WaitForIndexing(c rueidis.Client, index string) {
+	adapter := NewAdapter(c)
 	for {
-		res, err := c.FTInfo(context.Background(), index).Result()
+		res, err := adapter.FTInfo(context.Background(), index).Result()
 		Expect(err).NotTo(HaveOccurred())
-		if c.Options().Protocol == 2 {
+		if adapter.Options().Protocol == 2 {
 			if res.Indexing == 0 {
 				return
 			}
