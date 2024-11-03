@@ -70,7 +70,7 @@ To reuse a command, use `Pin()` after `Build()` and it will prevent the command 
 
 ### Auto Pipelining
 
-All concurrent non-blocking redis commands (such as `GET`, `SET`) are automatically pipelined,
+All concurrent non-blocking redis commands (such as `GET`, `SET`) are automatically pipelined by default,
 which reduces the overall round trips and system calls and gets higher throughput. You can easily get the benefit
 of [pipelining technique](https://redis.io/docs/manual/pipelining/) by just calling `client.Do()` from multiple goroutines concurrently.
 For example:
@@ -98,6 +98,12 @@ It is even able to achieve **~14x** throughput over go-redis in a local benchmar
 Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
 A benchmark result performed on two GCP n2-highcpu-2 machines also shows that rueidis can achieve higher throughput with lower latencies: https://github.com/redis/rueidis/pull/93
+
+### Disable auto pipelining
+
+While auto pipelining maximizes throughput, it relys on additional goroutines to process requests and responses and may add some latencies due to goroutine scheduling and head of line blocking.
+
+You can avoid this by setting `DisableAutoPipelining` to ture, then it will switch to connection pooling approach and serve each request with dedicated connection on the same goroutine.
 
 ### Manual Pipelining
 
