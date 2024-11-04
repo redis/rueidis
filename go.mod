@@ -1,4 +1,4 @@
-module github.com/redis/rueidis
+module github.com/superleapai/rueidis
 
 go 1.21
 
