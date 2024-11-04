@@ -62,6 +62,14 @@ type lru struct {
 	max   int
 }
 
+func NewLRU(opt CacheStoreOption) CacheStore {
+	return &lru{
+		max:   opt.CacheSizeEachConn,
+		store: make(map[string]*keyCache),
+		list:  list.New(),
+	}
+}
+
 func newLRU(opt CacheStoreOption) CacheStore {
 	return &lru{
 		max:   opt.CacheSizeEachConn,
