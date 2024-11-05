@@ -3,6 +3,7 @@ package rueidis
 import (
 	"container/list"
 	"context"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -346,4 +347,46 @@ func (c *lru) Close(err error) {
 	c.store = nil
 	c.list = nil
 	c.mu.Unlock()
+}
+
+func (c *lru) HashDelete(key, field string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if key == "" || field == "" {
+		return
+	}
+
+	// purge only the specific key and field value.
+	kc := c.store[key]
+	if kc != nil {
+		for cmd, ele := range kc.cache {
+			// But check and make sure this runs only when cmd is a match with the field. Right now handles for HGET prefix only
+			if cmd == fmt.Sprintf("HGET%s", field) { // Test this once
+				if ele != nil {
+					e := ele.Value.(*cacheEntry)
+					if e.val.typ == 0 { // do not delete pending entries
+						continue
+					}
+					c.list.Remove(ele)
+					c.size -= e.size
+				}
+				if delete(kc.cache, cmd); len(kc.cache) == 0 {
+					delete(c.store, key)
+				}
+			}
+		}
+	}
+}
+
+func (c *lru) CustomDelete(key string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if key == "" {
+		return
+	}
+
+	c.purge(key, c.store[key]) // Does this not panic if the key is not present? Should panic with current implementation on top as well if it does.
+
 }

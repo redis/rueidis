@@ -36,6 +36,8 @@ type CacheStore interface {
 	// If the keys is nil then it should delete all non-pending cached entries under all keys.
 	// If the keys is not nil then it should delete all non-pending cached entries under those keys.
 	Delete(keys []RedisMessage)
+	HashDelete(key, field string)
+	CustomDelete(key string) // Takes one key and deletes that from the cache store
 	// Close is called when connection between redis is broken.
 	// It should flush all cached entries and deliver the error to all pending CacheEntry.Wait.
 	Close(err error)
@@ -156,6 +158,14 @@ func (a *adapter) Close(err error) {
 			}
 		}
 	}
+}
+
+// Yet to implement
+func (a *adapter) HashDelete(key, field string) {
+}
+
+// Yet to implement
+func (a *adapter) CustomDelete(key string) {
 }
 
 type adapterEntry struct {
