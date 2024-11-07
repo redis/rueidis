@@ -783,7 +783,7 @@ func TestClusterClientInit(t *testing.T) {
 						}
 						return shardsResp
 					},
-					VersionFn: func() int { return 7 },
+					VersionFn: func() int { return 8 },
 				}
 			},
 			newRetryer(defaultRetryDelayFn),
@@ -816,7 +816,7 @@ func TestClusterClientInit(t *testing.T) {
 					DoFn: func(cmd Completed) RedisResult {
 						return newResult(RedisMessage{typ: '*', values: []RedisMessage{}}, nil)
 					},
-					VersionFn: func() int { return 7 },
+					VersionFn: func() int { return 8 },
 				}
 			},
 			newRetryer(defaultRetryDelayFn),
@@ -859,7 +859,7 @@ func TestClusterClientInit(t *testing.T) {
 		})
 
 		t.Run("shards", func(t *testing.T) {
-			client, err := getClient(7)
+			client, err := getClient(8)
 			if err != nil {
 				t.Fatalf("unexpected err %v", err)
 			}
@@ -933,7 +933,7 @@ func TestClusterClientInit(t *testing.T) {
 							}
 							return shardsResp
 						},
-						VersionFn: func() int { return 7 },
+						VersionFn: func() int { return 8 },
 					}
 				},
 				newRetryer(defaultRetryDelayFn),
@@ -953,7 +953,7 @@ func TestClusterClientInit(t *testing.T) {
 					DoFn: func(cmd Completed) RedisResult {
 						return shardsRespTls
 					},
-					VersionFn: func() int { return 7 },
+					VersionFn: func() int { return 8 },
 				}
 			},
 			newRetryer(defaultRetryDelayFn),
