@@ -137,7 +137,7 @@ type clusterslots struct {
 }
 
 func (s clusterslots) parse(tls bool) map[string]group {
-	if s.ver < 7 {
+	if s.ver < 8 {
 		return parseSlots(s.reply.val, s.addr)
 	}
 	return parseShards(s.reply.val, s.addr, tls)
@@ -147,7 +147,7 @@ func getClusterSlots(c conn, timeout time.Duration) clusterslots {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	v := c.Version()
-	if v < 7 {
+	if v < 8 {
 		return clusterslots{reply: c.Do(ctx, cmds.SlotCmd), addr: c.Addr(), ver: v}
 	}
 	return clusterslots{reply: c.Do(ctx, cmds.ShardsCmd), addr: c.Addr(), ver: v}
