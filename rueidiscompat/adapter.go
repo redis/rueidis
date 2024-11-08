@@ -4867,19 +4867,38 @@ func (c *Compat) FTAggregateWithArgs(ctx context.Context, index string, query st
 	_cmd := cmds.Incomplete(c.client.B().FtAggregate().Index(index).Query(query))
 	if options != nil {
 		if options.Verbatim {
+			// VERBATIM
 			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Verbatim())
 		}
 		if options.LoadAll {
+			// LOAD *
 			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).LoadAll())
 		} else {
+			// LOAD
 			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Load(int64(len(options.Load))))
-			// for _, l := range options.Load {
-			// 	// FIXME: where is AS ?
-			// 	// https://redis.io/docs/latest/commands/ft.aggregate/
-
-			// 	_cmd = cmds.Incomplete(cmds.FtAggregateOpLoadLoad(_cmd).Field())
-			// }
+			fields := make([]string, 0, len(options.Load))
+			for _, l := range options.Load {
+				fields = append(fields, l.Field)
+			}
+			_cmd = cmds.Incomplete(cmds.FtAggregateOpLoadLoad(_cmd).Field(fields...))
 		}
+		// TIMEOUT
+		_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Timeout(int64(options.Timeout)))
+		// GROUPBY
+		//   [ GROUPBY nargs property [property ...] [ REDUCE function nargs arg [arg ...] [AS name] [ REDUCE function nargs arg [arg ...] [AS name] ...]] ...]]
+		// GroupBy: []FTAggregateGroupBy
+		// FTAggregateGroupBy:
+		// 	Fields []interface{}
+		// 	Reduce []FTAggregateReducer
+		for _, groupBy := range options.GroupBy {
+			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).
+				Groupby(int64(len(options.GroupBy))).
+				Property(argsToSlice(groupBy.Fields)...))
+			// Reduce
+			// AS
+		}
+		// SORTBY
+		_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Groupby(int64(len(options.GroupBy))))
 	}
 }
 
