@@ -151,7 +151,7 @@
           {
             "name": "field_type",
             "type": "enum",
-            "enum": ["TEXT", "TAG", "NUMERIC", "GEO", "VECTOR"]
+            "enum": ["TEXT", "TAG", "NUMERIC", "GEO", "VECTOR", "GEOSHAPE"]
           },
           {
             "name": "option",

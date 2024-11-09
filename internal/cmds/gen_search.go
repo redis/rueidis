@@ -1926,6 +1926,11 @@ func (c FtCreateFieldAs) Vector(algo string, nargs int64, args ...string) FtCrea
 	return (FtCreateFieldFieldTypeVector)(c)
 }
 
+func (c FtCreateFieldAs) Geoshape() FtCreateFieldFieldTypeGeoshape {
+	c.cs.s = append(c.cs.s, "GEOSHAPE")
+	return (FtCreateFieldFieldTypeGeoshape)(c)
+}
+
 type FtCreateFieldFieldName Incomplete
 
 func (c FtCreateFieldFieldName) As(alias string) FtCreateFieldAs {
@@ -1957,6 +1962,11 @@ func (c FtCreateFieldFieldName) Vector(algo string, nargs int64, args ...string)
 	c.cs.s = append(c.cs.s, "VECTOR", algo, strconv.FormatInt(nargs, 10))
 	c.cs.s = append(c.cs.s, args...)
 	return (FtCreateFieldFieldTypeVector)(c)
+}
+
+func (c FtCreateFieldFieldName) Geoshape() FtCreateFieldFieldTypeGeoshape {
+	c.cs.s = append(c.cs.s, "GEOSHAPE")
+	return (FtCreateFieldFieldTypeGeoshape)(c)
 }
 
 type FtCreateFieldFieldTypeGeo Incomplete
@@ -2007,6 +2017,58 @@ func (c FtCreateFieldFieldTypeGeo) FieldName(fieldName string) FtCreateFieldFiel
 }
 
 func (c FtCreateFieldFieldTypeGeo) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type FtCreateFieldFieldTypeGeoshape Incomplete
+
+func (c FtCreateFieldFieldTypeGeoshape) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
+}
+
+func (c FtCreateFieldFieldTypeGeoshape) Sortable() FtCreateFieldOptionSortableSortable {
+	c.cs.s = append(c.cs.s, "SORTABLE")
+	return (FtCreateFieldOptionSortableSortable)(c)
+}
+
+func (c FtCreateFieldFieldTypeGeoshape) Noindex() FtCreateFieldOptionNoindex {
+	c.cs.s = append(c.cs.s, "NOINDEX")
+	return (FtCreateFieldOptionNoindex)(c)
+}
+
+func (c FtCreateFieldFieldTypeGeoshape) Nostem() FtCreateFieldOptionNostem {
+	c.cs.s = append(c.cs.s, "NOSTEM")
+	return (FtCreateFieldOptionNostem)(c)
+}
+
+func (c FtCreateFieldFieldTypeGeoshape) Phonetic(phonetic string) FtCreateFieldOptionPhonetic {
+	c.cs.s = append(c.cs.s, "PHONETIC", phonetic)
+	return (FtCreateFieldOptionPhonetic)(c)
+}
+
+func (c FtCreateFieldFieldTypeGeoshape) Weight(weight float64) FtCreateFieldOptionWeight {
+	c.cs.s = append(c.cs.s, "WEIGHT", strconv.FormatFloat(weight, 'f', -1, 64))
+	return (FtCreateFieldOptionWeight)(c)
+}
+
+func (c FtCreateFieldFieldTypeGeoshape) Separator(separator string) FtCreateFieldOptionSeparator {
+	c.cs.s = append(c.cs.s, "SEPARATOR", separator)
+	return (FtCreateFieldOptionSeparator)(c)
+}
+
+func (c FtCreateFieldFieldTypeGeoshape) Casesensitive() FtCreateFieldOptionCasesensitive {
+	c.cs.s = append(c.cs.s, "CASESENSITIVE")
+	return (FtCreateFieldOptionCasesensitive)(c)
+}
+
+func (c FtCreateFieldFieldTypeGeoshape) FieldName(fieldName string) FtCreateFieldFieldName {
+	c.cs.s = append(c.cs.s, fieldName)
+	return (FtCreateFieldFieldName)(c)
+}
+
+func (c FtCreateFieldFieldTypeGeoshape) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
