@@ -17,6 +17,18 @@ func (c FtAggregate) Index(index string) FtAggregateIndex {
 	return (FtAggregateIndex)(c)
 }
 
+type FtAggregateAddscores Incomplete
+
+func (c FtAggregateAddscores) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
+}
+
+func (c FtAggregateAddscores) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
 type FtAggregateCursorCount Incomplete
 
 func (c FtAggregateCursorCount) Maxidle(idleTime int64) FtAggregateCursorMaxidle {
@@ -27,6 +39,11 @@ func (c FtAggregateCursorCount) Maxidle(idleTime int64) FtAggregateCursorMaxidle
 func (c FtAggregateCursorCount) Params() FtAggregateParamsParams {
 	c.cs.s = append(c.cs.s, "PARAMS")
 	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateCursorCount) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
 }
 
 func (c FtAggregateCursorCount) Dialect(dialect int64) FtAggregateDialect {
@@ -44,6 +61,11 @@ type FtAggregateCursorMaxidle Incomplete
 func (c FtAggregateCursorMaxidle) Params() FtAggregateParamsParams {
 	c.cs.s = append(c.cs.s, "PARAMS")
 	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateCursorMaxidle) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
 }
 
 func (c FtAggregateCursorMaxidle) Dialect(dialect int64) FtAggregateDialect {
@@ -71,6 +93,11 @@ func (c FtAggregateCursorWithcursor) Maxidle(idleTime int64) FtAggregateCursorMa
 func (c FtAggregateCursorWithcursor) Params() FtAggregateParamsParams {
 	c.cs.s = append(c.cs.s, "PARAMS")
 	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateCursorWithcursor) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
 }
 
 func (c FtAggregateCursorWithcursor) Dialect(dialect int64) FtAggregateDialect {
@@ -151,6 +178,11 @@ func (c FtAggregateOpApplyAs) Params() FtAggregateParamsParams {
 	return (FtAggregateParamsParams)(c)
 }
 
+func (c FtAggregateOpApplyAs) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
+}
+
 func (c FtAggregateOpApplyAs) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -206,6 +238,11 @@ func (c FtAggregateOpFilter) Withcursor() FtAggregateCursorWithcursor {
 func (c FtAggregateOpFilter) Params() FtAggregateParamsParams {
 	c.cs.s = append(c.cs.s, "PARAMS")
 	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateOpFilter) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
 }
 
 func (c FtAggregateOpFilter) Dialect(dialect int64) FtAggregateDialect {
@@ -275,6 +312,11 @@ func (c FtAggregateOpGroupbyGroupby) Params() FtAggregateParamsParams {
 	return (FtAggregateParamsParams)(c)
 }
 
+func (c FtAggregateOpGroupbyGroupby) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
+}
+
 func (c FtAggregateOpGroupbyGroupby) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -340,6 +382,11 @@ func (c FtAggregateOpGroupbyProperty) Withcursor() FtAggregateCursorWithcursor {
 func (c FtAggregateOpGroupbyProperty) Params() FtAggregateParamsParams {
 	c.cs.s = append(c.cs.s, "PARAMS")
 	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateOpGroupbyProperty) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
 }
 
 func (c FtAggregateOpGroupbyProperty) Dialect(dialect int64) FtAggregateDialect {
@@ -429,6 +476,11 @@ func (c FtAggregateOpGroupbyReduceArg) Params() FtAggregateParamsParams {
 	return (FtAggregateParamsParams)(c)
 }
 
+func (c FtAggregateOpGroupbyReduceArg) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
+}
+
 func (c FtAggregateOpGroupbyReduceArg) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -506,6 +558,11 @@ func (c FtAggregateOpGroupbyReduceAs) Params() FtAggregateParamsParams {
 	return (FtAggregateParamsParams)(c)
 }
 
+func (c FtAggregateOpGroupbyReduceAs) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
+}
+
 func (c FtAggregateOpGroupbyReduceAs) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -576,6 +633,11 @@ func (c FtAggregateOpGroupbyReduceBy) Withcursor() FtAggregateCursorWithcursor {
 func (c FtAggregateOpGroupbyReduceBy) Params() FtAggregateParamsParams {
 	c.cs.s = append(c.cs.s, "PARAMS")
 	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceBy) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
 }
 
 func (c FtAggregateOpGroupbyReduceBy) Dialect(dialect int64) FtAggregateDialect {
@@ -665,6 +727,11 @@ func (c FtAggregateOpGroupbyReduceNargs) Params() FtAggregateParamsParams {
 	return (FtAggregateParamsParams)(c)
 }
 
+func (c FtAggregateOpGroupbyReduceNargs) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
+}
+
 func (c FtAggregateOpGroupbyReduceNargs) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -727,6 +794,11 @@ func (c FtAggregateOpGroupbyReduceOrderAsc) Params() FtAggregateParamsParams {
 	return (FtAggregateParamsParams)(c)
 }
 
+func (c FtAggregateOpGroupbyReduceOrderAsc) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
+}
+
 func (c FtAggregateOpGroupbyReduceOrderAsc) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -787,6 +859,11 @@ func (c FtAggregateOpGroupbyReduceOrderDesc) Withcursor() FtAggregateCursorWithc
 func (c FtAggregateOpGroupbyReduceOrderDesc) Params() FtAggregateParamsParams {
 	c.cs.s = append(c.cs.s, "PARAMS")
 	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateOpGroupbyReduceOrderDesc) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
 }
 
 func (c FtAggregateOpGroupbyReduceOrderDesc) Dialect(dialect int64) FtAggregateDialect {
@@ -860,6 +937,11 @@ func (c FtAggregateOpLimitOffsetNum) Params() FtAggregateParamsParams {
 	return (FtAggregateParamsParams)(c)
 }
 
+func (c FtAggregateOpLimitOffsetNum) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
+}
+
 func (c FtAggregateOpLimitOffsetNum) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -920,6 +1002,11 @@ func (c FtAggregateOpLoadField) Withcursor() FtAggregateCursorWithcursor {
 func (c FtAggregateOpLoadField) Params() FtAggregateParamsParams {
 	c.cs.s = append(c.cs.s, "PARAMS")
 	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateOpLoadField) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
 }
 
 func (c FtAggregateOpLoadField) Dialect(dialect int64) FtAggregateDialect {
@@ -984,6 +1071,11 @@ func (c FtAggregateOpLoadallLoadAll) Withcursor() FtAggregateCursorWithcursor {
 func (c FtAggregateOpLoadallLoadAll) Params() FtAggregateParamsParams {
 	c.cs.s = append(c.cs.s, "PARAMS")
 	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateOpLoadallLoadAll) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
 }
 
 func (c FtAggregateOpLoadallLoadAll) Dialect(dialect int64) FtAggregateDialect {
@@ -1053,6 +1145,11 @@ func (c FtAggregateOpSortbyFieldsOrderAsc) Params() FtAggregateParamsParams {
 	return (FtAggregateParamsParams)(c)
 }
 
+func (c FtAggregateOpSortbyFieldsOrderAsc) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
+}
+
 func (c FtAggregateOpSortbyFieldsOrderAsc) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -1118,6 +1215,11 @@ func (c FtAggregateOpSortbyFieldsOrderDesc) Withcursor() FtAggregateCursorWithcu
 func (c FtAggregateOpSortbyFieldsOrderDesc) Params() FtAggregateParamsParams {
 	c.cs.s = append(c.cs.s, "PARAMS")
 	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateOpSortbyFieldsOrderDesc) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
 }
 
 func (c FtAggregateOpSortbyFieldsOrderDesc) Dialect(dialect int64) FtAggregateDialect {
@@ -1197,6 +1299,11 @@ func (c FtAggregateOpSortbyFieldsProperty) Params() FtAggregateParamsParams {
 	return (FtAggregateParamsParams)(c)
 }
 
+func (c FtAggregateOpSortbyFieldsProperty) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
+}
+
 func (c FtAggregateOpSortbyFieldsProperty) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -1252,6 +1359,11 @@ func (c FtAggregateOpSortbyMax) Withcursor() FtAggregateCursorWithcursor {
 func (c FtAggregateOpSortbyMax) Params() FtAggregateParamsParams {
 	c.cs.s = append(c.cs.s, "PARAMS")
 	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateOpSortbyMax) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
 }
 
 func (c FtAggregateOpSortbyMax) Dialect(dialect int64) FtAggregateDialect {
@@ -1321,6 +1433,11 @@ func (c FtAggregateOpSortbySortby) Params() FtAggregateParamsParams {
 	return (FtAggregateParamsParams)(c)
 }
 
+func (c FtAggregateOpSortbySortby) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
+}
+
 func (c FtAggregateOpSortbySortby) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -1336,6 +1453,11 @@ type FtAggregateParamsNameValue Incomplete
 func (c FtAggregateParamsNameValue) NameValue(name string, value string) FtAggregateParamsNameValue {
 	c.cs.s = append(c.cs.s, name, value)
 	return c
+}
+
+func (c FtAggregateParamsNameValue) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
 }
 
 func (c FtAggregateParamsNameValue) Dialect(dialect int64) FtAggregateDialect {
@@ -1418,6 +1540,11 @@ func (c FtAggregateQuery) Params() FtAggregateParamsParams {
 	return (FtAggregateParamsParams)(c)
 }
 
+func (c FtAggregateQuery) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
+}
+
 func (c FtAggregateQuery) Dialect(dialect int64) FtAggregateDialect {
 	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
 	return (FtAggregateDialect)(c)
@@ -1473,6 +1600,11 @@ func (c FtAggregateTimeout) Withcursor() FtAggregateCursorWithcursor {
 func (c FtAggregateTimeout) Params() FtAggregateParamsParams {
 	c.cs.s = append(c.cs.s, "PARAMS")
 	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateTimeout) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
 }
 
 func (c FtAggregateTimeout) Dialect(dialect int64) FtAggregateDialect {
@@ -1535,6 +1667,11 @@ func (c FtAggregateVerbatim) Withcursor() FtAggregateCursorWithcursor {
 func (c FtAggregateVerbatim) Params() FtAggregateParamsParams {
 	c.cs.s = append(c.cs.s, "PARAMS")
 	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateVerbatim) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
 }
 
 func (c FtAggregateVerbatim) Dialect(dialect int64) FtAggregateDialect {
