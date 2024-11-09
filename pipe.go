@@ -1050,7 +1050,7 @@ func (p *pipe) DoStream(ctx context.Context, pool *pool, cmd Completed) RedisRes
 		}
 		dl, ok := ctx.Deadline()
 		if ok {
-			if p.timeout > 0 {
+			if p.timeout > 0 && !cmd.IsBlock() {
 				defaultDeadline := time.Now().Add(p.timeout)
 				if dl.After(defaultDeadline) {
 					dl = defaultDeadline
@@ -1101,6 +1101,12 @@ func (p *pipe) DoMultiStream(ctx context.Context, pool *pool, multi ...Completed
 		dl, ok := ctx.Deadline()
 		if ok {
 			if p.timeout > 0 {
+				for _, cmd := range multi {
+					if cmd.IsBlock() {
+						p.conn.SetDeadline(dl)
+						goto process
+					}
+				}
 				defaultDeadline := time.Now().Add(p.timeout)
 				if dl.After(defaultDeadline) {
 					dl = defaultDeadline
@@ -1138,7 +1144,7 @@ func (p *pipe) DoMultiStream(ctx context.Context, pool *pool, multi ...Completed
 
 func (p *pipe) syncDo(dl time.Time, dlOk bool, cmd Completed) (resp RedisResult) {
 	if dlOk {
-		if p.timeout > 0 {
+		if p.timeout > 0 && !cmd.IsBlock() {
 			defaultDeadline := time.Now().Add(p.timeout)
 			if dl.After(defaultDeadline) {
 				dl = defaultDeadline
@@ -1170,6 +1176,12 @@ func (p *pipe) syncDo(dl time.Time, dlOk bool, cmd Completed) (resp RedisResult)
 func (p *pipe) syncDoMulti(dl time.Time, dlOk bool, resp []RedisResult, multi []Completed) {
 	if dlOk {
 		if p.timeout > 0 {
+			for _, cmd := range multi {
+				if cmd.IsBlock() {
+					p.conn.SetDeadline(dl)
+					goto process
+				}
+			}
 			defaultDeadline := time.Now().Add(p.timeout)
 			if dl.After(defaultDeadline) {
 				dl = defaultDeadline
