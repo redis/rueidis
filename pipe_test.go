@@ -3644,6 +3644,27 @@ func TestWriteDeadlineIsShorterThanContextDeadline_DoStream(t *testing.T) {
 	}
 }
 
+func TestWriteDeadlineIsNoShorterThanContextDeadline_DoStreamBlocked(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, _ := setup(t, ClientOption{ConnWriteTimeout: 5 * time.Millisecond})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	cp := newPool(1, nil, nil)
+	startTime := time.Now()
+	s := p.DoStream(ctx, cp, cmds.NewBlockingCompleted([]string{"BLPOP", "a"}))
+	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if time.Since(startTime) < 100*time.Millisecond {
+		t.Fatalf("unexpected time %v", time.Since(startTime))
+	}
+	if len(cp.list) != 0 {
+		t.Fatalf("unexpected pool length %v", len(cp.list))
+	}
+}
+
 func TestCancelContext_Do_Block(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, shutdown, _ := setup(t, ClientOption{})
@@ -3729,6 +3750,27 @@ func TestWriteDeadlineIsShorterThanContextDeadline_DoMultiStream(t *testing.T) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	if time.Since(startTime) >= time.Second {
+		t.Fatalf("unexpected time %v", time.Since(startTime))
+	}
+	if len(cp.list) != 0 {
+		t.Fatalf("unexpected pool length %v", len(cp.list))
+	}
+}
+
+func TestWriteDeadlineIsNoShorterThanContextDeadline_DoMultiStreamBlocked(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, _ := setup(t, ClientOption{ConnWriteTimeout: 5 * time.Millisecond})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	cp := newPool(1, nil, nil)
+	startTime := time.Now()
+	s := p.DoMultiStream(ctx, cp, cmds.NewBlockingCompleted([]string{"BLPOP", "a"}))
+	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if time.Since(startTime) < 100*time.Millisecond {
 		t.Fatalf("unexpected time %v", time.Since(startTime))
 	}
 	if len(cp.list) != 0 {
@@ -3987,6 +4029,26 @@ func TestWriteDeadlineIsShorterThanContextDeadlineInSyncMode_Do(t *testing.T) {
 	p.Close()
 }
 
+func TestWriteDeadlineIsNoShorterThanContextDeadlineInSyncMode_DoBlocked(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 5 * time.Millisecond, Dialer: net.Dialer{KeepAlive: time.Second}})
+	defer closeConn()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	startTime := time.Now()
+	if err := p.Do(ctx, cmds.NewBlockingCompleted([]string{"BLPOP", "a"})).NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	if time.Since(startTime) < 100*time.Millisecond {
+		t.Fatalf("unexpected time %v", time.Since(startTime))
+	}
+
+	p.Close()
+}
+
 func TestOngoingDeadlineContextInSyncMode_DoMulti(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{})
@@ -4026,6 +4088,26 @@ func TestWriteDeadlineIsShorterThanContextDeadlineInSyncMode_DoMulti(t *testing.
 	}
 
 	if time.Since(startTime) >= time.Second {
+		t.Fatalf("unexpected time %v", time.Since(startTime))
+	}
+
+	p.Close()
+}
+
+func TestWriteDeadlineIsNoShorterThanContextDeadlineInSyncMode_DoMultiBlocked(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 5 * time.Millisecond, Dialer: net.Dialer{KeepAlive: time.Second}})
+	defer closeConn()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	startTime := time.Now()
+	if err := p.DoMulti(ctx, cmds.NewBlockingCompleted([]string{"BLPOP", "a"})).s[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	if time.Since(startTime) < 100*time.Millisecond {
 		t.Fatalf("unexpected time %v", time.Since(startTime))
 	}
 
