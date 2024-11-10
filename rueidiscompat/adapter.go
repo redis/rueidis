@@ -4865,119 +4865,282 @@ func (c *Compat) FTAggregate(ctx context.Context, index string, query string) *M
 
 func (c *Compat) FTAggregateWithArgs(ctx context.Context, index string, query string, options *FTAggregateOptions) *AggregateCmd {
 	_cmd := cmds.Incomplete(c.client.B().FtAggregate().Index(index).Query(query))
-	if options != nil {
-		if options.Verbatim {
-			// VERBATIM
-			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Verbatim())
-		}
-		// [LOAD count field [field ...]]
-		if options.LoadAll {
-			// LOAD *
-			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).LoadAll())
-		} else {
-			// LOAD
-			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Load(int64(len(options.Load))))
-			fields := make([]string, 0, len(options.Load))
-			for _, l := range options.Load {
-				fields = append(fields, l.Field)
-			}
-			_cmd = cmds.Incomplete(cmds.FtAggregateOpLoadLoad(_cmd).Field(fields...))
-		}
-		// [TIMEOUT timeout]
-		_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Timeout(int64(options.Timeout)))
-		// GROUPBY
-		// 0
-		// [
-		//    GROUPBY nargs property [property ...]
-		//    [
-		//        REDUCE function nargs arg [arg ...] [AS name]
-		//        [ REDUCE function nargs arg [arg ...] [AS name] ...]
-		//    ] ...
-		// ]]
-		for _, groupBy := range options.GroupBy {
-			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).
-				Groupby(int64(len(options.GroupBy))).
-				Property(argsToSlice(groupBy.Fields)...))
-			for _, reduce := range groupBy.Reduce {
-				_cmd = cmds.Incomplete(cmds.FtAggregateOpGroupbyProperty(_cmd).
-					Reduce(reduce.Reducer.String()).
-					Nargs(int64(len(reduce.Args))).
-					Arg(argsToSlice(reduce.Args)...).
-					As(reduce.As))
-			}
-		}
-		// SORTBY
-		//   [
-		//       SORTBY nargs [
-		//          property ASC | DESC [ property ASC | DESC ...]
-		//       ] [MAX num] [WITHCOUNT]
-		//
-		_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Sortby(int64(len(options.SortBy))))
-		for _, sortBy := range options.SortBy {
-			_cmd = cmds.Incomplete(cmds.FtAggregateOpSortbySortby(_cmd).Property(sortBy.FieldName))
-			if sortBy.Desc == sortBy.Asc {
-				panic("sortBy should be either ASC or DESC")
-			}
-			if sortBy.Asc {
-				// ASC
-				_cmd = cmds.Incomplete(cmds.FtAggregateOpSortbyFieldsProperty(_cmd).Asc())
-				continue
-			} else {
-				_cmd = cmds.Incomplete(cmds.FtAggregateOpSortbyFieldsProperty(_cmd).Desc())
-			}
-			// DESC
-		}
-		// FIXME: go-redis doesn't provide WITHCOUNT option
-		_cmd = cmds.Incomplete(cmds.FtAggregateOpSortbySortby(_cmd).Max(int64(options.SortByMax)))
-		// [ APPLY expression AS name [ APPLY expression AS name ...]]
-		for _, apply := range options.Apply {
-			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Apply(apply.Field).As(apply.As))
-		}
-		// [ LIMIT offset num]
-		_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Limit().OffsetNum(int64(options.Limit), int64(options.LimitOffset)))
-		// [FILTER filter]
-		_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Filter(options.Filter))
-		// [ WITHCURSOR [COUNT read_size] [MAXIDLE idle_time]]
-		_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Withcursor().Count(int64(options.WithCursorOptions.Count)).Maxidle(int64(options.WithCursorOptions.MaxIdle)))
-		// [ PARAMS nargs name value [ name value ...]]
-		_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Params().Nargs(int64(len(options.Params))))
-		// [ADDSCORES]
-		// [DIALECT dialect]
+	if options == nil {
+		panic("options can not be nil")
 	}
+	if options.Verbatim {
+		// VERBATIM
+		_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Verbatim())
+	}
+	// [LOAD count field [field ...]]
+	if options.LoadAll {
+		// LOAD *
+		_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).LoadAll())
+	} else {
+		// LOAD
+		_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Load(int64(len(options.Load))))
+		fields := make([]string, 0, len(options.Load))
+		for _, l := range options.Load {
+			fields = append(fields, l.Field)
+		}
+		_cmd = cmds.Incomplete(cmds.FtAggregateOpLoadLoad(_cmd).Field(fields...))
+	}
+	// [TIMEOUT timeout]
+	_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Timeout(int64(options.Timeout)))
+	// GROUPBY
+	// 0
+	// [
+	//    GROUPBY nargs property [property ...]
+	//    [
+	//        REDUCE function nargs arg [arg ...] [AS name]
+	//        [ REDUCE function nargs arg [arg ...] [AS name] ...]
+	//    ] ...
+	// ]]
+	for _, groupBy := range options.GroupBy {
+		_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).
+			Groupby(int64(len(options.GroupBy))).
+			Property(argsToSlice(groupBy.Fields)...))
+		for _, reduce := range groupBy.Reduce {
+			_cmd = cmds.Incomplete(cmds.FtAggregateOpGroupbyProperty(_cmd).
+				Reduce(reduce.Reducer.String()).
+				Nargs(int64(len(reduce.Args))).
+				Arg(argsToSlice(reduce.Args)...).
+				As(reduce.As))
+		}
+	}
+	// SORTBY
+	//   [
+	//       SORTBY nargs [
+	//          property ASC | DESC [ property ASC | DESC ...]
+	//       ] [MAX num] [WITHCOUNT]
+	//
+	_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Sortby(int64(len(options.SortBy))))
+	for _, sortBy := range options.SortBy {
+		_cmd = cmds.Incomplete(cmds.FtAggregateOpSortbySortby(_cmd).Property(sortBy.FieldName))
+		if sortBy.Desc == sortBy.Asc {
+			panic("sortBy should be either ASC or DESC")
+		}
+		if sortBy.Asc {
+			// ASC
+			_cmd = cmds.Incomplete(cmds.FtAggregateOpSortbyFieldsProperty(_cmd).Asc())
+			continue
+		} else {
+			_cmd = cmds.Incomplete(cmds.FtAggregateOpSortbyFieldsProperty(_cmd).Desc())
+		}
+		// DESC
+	}
+	// FIXME: go-redis doesn't provide WITHCOUNT option
+	_cmd = cmds.Incomplete(cmds.FtAggregateOpSortbySortby(_cmd).Max(int64(options.SortByMax)))
+	// [ APPLY expression AS name [ APPLY expression AS name ...]]
+	for _, apply := range options.Apply {
+		_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Apply(apply.Field).As(apply.As))
+	}
+	// [ LIMIT offset num]
+	_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Limit().OffsetNum(int64(options.Limit), int64(options.LimitOffset)))
+	// [FILTER filter]
+	_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Filter(options.Filter))
+	// [ WITHCURSOR [COUNT read_size] [MAXIDLE idle_time]]
+	_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Withcursor().Count(int64(options.WithCursorOptions.Count)).Maxidle(int64(options.WithCursorOptions.MaxIdle)))
+	// [ PARAMS nargs name value [ name value ...]]
+	_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Params().Nargs(int64(len(options.Params))).NameValue())
+	for name, val := range options.Params {
+		_cmd = cmds.Incomplete(cmds.FtAggregateParamsNameValue(_cmd).NameValue(name, str(val)))
+	}
+	// [ADDSCORES]: NOTE: go-redis doesn't implement this option.
+	// [DIALECT dialect]
+	_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Dialect(int64(options.DialectVersion)))
+	cmd := cmds.FtAggregateQuery(_cmd).Build()
+	return newAggregateCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) FTAliasAdd(ctx context.Context, index string, alias string) *StatusCmd { return nil }
-func (c *Compat) FTAliasDel(ctx context.Context, alias string) *StatusCmd               { return nil }
+func (c *Compat) FTAliasAdd(ctx context.Context, index string, alias string) *StatusCmd {
+	cmd := c.client.B().FtAliasadd().Alias(alias).Index(index).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) FTAliasDel(ctx context.Context, alias string) *StatusCmd {
+	cmd := c.client.B().FtAliasdel().Alias(alias).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
 func (c *Compat) FTAliasUpdate(ctx context.Context, index string, alias string) *StatusCmd {
-	return nil
+	cmd := c.client.B().FtAliasupdate().Alias(alias).Index(index).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
 }
+
 func (c *Compat) FTAlter(ctx context.Context, index string, skipInitalScan bool, definition []interface{}) *StatusCmd {
-	return nil
+	_cmd := cmds.Incomplete(c.client.B().FtAlter().Index(index))
+	if skipInitalScan {
+		_cmd = cmds.Incomplete(cmds.FtAlterIndex(_cmd).Skipinitialscan())
+	}
+	if len(definition) != 2 {
+		panic("definition should contain attribute and options")
+	}
+	cmd := cmds.FtAlterIndex(_cmd).Schema().Add().Field(str(definition[0])).Options(str(definition[1])).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
 }
+
 func (c *Compat) FTConfigGet(ctx context.Context, option string) *MapMapStringInterfaceCmd {
-	return nil
+	cmd := c.client.B().FtConfigGet().Option(option).Build()
+	return newMapMapStringInterfaceCmd(c.client.Do(ctx, cmd))
 }
+
 func (c *Compat) FTConfigSet(ctx context.Context, option string, value interface{}) *StatusCmd {
-	return nil
+	cmd := c.client.B().FtConfigSet().Option(option).Value(str(value)).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
 }
+
+// OnHash          bool
+//
+//	OnJSON          bool
+//	Prefix          []any
+//	Filter          string
+//	DefaultLanguage string
+//	LanguageField   string
+//	Score           float64
+//	ScoreField      string
+//	PayloadField    string
+//	MaxTextFields   int
+//	NoOffsets       bool
+//	Temporary       int
+//	NoHL            bool
+//	NoFields        bool
+//	NoFreqs         bool
+//	StopWords       []any
+//	SkipInitialScan bool
 func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOptions, schema ...*FieldSchema) *StatusCmd {
-	return nil
+	_cmd := cmds.Incomplete(c.client.B().FtCreate().Index(index))
+	if options.OnHash {
+		_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).OnHash())
+	}
+	if options.OnJSON {
+		_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).OnJson())
+	}
+	_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Prefix(int64(len(options.Prefix))).Prefix(argsToSlice(options.Prefix)...))
+	_cmd = cmds.Incomplete(
+		cmds.FtCreateIndex(_cmd).
+			Filter(options.Filter).
+			Language(options.DefaultLanguage).
+			LanguageField(options.LanguageField).
+			Score(options.Score).
+			ScoreField(options.ScoreField).
+			PayloadField(options.PayloadField))
+	// in go-reids, FTCreateOptions.MaxTextFields should be bool, not int
+	if options.MaxTextFields > 0 {
+		_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Maxtextfields())
+	}
+	if options.NoOffsets {
+		_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Nooffsets())
+	}
+	_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Temporary(float64(options.Temporary)))
+	if options.NoHL {
+		_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Nohl())
+	}
+	if options.NoFields {
+		_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Nofields())
+	}
+	if options.NoFreqs {
+		_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Nofreqs())
+	}
+	_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Stopwords(int64(len(options.StopWords))).Stopword(argsToSlice(options.StopWords)...))
+	if options.SkipInitialScan {
+		_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Skipinitialscan())
+	}
+	// schema
+	// if (len(schema) != 1) {
+	// 	panic("can only have one FieldSchema")
+	// }
+	_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Schema())
+	for _, sc := range schema {
+		_cmd = cmds.Incomplete(cmds.FtCreateSchema(_cmd).FieldName(sc.FieldName).As(sc.As))
+		switch sc.FieldType {
+		case SearchFieldTypeGeo:
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Geo())
+		case SearchFieldTypeGeoShape:
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Geoshape())
+		case SearchFieldTypeNumeric:
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Numeric())
+		case SearchFieldTypeTag:
+		case SearchFieldTypeText:
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Tag())
+		case SearchFieldTypeVector:
+			// FIXME: implement this
+			break
+			// if (sc.VectorArgs.FlatOptions == sc.VectorArgs.HNSWOptions) {
+			// 	panic("Vector index algorithm should be either FLAT or HNSW")
+			// }
+			// if (sc.VectorArgs.FlatOptions!= nil) {
+			// 	// (algo string, nargs int64, args ...string)
+			// 	_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Vector("FLAT",sc.VectorArgs.FlatOptions.))
+			// } else {
+
+			// }
+		default:
+			panic(fmt.Sprintf("unexpected SearchFieldType: %s", sc.FieldType.String()))
+		}
+	}
+	// FIXME: handle index properly
+	cmd := cmds.FtCreateSkipinitialscan(_cmd).Schema().FieldName("xx").Geo().Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
 }
-func (c *Compat) FTCursorDel(ctx context.Context, index string, cursorId int) *StatusCmd { return nil }
+
+func (c *Compat) FTCursorDel(ctx context.Context, index string, cursorId int) *StatusCmd {
+	cmd := c.client.B().FtCursorDel().Index(index).CursorId(int64(cursorId)).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
 func (c *Compat) FTCursorRead(ctx context.Context, index string, cursorId int, count int) *MapStringInterfaceCmd {
-	return nil
+	cmd := c.client.B().FtCursorRead().Index(index).CursorId(int64(cursorId)).Count(int64(count)).Build()
+	return newMapStringInterfaceCmd(c.client.Do(ctx, cmd))
 }
-func (c *Compat) FTDictAdd(ctx context.Context, dict string, term ...interface{}) *IntCmd { return nil }
-func (c *Compat) FTDictDel(ctx context.Context, dict string, term ...interface{}) *IntCmd { return nil }
-func (c *Compat) FTDictDump(ctx context.Context, dict string) *StringSliceCmd             { return nil }
-func (c *Compat) FTDropIndex(ctx context.Context, index string) *StatusCmd                { return nil }
+
+func (c *Compat) FTDictAdd(ctx context.Context, dict string, term ...interface{}) *IntCmd {
+	cmd := c.client.B().FtDictadd().Dict(dict).Term(argsToSlice(term)...).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) FTDictDel(ctx context.Context, dict string, term ...interface{}) *IntCmd {
+	cmd := c.client.B().FtDictdel().Dict(dict).Term(argsToSlice(term)...).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) FTDictDump(ctx context.Context, dict string) *StringSliceCmd {
+	cmd := c.client.B().FtDictdump().Dict(dict).Build()
+	return newStringSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) FTDropIndex(ctx context.Context, index string) *StatusCmd {
+	cmd := c.client.B().FtDropindex().Index(index).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
+}
+
 func (c *Compat) FTDropIndexWithArgs(ctx context.Context, index string, options *FTDropIndexOptions) *StatusCmd {
-	return nil
+	_cmd := cmds.Incomplete(c.client.B().FtDropindex().Index(index))
+	if options.DeleteDocs {
+		_cmd = cmds.Incomplete(cmds.FtDropindexIndex(_cmd).Dd())
+	}
+	cmd := cmds.FtDropindexIndex(_cmd).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
 }
-func (c *Compat) FTExplain(ctx context.Context, index string, query string) *StringCmd { return nil }
+
+func (c *Compat) FTExplain(ctx context.Context, index string, query string) *StringCmd {
+	cmd := c.client.B().FtExplain().Index(index).Query(query).Build()
+	return newStringCmd(c.client.Do(ctx, cmd))
+}
+
 func (c *Compat) FTExplainWithArgs(ctx context.Context, index string, query string, options *FTExplainOptions) *StringCmd {
-	return nil
+	_cmd := cmds.Incomplete(c.client.B().FtExplain().Index(index).Query(query))
+	if options != nil {
+		dialectVersion, err := strconv.ParseInt(options.Dialect, 10, 64)
+		if err != nil {
+			panic(fmt.Errorf("failed to parse dialect version: %v", err))
+		}
+		_cmd = cmds.Incomplete(cmds.FtExplainQuery(_cmd).Dialect(dialectVersion))
+	}
+	cmd := cmds.FtExplainQuery(_cmd).Build()
+	return newStringCmd(c.client.Do(ctx, cmd))
 }
+
 func (c *Compat) FTInfo(ctx context.Context, index string) *FTInfoCmd { return nil }
 func (c *Compat) FTSpellCheck(ctx context.Context, index string, query string) *FTSpellCheckCmd {
 	return nil

@@ -3452,6 +3452,10 @@ type AggregateCmd struct {
 	baseCmd[FTAggregateResult]
 }
 
+func newAggregateCmd(res rueidis.RedisResult) *AggregateCmd {
+	return nil
+}
+
 func (cmd *AggregateCmd) from(res rueidis.RedisResult) {
 
 }
@@ -3634,8 +3638,13 @@ type FTSearchSortBy struct {
 	Desc      bool
 }
 
-type FTDropIndexOptions struct{}
-type FTExplainOptions struct{}
+type FTDropIndexOptions struct {
+	DeleteDocs bool
+}
+
+type FTExplainOptions struct {
+	Dialect string
+}
 
 type IndexErrors struct {
 	IndexingFailures     int
