@@ -5894,6 +5894,11 @@ func (c FtSearchSlop) Build() Completed {
 
 type FtSearchSortbyOrderAsc Incomplete
 
+func (c FtSearchSortbyOrderAsc) Withcount() FtSearchSortbyWithcount {
+	c.cs.s = append(c.cs.s, "WITHCOUNT")
+	return (FtSearchSortbyWithcount)(c)
+}
+
 func (c FtSearchSortbyOrderAsc) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
@@ -5915,6 +5920,11 @@ func (c FtSearchSortbyOrderAsc) Build() Completed {
 }
 
 type FtSearchSortbyOrderDesc Incomplete
+
+func (c FtSearchSortbyOrderDesc) Withcount() FtSearchSortbyWithcount {
+	c.cs.s = append(c.cs.s, "WITHCOUNT")
+	return (FtSearchSortbyWithcount)(c)
+}
 
 func (c FtSearchSortbyOrderDesc) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
@@ -5948,6 +5958,11 @@ func (c FtSearchSortbySortby) Desc() FtSearchSortbyOrderDesc {
 	return (FtSearchSortbyOrderDesc)(c)
 }
 
+func (c FtSearchSortbySortby) Withcount() FtSearchSortbyWithcount {
+	c.cs.s = append(c.cs.s, "WITHCOUNT")
+	return (FtSearchSortbyWithcount)(c)
+}
+
 func (c FtSearchSortbySortby) Limit() FtSearchLimitLimit {
 	c.cs.s = append(c.cs.s, "LIMIT")
 	return (FtSearchLimitLimit)(c)
@@ -5964,6 +5979,28 @@ func (c FtSearchSortbySortby) Dialect(dialect int64) FtSearchDialect {
 }
 
 func (c FtSearchSortbySortby) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type FtSearchSortbyWithcount Incomplete
+
+func (c FtSearchSortbyWithcount) Limit() FtSearchLimitLimit {
+	c.cs.s = append(c.cs.s, "LIMIT")
+	return (FtSearchLimitLimit)(c)
+}
+
+func (c FtSearchSortbyWithcount) Params() FtSearchParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtSearchParamsParams)(c)
+}
+
+func (c FtSearchSortbyWithcount) Dialect(dialect int64) FtSearchDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtSearchDialect)(c)
+}
+
+func (c FtSearchSortbyWithcount) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }

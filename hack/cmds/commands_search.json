@@ -999,6 +999,12 @@
             "type": "enum",
             "optional": true,
             "enum": ["ASC", "DESC"]
+          },
+          {
+            "name": "withcount",
+            "type": "enum",
+            "optional": true,
+            "enum": ["WITHCOUNT"]
           }
         ]
       },
