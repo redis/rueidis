@@ -5173,33 +5173,6 @@ func (c *Compat) FTSearch(ctx context.Context, index string, query string) *FTSe
 	return newFTSearchCmd(c.client.Do(ctx, cmd))
 }
 
-//	type FTSearchOptions struct {
-//		NoContent       bool
-//		Verbatim        bool
-//		NoStopWords     bool
-//		WithScores      bool
-//		WithPayloads    bool
-//		WithSortKeys    bool
-//		Filters         []FTSearchFilter
-//		GeoFilter       []FTSearchGeoFilter
-//		InKeys          []interface{}
-//		InFields        []interface{}
-//		Return          []FTSearchReturn
-//		Slop            int
-//		Timeout         int
-//		InOrder         bool
-//		Language        string
-//		Expander        string
-//		Scorer          string
-//		ExplainScore    bool
-//		Payload         string
-//		SortBy          []FTSearchSortBy
-//		SortByWithCount bool
-//		LimitOffset     int
-//		Limit           int
-//		Params          map[string]interface{}
-//		DialectVersion  int
-//	}
 func (c *Compat) FTSearchWithArgs(ctx context.Context, index string, query string, options *FTSearchOptions) *FTSearchCmd {
 	_cmd := cmds.Incomplete(c.client.B().FtSearch().Index(index).Query(query))
 	// NoContent       bool
@@ -5231,28 +5204,96 @@ func (c *Compat) FTSearchWithArgs(ctx context.Context, index string, query strin
 	}
 	//		Filters         []FTSearchFilter
 	for _, filter := range options.Filters {
-		// _cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Filter(options.))
+		min, err := strconv.ParseFloat(str(filter.Min), 64)
+		if err != nil {
+			panic(fmt.Sprintf("failed to parse min %v to float64", filter.Min))
+		}
+		max, err := strconv.ParseFloat(str(filter.Max), 64)
+		if err != nil {
+			panic(fmt.Sprintf("failed to parse max %v to float64", filter.Max))
+		}
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Filter(str(filter.FieldName)).Min(min).Max(max))
 	}
-	//		GeoFilter       []FTSearchGeoFilter
-	//		InKeys          []interface{}
-	//		InFields        []interface{}
-	//		Return          []FTSearchReturn
-	//		Slop            int
-	//		Timeout         int
-	//		InOrder         bool
-	//		Language        string
-	//		Expander        string
-	//		Scorer          string
-	//		ExplainScore    bool
-	//		Payload         string
-	//		SortBy          []FTSearchSortBy
-	//		SortByWithCount bool
-	//		LimitOffset     int
-	//		Limit           int
-	//		Params          map[string]interface{}
-	//		DialectVersion  int
+	// GEOFILTER
+	for _, filter := range options.GeoFilter {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Geofilter(filter.FieldName).Lon(filter.Longitude).Lat(filter.Latitude).Radius(filter.Radius))
+		switch filter.Unit {
+		case "m":
+			_cmd = cmds.Incomplete(cmds.FtSearchGeoFilterRadius(_cmd).M())
+		case "km":
+			_cmd = cmds.Incomplete(cmds.FtSearchGeoFilterRadius(_cmd).M())
+		case "mi":
+			_cmd = cmds.Incomplete(cmds.FtSearchGeoFilterRadius(_cmd).Mi())
+		case "ft":
+			_cmd = cmds.Incomplete(cmds.FtSearchGeoFilterRadius(_cmd).Ft())
+		default:
+			panic(fmt.Sprint("invalid unit, want m | km | mi | ft, got %v", filter.Unit))
+		}
+	}
+	// [INKEYS count key [key ...]]
+	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Inkeys(str(len(options.InKeys))).Key(argsToSlice(options.InKeys)...))
+	// [ INFIELDS count field [field ...]]
+	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Infields(str(len(options.InKeys))).Field(argsToSlice(options.InFields)...))
+	// [RETURN count identifier [AS property] [ identifier [AS property] ...]]
+	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Return(str(len(options.Return))))
+	for _, re := range options.Return {
+		_cmd = cmds.Incomplete(cmds.FtSearchReturnReturn(_cmd).Identifier(re.FieldName).As(re.As))
+	}
+	// NOTE: go-redis doesn't implement SUMMARIZE option
+	// [SUMMARIZE [ FIELDS count field [field ...]] [FRAGS num] [LEN fragsize] [SEPARATOR separator]]
+	// [SLOP slop]
+	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Slop(int64(options.Slop)))
+	// [TIMEOUT timeout]
+	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Timeout(int64(options.Timeout)))
+	// [INORDER]
+	if options.InOrder {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Inorder())
+	}
+	// [LANGUAGE language]
+	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Language(options.Language))
+	// [EXPANDER expander]
+	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Expander(options.Expander))
+	// [SCORER scorer]
+	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Scorer(options.Scorer))
+	// [EXPLAINSCORE]
+	if options.ExplainScore {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Explainscore())
+	}
+	// [PAYLOAD payload]
+	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Payload(options.Payload))
+	// [SORTBY sortby [ ASC | DESC] [WITHCOUNT]]
+	if len(options.SortBy) != 1 {
+		panic(fmt.Sprintf("options.SortBy can only have 1 element, got %v", len(options.SortBy)))
+	}
+	sortBy := options.SortBy[0]
+	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Sortby(sortBy.FieldName))
+	if sortBy.Asc == sortBy.Desc && sortBy.Asc {
+		panic("options.SortBy[0] should specify either ASC or DESC")
+	}
+	if sortBy.Asc {
+		_cmd = cmds.Incomplete(cmds.FtSearchSortbySortby(_cmd).Asc())
+	} else {
+		_cmd = cmds.Incomplete(cmds.FtSearchSortbySortby(_cmd).Desc())
+	}
+	// WITHCOUNT
+	if options.SortByWithCount {
+		_cmd = cmds.Incomplete(cmds.FtSearchSortbySortby(_cmd).Withcount())
+	}
+	// [LIMIT offset num]
+	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Limit().OffsetNum(int64(options.Limit), int64(options.LimitOffset)))
+	// [PARAMS nargs name value [ name value ...]]
+	if options.Params != nil {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Params().Nargs(int64(len(options.Params))))
+		for name, val := range options.Params {
+			_cmd = cmds.Incomplete(cmds.FtSearchParamsNargs(_cmd).NameValue().NameValue(name, str(val)))
+		}
+	}
+	// [DIALECT dialect]
+	if options.DialectVersion > 0 {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Dialect(int64(options.DialectVersion)))
+	}
+	cmd := cmds.FtSearchQuery(_cmd).Build()
 	return newFTSearchCmd(c.client.Do(ctx, cmd))
-	return nil
 }
 
 func (c *Compat) FTSynDump(ctx context.Context, index string) *FTSynDumpCmd { return nil }
