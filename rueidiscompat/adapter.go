@@ -5141,17 +5141,120 @@ func (c *Compat) FTExplainWithArgs(ctx context.Context, index string, query stri
 	return newStringCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) FTInfo(ctx context.Context, index string) *FTInfoCmd { return nil }
+func (c *Compat) FTInfo(ctx context.Context, index string) *FTInfoCmd {
+	cmd := c.client.B().FtInfo().Index(index).Build()
+	return newFTInfoCmd(c.client.Do(ctx, cmd))
+}
+
 func (c *Compat) FTSpellCheck(ctx context.Context, index string, query string) *FTSpellCheckCmd {
-	return nil
+	cmd := c.client.B().FtSpellcheck().Index(index).Query(query).Build()
+	return newFTSpellCheckCmd(c.client.Do(ctx, cmd))
 }
+
 func (c *Compat) FTSpellCheckWithArgs(ctx context.Context, index string, query string, options *FTSpellCheckOptions) *FTSpellCheckCmd {
-	return nil
+	_cmd := cmds.Incomplete(c.client.B().FtSpellcheck().Index(index).Query(query))
+	_cmd = cmds.Incomplete(cmds.FtSpellcheckQuery(_cmd).Distance(int64(options.Distance)))
+	if options.Terms != nil {
+		if options.Terms.Inclusion != "INCLUDE" || options.Terms.Inclusion != "EXCLUDE" {
+			panic("Inclusion should be either INCLUDE or EXCLUDE")
+		}
+		if options.Terms.Inclusion == "INCLUDE" {
+			_cmd = cmds.Incomplete(cmds.FtSpellcheckQuery(_cmd).TermsInclude().Dictionary(options.Terms.Dictionary).Terms(argsToSlice(options.Terms.Terms)...))
+		} else {
+			_cmd = cmds.Incomplete(cmds.FtSpellcheckQuery(_cmd).TermsExclude().Dictionary(options.Terms.Dictionary).Terms(argsToSlice(options.Terms.Terms)...))
+		}
+	}
+	cmd := cmds.FtSpellcheckQuery(_cmd).Dialect(int64(options.Dialect)).Build()
+	return newFTSpellCheckCmd(c.client.Do(ctx, cmd))
 }
-func (c *Compat) FTSearch(ctx context.Context, index string, query string) *FTSearchCmd { return nil }
+
+func (c *Compat) FTSearch(ctx context.Context, index string, query string) *FTSearchCmd {
+	cmd := c.client.B().FtSearch().Index(index).Query(query).Build()
+	return newFTSearchCmd(c.client.Do(ctx, cmd))
+}
+
+//	type FTSearchOptions struct {
+//		NoContent       bool
+//		Verbatim        bool
+//		NoStopWords     bool
+//		WithScores      bool
+//		WithPayloads    bool
+//		WithSortKeys    bool
+//		Filters         []FTSearchFilter
+//		GeoFilter       []FTSearchGeoFilter
+//		InKeys          []interface{}
+//		InFields        []interface{}
+//		Return          []FTSearchReturn
+//		Slop            int
+//		Timeout         int
+//		InOrder         bool
+//		Language        string
+//		Expander        string
+//		Scorer          string
+//		ExplainScore    bool
+//		Payload         string
+//		SortBy          []FTSearchSortBy
+//		SortByWithCount bool
+//		LimitOffset     int
+//		Limit           int
+//		Params          map[string]interface{}
+//		DialectVersion  int
+//	}
 func (c *Compat) FTSearchWithArgs(ctx context.Context, index string, query string, options *FTSearchOptions) *FTSearchCmd {
+	_cmd := cmds.Incomplete(c.client.B().FtSearch().Index(index).Query(query))
+	// NoContent       bool
+	if options == nil {
+		panic("options can not be nil")
+	}
+	if options.NoContent {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Nocontent())
+	}
+	// 	Verbatim        bool
+	if options.Verbatim {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Verbatim())
+	}
+	// 	NoStopWords     bool
+	if options.NoStopWords {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Nostopwords())
+	}
+	// 	WithScores      bool
+	if options.WithScores {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Withscores())
+	}
+	// 	WithPayloads    bool
+	if options.WithPayloads {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Withpayloads())
+	}
+	// 	WithSortKeys    bool
+	if options.WithSortKeys {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Withsortkeys())
+	}
+	//		Filters         []FTSearchFilter
+	for _, filter := range options.Filters {
+		// _cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Filter(options.))
+	}
+	//		GeoFilter       []FTSearchGeoFilter
+	//		InKeys          []interface{}
+	//		InFields        []interface{}
+	//		Return          []FTSearchReturn
+	//		Slop            int
+	//		Timeout         int
+	//		InOrder         bool
+	//		Language        string
+	//		Expander        string
+	//		Scorer          string
+	//		ExplainScore    bool
+	//		Payload         string
+	//		SortBy          []FTSearchSortBy
+	//		SortByWithCount bool
+	//		LimitOffset     int
+	//		Limit           int
+	//		Params          map[string]interface{}
+	//		DialectVersion  int
+	return newFTSearchCmd(c.client.Do(ctx, cmd))
 	return nil
 }
+
 func (c *Compat) FTSynDump(ctx context.Context, index string) *FTSynDumpCmd { return nil }
 func (c *Compat) FTSynUpdate(ctx context.Context, index string, synGroupId interface{}, terms []interface{}) *StatusCmd {
 	return nil
