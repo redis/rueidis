@@ -204,8 +204,10 @@ func (m *mux) DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisR
 }
 
 func (m *mux) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
-	if (m.usePool && !cmd.NoReply()) || cmd.IsBlock() {
-		resp = m.blocking(ctx, cmd)
+	if m.usePool && !cmd.NoReply() {
+		resp = m.blocking(m.spool, ctx, cmd)
+	} else if cmd.IsBlock() {
+		resp = m.blocking(m.dpool, ctx, cmd)
 	} else {
 		resp = m.pipeline(ctx, cmd)
 	}
@@ -213,37 +215,38 @@ func (m *mux) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 }
 
 func (m *mux) DoMulti(ctx context.Context, multi ...Completed) (resp *redisresults) {
-	if m.usePool || (len(multi) >= m.maxm && m.maxm > 0) {
-		goto block // use a dedicated connection if the pipeline is too large
-	}
 	for _, cmd := range multi {
+		if cmd.NoReply() {
+			return m.pipelineMulti(ctx, multi)
+		}
 		if cmd.IsBlock() {
 			cmds.ToBlock(&multi[0]) // mark the first cmd as block if one of them is block to shortcut later check.
 			goto block
 		}
 	}
+	if m.usePool || (len(multi) >= m.maxm && m.maxm > 0) {
+		goto block // use a dedicated connection if the pipeline is too large
+	}
 	return m.pipelineMulti(ctx, multi)
 block:
-	for _, cmd := range multi {
-		if cmd.NoReply() {
-			return m.pipelineMulti(ctx, multi)
-		}
+	if m.usePool {
+		return m.blockingMulti(m.spool, ctx, multi)
 	}
-	return m.blockingMulti(ctx, multi)
+	return m.blockingMulti(m.dpool, ctx, multi)
 }
 
-func (m *mux) blocking(ctx context.Context, cmd Completed) (resp RedisResult) {
-	wire := m.spool.Acquire()
+func (m *mux) blocking(pool *pool, ctx context.Context, cmd Completed) (resp RedisResult) {
+	wire := pool.Acquire()
 	resp = wire.Do(ctx, cmd)
 	if resp.NonRedisError() != nil { // abort the wire if blocking command return early (ex. context.DeadlineExceeded)
 		wire.Close()
 	}
-	m.spool.Store(wire)
+	pool.Store(wire)
 	return resp
 }
 
-func (m *mux) blockingMulti(ctx context.Context, cmd []Completed) (resp *redisresults) {
-	wire := m.spool.Acquire()
+func (m *mux) blockingMulti(pool *pool, ctx context.Context, cmd []Completed) (resp *redisresults) {
+	wire := pool.Acquire()
 	resp = wire.DoMulti(ctx, cmd...)
 	for _, res := range resp.s {
 		if res.NonRedisError() != nil { // abort the wire if blocking command return early (ex. context.DeadlineExceeded)
@@ -251,7 +254,7 @@ func (m *mux) blockingMulti(ctx context.Context, cmd []Completed) (resp *redisre
 			break
 		}
 	}
-	m.spool.Store(wire)
+	pool.Store(wire)
 	return resp
 }
 
