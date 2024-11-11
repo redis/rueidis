@@ -741,7 +741,9 @@ func (p *pipe) Receive(ctx context.Context, subscribe Completed, fn func(message
 }
 
 func (p *pipe) CleanSubscriptions() {
-	if atomic.LoadInt32(&p.state) == 1 {
+	if atomic.LoadInt32(&p.blcksig) != 0 {
+		p.Close()
+	} else if atomic.LoadInt32(&p.state) == 1 {
 		if p.version >= 7 {
 			p.DoMulti(context.Background(), cmds.UnsubscribeCmd, cmds.PUnsubscribeCmd, cmds.SUnsubscribeCmd, cmds.DiscardCmd)
 		} else {

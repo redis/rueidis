@@ -4285,6 +4285,23 @@ func TestPipe_CleanSubscriptions_6(t *testing.T) {
 	)
 }
 
+func TestPipe_CleanSubscriptions_Blocking(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
+	defer cancel()
+	p.background()
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		mock.Expect("BLPOP")
+		cancel()
+	}()
+	p.Do(ctx, cmds.NewBlockingCompleted([]string{"BLPOP"}))
+	p.CleanSubscriptions()
+	if p.Error() != ErrClosing {
+		t.Fatal("unexpected error")
+	}
+}
+
 func TestPipe_CleanSubscriptions_7(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
