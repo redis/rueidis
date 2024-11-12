@@ -446,6 +446,39 @@ func TestLocker_WithContext_CancelContext(t *testing.T) {
 	}
 }
 
+func TestLocker_WithContext_ShorterTimeoutContext(t *testing.T) {
+	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
+		locker := newLocker(t, noLoop, setpx, nocsc)
+		locker.validity = time.Second * 5
+		locker.interval = time.Second * 3
+		defer locker.Close()
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
+		ctx, cancel, err := locker.WithContext(ctx, strconv.Itoa(rand.Int()))
+		if err != nil {
+			t.Fatal(err)
+		}
+		time.Sleep(time.Second * 2)
+		if !errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			t.Fatalf("unexpected context canceled %v", ctx.Err())
+		}
+		cancel()
+	}
+	for _, nocsc := range []bool{false, true} {
+		t.Run("Tracking Loop", func(t *testing.T) {
+			test(t, false, false, nocsc)
+		})
+		t.Run("Tracking NoLoop", func(t *testing.T) {
+			test(t, true, false, nocsc)
+		})
+		t.Run("SET PX", func(t *testing.T) {
+			test(t, true, true, nocsc)
+		})
+	}
+}
+
 func TestLocker_TryWithContext(t *testing.T) {
 	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
 		locker := newLocker(t, noLoop, setpx, nocsc)
