@@ -151,18 +151,18 @@ func keyname(prefix, name string, i int32) string {
 	return sb.String()
 }
 
-func (m *locker) acquire(ctx context.Context, key, val string, deadline time.Time, force bool) (err error) {
+func (m *locker) acquire(ctx context.Context, key, val string, duration time.Duration, deadline time.Time, force bool) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, m.timeout)
 	var resp rueidis.RedisResult
 	if force {
 		if m.setpx {
-			resp = fcqms.Exec(ctx, m.client, []string{key}, []string{val, strconv.FormatInt(m.validity.Milliseconds(), 10)})
+			resp = fcqms.Exec(ctx, m.client, []string{key}, []string{val, strconv.FormatInt(duration.Milliseconds(), 10)})
 		} else {
 			resp = fcqat.Exec(ctx, m.client, []string{key}, []string{val, strconv.FormatInt(deadline.UnixMilli(), 10)})
 		}
 	} else {
 		if m.setpx {
-			resp = acqms.Exec(ctx, m.client, []string{key}, []string{val, strconv.FormatInt(m.validity.Milliseconds(), 10)})
+			resp = acqms.Exec(ctx, m.client, []string{key}, []string{val, strconv.FormatInt(duration.Milliseconds(), 10)})
 		} else {
 			resp = acqat.Exec(ctx, m.client, []string{key}, []string{val, strconv.FormatInt(deadline.UnixMilli(), 10)})
 		}
@@ -249,8 +249,15 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 	var err error
 
 	val := random()
-	deadline := time.Now().Add(m.validity)
-	cacneltm := time.AfterFunc(m.validity, cancel)
+	now := time.Now()
+	duration := m.validity
+	if dl, ok := ctx.Deadline(); ok {
+		if dur := dl.Sub(now); dur < duration {
+			duration = dur
+		}
+	}
+	deadline := now.Add(duration)
+	cacneltm := time.AfterFunc(duration, cancel)
 	released := int32(0)
 	acquired := int32(0)
 	failures := int32(0)
@@ -266,19 +273,12 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 					deadline = deadline.Add(m.interval)
 					if err = m.script(ctx, extend, key, val, deadline); err == nil {
 						timer.Reset(m.interval)
-						if !m.noloop {
-							<-csc
-						}
 					}
 				case _, ok := <-csc:
 					if !ok {
 						err = ErrLockerClosed
 					} else {
-						if err = m.script(ctx, extend, key, val, deadline); err == nil {
-							if !m.noloop {
-								<-csc
-							}
-						}
+						err = m.script(ctx, extend, key, val, deadline)
 					}
 				}
 			}
@@ -314,7 +314,7 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 		default:
 		}
 		if !errors.Is(err, ErrNotLocked) {
-			if err = m.acquire(ctx, key, val, deadline, force); force && err == nil {
+			if err = m.acquire(ctx, key, val, duration, deadline, force); force && err == nil {
 				m.mu.RLock()
 				if m.gates != nil {
 					select {
