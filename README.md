@@ -1,3 +1,7 @@
+# Deprecated
+
+This fork was originally created to work around issues with the OpenTelemetry dependency, which have since been resolved upstream. If you're looking for a Redis client, we recommend _not_ using this fork and using the [core Rueidis repository](https://github.com/redis/rueidis) instead.
+
 # rueidis
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/redis/rueidis.svg)](https://pkg.go.dev/github.com/redis/rueidis)

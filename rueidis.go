@@ -1,4 +1,7 @@
 // Package rueidis is a fast Golang Redis RESP3 client that does auto pipelining and supports client side caching.
+//
+// Deprecated: this fork should no longer be used. Please use the main Rueidis repository instead.
+// [Rueidis]: https://github.com/redis/rueidis
 package rueidis
 
 //go:generate go run hack/cmds/gen.go internal/cmds hack/cmds/*.json
@@ -290,6 +293,9 @@ type AuthCredentials struct {
 // NewClient uses ClientOption to initialize the Client for both cluster client and single client.
 // It will first try to connect as cluster client. If the len(ClientOption.InitAddress) == 1 and
 // the address does not enable cluster mode, the NewClient() will use single client instead.
+//
+// Deprecated: this fork should no longer be used. Please use the main Rueidis repository instead.
+// [Rueidis]: https://github.com/redis/rueidis
 func NewClient(option ClientOption) (client Client, err error) {
 	if option.ReadBufferEachConn <= 0 {
 		option.ReadBufferEachConn = DefaultReadBuffer
