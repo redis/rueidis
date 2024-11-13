@@ -45,8 +45,9 @@ type Cmder interface {
 }
 
 type baseCmd[T any] struct {
-	err error
-	val T
+	err    error
+	val    T
+	rawVal any
 }
 
 func (cmd *baseCmd[T]) SetVal(val T) {
@@ -55,6 +56,10 @@ func (cmd *baseCmd[T]) SetVal(val T) {
 
 func (cmd *baseCmd[T]) Val() T {
 	return cmd.val
+}
+
+func (cmd *baseCmd[T]) RawVal() any {
+	return cmd.rawVal
 }
 
 func (cmd *baseCmd[T]) SetErr(err error) {
@@ -67,6 +72,10 @@ func (cmd *baseCmd[T]) Err() error {
 
 func (cmd *baseCmd[T]) Result() (T, error) {
 	return cmd.Val(), cmd.Err()
+}
+
+func (cmd *baseCmd[T]) RawResult() (any, error) {
+	return cmd.RawVal(), cmd.Err()
 }
 
 type Cmd struct {

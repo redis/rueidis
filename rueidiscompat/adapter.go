@@ -5155,7 +5155,7 @@ func (c *Compat) FTSpellCheckWithArgs(ctx context.Context, index string, query s
 	_cmd := cmds.Incomplete(c.client.B().FtSpellcheck().Index(index).Query(query))
 	_cmd = cmds.Incomplete(cmds.FtSpellcheckQuery(_cmd).Distance(int64(options.Distance)))
 	if options.Terms != nil {
-		if options.Terms.Inclusion != "INCLUDE" || options.Terms.Inclusion != "EXCLUDE" {
+		if options.Terms.Inclusion != "INCLUDE" && options.Terms.Inclusion != "EXCLUDE" {
 			panic("Inclusion should be either INCLUDE or EXCLUDE")
 		}
 		if options.Terms.Inclusion == "INCLUDE" {
@@ -5227,7 +5227,7 @@ func (c *Compat) FTSearchWithArgs(ctx context.Context, index string, query strin
 		case "ft":
 			_cmd = cmds.Incomplete(cmds.FtSearchGeoFilterRadius(_cmd).Ft())
 		default:
-			panic(fmt.Sprint("invalid unit, want m | km | mi | ft, got %v", filter.Unit))
+			panic(fmt.Sprintf("invalid unit, want m | km | mi | ft, got %v", filter.Unit))
 		}
 	}
 	// [INKEYS count key [key ...]]

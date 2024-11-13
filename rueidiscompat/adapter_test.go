@@ -36,7 +36,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-redis/redis"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -11561,7 +11560,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "txt", &FTCreateOptions{}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "txt")
+			WaitForIndexing(clientresp2, "txt", 2)
 			adapter.HSet(ctx, "doc1", "txt", "foo baz")
 			adapter.HSet(ctx, "doc2", "txt", "foo bar")
 			res, err := adapter.FTSearchWithArgs(ctx, "txt", "foo ~bar", &FTSearchOptions{WithScores: true}).Result()
@@ -11578,7 +11577,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "txt", &FTCreateOptions{StopWords: []interface{}{"foo", "bar", "baz"}}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "txt")
+			WaitForIndexing(clientresp2, "txt", 2)
 			adapter.HSet(ctx, "doc1", "txt", "foo baz")
 			adapter.HSet(ctx, "doc2", "txt", "hello world")
 			res1, err := adapter.FTSearchWithArgs(ctx, "txt", "foo bar", &FTSearchOptions{NoContent: true}).Result()
@@ -11593,7 +11592,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "txt", &FTCreateOptions{}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText}, &FieldSchema{FieldName: "num", FieldType: SearchFieldTypeNumeric}, &FieldSchema{FieldName: "loc", FieldType: SearchFieldTypeGeo}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "txt")
+			WaitForIndexing(clientresp2, "txt", 2)
 			adapter.HSet(ctx, "doc1", "txt", "foo bar", "num", 3.141, "loc", "-0.441,51.458")
 			adapter.HSet(ctx, "doc2", "txt", "foo baz", "num", 2, "loc", "-0.1,51.2")
 			res1, err := adapter.FTSearchWithArgs(ctx, "txt", "foo", &FTSearchOptions{Filters: []FTSearchFilter{{FieldName: "num", Min: 0, Max: 2}}, NoContent: true}).Result()
@@ -11624,7 +11623,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "num", &FTCreateOptions{}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText}, &FieldSchema{FieldName: "num", FieldType: SearchFieldTypeNumeric, Sortable: true}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "num")
+			WaitForIndexing(clientresp2, "num", 2)
 			adapter.HSet(ctx, "doc1", "txt", "foo bar", "num", 1)
 			adapter.HSet(ctx, "doc2", "txt", "foo baz", "num", 2)
 			adapter.HSet(ctx, "doc3", "txt", "foo qux", "num", 3)
@@ -11651,7 +11650,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "txt", &FTCreateOptions{}, &FieldSchema{FieldName: "title", FieldType: SearchFieldTypeText, Weight: 5}, &FieldSchema{FieldName: "body", FieldType: SearchFieldTypeText}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "txt")
+			WaitForIndexing(clientresp2, "txt", 2)
 			adapter.HSet(ctx, "doc1", "title", "RediSearch", "body", "Redisearch impements a search engine on top of redis")
 			res1, err := adapter.FTSearchWithArgs(ctx, "txt", "search engine", &FTSearchOptions{NoContent: true, Verbatim: true, LimitOffset: 0, Limit: 5}).Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -11668,7 +11667,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx", &FTCreateOptions{}, text1, text2, num, geo, tag).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx")
+			WaitForIndexing(clientresp2, "idx", 2)
 			adapter.HSet(ctx, "doc1", "field", "aaa", "text", "1", "numeric", 1, "geo", "1,1", "tag", "1")
 			adapter.HSet(ctx, "doc2", "field", "aab", "text", "2", "numeric", 2, "geo", "2,2", "tag", "2")
 			res1, err := adapter.FTSearch(ctx, "idx", "@text:aa*").Result()
@@ -11704,7 +11703,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "txt", &FTCreateOptions{}, text1, text2, text3).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "txt")
+			WaitForIndexing(clientresp2, "txt", 2)
 			res1, err := adapter.FTExplain(ctx, "txt", "@f3:f3_val @f2:f2_val @f1:f1_val").Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res1).ToNot(BeEmpty())
@@ -11717,11 +11716,11 @@ func testAdapterCache(resp3 bool) {
 			val1, err := adapter.FTCreate(ctx, "testAlias", &FTCreateOptions{Prefix: []interface{}{"index1:"}}, text1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val1).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "testAlias")
+			WaitForIndexing(clientresp2, "testAlias", 2)
 			val2, err := adapter.FTCreate(ctx, "testAlias2", &FTCreateOptions{Prefix: []interface{}{"index2:"}}, text2).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val2).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "testAlias2")
+			WaitForIndexing(clientresp2, "testAlias2", 2)
 
 			adapter.HSet(ctx, "index1:lonestar", "name", "lonestar")
 			adapter.HSet(ctx, "index2:yogurt", "name", "yogurt")
@@ -11756,7 +11755,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText, Sortable: true, NoStem: true}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			resInfo, err := adapter.FTInfo(ctx, "idx1").Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -11769,7 +11768,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			resAlter, err := adapter.FTAlter(ctx, "idx1", false, []interface{}{"body", SearchFieldTypeText.String()}).Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -11788,7 +11787,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1, text2).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.HSet(ctx, "doc1", "f1", "some valid content", "f2", "this is sample text")
 			adapter.HSet(ctx, "doc2", "f1", "very important", "f2", "lorem ipsum")
@@ -11835,7 +11834,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1, text2).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			resDictAdd, err := adapter.FTDictAdd(ctx, "custom_dict", "item1", "item2", "item3").Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -11859,7 +11858,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.HSet(ctx, "doc1", "name", "Jon")
 			adapter.HSet(ctx, "doc2", "name", "John")
@@ -11874,7 +11873,7 @@ func testAdapterCache(resp3 bool) {
 			val2, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text2).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val2).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.HSet(ctx, "doc1", "name", "Jon")
 			adapter.HSet(ctx, "doc2", "name", "John")
@@ -11892,7 +11891,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.HSet(ctx, "doc1", "description", "The quick brown fox jumps over the lazy dog")
 			adapter.HSet(ctx, "doc2", "description", "Quick alice was beginning to get very tired of sitting by her quick sister on the bank, and of having nothing to do.")
@@ -11949,7 +11948,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1, text2, text3, num).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.HSet(ctx, "search", "title", "RediSearch",
 				"body", "Redisearch impements a search engine on top of redis",
@@ -12053,7 +12052,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1, text2).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.HSet(ctx, "doc1", "t1", "a", "t2", "b")
 			adapter.HSet(ctx, "doc2", "t1", "b", "t2", "a")
@@ -12089,7 +12088,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1, text2).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.HSet(ctx, "doc1", "t1", "hello", "t2", "world")
 
@@ -12116,7 +12115,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1, num1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.HSet(ctx, "doc1", "PrimaryKey", "9::362330", "CreatedDateTimeUTC", "637387878524969984")
 			adapter.HSet(ctx, "doc2", "PrimaryKey", "9::362329", "CreatedDateTimeUTC", "637387875859270016")
@@ -12135,7 +12134,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1, num1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.HSet(ctx, "doc1", "name", "bar", "age", "25")
 			adapter.HSet(ctx, "doc2", "name", "foo", "age", "19")
@@ -12164,7 +12163,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{SkipInitialScan: true}, text1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			res, err := adapter.FTSearch(ctx, "idx1", "@foo:bar").Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -12177,7 +12176,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{OnJSON: true, Prefix: []interface{}{"king:"}}, text1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.JSONSet(ctx, "king:1", "$", `{"name": "henry"}`)
 			adapter.JSONSet(ctx, "king:2", "$", `{"name": "james"}`)
@@ -12196,7 +12195,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{OnJSON: true}, text1, num1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.JSONSet(ctx, "doc:1", "$", `{"name": "Jon", "age": 25}`)
 
@@ -12214,7 +12213,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, tag1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.HSet(ctx, "1", "t", "HELLO")
 			adapter.HSet(ctx, "2", "t", "hello")
@@ -12233,7 +12232,7 @@ func testAdapterCache(resp3 bool) {
 			val, err = adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, tag2).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			res, err = adapter.FTSearch(ctx, "idx1", "@t:{HELLO}").Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -12252,7 +12251,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{OnJSON: true}, text1, num1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			res, err := adapter.FTSearchWithArgs(ctx, "idx1", "*", &FTSearchOptions{Return: []FTSearchReturn{{FieldName: "$.t", As: "txt"}}}).Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -12274,7 +12273,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{OnHash: true}, text1, text2).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			resSynUpdate, err := adapter.FTSynUpdateWithArgs(ctx, "idx1", "id1", &FTSynUpdateOptions{SkipInitialScan: true}, []interface{}{"boy", "child", "offspring"}).Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -12300,7 +12299,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{OnHash: true}, text1, text2).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			resSynUpdate, err := adapter.FTSynUpdate(ctx, "idx1", "id1", []interface{}{"boy", "child", "offspring"}).Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -12338,7 +12337,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{OnJSON: true, Prefix: []interface{}{"king:"}}, text1, num1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.JSONSet(ctx, "king:1", "$", `{"name": "henry", "num": 42}`)
 			adapter.JSONSet(ctx, "king:2", "$", `{"name": "james", "num": 3.14}`)
@@ -12362,7 +12361,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{OnJSON: true, Prefix: []interface{}{"king:"}}, tag1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.JSONSet(ctx, "king:1", "$", `{"name": "henry", "country": {"name": "england"}}`)
 
@@ -12380,7 +12379,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{OnJSON: true}, text1, text2).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.JSONSet(ctx, "doc:1", "$", `{"prod:name": "RediSearch"}`)
 
@@ -12409,7 +12408,7 @@ func testAdapterCache(resp3 bool) {
 				&FieldSchema{FieldName: "v", FieldType: SearchFieldTypeVector, VectorArgs: &FTVectorArgs{HNSWOptions: hnswOptions}}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.HSet(ctx, "a", "v", "aaaaaaaa")
 			adapter.HSet(ctx, "b", "v", "aaaabaaa")
@@ -12431,7 +12430,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "name", FieldType: SearchFieldTypeText}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp3, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.HSet(ctx, "doc1", "name", "Alice")
 			adapter.HSet(ctx, "doc2", "name", "Bob")
@@ -12449,7 +12448,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "numval", FieldType: SearchFieldTypeNumeric}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp3, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.HSet(ctx, "doc1", "numval", 101)
 			adapter.HSet(ctx, "doc2", "numval", 102)
@@ -12467,7 +12466,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "g", FieldType: SearchFieldTypeGeo}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp3, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.HSet(ctx, "doc1", "g", "29.69465, 34.95126")
 			adapter.HSet(ctx, "doc2", "g", "29.69350, 34.94737")
@@ -12504,7 +12503,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			res, err := adapter.FTInfo(ctx, "idx1").Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -12518,7 +12517,7 @@ func testAdapterCache(resp3 bool) {
 			val, err = adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText, WithSuffixtrie: true}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			res, err = adapter.FTInfo(ctx, "idx1").Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -12532,7 +12531,7 @@ func testAdapterCache(resp3 bool) {
 			val, err = adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "t", FieldType: SearchFieldTypeTag, WithSuffixtrie: true}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			res, err = adapter.FTInfo(ctx, "idx1").Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -12647,7 +12646,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "geom", FieldType: SearchFieldTypeGeoShape, GeoShapeFieldType: "FLAT"}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.HSet(ctx, "small", "geom", "POLYGON((1 1, 1 100, 100 100, 100 1, 1 1))")
 			adapter.HSet(ctx, "large", "geom", "POLYGON((1 1, 1 200, 200 200, 200 1, 1 1))")
@@ -12677,7 +12676,7 @@ func testAdapterCache(resp3 bool) {
 			).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "index")
+			WaitForIndexing(clientresp2, "index", 2)
 		})
 
 		It("should test geoshapes query intersects and disjoint", Label("NonRedisEnterprise"), func() {
@@ -12755,7 +12754,7 @@ func testAdapterCache(resp3 bool) {
 				&FieldSchema{FieldName: "description", FieldType: SearchFieldTypeText, IndexMissing: true}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.HSet(ctx, "property:1", map[string]interface{}{
 				"title":       "Luxury Villa in Malibu",
@@ -12799,7 +12798,7 @@ func testAdapterCache(resp3 bool) {
 				&FieldSchema{FieldName: "description", FieldType: SearchFieldTypeText, IndexEmpty: true}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp2, "idx1")
+			WaitForIndexing(clientresp2, "idx1", 2)
 
 			adapter.HSet(ctx, "property:1", map[string]interface{}{
 				"title":       "Luxury Villa in Malibu",
@@ -12854,7 +12853,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1, num1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp3, "idx1")
+			WaitForIndexing(clientresp3, "idx1", 3)
 
 			adapter.HSet(ctx, "doc1", "PrimaryKey", "9::362330", "CreatedDateTimeUTC", "637387878524969984")
 			adapter.HSet(ctx, "doc2", "PrimaryKey", "9::362329", "CreatedDateTimeUTC", "637387875859270016")
@@ -12888,7 +12887,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText, Sortable: true, NoStem: true}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp3, "idx1")
+			WaitForIndexing(clientresp3, "idx1", 3)
 
 			resInfo, err := adapter.FTInfo(ctx, "idx1").RawResult()
 			Expect(err).NotTo(HaveOccurred())
@@ -12916,7 +12915,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1, text2).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(adapter, "idx1")
+			WaitForIndexing(clientresp3, "idx1", 3)
 
 			adapter.HSet(ctx, "doc1", "f1", "some valid content", "f2", "this is sample text")
 			adapter.HSet(ctx, "doc2", "f1", "very important", "f2", "lorem ipsum")
@@ -12941,7 +12940,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "txt", &FTCreateOptions{StopWords: []interface{}{"foo", "bar", "baz"}}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(adapter, "txt")
+			WaitForIndexing(clientresp3, "txt", 3)
 			adapter.HSet(ctx, "doc1", "txt", "foo baz")
 			adapter.HSet(ctx, "doc2", "txt", "hello world")
 			res1, err := adapter.FTSearchWithArgs(ctx, "txt", "foo bar", &FTSearchOptions{NoContent: true}).RawResult()
@@ -12969,7 +12968,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{OnHash: true}, text1, text2).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(client, "idx1")
+			WaitForIndexing(clientresp3, "idx1", 3)
 
 			resSynUpdate, err := adapter.FTSynUpdate(ctx, "idx1", "id1", []interface{}{"boy", "child", "offspring"}).Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -13005,7 +13004,7 @@ func testAdapterCache(resp3 bool) {
 			val, err := adapter.FTCreate(ctx, "txt", &FTCreateOptions{}, text1, text2, text3).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp3, "txt")
+			WaitForIndexing(clientresp3, "txt", 3)
 			res1, err := adapter.FTExplain(ctx, "txt", "@f3:f3_val @f2:f2_val @f1:f1_val").Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res1).ToNot(BeEmpty())
@@ -13056,12 +13055,12 @@ func (s *numberStruct) UnmarshalBinary(b []byte) error {
 	return json.Unmarshal(b, s)
 }
 
-func WaitForIndexing(c rueidis.Client, index string) {
+func WaitForIndexing(c rueidis.Client, index string, protocolVersion int) {
 	adapter := NewAdapter(c)
 	for {
 		res, err := adapter.FTInfo(context.Background(), index).Result()
 		Expect(err).NotTo(HaveOccurred())
-		if adapter.Options().Protocol == 2 {
+		if protocolVersion == 2 {
 			if res.Indexing == 0 {
 				return
 			}
@@ -13072,7 +13071,7 @@ func WaitForIndexing(c rueidis.Client, index string) {
 	}
 }
 
-func _assert_geosearch_result(result *redis.FTSearchResult, expectedDocIDs []string) {
+func _assert_geosearch_result(result *FTSearchResult, expectedDocIDs []string) {
 	ids := make([]string, len(result.Docs))
 	for i, doc := range result.Docs {
 		ids[i] = doc.ID
