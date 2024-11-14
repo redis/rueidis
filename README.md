@@ -216,7 +216,7 @@ This will also fall back `client.DoCache()` and `client.DoMultiCache()` to `clie
 
 ## Context Cancellation
 
-`client.Do()`, `client.DoMulti()`, `client.DoCache()`, and `client.DoMultiCache()` can return early if the context is canceled or the deadline is reached.
+`client.Do()`, `client.DoMulti()`, `client.DoCache()`, and `client.DoMultiCache()` can return early if the context deadline is reached.
 
 ```golang
 ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -225,6 +225,12 @@ client.Do(ctx, client.B().Set().Key("key").Value("val").Nx().Build()).Error() ==
 ```
 
 Please note that though operations can return early, the command is likely sent already.
+
+### Canceling a Context Before Its Deadline
+
+Manually canceling a context is only work in pipeline mode, as it requires an additional goroutine to monitor the context.
+Pipeline mode will be started automatically when there are concurrent requests on the same connection, but you can start it in advance with `ClientOption.AlwaysPipelining`
+to make sure manually cancellation is respected, especially for blocking requests which are sent with a dedicated connection where pipeline mode isn't started.
 
 ## Pub/Sub
 
