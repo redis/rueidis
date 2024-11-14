@@ -590,7 +590,7 @@ func (p *pipe) backgroundPing() {
 			go func() { ch <- p.Do(context.Background(), cmds.PingCmd).NonRedisError() }()
 			select {
 			case <-tm.C:
-				err = context.DeadlineExceeded
+				err = os.ErrDeadlineExceeded
 			case err = <-ch:
 				tm.Stop()
 			}
@@ -1150,6 +1150,7 @@ func (p *pipe) syncDo(dl time.Time, dlOk bool, cmd Completed) (resp RedisResult)
 			defaultDeadline := time.Now().Add(p.timeout)
 			if dl.After(defaultDeadline) {
 				dl = defaultDeadline
+				dlOk = false
 			}
 		}
 		p.conn.SetDeadline(dl)
@@ -1165,7 +1166,7 @@ func (p *pipe) syncDo(dl time.Time, dlOk bool, cmd Completed) (resp RedisResult)
 		msg, err = syncRead(p.r)
 	}
 	if err != nil {
-		if errors.Is(err, os.ErrDeadlineExceeded) {
+		if dlOk && errors.Is(err, os.ErrDeadlineExceeded) {
 			err = context.DeadlineExceeded
 		}
 		p.error.CompareAndSwap(nil, &errs{error: err})
@@ -1187,6 +1188,7 @@ func (p *pipe) syncDoMulti(dl time.Time, dlOk bool, resp []RedisResult, multi []
 			defaultDeadline := time.Now().Add(p.timeout)
 			if dl.After(defaultDeadline) {
 				dl = defaultDeadline
+				dlOk = false
 			}
 		}
 		p.conn.SetDeadline(dl)
@@ -1218,7 +1220,7 @@ process:
 	}
 	return
 abort:
-	if errors.Is(err, os.ErrDeadlineExceeded) {
+	if dlOk && errors.Is(err, os.ErrDeadlineExceeded) {
 		err = context.DeadlineExceeded
 	}
 	p.error.CompareAndSwap(nil, &errs{error: err})

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -3402,7 +3403,7 @@ func TestExitOnRingFullAndPingTimout(t *testing.T) {
 	// fill the ring
 	for i := 0; i < len(p.queue.(*ring).store); i++ {
 		go func() {
-			if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); err != context.DeadlineExceeded {
+			if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); !errors.Is(err, os.ErrDeadlineExceeded) {
 				t.Errorf("unexpected result, expected context.DeadlineExceeded, got %v", err)
 			}
 		}()
@@ -3412,7 +3413,7 @@ func TestExitOnRingFullAndPingTimout(t *testing.T) {
 		mock.Expect("GET", "a")
 	}
 
-	if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); err != context.DeadlineExceeded {
+	if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); !errors.Is(err, os.ErrDeadlineExceeded) {
 		t.Errorf("unexpected result, expected context.DeadlineExceeded, got %v", err)
 	}
 }
@@ -3944,7 +3945,7 @@ func TestSyncModeSwitchingWithDeadlineExceed_Do(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go func() {
-			if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+			if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, os.ErrDeadlineExceeded) {
 				t.Errorf("unexpected err %v", err)
 			}
 			wg.Done()
@@ -3970,7 +3971,7 @@ func TestSyncModeSwitchingWithDeadlineExceed_DoMulti(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go func() {
-			if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+			if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, os.ErrDeadlineExceeded) {
 				t.Errorf("unexpected err %v", err)
 			}
 			wg.Done()
@@ -3984,9 +3985,9 @@ func TestSyncModeSwitchingWithDeadlineExceed_DoMulti(t *testing.T) {
 	p.Close()
 }
 
-func TestOngoingDeadlineContextInSyncMode_Do(t *testing.T) {
+func TestOngoingDeadlineShortContextInSyncMode_Do(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
-	p, _, _, closeConn := setup(t, ClientOption{})
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 1 * time.Second})
 	defer closeConn()
 
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Second/2))
@@ -3998,12 +3999,26 @@ func TestOngoingDeadlineContextInSyncMode_Do(t *testing.T) {
 	p.Close()
 }
 
+func TestOngoingDeadlineLongContextInSyncMode_Do(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 1 * time.Second / 4})
+	defer closeConn()
+
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Second/2))
+	defer cancel()
+
+	if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, os.ErrDeadlineExceeded) {
+		t.Fatalf("unexpected err %v", err)
+	}
+	p.Close()
+}
+
 func TestWriteDeadlineInSyncMode_Do(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 1 * time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	defer closeConn()
 
-	if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+	if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, os.ErrDeadlineExceeded) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	p.Close()
@@ -4018,7 +4033,7 @@ func TestWriteDeadlineIsShorterThanContextDeadlineInSyncMode_Do(t *testing.T) {
 	defer cancel()
 
 	startTime := time.Now()
-	if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+	if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, os.ErrDeadlineExceeded) {
 		t.Fatalf("unexpected err %v", err)
 	}
 
@@ -4031,7 +4046,7 @@ func TestWriteDeadlineIsShorterThanContextDeadlineInSyncMode_Do(t *testing.T) {
 
 func TestWriteDeadlineIsNoShorterThanContextDeadlineInSyncMode_DoBlocked(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
-	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 5 * time.Millisecond, Dialer: net.Dialer{KeepAlive: time.Second}})
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 5 * time.Second, Dialer: net.Dialer{KeepAlive: time.Second}})
 	defer closeConn()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
@@ -4049,9 +4064,9 @@ func TestWriteDeadlineIsNoShorterThanContextDeadlineInSyncMode_DoBlocked(t *test
 	p.Close()
 }
 
-func TestOngoingDeadlineContextInSyncMode_DoMulti(t *testing.T) {
+func TestOngoingDeadlineShortContextInSyncMode_DoMulti(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
-	p, _, _, closeConn := setup(t, ClientOption{})
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second})
 	defer closeConn()
 
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Second/2))
@@ -4063,12 +4078,26 @@ func TestOngoingDeadlineContextInSyncMode_DoMulti(t *testing.T) {
 	p.Close()
 }
 
+func TestOngoingDeadlineLongContextInSyncMode_DoMulti(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 4})
+	defer closeConn()
+
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Second/2))
+	defer cancel()
+
+	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, os.ErrDeadlineExceeded) {
+		t.Fatalf("unexpected err %v", err)
+	}
+	p.Close()
+}
+
 func TestWriteDeadlineInSyncMode_DoMulti(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	defer closeConn()
 
-	if err := p.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+	if err := p.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, os.ErrDeadlineExceeded) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	p.Close()
@@ -4080,6 +4109,26 @@ func TestWriteDeadlineIsShorterThanContextDeadlineInSyncMode_DoMulti(t *testing.
 	defer closeConn()
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	startTime := time.Now()
+	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, os.ErrDeadlineExceeded) {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	if time.Since(startTime) >= time.Second {
+		t.Fatalf("unexpected time %v", time.Since(startTime))
+	}
+
+	p.Close()
+}
+
+func TestWriteDeadlineIsNoShorterThanContextDeadlineInSyncMode_DoMulti(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second, Dialer: net.Dialer{KeepAlive: time.Second}})
+	defer closeConn()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second/2)
 	defer cancel()
 
 	startTime := time.Now()
@@ -4170,7 +4219,7 @@ func TestOngoingWriteTimeoutInPipelineMode_Do(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		go func() {
 			_, err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).ToString()
-			if errors.Is(err, context.DeadlineExceeded) {
+			if errors.Is(err, os.ErrDeadlineExceeded) {
 				atomic.AddInt32(&timeout, 1)
 			} else {
 				t.Errorf("unexpected err %v", err)
@@ -4244,7 +4293,7 @@ func TestOngoingWriteTimeoutInPipelineMode_DoMulti(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		go func() {
 			_, err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].ToString()
-			if errors.Is(err, context.DeadlineExceeded) {
+			if errors.Is(err, os.ErrDeadlineExceeded) {
 				atomic.AddInt32(&timeout, 1)
 			} else {
 				t.Errorf("unexpected err %v", err)
