@@ -3,7 +3,6 @@ package rueidis
 import (
 	"bufio"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -590,7 +589,7 @@ func (p *pipe) backgroundPing() {
 			go func() { ch <- p.Do(context.Background(), cmds.PingCmd).NonRedisError() }()
 			select {
 			case <-tm.C:
-				err = context.DeadlineExceeded
+				err = os.ErrDeadlineExceeded
 			case err = <-ch:
 				tm.Stop()
 			}
@@ -1165,9 +1164,6 @@ func (p *pipe) syncDo(dl time.Time, dlOk bool, cmd Completed) (resp RedisResult)
 		msg, err = syncRead(p.r)
 	}
 	if err != nil {
-		if errors.Is(err, os.ErrDeadlineExceeded) {
-			err = context.DeadlineExceeded
-		}
 		p.error.CompareAndSwap(nil, &errs{error: err})
 		p.conn.Close()
 		p.background() // start the background worker to clean up goroutines
@@ -1218,9 +1214,6 @@ process:
 	}
 	return
 abort:
-	if errors.Is(err, os.ErrDeadlineExceeded) {
-		err = context.DeadlineExceeded
-	}
 	p.error.CompareAndSwap(nil, &errs{error: err})
 	p.conn.Close()
 	p.background() // start the background worker to clean up goroutines
