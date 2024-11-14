@@ -420,7 +420,7 @@ func testMultiSETGETHelpers(t *testing.T, client Client, csc bool) {
 	t.Logf("testing Multi SET with %d keys\n", keys)
 	for _, err := range MSet(client, ctx, kvs) {
 		if err != nil {
-			t.Fatalf("unexpecetd err %v\n", err)
+			t.Fatalf("unexpected err %v\n", err)
 		}
 	}
 
@@ -433,29 +433,29 @@ func testMultiSETGETHelpers(t *testing.T, client Client, csc bool) {
 		for _, key := range cmdKeys {
 			ret, ok := resp[key]
 			if !ok {
-				t.Fatalf("unexpecetd result %v not found\n", key)
+				t.Fatalf("unexpected result %v not found\n", key)
 			}
 			if exp, ok := kvs[key]; ok {
 				if exp != ret.string {
-					t.Fatalf("unexpecetd result %v wrong value %v\n", key, exp)
+					t.Fatalf("unexpected result %v wrong value %v\n", key, exp)
 				}
 			} else {
 				if !ret.IsNil() {
-					t.Fatalf("unexpecetd result %v wrong value %v\n", key, "nil")
+					t.Fatalf("unexpected result %v wrong value %v\n", key, "nil")
 				}
 			}
 		}
 	}
 	resp, err := MGet(client, ctx, cmdKeys)
 	if err != nil {
-		t.Fatalf("unexpecetd err %v\n", err)
+		t.Fatalf("unexpected err %v\n", err)
 	}
 	validate(resp)
 
 	t.Logf("testing client side caching with %d keys\n", keys*2)
 	resp, err = MGetCache(client, ctx, time.Minute, cmdKeys)
 	if err != nil {
-		t.Fatalf("unexpecetd err %v\n", err)
+		t.Fatalf("unexpected err %v\n", err)
 	}
 	validate(resp)
 	for _, ret := range resp {
@@ -465,7 +465,7 @@ func testMultiSETGETHelpers(t *testing.T, client Client, csc bool) {
 	}
 	resp, err = MGetCache(client, ctx, time.Minute, cmdKeys)
 	if err != nil {
-		t.Fatalf("unexpecetd err %v\n", err)
+		t.Fatalf("unexpected err %v\n", err)
 	}
 	validate(resp)
 	for _, ret := range resp {
@@ -477,7 +477,7 @@ func testMultiSETGETHelpers(t *testing.T, client Client, csc bool) {
 	t.Logf("testing DEL with %d keys\n", keys*2)
 	for _, err := range MDel(client, ctx, cmdKeys) {
 		if err != nil {
-			t.Fatalf("unexpecetd err %v\n", err)
+			t.Fatalf("unexpected err %v\n", err)
 		}
 	}
 
@@ -486,7 +486,7 @@ func testMultiSETGETHelpers(t *testing.T, client Client, csc bool) {
 	t.Logf("testing client side caching after delete\n")
 	resp, err = MGetCache(client, ctx, time.Minute, cmdKeys)
 	if err != nil {
-		t.Fatalf("unexpecetd err %v\n", err)
+		t.Fatalf("unexpected err %v\n", err)
 	}
 	for _, ret := range resp {
 		if !ret.IsNil() {

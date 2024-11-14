@@ -3215,16 +3215,16 @@ func TestPubSubHooks(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		if !s1 {
-			t.Fatalf("unexpecetd s1")
+			t.Fatalf("unexpected s1")
 		}
 		if !s2 {
-			t.Fatalf("unexpecetd s2")
+			t.Fatalf("unexpected s2")
 		}
 		if !u1 {
-			t.Fatalf("unexpecetd u1")
+			t.Fatalf("unexpected u1")
 		}
 		if !u2 {
-			t.Fatalf("unexpecetd u2")
+			t.Fatalf("unexpected u2")
 		}
 	})
 
@@ -3302,10 +3302,10 @@ func TestPubSubHooks(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		if !m1 {
-			t.Fatalf("unexpecetd m1")
+			t.Fatalf("unexpected m1")
 		}
 		if !m2 {
-			t.Fatalf("unexpecetd m2")
+			t.Fatalf("unexpected m2")
 		}
 	})
 }
@@ -4247,7 +4247,7 @@ func TestOngoingWriteTimeoutInPipelineMode_DoMulti(t *testing.T) {
 			if errors.Is(err, context.DeadlineExceeded) {
 				atomic.AddInt32(&timeout, 1)
 			} else {
-				t.Errorf("unexpecetd err %v", err)
+				t.Errorf("unexpected err %v", err)
 			}
 		}()
 	}

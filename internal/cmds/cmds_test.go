@@ -151,11 +151,11 @@ func TestCompleted_CommandSlice(t *testing.T) {
 	cs := []string{"a", "b", "c"}
 	completed := NewCompleted(cs)
 	if !reflect.DeepEqual(completed.cs.s, cs) || !reflect.DeepEqual(completed.Commands(), cs) {
-		t.Fatalf("unexpecetd diffs")
+		t.Fatalf("unexpected diffs")
 	}
 	cacheable := Cacheable(completed)
 	if !reflect.DeepEqual(cacheable.cs.s, cs) || !reflect.DeepEqual(cacheable.Commands(), cs) {
-		t.Fatalf("unexpecetd diffs")
+		t.Fatalf("unexpected diffs")
 	}
 }
 
