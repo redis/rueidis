@@ -3,6 +3,7 @@ package rueidis
 import (
 	"bytes"
 	"context"
+	"errors"
 	"math/rand"
 	"net"
 	"os"
@@ -167,7 +168,7 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
 			defer cancel()
 			val, err := client.Do(ctx, client.B().Get().Key(key).Build()).ToString()
-			if err != context.DeadlineExceeded {
+			if !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, os.ErrDeadlineExceeded) {
 				if v, ok := kvs[key]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
 					t.Errorf("unexpected get response %v %v %v", val, err, ok)
 				}
@@ -318,7 +319,7 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 			defer cancel()
 			for j, resp := range client.DoMulti(ctx, commands...) {
 				val, err := resp.ToString()
-				if err != context.DeadlineExceeded {
+				if !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, os.ErrDeadlineExceeded) {
 					if v, ok := kvs[cmdkeys[j]]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
 						t.Fatalf("unexpected get response %v %v %v", val, err, ok)
 					}
