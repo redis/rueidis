@@ -133,6 +133,15 @@ type ClientOption struct {
 	// WriteBufferEachConn is the size of the bufio.NewWriterSize for each connection, default to DefaultWriteBuffer (0.5 MiB).
 	WriteBufferEachConn int
 
+	// IdleConnTTL is the duration for which a connection will be closed if it is idle.
+	// If IdleConnTTL is 0, then idle connections will not be closed.
+	IdleConnTTL time.Duration
+	// BlockingPoolMinSize is the minimum size of the connection pool
+	// shared by blocking commands (ex BLPOP, XREAD with BLOCK).
+	// Only relevant if IdleConnTTL is not 0. This parameter limits
+	// the number of idle connections that can be removed by TTL.
+	BlockingPoolMinSize int
+
 	// BlockingPoolSize is the size of the connection pool shared by blocking commands (ex BLPOP, XREAD with BLOCK).
 	// The default is DefaultPoolSize.
 	BlockingPoolSize int

@@ -99,8 +99,14 @@ func newMux(dst string, option *ClientOption, init, dead wire, wireFn wireFn, wi
 	for i := 0; i < len(m.wire); i++ {
 		m.wire[i].Store(init)
 	}
-	m.dpool = newPool(option.BlockingPoolSize, dead, wireFn)
-	m.spool = newPool(option.BlockingPoolSize, dead, wireNoBgFn)
+
+	var idleConnTTL *time.Duration
+	if option.IdleConnTTL != 0 {
+		idleConnTTL = &option.IdleConnTTL
+	}
+
+	m.dpool = newPool(option.BlockingPoolSize, dead, idleConnTTL, option.BlockingPoolMinSize, wireFn)
+	m.spool = newPool(option.BlockingPoolSize, dead, idleConnTTL, option.BlockingPoolMinSize, wireNoBgFn)
 	return m
 }
 
