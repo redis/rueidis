@@ -5010,46 +5010,74 @@ func (c *Compat) FTConfigSet(ctx context.Context, option string, value interface
 //	SkipInitialScan bool
 func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOptions, schema ...*FieldSchema) *StatusCmd {
 	_cmd := cmds.Incomplete(c.client.B().FtCreate().Index(index))
-	if options.OnHash {
-		_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).OnHash())
+	if options != nil {
+		// [ON HASH | JSON]
+		if options.OnHash {
+			_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).OnHash())
+		}
+		if options.OnJSON {
+			_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).OnJson())
+		}
+		// [PREFIX count prefix [prefix ...]]
+		_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Prefix(int64(len(options.Prefix))).Prefix(argsToSlice(options.Prefix)...))
+		// [FILTER {filter}]
+		if options.Filter != "" {
+			_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Filter(options.Filter))
+		}
+		// [LANGUAGE default_lang]
+		if options.DefaultLanguage != "" {
+			_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Language(options.DefaultLanguage))
+		}
+		// [LANGUAGE_FIELD lang_attribute]
+		if options.LanguageField != "" {
+			_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).LanguageField(options.LanguageField))
+		}
+		// [SCORE default_score]
+		if options.Score != 0 {
+			_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Score(options.Score))
+		}
+		// [SCORE_FIELD score_attribute]
+		if options.ScoreField != "" {
+			_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).ScoreField(options.ScoreField))
+		}
+		// [PAYLOAD_FIELD payload_attribute]
+		_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).PayloadField(options.PayloadField))
+		// [MAXTEXTFIELDS]
+		// FIXME: in go-reids, FTCreateOptions.MaxTextFields should be bool, not int
+		if options.MaxTextFields > 0 {
+			_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Maxtextfields())
+		}
+		// [TEMPORARY seconds]
+		// FIXME: reudis: Temporary should not be float64
+		// TRY  FT.CREATE myindex2 ON JSON PREFIX 1 doc: TEMPORARY 1.1 SCHEMA $.name AS name TEXT
+		if options.Temporary > 0 {
+			_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Temporary(float64(options.Temporary)))
+		}
+		// [NOOFFSETS]
+		if options.NoOffsets {
+			_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Nooffsets())
+		}
+		// [NOHL]
+		if options.NoHL {
+			_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Nohl())
+		}
+		// [NOFIELDS]
+		if options.NoFields {
+			_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Nofields())
+		}
+		// [NOFREQS]
+		if options.NoFreqs {
+			_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Nofreqs())
+		}
+		// [STOPWORDS count [stopword ...]]
+		if len(options.StopWords) > 0 {
+			_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Stopwords(int64(len(options.StopWords))).Stopword(argsToSlice(options.StopWords)...))
+		}
+		// [SKIPINITIALSCAN]
+		if options.SkipInitialScan {
+			_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Skipinitialscan())
+		}
 	}
-	if options.OnJSON {
-		_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).OnJson())
-	}
-	_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Prefix(int64(len(options.Prefix))).Prefix(argsToSlice(options.Prefix)...))
-	_cmd = cmds.Incomplete(
-		cmds.FtCreateIndex(_cmd).
-			Filter(options.Filter).
-			Language(options.DefaultLanguage).
-			LanguageField(options.LanguageField).
-			Score(options.Score).
-			ScoreField(options.ScoreField).
-			PayloadField(options.PayloadField))
-	// in go-reids, FTCreateOptions.MaxTextFields should be bool, not int
-	if options.MaxTextFields > 0 {
-		_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Maxtextfields())
-	}
-	if options.NoOffsets {
-		_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Nooffsets())
-	}
-	_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Temporary(float64(options.Temporary)))
-	if options.NoHL {
-		_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Nohl())
-	}
-	if options.NoFields {
-		_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Nofields())
-	}
-	if options.NoFreqs {
-		_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Nofreqs())
-	}
-	_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Stopwords(int64(len(options.StopWords))).Stopword(argsToSlice(options.StopWords)...))
-	if options.SkipInitialScan {
-		_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Skipinitialscan())
-	}
-	// schema
-	// if (len(schema) != 1) {
-	// 	panic("can only have one FieldSchema")
-	// }
 	_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Schema())
 	for _, sc := range schema {
 		_cmd = cmds.Incomplete(cmds.FtCreateSchema(_cmd).FieldName(sc.FieldName).As(sc.As))
@@ -5081,6 +5109,7 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 	}
 	// FIXME: handle index properly
 	cmd := cmds.FtCreateSkipinitialscan(_cmd).Schema().FieldName("xx").Geo().Build()
+	fmt.Print(cmd.Commands())
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 

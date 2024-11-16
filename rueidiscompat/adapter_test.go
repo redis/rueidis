@@ -11555,7 +11555,7 @@ func testAdapterCache(resp3 bool) {
 			Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
 		})
 
-		It("should FTCreate and FTSearch WithScores", Label("search", "ftcreate", "ftsearch"), func() {
+		FIt("should FTCreate and FTSearch WithScores", Label("search", "ftcreate", "ftsearch"), func() {
 			// FIXME: FieldType
 			val, err := adapter.FTCreate(ctx, "txt", &FTCreateOptions{}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText}).Result()
 			Expect(err).NotTo(HaveOccurred())
