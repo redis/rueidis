@@ -2,7 +2,6 @@ package rueidis
 
 import (
 	"errors"
-	"fmt"
 	"runtime"
 	"sync/atomic"
 	"testing"
@@ -234,8 +233,8 @@ func TestPoolWithIdleTTL(t *testing.T) {
 	}
 
 	t.Run("Removing idle conns. Min size is not 0", func(t *testing.T) {
-		minPoolSize := 3
-		p := setup(0, time.Millisecond*50, minPoolSize)
+		minSize := 3
+		p := setup(0, time.Millisecond*50, minSize)
 
 		conns := make([]wire, 10)
 		for i := range conns {
@@ -247,17 +246,23 @@ func TestPoolWithIdleTTL(t *testing.T) {
 			p.Store(w)
 		}
 
-		time.Sleep(time.Millisecond * 100)
-		p.Store(p.Acquire())
+		time.Sleep(time.Millisecond * 60)
+		p.cond.Broadcast()
+		time.Sleep(time.Millisecond * 40)
 
-		if p.size != minPoolSize {
-			fmt.Println(p.size)
-			t.Fatalf("size must be equal to minSize")
+		p.cond.L.Lock()
+		if p.size != minSize {
+			defer p.cond.L.Unlock()
+			t.Fatalf("size must be equal to %d, actual: %d", minSize, p.size)
 		}
 
-		if len(p.list) != minPoolSize {
-			t.Fatalf("pool should have minSize wires")
+		if len(p.list) != minSize {
+			defer p.cond.L.Unlock()
+			t.Fatalf("pool len must equal to %d, actual: %d", minSize, len(p.list))
 		}
+		p.cond.L.Unlock()
+
+		p.Close()
 	})
 
 	t.Run("Removing idle conns. Min size is 0", func(t *testing.T) {
@@ -273,16 +278,22 @@ func TestPoolWithIdleTTL(t *testing.T) {
 			p.Store(w)
 		}
 
-		time.Sleep(time.Millisecond * 100)
-		p.Store(p.Acquire())
+		time.Sleep(time.Millisecond * 60)
+		p.cond.Broadcast()
+		time.Sleep(time.Millisecond * 40)
 
-		if p.size != 1 {
-			fmt.Println(p.size)
-			t.Fatalf("size must be equal to 1")
+		p.cond.L.Lock()
+		if p.size != 0 {
+			defer p.cond.L.Unlock()
+			t.Fatalf("size must be equal to 0, actual: %d", p.size)
 		}
 
-		if len(p.list) != 1 {
-			t.Fatalf("pool should have one wire")
+		if len(p.list) != 0 {
+			defer p.cond.L.Unlock()
+			t.Fatalf("pool len must equal to 0, actual: %d", len(p.list))
 		}
+		p.cond.L.Unlock()
+
+		p.Close()
 	})
 }

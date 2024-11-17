@@ -10,30 +10,38 @@ func newPool(cap int, dead wire, idleConnTTL *time.Duration, minSize int, makeFn
 		cap = DefaultPoolSize
 	}
 
-	return &pool{
-		size:        0,
-		minSize:     minSize,
-		cap:         cap,
-		dead:        dead,
-		make:        makeFn,
-		list:        make([]wire, 0, 4),
-		cond:        sync.NewCond(&sync.Mutex{}),
-		idleConnTTL: idleConnTTL,
-		timers:      make(map[wire]*time.Timer),
+	p := &pool{
+		size:         0,
+		minSize:      minSize,
+		cap:          cap,
+		dead:         dead,
+		make:         makeFn,
+		list:         make([]wire, 0, 4),
+		cond:         sync.NewCond(&sync.Mutex{}),
+		idleConnTTL:  idleConnTTL,
+		lastUsage:    make(map[wire]time.Time),
+		stopChan:     make(chan struct{}, 1),
+		stopChanOnce: &sync.Once{},
 	}
+
+	go p.removeIdleConns()
+
+	return p
 }
 
 type pool struct {
-	dead        wire
-	cond        *sync.Cond
-	make        func() wire
-	list        []wire
-	size        int
-	minSize     int
-	cap         int
-	down        bool
-	idleConnTTL *time.Duration
-	timers      map[wire]*time.Timer
+	dead         wire
+	cond         *sync.Cond
+	make         func() wire
+	list         []wire
+	size         int
+	minSize      int
+	cap          int
+	down         bool
+	idleConnTTL  *time.Duration
+	stopChan     chan struct{}
+	stopChanOnce *sync.Once
+	lastUsage    map[wire]time.Time
 }
 
 func (p *pool) Acquire() (v wire) {
@@ -50,7 +58,7 @@ func (p *pool) Acquire() (v wire) {
 		i := len(p.list) - 1
 		v = p.list[i]
 		p.list = p.list[:i]
-		delete(p.timers, v)
+		delete(p.lastUsage, v)
 	}
 	p.cond.L.Unlock()
 	return v
@@ -62,8 +70,7 @@ func (p *pool) Store(v wire) {
 		p.list = append(p.list, v)
 
 		if p.idleConnTTL != nil {
-			p.removeIdleConns()
-			p.timers[v] = time.NewTimer(*p.idleConnTTL)
+			p.lastUsage[v] = time.Now()
 		}
 	} else {
 		p.size--
@@ -75,6 +82,9 @@ func (p *pool) Store(v wire) {
 
 func (p *pool) Close() {
 	p.cond.L.Lock()
+	p.stopChanOnce.Do(func() {
+		p.stopChan <- struct{}{}
+	})
 	p.down = true
 	for _, w := range p.list {
 		w.Close()
@@ -88,22 +98,40 @@ func (p *pool) removeIdleConns() {
 		return
 	}
 
-	for p.size > p.minSize {
-		w := p.list[0]
-		timer, ok := p.timers[w]
-		if !ok {
-			return
-		}
+	ttl := *p.idleConnTTL
+	ticker := time.NewTicker(ttl)
 
+	for {
 		select {
-		case <-timer.C:
-			w.Close()
-			p.size--
-			p.list = p.list[1:]
-			delete(p.timers, w)
-
-		default:
+		case <-p.stopChan:
+			ticker.Stop()
 			return
+
+		case <-ticker.C:
+			p.cond.L.Lock()
+			if p.down {
+				p.cond.L.Unlock()
+				return
+			}
+
+			for p.size > p.minSize && len(p.list) > 0 {
+				w := p.list[0]
+				lastUsageTime, ok := p.lastUsage[w]
+				if !ok {
+					break
+				}
+
+				if time.Since(lastUsageTime) <= ttl {
+					break
+				}
+
+				w.Close()
+				p.size--
+				p.list = p.list[1:]
+				delete(p.lastUsage, w)
+			}
+
+			p.cond.L.Unlock()
 		}
 	}
 }
