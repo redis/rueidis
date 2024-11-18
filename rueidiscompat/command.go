@@ -3857,6 +3857,15 @@ func (cmd *FTSearchCmd) from(res rueidis.RedisResult) {
 		cmd.SetErr(err)
 		return
 	}
+	totalResultsMsg, ok := m["total_results"]
+	if !ok {
+		cmd.SetErr(fmt.Errorf(`result map should contain key "total_results"`))
+	}
+	totalResults, err := totalResultsMsg.AsInt64()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
 	resultsMsg, ok := m["results"]
 	if !ok {
 		cmd.SetErr(fmt.Errorf(`result map should contain key "results"`))
@@ -3866,7 +3875,7 @@ func (cmd *FTSearchCmd) from(res rueidis.RedisResult) {
 		cmd.SetErr(err)
 		return
 	}
-	ftSearchResult := FTSearchResult{Total: len(resultsArr), Docs: make([]Document, 0, len(resultsArr))}
+	ftSearchResult := FTSearchResult{Total: int(totalResults), Docs: make([]Document, 0, len(resultsArr))}
 	for _, result := range resultsArr {
 		// result: arr:  id, doc2, score, 3, "extra_attributes": [foo, bar]
 		resultMap, err := result.ToMap()

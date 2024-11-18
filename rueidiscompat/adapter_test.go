@@ -11555,7 +11555,7 @@ func testAdapterCache(resp3 bool) {
 			Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
 		})
 
-		FIt("should FTCreate and FTSearch WithScores", Label("search", "ftcreate", "ftsearch"), func() {
+		It("should FTCreate and FTSearch WithScores", Label("search", "ftcreate", "ftsearch"), func() {
 			// FIXME: FieldType
 			val, err := adapter.FTCreate(ctx, "txt", &FTCreateOptions{}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText}).Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -11940,7 +11940,7 @@ func testAdapterCache(resp3 bool) {
 
 		})
 
-		It("should FTAggregate GroupBy ", Label("search", "ftaggregate"), func() {
+		FIt("should FTAggregate GroupBy ", Label("search", "ftaggregate"), func() {
 			text1 := &FieldSchema{FieldName: "title", FieldType: SearchFieldTypeText}
 			text2 := &FieldSchema{FieldName: "body", FieldType: SearchFieldTypeText}
 			text3 := &FieldSchema{FieldName: "parent", FieldType: SearchFieldTypeText}

@@ -5081,34 +5081,37 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 		}
 	}
 	_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Schema())
+	// 	SCHEMA field_name [AS alias] TEXT | TAG | NUMERIC | GEO | VECTOR | GEOSHAPE [ SORTABLE [UNF]]
+	//   [NOINDEX] [ field_name [AS alias] TEXT | TAG | NUMERIC | GEO | VECTOR | GEOSHAPE [ SORTABLE [UNF]] [NOINDEX] ...]
+
 	for _, sc := range schema {
 		_cmd = cmds.Incomplete(cmds.FtCreateSchema(_cmd).FieldName(sc.FieldName))
 		if sc.As != "" {
 			_cmd = cmds.Incomplete(cmds.FtCreateFieldFieldName(_cmd).As(sc.As))
 		}
 		switch sc.FieldType {
-		case SearchFieldTypeGeo:
-			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Geo())
-		case SearchFieldTypeGeoShape:
-			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Geoshape())
 		case SearchFieldTypeNumeric:
 			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Numeric())
 		case SearchFieldTypeTag:
 			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Tag())
 		case SearchFieldTypeText:
 			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Text())
+		case SearchFieldTypeGeo:
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Geo())
 		case SearchFieldTypeVector:
 			// FIXME: implement this
 			break
 			// if (sc.VectorArgs.FlatOptions == sc.VectorArgs.HNSWOptions) {
-			// 	panic("Vector index algorithm should be either FLAT or HNSW")
-			// }
-			// if (sc.VectorArgs.FlatOptions!= nil) {
-			// 	// (algo string, nargs int64, args ...string)
-			// 	_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Vector("FLAT",sc.VectorArgs.FlatOptions.))
-			// } else {
+		// 	panic("Vector index algorithm should be either FLAT or HNSW")
+		// }
+		// if (sc.VectorArgs.FlatOptions!= nil) {
+		// 	// (algo string, nargs int64, args ...string)
+		// 	_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Vector("FLAT",sc.VectorArgs.FlatOptions.))
+		// } else {
 
-			// }
+		// }
+		case SearchFieldTypeGeoShape:
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Geoshape())
 		default:
 			panic(fmt.Sprintf("unexpected SearchFieldType: %s", sc.FieldType.String()))
 		}
@@ -5121,7 +5124,30 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 		if sc.NoIndex {
 			_cmd = cmds.Incomplete(cmds.FtCreateFieldFieldTypeText(_cmd).Noindex())
 		}
+		// FIXME: redis doc: PHONETIC not in EBNF definition
+		if sc.PhoneticMatcher != "" {
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldFieldTypeText(_cmd).Phonetic(sc.PhoneticMatcher))
+		}
+		if sc.Weight > 0 {
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldFieldTypeText(_cmd).Weight(sc.Weight))
+		}
+		if sc.Separator != "" {
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldFieldTypeText(_cmd).Separator(sc.Separator))
+		}
+		if sc.CaseSensitive {
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldFieldTypeText(_cmd).Casesensitive())
+		}
+		if sc.WithSuffixtrie {
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldFieldTypeText(_cmd).Withsuffixtrie())
+		}
+		if sc.IndexEmpty {
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldFieldTypeText(_cmd).Indexempty())
+		}
+		if sc.IndexMissing {
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldFieldTypeText(_cmd).Casesensitive())
+		}
 	}
+
 	// FIXME: handle index properly
 	cmd := cmds.FtCreateFieldFieldTypeText(_cmd).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
