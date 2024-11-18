@@ -3846,6 +3846,8 @@ type FTSearchCmd struct {
 
 // Ref: https://redis.io/docs/latest/commands/ft.search/
 func (cmd *FTSearchCmd) from(res rueidis.RedisResult) {
+	fmt.Printf("rueidisresult %#v\n", res.String())
+
 	if err := res.Error(); err != nil {
 		cmd.SetErr(err)
 		return
@@ -3864,8 +3866,7 @@ func (cmd *FTSearchCmd) from(res rueidis.RedisResult) {
 		cmd.SetErr(err)
 		return
 	}
-	fmt.Println("Hello")
-	ftSearchResult := FTSearchResult{Total: len(resultsArr)}
+	ftSearchResult := FTSearchResult{Total: len(resultsArr), Docs: make([]Document, 0, len(resultsArr))}
 	for _, result := range resultsArr {
 		// result: arr:  id, doc2, score, 3, "extra_attributes": [foo, bar]
 		resultMap, err := result.ToMap()
@@ -3918,35 +3919,17 @@ func (cmd *FTSearchCmd) from(res rueidis.RedisResult) {
 					}
 					doc.SortKey = &sortKey
 				}
+			}
 		}
-		// FIXME: withpayload
+
 		ftSearchResult.Docs = append(ftSearchResult.Docs, doc)
-		fmt.Println("got doc", doc)
 	}
+
 	cmd.SetVal(ftSearchResult)
 
 	_r, _ := json.MarshalIndent(ftSearchResult, "", "\t")
 	fmt.Print(string(_r))
 
-	fmt.Printf("rueidisresult %#v\n", res.String())
-
-	// attributes: string
-	// total_results: integer
-	// format: string
-	// results
-	// warning
-
-	// <numOfResult>
-	// if len(m) == 0 {
-	// 	cmd.SetErr(fmt.Errorf("got %d, wanted 4", len(m)))
-	// }
-	// result := FTSearchResult{}
-	// result =
-	// val := make([]FTSearchResult, 0, len(arr))
-
-	if cmd.options.DialectVersion == 3 {
-
-	}
 }
 
 func newFTSearchCmd(res rueidis.RedisResult, options *FTSearchOptions) *FTSearchCmd {

@@ -5265,7 +5265,7 @@ func (c *Compat) FTSearchWithArgs(ctx context.Context, index string, query strin
 		case "m":
 			_cmd = cmds.Incomplete(cmds.FtSearchGeoFilterRadius(_cmd).M())
 		case "km":
-			_cmd = cmds.Incomplete(cmds.FtSearchGeoFilterRadius(_cmd).M())
+			_cmd = cmds.Incomplete(cmds.FtSearchGeoFilterRadius(_cmd).Km())
 		case "mi":
 			_cmd = cmds.Incomplete(cmds.FtSearchGeoFilterRadius(_cmd).Mi())
 		case "ft":
