@@ -3844,12 +3844,113 @@ type FTSearchCmd struct {
 	options *FTSearchOptions
 }
 
+// Ref: https://redis.io/docs/latest/commands/ft.search/
 func (cmd *FTSearchCmd) from(res rueidis.RedisResult) {
-	// FIXME: impl
+	if err := res.Error(); err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	m, err := res.ToMap()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	resultsMsg, ok := m["results"]
+	if !ok {
+		cmd.SetErr(fmt.Errorf(`result map should contain key "results"`))
+	}
+	resultsArr, err := resultsMsg.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	fmt.Println("Hello")
+	ftSearchResult := FTSearchResult{Total: len(resultsArr)}
+	for _, result := range resultsArr {
+		// result: arr:  id, doc2, score, 3, "extra_attributes": [foo, bar]
+		resultMap, err := result.ToMap()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		fmt.Println("resultMap", result.String())
+		doc := Document{}
+		for k, v := range resultMap {
+			switch k {
+			case "id":
+				idStr, err := v.ToString()
+				if err != nil {
+					cmd.SetErr(err)
+					return
+				}
+				doc.ID = idStr
+			case "extra_attributes":
+				// doc.ID = resultArr[i+1].String()
+				strMap, err := v.AsStrMap()
+				if err != nil {
+					cmd.SetErr(err)
+					return
+				}
+				doc.Fields = strMap
+				// docs[d].Doc, _ = record.values[j+1].AsStrMap()
+			case "score":
+				score, err := v.AsFloat64()
+				if err != nil {
+					cmd.SetErr(err)
+					return
+				}
+				doc.Score = &score
+			case "payload":
+				if !v.IsNil() {
+					payload, err := v.ToString()
+					if err != nil {
+						cmd.SetErr(err)
+						return
+					}
+					doc.Payload = &payload
+				}
+			case "sortkey":
+				if !v.IsNil() {
+					sortKey, err := v.ToString()
+					if err != nil {
+						cmd.SetErr(err)
+						return
+					}
+					doc.SortKey = &sortKey
+				}
+		}
+		// FIXME: withpayload
+		ftSearchResult.Docs = append(ftSearchResult.Docs, doc)
+		fmt.Println("got doc", doc)
+	}
+	cmd.SetVal(ftSearchResult)
+
+	_r, _ := json.MarshalIndent(ftSearchResult, "", "\t")
+	fmt.Print(string(_r))
+
+	fmt.Printf("rueidisresult %#v\n", res.String())
+
+	// attributes: string
+	// total_results: integer
+	// format: string
+	// results
+	// warning
+
+	// <numOfResult>
+	// if len(m) == 0 {
+	// 	cmd.SetErr(fmt.Errorf("got %d, wanted 4", len(m)))
+	// }
+	// result := FTSearchResult{}
+	// result =
+	// val := make([]FTSearchResult, 0, len(arr))
+
+	if cmd.options.DialectVersion == 3 {
+
+	}
 }
 
-func newFTSearchCmd(res rueidis.RedisResult) *FTSearchCmd {
-	cmd := &FTSearchCmd{}
+func newFTSearchCmd(res rueidis.RedisResult, options *FTSearchOptions) *FTSearchCmd {
+	cmd := &FTSearchCmd{options: options}
 	cmd.from(res)
 	return cmd
 }

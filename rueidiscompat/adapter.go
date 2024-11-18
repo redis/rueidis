@@ -5041,7 +5041,9 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 			_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).ScoreField(options.ScoreField))
 		}
 		// [PAYLOAD_FIELD payload_attribute]
-		_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).PayloadField(options.PayloadField))
+		if options.PayloadField != "" {
+			_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).PayloadField(options.PayloadField))
+		}
 		// [MAXTEXTFIELDS]
 		// FIXME: in go-reids, FTCreateOptions.MaxTextFields should be bool, not int
 		if options.MaxTextFields > 0 {
@@ -5080,7 +5082,10 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 	}
 	_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Schema())
 	for _, sc := range schema {
-		_cmd = cmds.Incomplete(cmds.FtCreateSchema(_cmd).FieldName(sc.FieldName).As(sc.As))
+		_cmd = cmds.Incomplete(cmds.FtCreateSchema(_cmd).FieldName(sc.FieldName))
+		if sc.As != "" {
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldFieldName(_cmd).As(sc.As))
+		}
 		switch sc.FieldType {
 		case SearchFieldTypeGeo:
 			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Geo())
@@ -5089,8 +5094,9 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 		case SearchFieldTypeNumeric:
 			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Numeric())
 		case SearchFieldTypeTag:
-		case SearchFieldTypeText:
 			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Tag())
+		case SearchFieldTypeText:
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Text())
 		case SearchFieldTypeVector:
 			// FIXME: implement this
 			break
@@ -5106,10 +5112,18 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 		default:
 			panic(fmt.Sprintf("unexpected SearchFieldType: %s", sc.FieldType.String()))
 		}
+		if sc.Sortable {
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldFieldTypeText(_cmd).Sortable())
+		}
+		if sc.UNF {
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldOptionSortableSortable(_cmd).Unf())
+		}
+		if sc.NoIndex {
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldFieldTypeText(_cmd).Noindex())
+		}
 	}
 	// FIXME: handle index properly
-	cmd := cmds.FtCreateSkipinitialscan(_cmd).Schema().FieldName("xx").Geo().Build()
-	fmt.Print(cmd.Commands())
+	cmd := cmds.FtCreateFieldFieldTypeText(_cmd).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
@@ -5199,39 +5213,40 @@ func (c *Compat) FTSpellCheckWithArgs(ctx context.Context, index string, query s
 
 func (c *Compat) FTSearch(ctx context.Context, index string, query string) *FTSearchCmd {
 	cmd := c.client.B().FtSearch().Index(index).Query(query).Build()
-	return newFTSearchCmd(c.client.Do(ctx, cmd))
+	return newFTSearchCmd(c.client.Do(ctx, cmd), nil)
 }
 
+// Ref: https://github.com/redis/go-redis/blob/930d904205691ff06104fcc3ac108177077def35/search_commands.go#L1688
 func (c *Compat) FTSearchWithArgs(ctx context.Context, index string, query string, options *FTSearchOptions) *FTSearchCmd {
 	_cmd := cmds.Incomplete(c.client.B().FtSearch().Index(index).Query(query))
-	// NoContent       bool
 	if options == nil {
 		panic("options can not be nil")
 	}
+	// [NOCONTENT]
 	if options.NoContent {
 		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Nocontent())
 	}
-	// 	Verbatim        bool
+	// [VERBATIM]
 	if options.Verbatim {
 		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Verbatim())
 	}
-	// 	NoStopWords     bool
+	// [NOSTOPWORDS]
 	if options.NoStopWords {
 		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Nostopwords())
 	}
-	// 	WithScores      bool
+	// [WITHSCORES]
 	if options.WithScores {
 		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Withscores())
 	}
-	// 	WithPayloads    bool
+	// [WITHPAYLOADS]
 	if options.WithPayloads {
 		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Withpayloads())
 	}
-	// 	WithSortKeys    bool
+	// [WITHSORTKEYS]
 	if options.WithSortKeys {
 		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Withsortkeys())
 	}
-	//		Filters         []FTSearchFilter
+	// [FILTER numeric_field min max [ FILTER numeric_field min max ...]]
 	for _, filter := range options.Filters {
 		min, err := strconv.ParseFloat(str(filter.Min), 64)
 		if err != nil {
@@ -5243,7 +5258,7 @@ func (c *Compat) FTSearchWithArgs(ctx context.Context, index string, query strin
 		}
 		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Filter(str(filter.FieldName)).Min(min).Max(max))
 	}
-	// GEOFILTER
+	//  [GEOFILTER geo_field lon lat radius m | km | mi | ft [ GEOFILTER geo_field lon lat radius m | km | mi | ft ...]]
 	for _, filter := range options.GeoFilter {
 		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Geofilter(filter.FieldName).Lon(filter.Longitude).Lat(filter.Latitude).Radius(filter.Radius))
 		switch filter.Unit {
@@ -5260,56 +5275,77 @@ func (c *Compat) FTSearchWithArgs(ctx context.Context, index string, query strin
 		}
 	}
 	// [INKEYS count key [key ...]]
-	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Inkeys(str(len(options.InKeys))).Key(argsToSlice(options.InKeys)...))
-	// [ INFIELDS count field [field ...]]
-	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Infields(str(len(options.InKeys))).Field(argsToSlice(options.InFields)...))
-	// [RETURN count identifier [AS property] [ identifier [AS property] ...]]
-	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Return(str(len(options.Return))))
-	for _, re := range options.Return {
-		_cmd = cmds.Incomplete(cmds.FtSearchReturnReturn(_cmd).Identifier(re.FieldName).As(re.As))
+	if len(options.InKeys) > 0 {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Inkeys(str(len(options.InKeys))).Key(argsToSlice(options.InKeys)...))
 	}
-	// NOTE: go-redis doesn't implement SUMMARIZE option
+	// [ INFIELDS count field [field ...]]
+	if len(options.InFields) > 0 {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Infields(str(len(options.InFields))).Field(argsToSlice(options.InFields)...))
+	}
+	// [RETURN count identifier [AS property] [ identifier [AS property] ...]]
+	if len(options.Return) > 0 {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Return(str(len(options.Return))))
+		for _, re := range options.Return {
+			_cmd = cmds.Incomplete(cmds.FtSearchReturnReturn(_cmd).Identifier(re.FieldName).As(re.As))
+		}
+	}
+	// FIXME: go-redis doesn't implement SUMMARIZE option
 	// [SUMMARIZE [ FIELDS count field [field ...]] [FRAGS num] [LEN fragsize] [SEPARATOR separator]]
 	// [SLOP slop]
-	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Slop(int64(options.Slop)))
+	if options.Slop > 0 {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Slop(int64(options.Slop)))
+	}
 	// [TIMEOUT timeout]
-	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Timeout(int64(options.Timeout)))
+	if options.Timeout > 0 {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Timeout(int64(options.Timeout)))
+	}
 	// [INORDER]
 	if options.InOrder {
 		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Inorder())
 	}
 	// [LANGUAGE language]
-	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Language(options.Language))
+	if options.Language != "" {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Language(options.Language))
+	}
 	// [EXPANDER expander]
-	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Expander(options.Expander))
+	if options.Expander != "" {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Expander(options.Expander))
+	}
 	// [SCORER scorer]
-	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Scorer(options.Scorer))
+	if options.Scorer != "" {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Scorer(options.Scorer))
+	}
 	// [EXPLAINSCORE]
 	if options.ExplainScore {
 		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Explainscore())
 	}
 	// [PAYLOAD payload]
-	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Payload(options.Payload))
+	if options.Payload != "" {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Payload(options.Payload))
+	}
 	// [SORTBY sortby [ ASC | DESC] [WITHCOUNT]]
-	if len(options.SortBy) != 1 {
-		panic(fmt.Sprintf("options.SortBy can only have 1 element, got %v", len(options.SortBy)))
-	}
-	sortBy := options.SortBy[0]
-	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Sortby(sortBy.FieldName))
-	if sortBy.Asc == sortBy.Desc && sortBy.Asc {
-		panic("options.SortBy[0] should specify either ASC or DESC")
-	}
-	if sortBy.Asc {
-		_cmd = cmds.Incomplete(cmds.FtSearchSortbySortby(_cmd).Asc())
-	} else {
-		_cmd = cmds.Incomplete(cmds.FtSearchSortbySortby(_cmd).Desc())
-	}
-	// WITHCOUNT
-	if options.SortByWithCount {
-		_cmd = cmds.Incomplete(cmds.FtSearchSortbySortby(_cmd).Withcount())
+	if options.SortBy != nil {
+		if len(options.SortBy) != 1 {
+			panic(fmt.Sprintf("options.SortBy can only have 1 element, got %v", len(options.SortBy)))
+		}
+		sortBy := options.SortBy[0]
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Sortby(sortBy.FieldName))
+		if sortBy.Asc == sortBy.Desc && sortBy.Asc {
+			panic("options.SortBy[0] should specify either ASC or DESC")
+		}
+		if sortBy.Asc {
+			_cmd = cmds.Incomplete(cmds.FtSearchSortbySortby(_cmd).Asc())
+		} else {
+			_cmd = cmds.Incomplete(cmds.FtSearchSortbySortby(_cmd).Desc())
+		}
+		if options.SortByWithCount {
+			_cmd = cmds.Incomplete(cmds.FtSearchSortbySortby(_cmd).Withcount())
+		}
 	}
 	// [LIMIT offset num]
-	_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Limit().OffsetNum(int64(options.Limit), int64(options.LimitOffset)))
+	if options.LimitOffset >= 0 && options.Limit > 0 {
+		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Limit().OffsetNum(int64(options.Limit), int64(options.LimitOffset)))
+	}
 	// [PARAMS nargs name value [ name value ...]]
 	if options.Params != nil {
 		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Params().Nargs(int64(len(options.Params))))
@@ -5322,7 +5358,8 @@ func (c *Compat) FTSearchWithArgs(ctx context.Context, index string, query strin
 		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Dialect(int64(options.DialectVersion)))
 	}
 	cmd := cmds.FtSearchQuery(_cmd).Build()
-	return newFTSearchCmd(c.client.Do(ctx, cmd))
+	fmt.Print(cmd.Commands())
+	return newFTSearchCmd(c.client.Do(ctx, cmd), options)
 }
 
 func (c *Compat) FTSynDump(ctx context.Context, index string) *FTSynDumpCmd { return nil }
