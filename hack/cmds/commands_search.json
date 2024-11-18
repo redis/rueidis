@@ -160,12 +160,6 @@
             "multiple": true,
             "block": [
               {
-                "name": "withsuffixtrie",
-                "type": "enum",
-                "enum": ["WITHSUFFIXTRIE"],
-                "optional": true
-              },
-              {
                 "name": "sortable",
                 "type": "block",
                 "optional": true,
@@ -218,6 +212,24 @@
                 "type": "enum",
                 "optional": true,
                 "enum": ["CASESENSITIVE"]
+              },
+							{
+                "name": "WITHSUFFIXTRIE",
+                "type": "enum",
+                "optional": true,
+                "enum": ["WITHSUFFIXTRIE"]
+              },
+							{
+                "name": "INDEXEMPTY",
+                "type": "enum",
+                "optional": true,
+                "enum": ["INDEXEMPTY"]
+              },
+							{
+                "name": "INDEXMISSING",
+                "type": "enum",
+                "optional": true,
+                "enum": ["INDEXMISSING"]
               }
             ]
           }

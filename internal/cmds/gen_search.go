@@ -1971,11 +1971,6 @@ func (c FtCreateFieldFieldName) Geoshape() FtCreateFieldFieldTypeGeoshape {
 
 type FtCreateFieldFieldTypeGeo Incomplete
 
-func (c FtCreateFieldFieldTypeGeo) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
-	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
-	return (FtCreateFieldOptionWithsuffixtrie)(c)
-}
-
 func (c FtCreateFieldFieldTypeGeo) Sortable() FtCreateFieldOptionSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
 	return (FtCreateFieldOptionSortableSortable)(c)
@@ -2011,6 +2006,21 @@ func (c FtCreateFieldFieldTypeGeo) Casesensitive() FtCreateFieldOptionCasesensit
 	return (FtCreateFieldOptionCasesensitive)(c)
 }
 
+func (c FtCreateFieldFieldTypeGeo) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
+}
+
+func (c FtCreateFieldFieldTypeGeo) Indexempty() FtCreateFieldOptionIndexempty {
+	c.cs.s = append(c.cs.s, "INDEXEMPTY")
+	return (FtCreateFieldOptionIndexempty)(c)
+}
+
+func (c FtCreateFieldFieldTypeGeo) Indexmissing() FtCreateFieldOptionIndexmissing {
+	c.cs.s = append(c.cs.s, "INDEXMISSING")
+	return (FtCreateFieldOptionIndexmissing)(c)
+}
+
 func (c FtCreateFieldFieldTypeGeo) FieldName(fieldName string) FtCreateFieldFieldName {
 	c.cs.s = append(c.cs.s, fieldName)
 	return (FtCreateFieldFieldName)(c)
@@ -2022,11 +2032,6 @@ func (c FtCreateFieldFieldTypeGeo) Build() Completed {
 }
 
 type FtCreateFieldFieldTypeGeoshape Incomplete
-
-func (c FtCreateFieldFieldTypeGeoshape) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
-	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
-	return (FtCreateFieldOptionWithsuffixtrie)(c)
-}
 
 func (c FtCreateFieldFieldTypeGeoshape) Sortable() FtCreateFieldOptionSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
@@ -2063,6 +2068,21 @@ func (c FtCreateFieldFieldTypeGeoshape) Casesensitive() FtCreateFieldOptionCases
 	return (FtCreateFieldOptionCasesensitive)(c)
 }
 
+func (c FtCreateFieldFieldTypeGeoshape) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
+}
+
+func (c FtCreateFieldFieldTypeGeoshape) Indexempty() FtCreateFieldOptionIndexempty {
+	c.cs.s = append(c.cs.s, "INDEXEMPTY")
+	return (FtCreateFieldOptionIndexempty)(c)
+}
+
+func (c FtCreateFieldFieldTypeGeoshape) Indexmissing() FtCreateFieldOptionIndexmissing {
+	c.cs.s = append(c.cs.s, "INDEXMISSING")
+	return (FtCreateFieldOptionIndexmissing)(c)
+}
+
 func (c FtCreateFieldFieldTypeGeoshape) FieldName(fieldName string) FtCreateFieldFieldName {
 	c.cs.s = append(c.cs.s, fieldName)
 	return (FtCreateFieldFieldName)(c)
@@ -2074,11 +2094,6 @@ func (c FtCreateFieldFieldTypeGeoshape) Build() Completed {
 }
 
 type FtCreateFieldFieldTypeNumeric Incomplete
-
-func (c FtCreateFieldFieldTypeNumeric) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
-	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
-	return (FtCreateFieldOptionWithsuffixtrie)(c)
-}
 
 func (c FtCreateFieldFieldTypeNumeric) Sortable() FtCreateFieldOptionSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
@@ -2115,6 +2130,21 @@ func (c FtCreateFieldFieldTypeNumeric) Casesensitive() FtCreateFieldOptionCasese
 	return (FtCreateFieldOptionCasesensitive)(c)
 }
 
+func (c FtCreateFieldFieldTypeNumeric) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
+}
+
+func (c FtCreateFieldFieldTypeNumeric) Indexempty() FtCreateFieldOptionIndexempty {
+	c.cs.s = append(c.cs.s, "INDEXEMPTY")
+	return (FtCreateFieldOptionIndexempty)(c)
+}
+
+func (c FtCreateFieldFieldTypeNumeric) Indexmissing() FtCreateFieldOptionIndexmissing {
+	c.cs.s = append(c.cs.s, "INDEXMISSING")
+	return (FtCreateFieldOptionIndexmissing)(c)
+}
+
 func (c FtCreateFieldFieldTypeNumeric) FieldName(fieldName string) FtCreateFieldFieldName {
 	c.cs.s = append(c.cs.s, fieldName)
 	return (FtCreateFieldFieldName)(c)
@@ -2126,11 +2156,6 @@ func (c FtCreateFieldFieldTypeNumeric) Build() Completed {
 }
 
 type FtCreateFieldFieldTypeTag Incomplete
-
-func (c FtCreateFieldFieldTypeTag) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
-	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
-	return (FtCreateFieldOptionWithsuffixtrie)(c)
-}
 
 func (c FtCreateFieldFieldTypeTag) Sortable() FtCreateFieldOptionSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
@@ -2167,6 +2192,21 @@ func (c FtCreateFieldFieldTypeTag) Casesensitive() FtCreateFieldOptionCasesensit
 	return (FtCreateFieldOptionCasesensitive)(c)
 }
 
+func (c FtCreateFieldFieldTypeTag) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
+}
+
+func (c FtCreateFieldFieldTypeTag) Indexempty() FtCreateFieldOptionIndexempty {
+	c.cs.s = append(c.cs.s, "INDEXEMPTY")
+	return (FtCreateFieldOptionIndexempty)(c)
+}
+
+func (c FtCreateFieldFieldTypeTag) Indexmissing() FtCreateFieldOptionIndexmissing {
+	c.cs.s = append(c.cs.s, "INDEXMISSING")
+	return (FtCreateFieldOptionIndexmissing)(c)
+}
+
 func (c FtCreateFieldFieldTypeTag) FieldName(fieldName string) FtCreateFieldFieldName {
 	c.cs.s = append(c.cs.s, fieldName)
 	return (FtCreateFieldFieldName)(c)
@@ -2178,11 +2218,6 @@ func (c FtCreateFieldFieldTypeTag) Build() Completed {
 }
 
 type FtCreateFieldFieldTypeText Incomplete
-
-func (c FtCreateFieldFieldTypeText) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
-	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
-	return (FtCreateFieldOptionWithsuffixtrie)(c)
-}
 
 func (c FtCreateFieldFieldTypeText) Sortable() FtCreateFieldOptionSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
@@ -2219,6 +2254,21 @@ func (c FtCreateFieldFieldTypeText) Casesensitive() FtCreateFieldOptionCasesensi
 	return (FtCreateFieldOptionCasesensitive)(c)
 }
 
+func (c FtCreateFieldFieldTypeText) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
+}
+
+func (c FtCreateFieldFieldTypeText) Indexempty() FtCreateFieldOptionIndexempty {
+	c.cs.s = append(c.cs.s, "INDEXEMPTY")
+	return (FtCreateFieldOptionIndexempty)(c)
+}
+
+func (c FtCreateFieldFieldTypeText) Indexmissing() FtCreateFieldOptionIndexmissing {
+	c.cs.s = append(c.cs.s, "INDEXMISSING")
+	return (FtCreateFieldOptionIndexmissing)(c)
+}
+
 func (c FtCreateFieldFieldTypeText) FieldName(fieldName string) FtCreateFieldFieldName {
 	c.cs.s = append(c.cs.s, fieldName)
 	return (FtCreateFieldFieldName)(c)
@@ -2230,11 +2280,6 @@ func (c FtCreateFieldFieldTypeText) Build() Completed {
 }
 
 type FtCreateFieldFieldTypeVector Incomplete
-
-func (c FtCreateFieldFieldTypeVector) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
-	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
-	return (FtCreateFieldOptionWithsuffixtrie)(c)
-}
 
 func (c FtCreateFieldFieldTypeVector) Sortable() FtCreateFieldOptionSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
@@ -2271,6 +2316,21 @@ func (c FtCreateFieldFieldTypeVector) Casesensitive() FtCreateFieldOptionCasesen
 	return (FtCreateFieldOptionCasesensitive)(c)
 }
 
+func (c FtCreateFieldFieldTypeVector) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
+}
+
+func (c FtCreateFieldFieldTypeVector) Indexempty() FtCreateFieldOptionIndexempty {
+	c.cs.s = append(c.cs.s, "INDEXEMPTY")
+	return (FtCreateFieldOptionIndexempty)(c)
+}
+
+func (c FtCreateFieldFieldTypeVector) Indexmissing() FtCreateFieldOptionIndexmissing {
+	c.cs.s = append(c.cs.s, "INDEXMISSING")
+	return (FtCreateFieldOptionIndexmissing)(c)
+}
+
 func (c FtCreateFieldFieldTypeVector) FieldName(fieldName string) FtCreateFieldFieldName {
 	c.cs.s = append(c.cs.s, fieldName)
 	return (FtCreateFieldFieldName)(c)
@@ -2286,6 +2346,16 @@ type FtCreateFieldOptionCasesensitive Incomplete
 func (c FtCreateFieldOptionCasesensitive) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
 	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
 	return (FtCreateFieldOptionWithsuffixtrie)(c)
+}
+
+func (c FtCreateFieldOptionCasesensitive) Indexempty() FtCreateFieldOptionIndexempty {
+	c.cs.s = append(c.cs.s, "INDEXEMPTY")
+	return (FtCreateFieldOptionIndexempty)(c)
+}
+
+func (c FtCreateFieldOptionCasesensitive) Indexmissing() FtCreateFieldOptionIndexmissing {
+	c.cs.s = append(c.cs.s, "INDEXMISSING")
+	return (FtCreateFieldOptionIndexmissing)(c)
 }
 
 func (c FtCreateFieldOptionCasesensitive) Sortable() FtCreateFieldOptionSortableSortable {
@@ -2333,6 +2403,130 @@ func (c FtCreateFieldOptionCasesensitive) Build() Completed {
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
+type FtCreateFieldOptionIndexempty Incomplete
+
+func (c FtCreateFieldOptionIndexempty) Indexmissing() FtCreateFieldOptionIndexmissing {
+	c.cs.s = append(c.cs.s, "INDEXMISSING")
+	return (FtCreateFieldOptionIndexmissing)(c)
+}
+
+func (c FtCreateFieldOptionIndexempty) Sortable() FtCreateFieldOptionSortableSortable {
+	c.cs.s = append(c.cs.s, "SORTABLE")
+	return (FtCreateFieldOptionSortableSortable)(c)
+}
+
+func (c FtCreateFieldOptionIndexempty) Noindex() FtCreateFieldOptionNoindex {
+	c.cs.s = append(c.cs.s, "NOINDEX")
+	return (FtCreateFieldOptionNoindex)(c)
+}
+
+func (c FtCreateFieldOptionIndexempty) Nostem() FtCreateFieldOptionNostem {
+	c.cs.s = append(c.cs.s, "NOSTEM")
+	return (FtCreateFieldOptionNostem)(c)
+}
+
+func (c FtCreateFieldOptionIndexempty) Phonetic(phonetic string) FtCreateFieldOptionPhonetic {
+	c.cs.s = append(c.cs.s, "PHONETIC", phonetic)
+	return (FtCreateFieldOptionPhonetic)(c)
+}
+
+func (c FtCreateFieldOptionIndexempty) Weight(weight float64) FtCreateFieldOptionWeight {
+	c.cs.s = append(c.cs.s, "WEIGHT", strconv.FormatFloat(weight, 'f', -1, 64))
+	return (FtCreateFieldOptionWeight)(c)
+}
+
+func (c FtCreateFieldOptionIndexempty) Separator(separator string) FtCreateFieldOptionSeparator {
+	c.cs.s = append(c.cs.s, "SEPARATOR", separator)
+	return (FtCreateFieldOptionSeparator)(c)
+}
+
+func (c FtCreateFieldOptionIndexempty) Casesensitive() FtCreateFieldOptionCasesensitive {
+	c.cs.s = append(c.cs.s, "CASESENSITIVE")
+	return (FtCreateFieldOptionCasesensitive)(c)
+}
+
+func (c FtCreateFieldOptionIndexempty) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
+}
+
+func (c FtCreateFieldOptionIndexempty) Indexempty() FtCreateFieldOptionIndexempty {
+	c.cs.s = append(c.cs.s, "INDEXEMPTY")
+	return c
+}
+
+func (c FtCreateFieldOptionIndexempty) FieldName(fieldName string) FtCreateFieldFieldName {
+	c.cs.s = append(c.cs.s, fieldName)
+	return (FtCreateFieldFieldName)(c)
+}
+
+func (c FtCreateFieldOptionIndexempty) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type FtCreateFieldOptionIndexmissing Incomplete
+
+func (c FtCreateFieldOptionIndexmissing) Sortable() FtCreateFieldOptionSortableSortable {
+	c.cs.s = append(c.cs.s, "SORTABLE")
+	return (FtCreateFieldOptionSortableSortable)(c)
+}
+
+func (c FtCreateFieldOptionIndexmissing) Noindex() FtCreateFieldOptionNoindex {
+	c.cs.s = append(c.cs.s, "NOINDEX")
+	return (FtCreateFieldOptionNoindex)(c)
+}
+
+func (c FtCreateFieldOptionIndexmissing) Nostem() FtCreateFieldOptionNostem {
+	c.cs.s = append(c.cs.s, "NOSTEM")
+	return (FtCreateFieldOptionNostem)(c)
+}
+
+func (c FtCreateFieldOptionIndexmissing) Phonetic(phonetic string) FtCreateFieldOptionPhonetic {
+	c.cs.s = append(c.cs.s, "PHONETIC", phonetic)
+	return (FtCreateFieldOptionPhonetic)(c)
+}
+
+func (c FtCreateFieldOptionIndexmissing) Weight(weight float64) FtCreateFieldOptionWeight {
+	c.cs.s = append(c.cs.s, "WEIGHT", strconv.FormatFloat(weight, 'f', -1, 64))
+	return (FtCreateFieldOptionWeight)(c)
+}
+
+func (c FtCreateFieldOptionIndexmissing) Separator(separator string) FtCreateFieldOptionSeparator {
+	c.cs.s = append(c.cs.s, "SEPARATOR", separator)
+	return (FtCreateFieldOptionSeparator)(c)
+}
+
+func (c FtCreateFieldOptionIndexmissing) Casesensitive() FtCreateFieldOptionCasesensitive {
+	c.cs.s = append(c.cs.s, "CASESENSITIVE")
+	return (FtCreateFieldOptionCasesensitive)(c)
+}
+
+func (c FtCreateFieldOptionIndexmissing) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
+	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
+	return (FtCreateFieldOptionWithsuffixtrie)(c)
+}
+
+func (c FtCreateFieldOptionIndexmissing) Indexempty() FtCreateFieldOptionIndexempty {
+	c.cs.s = append(c.cs.s, "INDEXEMPTY")
+	return (FtCreateFieldOptionIndexempty)(c)
+}
+
+func (c FtCreateFieldOptionIndexmissing) Indexmissing() FtCreateFieldOptionIndexmissing {
+	c.cs.s = append(c.cs.s, "INDEXMISSING")
+	return c
+}
+
+func (c FtCreateFieldOptionIndexmissing) FieldName(fieldName string) FtCreateFieldFieldName {
+	c.cs.s = append(c.cs.s, fieldName)
+	return (FtCreateFieldFieldName)(c)
+}
+
+func (c FtCreateFieldOptionIndexmissing) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
 type FtCreateFieldOptionNoindex Incomplete
 
 func (c FtCreateFieldOptionNoindex) Nostem() FtCreateFieldOptionNostem {
@@ -2363,6 +2557,16 @@ func (c FtCreateFieldOptionNoindex) Casesensitive() FtCreateFieldOptionCasesensi
 func (c FtCreateFieldOptionNoindex) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
 	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
 	return (FtCreateFieldOptionWithsuffixtrie)(c)
+}
+
+func (c FtCreateFieldOptionNoindex) Indexempty() FtCreateFieldOptionIndexempty {
+	c.cs.s = append(c.cs.s, "INDEXEMPTY")
+	return (FtCreateFieldOptionIndexempty)(c)
+}
+
+func (c FtCreateFieldOptionNoindex) Indexmissing() FtCreateFieldOptionIndexmissing {
+	c.cs.s = append(c.cs.s, "INDEXMISSING")
+	return (FtCreateFieldOptionIndexmissing)(c)
 }
 
 func (c FtCreateFieldOptionNoindex) Sortable() FtCreateFieldOptionSortableSortable {
@@ -2412,6 +2616,16 @@ func (c FtCreateFieldOptionNostem) Withsuffixtrie() FtCreateFieldOptionWithsuffi
 	return (FtCreateFieldOptionWithsuffixtrie)(c)
 }
 
+func (c FtCreateFieldOptionNostem) Indexempty() FtCreateFieldOptionIndexempty {
+	c.cs.s = append(c.cs.s, "INDEXEMPTY")
+	return (FtCreateFieldOptionIndexempty)(c)
+}
+
+func (c FtCreateFieldOptionNostem) Indexmissing() FtCreateFieldOptionIndexmissing {
+	c.cs.s = append(c.cs.s, "INDEXMISSING")
+	return (FtCreateFieldOptionIndexmissing)(c)
+}
+
 func (c FtCreateFieldOptionNostem) Sortable() FtCreateFieldOptionSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
 	return (FtCreateFieldOptionSortableSortable)(c)
@@ -2459,6 +2673,16 @@ func (c FtCreateFieldOptionPhonetic) Withsuffixtrie() FtCreateFieldOptionWithsuf
 	return (FtCreateFieldOptionWithsuffixtrie)(c)
 }
 
+func (c FtCreateFieldOptionPhonetic) Indexempty() FtCreateFieldOptionIndexempty {
+	c.cs.s = append(c.cs.s, "INDEXEMPTY")
+	return (FtCreateFieldOptionIndexempty)(c)
+}
+
+func (c FtCreateFieldOptionPhonetic) Indexmissing() FtCreateFieldOptionIndexmissing {
+	c.cs.s = append(c.cs.s, "INDEXMISSING")
+	return (FtCreateFieldOptionIndexmissing)(c)
+}
+
 func (c FtCreateFieldOptionPhonetic) Sortable() FtCreateFieldOptionSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
 	return (FtCreateFieldOptionSortableSortable)(c)
@@ -2499,6 +2723,16 @@ func (c FtCreateFieldOptionSeparator) Casesensitive() FtCreateFieldOptionCasesen
 func (c FtCreateFieldOptionSeparator) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
 	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
 	return (FtCreateFieldOptionWithsuffixtrie)(c)
+}
+
+func (c FtCreateFieldOptionSeparator) Indexempty() FtCreateFieldOptionIndexempty {
+	c.cs.s = append(c.cs.s, "INDEXEMPTY")
+	return (FtCreateFieldOptionIndexempty)(c)
+}
+
+func (c FtCreateFieldOptionSeparator) Indexmissing() FtCreateFieldOptionIndexmissing {
+	c.cs.s = append(c.cs.s, "INDEXMISSING")
+	return (FtCreateFieldOptionIndexmissing)(c)
 }
 
 func (c FtCreateFieldOptionSeparator) Sortable() FtCreateFieldOptionSortableSortable {
@@ -2583,6 +2817,16 @@ func (c FtCreateFieldOptionSortableSortable) Withsuffixtrie() FtCreateFieldOptio
 	return (FtCreateFieldOptionWithsuffixtrie)(c)
 }
 
+func (c FtCreateFieldOptionSortableSortable) Indexempty() FtCreateFieldOptionIndexempty {
+	c.cs.s = append(c.cs.s, "INDEXEMPTY")
+	return (FtCreateFieldOptionIndexempty)(c)
+}
+
+func (c FtCreateFieldOptionSortableSortable) Indexmissing() FtCreateFieldOptionIndexmissing {
+	c.cs.s = append(c.cs.s, "INDEXMISSING")
+	return (FtCreateFieldOptionIndexmissing)(c)
+}
+
 func (c FtCreateFieldOptionSortableSortable) Sortable() FtCreateFieldOptionSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
 	return c
@@ -2635,6 +2879,16 @@ func (c FtCreateFieldOptionSortableUnf) Withsuffixtrie() FtCreateFieldOptionWith
 	return (FtCreateFieldOptionWithsuffixtrie)(c)
 }
 
+func (c FtCreateFieldOptionSortableUnf) Indexempty() FtCreateFieldOptionIndexempty {
+	c.cs.s = append(c.cs.s, "INDEXEMPTY")
+	return (FtCreateFieldOptionIndexempty)(c)
+}
+
+func (c FtCreateFieldOptionSortableUnf) Indexmissing() FtCreateFieldOptionIndexmissing {
+	c.cs.s = append(c.cs.s, "INDEXMISSING")
+	return (FtCreateFieldOptionIndexmissing)(c)
+}
+
 func (c FtCreateFieldOptionSortableUnf) Sortable() FtCreateFieldOptionSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
 	return (FtCreateFieldOptionSortableSortable)(c)
@@ -2665,6 +2919,16 @@ func (c FtCreateFieldOptionWeight) Casesensitive() FtCreateFieldOptionCasesensit
 func (c FtCreateFieldOptionWeight) Withsuffixtrie() FtCreateFieldOptionWithsuffixtrie {
 	c.cs.s = append(c.cs.s, "WITHSUFFIXTRIE")
 	return (FtCreateFieldOptionWithsuffixtrie)(c)
+}
+
+func (c FtCreateFieldOptionWeight) Indexempty() FtCreateFieldOptionIndexempty {
+	c.cs.s = append(c.cs.s, "INDEXEMPTY")
+	return (FtCreateFieldOptionIndexempty)(c)
+}
+
+func (c FtCreateFieldOptionWeight) Indexmissing() FtCreateFieldOptionIndexmissing {
+	c.cs.s = append(c.cs.s, "INDEXMISSING")
+	return (FtCreateFieldOptionIndexmissing)(c)
 }
 
 func (c FtCreateFieldOptionWeight) Sortable() FtCreateFieldOptionSortableSortable {
@@ -2703,6 +2967,16 @@ func (c FtCreateFieldOptionWeight) Build() Completed {
 }
 
 type FtCreateFieldOptionWithsuffixtrie Incomplete
+
+func (c FtCreateFieldOptionWithsuffixtrie) Indexempty() FtCreateFieldOptionIndexempty {
+	c.cs.s = append(c.cs.s, "INDEXEMPTY")
+	return (FtCreateFieldOptionIndexempty)(c)
+}
+
+func (c FtCreateFieldOptionWithsuffixtrie) Indexmissing() FtCreateFieldOptionIndexmissing {
+	c.cs.s = append(c.cs.s, "INDEXMISSING")
+	return (FtCreateFieldOptionIndexmissing)(c)
+}
 
 func (c FtCreateFieldOptionWithsuffixtrie) Sortable() FtCreateFieldOptionSortableSortable {
 	c.cs.s = append(c.cs.s, "SORTABLE")
