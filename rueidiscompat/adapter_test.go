@@ -11940,7 +11940,7 @@ func testAdapterCache(resp3 bool) {
 
 		})
 
-		FIt("should FTAggregate GroupBy ", Label("search", "ftaggregate"), func() {
+		It("should FTAggregate GroupBy ", Label("search", "ftaggregate"), func() {
 			text1 := &FieldSchema{FieldName: "title", FieldType: SearchFieldTypeText}
 			text2 := &FieldSchema{FieldName: "body", FieldType: SearchFieldTypeText}
 			text3 := &FieldSchema{FieldName: "parent", FieldType: SearchFieldTypeText}
@@ -12046,7 +12046,7 @@ func testAdapterCache(resp3 bool) {
 
 		})
 
-		It("should FTAggregate sort and limit", Label("search", "ftaggregate"), func() {
+		FIt("should FTAggregate sort and limit", Label("search", "ftaggregate"), func() {
 			text1 := &FieldSchema{FieldName: "t1", FieldType: SearchFieldTypeText}
 			text2 := &FieldSchema{FieldName: "t2", FieldType: SearchFieldTypeText}
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1, text2).Result()

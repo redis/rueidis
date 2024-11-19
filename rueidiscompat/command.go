@@ -3461,12 +3461,92 @@ type AggregateCmd struct {
 	baseCmd[FTAggregateResult]
 }
 
-func newAggregateCmd(res rueidis.RedisResult) *AggregateCmd {
-	return nil
+func (cmd *AggregateCmd) from(res rueidis.RedisResult) {
+	fmt.Printf("rueidisresult %#v\n", res.String())
+
+	if err := res.Error(); err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	m, err := res.ToMap()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	totalResultsMsg, ok := m["total_results"]
+	if !ok {
+		cmd.SetErr(fmt.Errorf(`result map should contain key "total_results"`))
+	}
+	totalResults, err := totalResultsMsg.AsInt64()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	resultsMsg, ok := m["results"]
+	if !ok {
+		cmd.SetErr(fmt.Errorf(`result map should contain key "results"`))
+	}
+	resultsArr, err := resultsMsg.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	ftAggregateResult := FTAggregateResult{Total: int(totalResults), Rows: make([]AggregateRow, 0, len(resultsArr))}
+	for _, result := range resultsArr {
+		resultMap, err := result.ToMap()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		fmt.Println("resultMap", result.String())
+		// FIXME: unknown length?
+		row := AggregateRow{Fields: make(map[string]any)}
+		for k, v := range resultMap {
+			switch k {
+			case "extra_attributes":
+				// simple string
+				_m, err := v.AsMap()
+				if err != nil {
+					cmd.SetErr(err)
+					return
+				}
+				for _k, _v := range _m {
+					anyVal, err := _v.ToAny()
+					if err != nil {
+						cmd.SetErr(err)
+						return
+					}
+					row.Fields[_k] = anyVal
+				}
+			case "values":
+				// FIXME: do we have this?
+				continue
+			default:
+				fmt.Println("xxx got v", v.String())
+				// case "id":
+				// 	idStr, err := v.ToString()
+				// 	if err != nil {
+				// 		cmd.SetErr(err)
+				// 		return
+				// 	}
+				// 	row. = idStr
+			}
+		}
+
+		ftAggregateResult.Rows = append(ftAggregateResult.Rows, row)
+	}
+
+	cmd.SetVal(ftAggregateResult)
+
+	_r, _ := json.MarshalIndent(ftAggregateResult, "", "\t")
+	fmt.Print(string(_r))
+
 }
 
-func (cmd *AggregateCmd) from(res rueidis.RedisResult) {
-
+func newAggregateCmd(res rueidis.RedisResult) *AggregateCmd {
+	cmd := &AggregateCmd{}
+	cmd.from(res)
+	return cmd
 }
 
 type FTCreateOptions struct {
