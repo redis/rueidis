@@ -1214,6 +1214,12 @@
                 "type": "integer",
                 "command": "MAX",
                 "optional": true
+              },
+							{
+                "name": "withcount",
+                "type": "enum",
+								"enum": ["WITHCOUNT"],
+                "optional": true
               }
             ]
           },
