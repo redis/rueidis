@@ -5254,146 +5254,161 @@ func (c *Compat) FTSearch(ctx context.Context, index string, query string) *FTSe
 	return newFTSearchCmd(c.client.Do(ctx, cmd), nil)
 }
 
-// Ref: https://github.com/redis/go-redis/blob/930d904205691ff06104fcc3ac108177077def35/search_commands.go#L1688
+// FTSearchWithArgs - Executes a search query on an index with additional options.
+// The 'index' parameter specifies the index to search, the 'query' parameter specifies the search query,
+// and the 'options' parameter specifies additional options for the search.
+// For more information, please refer to the Redis documentation:
+// [FT.SEARCH]: (https://redis.io/commands/ft.search/)
+// FTSearchWithArgs Aligns with go-redis v9.7.0.
+// Ref: https://github.com/redis/go-redis/blob/ed37c33a9037483ad2a6b1042e5eb6df89009a1c/search_commands.go#L1802
 func (c *Compat) FTSearchWithArgs(ctx context.Context, index string, query string, options *FTSearchOptions) *FTSearchCmd {
 	_cmd := cmds.Incomplete(c.client.B().FtSearch().Index(index).Query(query))
-	if options == nil {
-		panic("options can not be nil")
-	}
-	// [NOCONTENT]
-	if options.NoContent {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Nocontent())
-	}
-	// [VERBATIM]
-	if options.Verbatim {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Verbatim())
-	}
-	// [NOSTOPWORDS]
-	if options.NoStopWords {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Nostopwords())
-	}
-	// [WITHSCORES]
-	if options.WithScores {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Withscores())
-	}
-	// [WITHPAYLOADS]
-	if options.WithPayloads {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Withpayloads())
-	}
-	// [WITHSORTKEYS]
-	if options.WithSortKeys {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Withsortkeys())
-	}
-	// [FILTER numeric_field min max [ FILTER numeric_field min max ...]]
-	for _, filter := range options.Filters {
-		min, err := strconv.ParseFloat(str(filter.Min), 64)
-		if err != nil {
-			panic(fmt.Sprintf("failed to parse min %v to float64", filter.Min))
+	if options != nil {
+		// [NOCONTENT]
+		if options.NoContent {
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Nocontent())
 		}
-		max, err := strconv.ParseFloat(str(filter.Max), 64)
-		if err != nil {
-			panic(fmt.Sprintf("failed to parse max %v to float64", filter.Max))
+		// [VERBATIM]
+		if options.Verbatim {
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Verbatim())
 		}
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Filter(str(filter.FieldName)).Min(min).Max(max))
-	}
-	//  [GEOFILTER geo_field lon lat radius m | km | mi | ft [ GEOFILTER geo_field lon lat radius m | km | mi | ft ...]]
-	for _, filter := range options.GeoFilter {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Geofilter(filter.FieldName).Lon(filter.Longitude).Lat(filter.Latitude).Radius(filter.Radius))
-		switch filter.Unit {
-		case "m":
-			_cmd = cmds.Incomplete(cmds.FtSearchGeoFilterRadius(_cmd).M())
-		case "km":
-			_cmd = cmds.Incomplete(cmds.FtSearchGeoFilterRadius(_cmd).Km())
-		case "mi":
-			_cmd = cmds.Incomplete(cmds.FtSearchGeoFilterRadius(_cmd).Mi())
-		case "ft":
-			_cmd = cmds.Incomplete(cmds.FtSearchGeoFilterRadius(_cmd).Ft())
-		default:
-			panic(fmt.Sprintf("invalid unit, want m | km | mi | ft, got %v", filter.Unit))
+		// [NOSTOPWORDS]
+		if options.NoStopWords {
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Nostopwords())
 		}
-	}
-	// [INKEYS count key [key ...]]
-	if len(options.InKeys) > 0 {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Inkeys(str(len(options.InKeys))).Key(argsToSlice(options.InKeys)...))
-	}
-	// [ INFIELDS count field [field ...]]
-	if len(options.InFields) > 0 {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Infields(str(len(options.InFields))).Field(argsToSlice(options.InFields)...))
-	}
-	// [RETURN count identifier [AS property] [ identifier [AS property] ...]]
-	if len(options.Return) > 0 {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Return(str(len(options.Return))))
-		for _, re := range options.Return {
-			_cmd = cmds.Incomplete(cmds.FtSearchReturnReturn(_cmd).Identifier(re.FieldName).As(re.As))
+		// [WITHSCORES]
+		if options.WithScores {
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Withscores())
 		}
-	}
-	// FIXME: go-redis doesn't implement SUMMARIZE option
-	// [SUMMARIZE [ FIELDS count field [field ...]] [FRAGS num] [LEN fragsize] [SEPARATOR separator]]
-	// [SLOP slop]
-	if options.Slop > 0 {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Slop(int64(options.Slop)))
-	}
-	// [TIMEOUT timeout]
-	if options.Timeout > 0 {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Timeout(int64(options.Timeout)))
-	}
-	// [INORDER]
-	if options.InOrder {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Inorder())
-	}
-	// [LANGUAGE language]
-	if options.Language != "" {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Language(options.Language))
-	}
-	// [EXPANDER expander]
-	if options.Expander != "" {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Expander(options.Expander))
-	}
-	// [SCORER scorer]
-	if options.Scorer != "" {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Scorer(options.Scorer))
-	}
-	// [EXPLAINSCORE]
-	if options.ExplainScore {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Explainscore())
-	}
-	// [PAYLOAD payload]
-	if options.Payload != "" {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Payload(options.Payload))
-	}
-	// [SORTBY sortby [ ASC | DESC] [WITHCOUNT]]
-	if options.SortBy != nil {
-		if len(options.SortBy) != 1 {
-			panic(fmt.Sprintf("options.SortBy can only have 1 element, got %v", len(options.SortBy)))
+		// [WITHPAYLOADS]
+		if options.WithPayloads {
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Withpayloads())
 		}
-		sortBy := options.SortBy[0]
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Sortby(sortBy.FieldName))
-		if sortBy.Asc == sortBy.Desc && sortBy.Asc {
-			panic("options.SortBy[0] should specify either ASC or DESC")
+		// [WITHSORTKEYS]
+		if options.WithSortKeys {
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Withsortkeys())
 		}
-		if sortBy.Asc {
-			_cmd = cmds.Incomplete(cmds.FtSearchSortbySortby(_cmd).Asc())
-		} else {
-			_cmd = cmds.Incomplete(cmds.FtSearchSortbySortby(_cmd).Desc())
+		// [FILTER numeric_field min max [ FILTER numeric_field min max ...]]
+		for _, filter := range options.Filters {
+			min, err := strconv.ParseFloat(str(filter.Min), 64)
+			if err != nil {
+				panic(fmt.Sprintf("failed to parse min %v to float64", filter.Min))
+			}
+			max, err := strconv.ParseFloat(str(filter.Max), 64)
+			if err != nil {
+				panic(fmt.Sprintf("failed to parse max %v to float64", filter.Max))
+			}
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Filter(str(filter.FieldName)).Min(min).Max(max))
 		}
-		if options.SortByWithCount {
-			_cmd = cmds.Incomplete(cmds.FtSearchSortbySortby(_cmd).Withcount())
+		//  [GEOFILTER geo_field lon lat radius m | km | mi | ft [ GEOFILTER geo_field lon lat radius m | km | mi | ft ...]]
+		for _, filter := range options.GeoFilter {
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Geofilter(filter.FieldName).Lon(filter.Longitude).Lat(filter.Latitude).Radius(filter.Radius))
+			switch filter.Unit {
+			case "m":
+				_cmd = cmds.Incomplete(cmds.FtSearchGeoFilterRadius(_cmd).M())
+			case "km":
+				_cmd = cmds.Incomplete(cmds.FtSearchGeoFilterRadius(_cmd).Km())
+			case "mi":
+				_cmd = cmds.Incomplete(cmds.FtSearchGeoFilterRadius(_cmd).Mi())
+			case "ft":
+				_cmd = cmds.Incomplete(cmds.FtSearchGeoFilterRadius(_cmd).Ft())
+			default:
+				panic(fmt.Sprintf("invalid unit, want m | km | mi | ft, got %v", filter.Unit))
+			}
 		}
-	}
-	// [LIMIT offset num]
-	if options.LimitOffset >= 0 && options.Limit > 0 {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Limit().OffsetNum(int64(options.Limit), int64(options.LimitOffset)))
-	}
-	// [PARAMS nargs name value [ name value ...]]
-	if options.Params != nil {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Params().Nargs(int64(len(options.Params))))
-		for name, val := range options.Params {
-			_cmd = cmds.Incomplete(cmds.FtSearchParamsNargs(_cmd).NameValue().NameValue(name, str(val)))
+		// [INKEYS count key [key ...]]
+		if len(options.InKeys) > 0 {
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Inkeys(str(len(options.InKeys))).Key(argsToSlice(options.InKeys)...))
 		}
-	}
-	// [DIALECT dialect]
-	if options.DialectVersion > 0 {
-		_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Dialect(int64(options.DialectVersion)))
+		// [ INFIELDS count field [field ...]]
+		if len(options.InFields) > 0 {
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Infields(str(len(options.InFields))).Field(argsToSlice(options.InFields)...))
+		}
+		// [RETURN count identifier [AS property] [ identifier [AS property] ...]]
+		if len(options.Return) > 0 {
+			var numOfArgs int64 = 0
+			for _, re := range options.Return {
+				numOfArgs++
+				if re.As != "" {
+					numOfArgs += 2
+				}
+			}
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Return(str(numOfArgs)))
+			for _, re := range options.Return {
+				_cmd = cmds.Incomplete(cmds.FtSearchReturnReturn(_cmd).Identifier(re.FieldName))
+				if re.As != "" {
+					_cmd = cmds.Incomplete(cmds.FtSearchReturnIdentifiersIdentifier(_cmd).As(re.As))
+				}
+			}
+		}
+		// FIXME: go-redis doesn't implement SUMMARIZE option
+		// [SUMMARIZE [ FIELDS count field [field ...]] [FRAGS num] [LEN fragsize] [SEPARATOR separator]]
+		// [SLOP slop]
+		if options.Slop > 0 {
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Slop(int64(options.Slop)))
+		}
+		// [TIMEOUT timeout]
+		if options.Timeout > 0 {
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Timeout(int64(options.Timeout)))
+		}
+		// [INORDER]
+		if options.InOrder {
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Inorder())
+		}
+		// [LANGUAGE language]
+		if options.Language != "" {
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Language(options.Language))
+		}
+		// [EXPANDER expander]
+		if options.Expander != "" {
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Expander(options.Expander))
+		}
+		// [SCORER scorer]
+		if options.Scorer != "" {
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Scorer(options.Scorer))
+		}
+		// [EXPLAINSCORE]
+		if options.ExplainScore {
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Explainscore())
+		}
+		// [PAYLOAD payload]
+		if options.Payload != "" {
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Payload(options.Payload))
+		}
+		// [SORTBY sortby [ ASC | DESC] [WITHCOUNT]]
+		if options.SortBy != nil {
+			if len(options.SortBy) != 1 {
+				panic(fmt.Sprintf("options.SortBy can only have 1 element, got %v", len(options.SortBy)))
+			}
+			sortBy := options.SortBy[0]
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Sortby(sortBy.FieldName))
+			if sortBy.Asc == sortBy.Desc && sortBy.Asc {
+				panic("options.SortBy[0] should specify either ASC or DESC")
+			}
+			if sortBy.Asc {
+				_cmd = cmds.Incomplete(cmds.FtSearchSortbySortby(_cmd).Asc())
+			} else {
+				_cmd = cmds.Incomplete(cmds.FtSearchSortbySortby(_cmd).Desc())
+			}
+			if options.SortByWithCount {
+				_cmd = cmds.Incomplete(cmds.FtSearchSortbySortby(_cmd).Withcount())
+			}
+		}
+		// [LIMIT offset num]
+		if options.LimitOffset >= 0 && options.Limit > 0 {
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Limit().OffsetNum(int64(options.Limit), int64(options.LimitOffset)))
+		}
+		// [PARAMS nargs name value [ name value ...]]
+		if options.Params != nil {
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Params().Nargs(int64(len(options.Params))))
+			for name, val := range options.Params {
+				_cmd = cmds.Incomplete(cmds.FtSearchParamsNargs(_cmd).NameValue().NameValue(name, str(val)))
+			}
+		}
+		// [DIALECT dialect]
+		if options.DialectVersion > 0 {
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Dialect(int64(options.DialectVersion)))
+		}
 	}
 	cmd := cmds.FtSearchQuery(_cmd).Build()
 	fmt.Print(cmd.Commands())

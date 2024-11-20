@@ -12046,7 +12046,7 @@ func testAdapterCache(resp3 bool) {
 
 		})
 
-		FIt("should FTAggregate sort and limit", Label("search", "ftaggregate"), func() {
+		It("should FTAggregate sort and limit", Label("search", "ftaggregate"), func() {
 			text1 := &FieldSchema{FieldName: "t1", FieldType: SearchFieldTypeText}
 			text2 := &FieldSchema{FieldName: "t2", FieldType: SearchFieldTypeText}
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1, text2).Result()
@@ -12266,7 +12266,7 @@ func testAdapterCache(resp3 bool) {
 			Expect(res.Docs[0].Fields["txt"]).To(BeEquivalentTo("telmatosaurus"))
 		})
 
-		It("should FTSynUpdate", Label("search", "ftsynupdate"), func() {
+		FIt("should FTSynUpdate", Label("search", "ftsynupdate"), func() {
 
 			text1 := &FieldSchema{FieldName: "title", FieldType: SearchFieldTypeText}
 			text2 := &FieldSchema{FieldName: "body", FieldType: SearchFieldTypeText}
