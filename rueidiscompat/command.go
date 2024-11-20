@@ -3827,6 +3827,11 @@ type FTInfoCmd struct {
 
 func (cmd *FTInfoCmd) from(res rueidis.RedisResult) {
 	// FIXME: impl
+	fmt.Println(res.String())
+	if err := res.Error(); err != nil {
+		cmd.SetErr(err)
+		return
+	}
 }
 
 func newFTInfoCmd(res rueidis.RedisResult) *FTInfoCmd {

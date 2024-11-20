@@ -5002,24 +5002,15 @@ func (c *Compat) FTConfigSet(ctx context.Context, option string, value interface
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
-// OnHash          bool
-//
-//	OnJSON          bool
-//	Prefix          []any
-//	Filter          string
-//	DefaultLanguage string
-//	LanguageField   string
-//	Score           float64
-//	ScoreField      string
-//	PayloadField    string
-//	MaxTextFields   int
-//	NoOffsets       bool
-//	Temporary       int
-//	NoHL            bool
-//	NoFields        bool
-//	NoFreqs         bool
-//	StopWords       []any
-//	SkipInitialScan bool
+// FTCreate - Creates a new index with the given options and schema.
+// The 'index' parameter specifies the name of the index to create.
+// The 'options' parameter specifies various options for the index, such as:
+// whether to index hashes or JSONs, prefixes, filters, default language, score, score field, payload field, etc.
+// The 'schema' parameter specifies the schema for the index, which includes the field name, field type, etc.
+// For more information, please refer to the Redis documentation:
+// [FT.CREATE]: (https://redis.io/commands/ft.create/)
+// FTCreate aligns with go-redis v9.7.0.
+// Ref: https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L854
 func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOptions, schema ...*FieldSchema) *StatusCmd {
 	_cmd := cmds.Incomplete(c.client.B().FtCreate().Index(index))
 	if options != nil {
@@ -5095,8 +5086,10 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 	_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Schema())
 	// 	SCHEMA field_name [AS alias] TEXT | TAG | NUMERIC | GEO | VECTOR | GEOSHAPE [ SORTABLE [UNF]]
 	//   [NOINDEX] [ field_name [AS alias] TEXT | TAG | NUMERIC | GEO | VECTOR | GEOSHAPE [ SORTABLE [UNF]] [NOINDEX] ...]
-
 	for _, sc := range schema {
+		if sc.FieldName == "" || sc.FieldType == SearchFieldTypeInvalid {
+			panic("FT.CREATE: SCHEMA FieldName and FieldType are required")
+		}
 		_cmd = cmds.Incomplete(cmds.FtCreateSchema(_cmd).FieldName(sc.FieldName))
 		if sc.As != "" {
 			_cmd = cmds.Incomplete(cmds.FtCreateFieldFieldName(_cmd).As(sc.As))
@@ -5112,20 +5105,44 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Geo())
 		case SearchFieldTypeVector:
 			// FIXME: implement this
-			break
-			// if (sc.VectorArgs.FlatOptions == sc.VectorArgs.HNSWOptions) {
-		// 	panic("Vector index algorithm should be either FLAT or HNSW")
-		// }
-		// if (sc.VectorArgs.FlatOptions!= nil) {
-		// 	// (algo string, nargs int64, args ...string)
-		// 	_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Vector("FLAT",sc.VectorArgs.FlatOptions.))
-		// } else {
-
-		// }
+			// VECTOR <algorithm> <index_attribute_count> <index_attribute_name> <index_attribute_value>
+			// [<index_attribute_name> <index_attribute_value> ...]
+			// Ref: https://redis.io/docs/latest/develop/interact/search-and-query/advanced-concepts/vectors/#create-a-vector-index
+			if sc.VectorArgs == nil {
+				panic("FT.CREATE: SCHEMA VectorArgs cannot be nil")
+			}
+			if sc.VectorArgs.FlatOptions != nil && sc.VectorArgs.HNSWOptions != nil {
+				panic("FT.CREATE: SCHEMA VectorArgs FlatOptions and HNSWOptions are mutually exclusive")
+			}
+			if sc.VectorArgs.FlatOptions != nil {
+				// args = append(args, "FLAT")
+				// _cmd = cmds.Incomplete(cmds.FtCreateFieldFieldTypeVector(_cmd).())
+				if sc.VectorArgs.FlatOptions.Type == "" || sc.VectorArgs.FlatOptions.Dim == 0 || sc.VectorArgs.FlatOptions.DistanceMetric == "" {
+					panic("FT.CREATE: Type, Dim and DistanceMetric are required for VECTOR FLAT")
+				}
+				flatArgs := []interface{}{
+					"TYPE", sc.VectorArgs.FlatOptions.Type,
+					"DIM", sc.VectorArgs.FlatOptions.Dim,
+					"DISTANCE_METRIC", sc.VectorArgs.FlatOptions.DistanceMetric,
+				}
+				if sc.VectorArgs.FlatOptions.InitialCapacity > 0 {
+					flatArgs = append(flatArgs, "INITIAL_CAP", sc.VectorArgs.FlatOptions.InitialCapacity)
+				}
+				if sc.VectorArgs.FlatOptions.BlockSize > 0 {
+					flatArgs = append(flatArgs, "BLOCK_SIZE", sc.VectorArgs.FlatOptions.BlockSize)
+				}
+			}
 		case SearchFieldTypeGeoShape:
+			// FIXME: geo shape need a block
+			if sc.GeoShapeFieldType == "" {
+				panic("FT.CREATE: GeoShapeFieldType cannot be empty while SCHEMA FieldType is GEOSHAPE")
+			}
 			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Geoshape())
 		default:
 			panic(fmt.Sprintf("unexpected SearchFieldType: %s", sc.FieldType.String()))
+		}
+		if sc.NoStem {
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldFieldTypeText(_cmd).Nostem())
 		}
 		if sc.Sortable {
 			_cmd = cmds.Incomplete(cmds.FtCreateFieldFieldTypeText(_cmd).Sortable())
@@ -5224,6 +5241,7 @@ func (c *Compat) FTExplainWithArgs(ctx context.Context, index string, query stri
 
 func (c *Compat) FTInfo(ctx context.Context, index string) *FTInfoCmd {
 	cmd := c.client.B().FtInfo().Index(index).Build()
+	fmt.Println(cmd.Commands())
 	return newFTInfoCmd(c.client.Do(ctx, cmd))
 }
 
