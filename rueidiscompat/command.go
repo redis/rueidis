@@ -3924,100 +3924,201 @@ type FTSearchCmd struct {
 	options *FTSearchOptions
 }
 
-// Ref: https://redis.io/docs/latest/commands/ft.search/
+// Ref: https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1541
 func (cmd *FTSearchCmd) from(res rueidis.RedisResult) {
+	// redis message type array is not a RESP3 map
+	// res may be Map in RESP3, but is array in RESP2
 	fmt.Printf("rueidisresult %#v\n", res.String())
 
 	if err := res.Error(); err != nil {
 		cmd.SetErr(err)
 		return
 	}
-	m, err := res.ToMap()
+
+	data, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
 		return
 	}
-	totalResultsMsg, ok := m["total_results"]
-	if !ok {
-		cmd.SetErr(fmt.Errorf(`result map should contain key "total_results"`))
+
+	if len(data) < 1 {
+		cmd.SetErr(fmt.Errorf("unexpected search result format"))
+		return
 	}
-	totalResults, err := totalResultsMsg.AsInt64()
+
+	total, err := data[0].AsInt64()
 	if err != nil {
 		cmd.SetErr(err)
 		return
 	}
-	resultsMsg, ok := m["results"]
-	if !ok {
-		cmd.SetErr(fmt.Errorf(`result map should contain key "results"`))
-	}
-	resultsArr, err := resultsMsg.ToArray()
-	if err != nil {
-		cmd.SetErr(err)
-		return
-	}
-	ftSearchResult := FTSearchResult{Total: int(totalResults), Docs: make([]Document, 0, len(resultsArr))}
-	for _, result := range resultsArr {
-		// result: arr:  id, doc2, score, 3, "extra_attributes": [foo, bar]
-		resultMap, err := result.ToMap()
+
+	var results []Document
+	for i := 1; i < len(data); {
+		docID, err := data[i].ToString()
 		if err != nil {
-			cmd.SetErr(err)
+			cmd.SetErr(fmt.Errorf("invalid total results format: %w", err))
 			return
 		}
-		fmt.Println("resultMap", result.String())
-		doc := Document{}
-		for k, v := range resultMap {
-			switch k {
-			case "id":
-				idStr, err := v.ToString()
-				if err != nil {
-					cmd.SetErr(err)
-					return
-				}
-				doc.ID = idStr
-			case "extra_attributes":
-				// doc.ID = resultArr[i+1].String()
-				strMap, err := v.AsStrMap()
-				if err != nil {
-					cmd.SetErr(err)
-					return
-				}
-				doc.Fields = strMap
-				// docs[d].Doc, _ = record.values[j+1].AsStrMap()
-			case "score":
-				score, err := v.AsFloat64()
-				if err != nil {
-					cmd.SetErr(err)
-					return
-				}
-				doc.Score = &score
-			case "payload":
-				if !v.IsNil() {
-					payload, err := v.ToString()
-					if err != nil {
-						cmd.SetErr(err)
-						return
-					}
-					doc.Payload = &payload
-				}
-			case "sortkey":
-				if !v.IsNil() {
-					sortKey, err := v.ToString()
-					if err != nil {
-						cmd.SetErr(err)
-						return
-					}
-					doc.SortKey = &sortKey
-				}
-			}
+
+		doc := Document{
+			ID:     docID,
+			Fields: make(map[string]string),
+		}
+		i++
+
+		if cmd.options.NoContent {
+			results = append(results, doc)
+			continue
 		}
 
-		ftSearchResult.Docs = append(ftSearchResult.Docs, doc)
+		if cmd.options.WithScores && i < len(data) {
+			scoreStr, err := data[i].ToString()
+			if err != nil {
+				cmd.SetErr(fmt.Errorf("invalid score format: %w", err))
+				return
+			}
+			score, err := strconv.ParseFloat(scoreStr, 64)
+			if err != nil {
+				cmd.SetErr(fmt.Errorf("invalid score format: %w", err))
+				return
+			}
+			doc.Score = &score
+			i++
+		}
+
+		if cmd.options.WithPayloads && i < len(data) {
+			payload, err := data[i].ToString()
+			if err != nil {
+				cmd.SetErr(fmt.Errorf("invalid payload format: %w", err))
+				return
+			}
+			doc.Payload = &payload
+			i++
+		}
+
+		if cmd.options.WithSortKeys && i < len(data) {
+			sortKey, err := data[i].ToString()
+			if err != nil {
+				cmd.SetErr(fmt.Errorf("invalid payload format: %w", err))
+				return
+			}
+			doc.SortKey = &sortKey
+			i++
+		}
+
+		if i < len(data) {
+			fields, err := data[i].ToArray()
+			if err != nil {
+				cmd.SetErr(fmt.Errorf("invalid document fields format: %w", err))
+				return
+			}
+			for j := 0; j < len(fields); j += 2 {
+
+				key, err := fields[j].ToString()
+				if err != nil {
+					cmd.SetErr(fmt.Errorf("invalid field key format: %w", err))
+					return
+				}
+				value, err := fields[j+1].ToString()
+				if err != nil {
+					cmd.SetErr(fmt.Errorf("invalid field value format: %w", err))
+					return
+				}
+				doc.Fields[key] = value
+			}
+			i++
+		}
+
+		results = append(results, doc)
 	}
 
-	cmd.SetVal(ftSearchResult)
+	cmd.SetVal(FTSearchResult{
+		Total: int(total),
+		Docs:  results,
+	})
+	/// Old, wrong parsing
 
-	_r, _ := json.MarshalIndent(ftSearchResult, "", "\t")
-	fmt.Print(string(_r))
+	// totalResultsMsg, ok := m["total_results"]
+	// if !ok {
+	// 	cmd.SetErr(fmt.Errorf(`result map should contain key "total_results"`))
+	// }
+	// totalResults, err := totalResultsMsg.AsInt64()
+	// if err != nil {
+	// 	cmd.SetErr(err)
+	// 	return
+	// }
+	// resultsMsg, ok := m["results"]
+	// if !ok {
+	// 	cmd.SetErr(fmt.Errorf(`result map should contain key "results"`))
+	// }
+	// resultsArr, err := resultsMsg.ToArray()
+	// if err != nil {
+	// 	cmd.SetErr(err)
+	// 	return
+	// }
+	// ftSearchResult := FTSearchResult{Total: int(totalResults), Docs: make([]Document, 0, len(resultsArr))}
+	// for _, result := range resultsArr {
+	// 	// result: arr:  id, doc2, score, 3, "extra_attributes": [foo, bar]
+	// 	resultMap, err := result.ToMap()
+	// 	if err != nil {
+	// 		cmd.SetErr(err)
+	// 		return
+	// 	}
+	// 	fmt.Println("resultMap", result.String())
+	// 	doc := Document{}
+	// 	for k, v := range resultMap {
+	// 		switch k {
+	// 		case "id":
+	// 			idStr, err := v.ToString()
+	// 			if err != nil {
+	// 				cmd.SetErr(err)
+	// 				return
+	// 			}
+	// 			doc.ID = idStr
+	// 		case "extra_attributes":
+	// 			// doc.ID = resultArr[i+1].String()
+	// 			strMap, err := v.AsStrMap()
+	// 			if err != nil {
+	// 				cmd.SetErr(err)
+	// 				return
+	// 			}
+	// 			doc.Fields = strMap
+	// 			// docs[d].Doc, _ = record.values[j+1].AsStrMap()
+	// 		case "score":
+	// 			score, err := v.AsFloat64()
+	// 			if err != nil {
+	// 				cmd.SetErr(err)
+	// 				return
+	// 			}
+	// 			doc.Score = &score
+	// 		case "payload":
+	// 			if !v.IsNil() {
+	// 				payload, err := v.ToString()
+	// 				if err != nil {
+	// 					cmd.SetErr(err)
+	// 					return
+	// 				}
+	// 				doc.Payload = &payload
+	// 			}
+	// 		case "sortkey":
+	// 			if !v.IsNil() {
+	// 				sortKey, err := v.ToString()
+	// 				if err != nil {
+	// 					cmd.SetErr(err)
+	// 					return
+	// 				}
+	// 				doc.SortKey = &sortKey
+	// 			}
+	// 		}
+	// 	}
+
+	// 	ftSearchResult.Docs = append(ftSearchResult.Docs, doc)
+	// }
+
+	// cmd.SetVal(ftSearchResult)
+
+	// _r, _ := json.MarshalIndent(ftSearchResult, "", "\t")
+	// fmt.Print(string(_r))
 
 }
 
