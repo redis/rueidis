@@ -35,6 +35,10 @@ services:
     image: redis:5-alpine
     ports:
       - "6356:6379"
+  compat-redisearch:
+    image: redis/redis-stack:7.4.0-v0
+    ports:
+      - "6381:6379"
   sentinel:
     image: redis:7.4-alpine
     entrypoint:
