@@ -3358,36 +3358,42 @@ func newJSONSliceCmd(res rueidis.RedisResult) *JSONSliceCmd {
 	return cmd
 }
 
-type mapStringInterface map[string]any
 type MapMapStringInterfaceCmd struct {
-	baseCmd[map[string]mapStringInterface]
+	baseCmd[map[string]any]
 }
 
 func (cmd *MapMapStringInterfaceCmd) from(res rueidis.RedisResult) {
-	// outerMap: map[string]mapStringInterface
-	outerMap, err := res.ToMap()
+	arr, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
 		return
 	}
-	cmd.val = make(map[string]mapStringInterface, len(outerMap))
-	for k, v := range outerMap {
-		// _m: map[string]any
-		_m, err := v.ToMap()
+	data := make(map[string]any, len(arr)/2)
+	for i := 0; i < len(arr); i++ {
+		arr1, err := arr[i].ToArray()
 		if err != nil {
 			cmd.SetErr(err)
 			return
 		}
-		cmd.val[k] = make(map[string]any, len(_m))
-		for _k, _v := range _m {
-			val, err := _v.ToAny()
+		for _i := 0; _i < len(arr1); _i += 2 {
+			key, err := arr1[_i].ToString()
 			if err != nil {
 				cmd.SetErr(err)
 				return
 			}
-			cmd.val[k][_k] = val
+			if !arr1[_i+1].IsNil() {
+				value, err := arr1[_i+1].ToAny()
+				if err != nil {
+					cmd.SetErr(err)
+					return
+				}
+				data[key] = value
+			} else {
+				data[key] = nil
+			}
 		}
 	}
+	cmd.SetVal(data)
 }
 
 func newMapMapStringInterfaceCmd(res rueidis.RedisResult) *MapMapStringInterfaceCmd {
