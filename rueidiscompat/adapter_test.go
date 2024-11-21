@@ -11770,7 +11770,7 @@ func testAdapterSearchRESP2() {
 			Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
 		})
 
-		FIt("should FTCreate and FTSearch WithScores", Label("search", "ftcreate", "ftsearch"), func() {
+		It("should FTCreate and FTSearch WithScores", Label("search", "ftcreate", "ftsearch"), func() {
 			// FIXME: FieldType
 			val, err := adapter.FTCreate(ctx, "txt", &FTCreateOptions{}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText}).Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -11996,7 +11996,7 @@ func testAdapterSearchRESP2() {
 
 		})
 
-		It("should FTSpellCheck", Label("search", "ftcreate", "ftsearch", "ftspellcheck"), func() {
+		FIt("should FTSpellCheck", Label("search", "ftcreate", "ftsearch", "ftspellcheck"), func() {
 			text1 := &FieldSchema{FieldName: "f1", FieldType: SearchFieldTypeText}
 			text2 := &FieldSchema{FieldName: "f2", FieldType: SearchFieldTypeText}
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1, text2).Result()

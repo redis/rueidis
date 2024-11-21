@@ -5252,18 +5252,25 @@ func (c *Compat) FTSpellCheck(ctx context.Context, index string, query string) *
 
 func (c *Compat) FTSpellCheckWithArgs(ctx context.Context, index string, query string, options *FTSpellCheckOptions) *FTSpellCheckCmd {
 	_cmd := cmds.Incomplete(c.client.B().FtSpellcheck().Index(index).Query(query))
-	_cmd = cmds.Incomplete(cmds.FtSpellcheckQuery(_cmd).Distance(int64(options.Distance)))
-	if options.Terms != nil {
-		if options.Terms.Inclusion != "INCLUDE" && options.Terms.Inclusion != "EXCLUDE" {
-			panic("Inclusion should be either INCLUDE or EXCLUDE")
+	if options != nil {
+		if options.Distance > 0 {
+			_cmd = cmds.Incomplete(cmds.FtSpellcheckQuery(_cmd).Distance(int64(options.Distance)))
 		}
-		if options.Terms.Inclusion == "INCLUDE" {
-			_cmd = cmds.Incomplete(cmds.FtSpellcheckQuery(_cmd).TermsInclude().Dictionary(options.Terms.Dictionary).Terms(argsToSlice(options.Terms.Terms)...))
-		} else {
-			_cmd = cmds.Incomplete(cmds.FtSpellcheckQuery(_cmd).TermsExclude().Dictionary(options.Terms.Dictionary).Terms(argsToSlice(options.Terms.Terms)...))
+		if options.Terms != nil {
+			if options.Terms.Inclusion != "INCLUDE" && options.Terms.Inclusion != "EXCLUDE" {
+				panic("Inclusion should be either INCLUDE or EXCLUDE")
+			}
+			if options.Terms.Inclusion == "INCLUDE" {
+				_cmd = cmds.Incomplete(cmds.FtSpellcheckQuery(_cmd).TermsInclude().Dictionary(options.Terms.Dictionary).Terms(argsToSlice(options.Terms.Terms)...))
+			} else {
+				_cmd = cmds.Incomplete(cmds.FtSpellcheckQuery(_cmd).TermsExclude().Dictionary(options.Terms.Dictionary).Terms(argsToSlice(options.Terms.Terms)...))
+			}
+		}
+		if options.Dialect > 0 {
+			_cmd = cmds.Incomplete(cmds.FtSpellcheckQuery(_cmd).Dialect(int64(options.Dialect)))
 		}
 	}
-	cmd := cmds.FtSpellcheckQuery(_cmd).Dialect(int64(options.Dialect)).Build()
+	cmd := cmds.FtSpellcheckQuery(_cmd).Build()
 	return newFTSpellCheckCmd(c.client.Do(ctx, cmd))
 }
 
