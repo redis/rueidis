@@ -10,7 +10,7 @@ func newPool(cap int, dead wire, idleConnTTL time.Duration, minSize int, makeFn 
 		cap = DefaultPoolSize
 	}
 
-	p := &pool{
+	return &pool{
 		size:        0,
 		minSize:     minSize,
 		cap:         cap,
@@ -20,25 +20,20 @@ func newPool(cap int, dead wire, idleConnTTL time.Duration, minSize int, makeFn 
 		cond:        sync.NewCond(&sync.Mutex{}),
 		idleConnTTL: idleConnTTL,
 	}
-
-	if idleConnTTL != 0 {
-		p.timer = time.AfterFunc(idleConnTTL, p.removeIdleConns)
-	}
-
-	return p
 }
 
 type pool struct {
-	dead        wire
-	cond        *sync.Cond
-	make        func() wire
-	list        []wire
-	size        int
-	minSize     int
-	cap         int
-	down        bool
-	idleConnTTL time.Duration
-	timer       *time.Timer
+	dead          wire
+	cond          *sync.Cond
+	make          func() wire
+	list          []wire
+	size          int
+	minSize       int
+	cap           int
+	down          bool
+	idleConnTTL   time.Duration
+	timer         *time.Timer
+	timerIsActive bool
 }
 
 func (p *pool) Acquire() (v wire) {
@@ -64,7 +59,7 @@ func (p *pool) Store(v wire) {
 	p.cond.L.Lock()
 	if !p.down && v.Error() == nil {
 		p.list = append(p.list, v)
-		p.resetTimerIfNeeded()
+		p.startTimerIfNeeded()
 	} else {
 		p.size--
 		v.Close()
@@ -84,11 +79,21 @@ func (p *pool) Close() {
 	p.cond.Broadcast()
 }
 
-func (p *pool) removeIdleConns() {
-	if p.idleConnTTL == 0 {
+func (p *pool) startTimerIfNeeded() {
+	if p.idleConnTTL == 0 || p.timerIsActive || len(p.list) <= p.minSize {
 		return
 	}
 
+	p.timerIsActive = true
+	if p.timer == nil {
+		p.timer = time.AfterFunc(p.idleConnTTL, p.removeIdleConns)
+		return
+	}
+
+	p.timer.Reset(p.idleConnTTL)
+}
+
+func (p *pool) removeIdleConns() {
 	p.cond.L.Lock()
 	defer p.cond.L.Unlock()
 
@@ -96,24 +101,18 @@ func (p *pool) removeIdleConns() {
 		return
 	}
 
-	newLen := len(p.list) - min(p.size-p.minSize, len(p.list))
+	newLen := min(p.minSize, len(p.list))
 	for _, w := range p.list[newLen:] {
 		w.Close()
 	}
 
 	p.list = p.list[:newLen]
 	p.size = p.minSize
-
-	p.stopTimer()
-}
-
-func (p *pool) resetTimerIfNeeded() {
-	if p.timer != nil && p.size > p.minSize {
-		p.timer.Reset(p.idleConnTTL)
-	}
+	p.timerIsActive = false
 }
 
 func (p *pool) stopTimer() {
+	p.timerIsActive = false
 	if p.timer != nil {
 		p.timer.Stop()
 	}
