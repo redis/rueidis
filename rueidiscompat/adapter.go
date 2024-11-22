@@ -5137,7 +5137,7 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 			if sc.GeoShapeFieldType == "" {
 				panic("FT.CREATE: GeoShapeFieldType cannot be empty while SCHEMA FieldType is GEOSHAPE")
 			}
-			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Geoshape())
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Geoshape().FieldName(sc.GeoShapeFieldType))
 		default:
 			panic(fmt.Sprintf("unexpected SearchFieldType: %s", sc.FieldType.String()))
 		}
