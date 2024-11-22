@@ -5173,7 +5173,7 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 			_cmd = cmds.Incomplete(cmds.FtCreateFieldFieldTypeText(_cmd).Indexempty())
 		}
 		if sc.IndexMissing {
-			_cmd = cmds.Incomplete(cmds.FtCreateFieldFieldTypeText(_cmd).Casesensitive())
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldFieldTypeText(_cmd).Indexmissing())
 		}
 	}
 
