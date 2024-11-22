@@ -11996,7 +11996,7 @@ func testAdapterSearchRESP2() {
 
 		})
 
-		FIt("should FTSpellCheck", Label("search", "ftcreate", "ftsearch", "ftspellcheck"), func() {
+		It("should FTSpellCheck", Label("search", "ftcreate", "ftsearch", "ftspellcheck"), func() {
 			text1 := &FieldSchema{FieldName: "f1", FieldType: SearchFieldTypeText}
 			text2 := &FieldSchema{FieldName: "f2", FieldType: SearchFieldTypeText}
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1, text2).Result()
@@ -12508,7 +12508,6 @@ func testAdapterSearchRESP2() {
 		})
 
 		It("should FTSynDump", Label("search", "ftsyndump"), func() {
-
 			text1 := &FieldSchema{FieldName: "title", FieldType: SearchFieldTypeText}
 			text2 := &FieldSchema{FieldName: "body", FieldType: SearchFieldTypeText}
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{OnHash: true}, text1, text2).Result()
@@ -12641,7 +12640,7 @@ func testAdapterSearchRESP2() {
 			Expect(res.Docs[0].Fields["__v_score"]).To(BeEquivalentTo("0"))
 		})
 
-		It("should FTCreate and FTSearch text params", Label("search", "ftcreate", "ftsearch"), func() {
+		FIt("should FTCreate and FTSearch text params", Label("search", "ftcreate", "ftsearch"), func() {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "name", FieldType: SearchFieldTypeText}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))

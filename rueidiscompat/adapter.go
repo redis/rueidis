@@ -5440,15 +5440,30 @@ func (c *Compat) FTSearchWithArgs(ctx context.Context, index string, query strin
 	return newFTSearchCmd(c.client.Do(ctx, cmd), options)
 }
 
-func (c *Compat) FTSynDump(ctx context.Context, index string) *FTSynDumpCmd { return nil }
+func (c *Compat) FTSynDump(ctx context.Context, index string) *FTSynDumpCmd {
+	cmd := c.client.B().FtSyndump().Index(index).Build()
+	return newFTSynDumpCmd(c.client.Do(ctx, cmd))
+}
+
 func (c *Compat) FTSynUpdate(ctx context.Context, index string, synGroupId interface{}, terms []interface{}) *StatusCmd {
-	return nil
+	cmd := c.client.B().FtSynupdate().Index(index).SynonymGroupId(str(synGroupId)).Term(argToSlice(terms)...).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
 }
+
 func (c *Compat) FTSynUpdateWithArgs(ctx context.Context, index string, synGroupId interface{}, options *FTSynUpdateOptions, terms []interface{}) *StatusCmd {
-	return nil
+	_cmd := cmds.Incomplete(c.client.B().FtSynupdate().Index(index).SynonymGroupId(str(synGroupId)))
+	if options != nil {
+		if options.SkipInitialScan {
+			_cmd = cmds.Incomplete(cmds.FtSynupdateSynonymGroupId(_cmd).Skipinitialscan())
+		}
+	}
+	cmd := cmds.FtSynupdateSynonymGroupId(_cmd).Term(argsToSlice(terms)...).Build()
+	return newStatusCmd(c.client.Do(ctx, cmd))
 }
+
 func (c *Compat) FTTagVals(ctx context.Context, index string, field string) *StringSliceCmd {
-	return nil
+	cmd := c.client.B().FtTagvals().Index(index).FieldName(field).Build()
+	return newStringSliceCmd(c.client.Do(ctx, cmd))
 }
 
 func (c CacheCompat) BitCount(ctx context.Context, key string, bitCount *BitCount) *IntCmd {

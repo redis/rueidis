@@ -58,6 +58,10 @@ func (cmd *baseCmd[T]) Val() T {
 	return cmd.val
 }
 
+func (cmd *baseCmd[T]) SetRawVal(val T) {
+	cmd.val = val
+}
+
 func (cmd *baseCmd[T]) RawVal() any {
 	return cmd.rawVal
 }
@@ -3464,89 +3468,71 @@ type FTAggregateOptions struct {
 }
 
 type AggregateCmd struct {
-	baseCmd[FTAggregateResult]
+	baseCmd[*FTAggregateResult]
 }
 
 func (cmd *AggregateCmd) from(res rueidis.RedisResult) {
-	fmt.Printf("rueidisresult %#v\n", res.String())
-
 	if err := res.Error(); err != nil {
 		cmd.SetErr(err)
 		return
 	}
-	m, err := res.ToMap()
+	rows, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
 		return
 	}
-	totalResultsMsg, ok := m["total_results"]
-	if !ok {
-		cmd.SetErr(fmt.Errorf(`result map should contain key "total_results"`))
-	}
-	totalResults, err := totalResultsMsg.AsInt64()
-	if err != nil {
-		cmd.SetErr(err)
-		return
-	}
-	resultsMsg, ok := m["results"]
-	if !ok {
-		cmd.SetErr(fmt.Errorf(`result map should contain key "results"`))
-	}
-	resultsArr, err := resultsMsg.ToArray()
-	if err != nil {
-		cmd.SetErr(err)
-		return
-	}
-	ftAggregateResult := FTAggregateResult{Total: int(totalResults), Rows: make([]AggregateRow, 0, len(resultsArr))}
-	for _, result := range resultsArr {
-		resultMap, err := result.ToMap()
+	anyArr := make([]any, 0, len(rows))
+	for _, e := range rows {
+		anyE, err := e.ToAny()
 		if err != nil {
 			cmd.SetErr(err)
 			return
 		}
-		fmt.Println("resultMap", result.String())
-		// FIXME: unknown length?
-		row := AggregateRow{Fields: make(map[string]any)}
-		for k, v := range resultMap {
-			switch k {
-			case "extra_attributes":
-				// simple string
-				_m, err := v.AsMap()
-				if err != nil {
-					cmd.SetErr(err)
-					return
-				}
-				for _k, _v := range _m {
-					anyVal, err := _v.ToAny()
-					if err != nil {
-						cmd.SetErr(err)
-						return
-					}
-					row.Fields[_k] = anyVal
-				}
-			case "values":
-				// FIXME: do we have this?
-				continue
-			default:
-				fmt.Println("xxx got v", v.String())
-				// case "id":
-				// 	idStr, err := v.ToString()
-				// 	if err != nil {
-				// 		cmd.SetErr(err)
-				// 		return
-				// 	}
-				// 	row. = idStr
-			}
-		}
+		anyArr = append(anyArr, anyE)
+	}
+	result, err := processAggregateResult(anyArr)
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetVal(result)
+}
 
-		ftAggregateResult.Rows = append(ftAggregateResult.Rows, row)
+// Ref: https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L584
+func processAggregateResult(data []interface{}) (*FTAggregateResult, error) {
+	if len(data) == 0 {
+		return nil, fmt.Errorf("no data returned")
 	}
 
-	cmd.SetVal(ftAggregateResult)
+	total, ok := data[0].(int64)
+	if !ok {
+		return nil, fmt.Errorf("invalid total format")
+	}
 
-	_r, _ := json.MarshalIndent(ftAggregateResult, "", "\t")
-	fmt.Print(string(_r))
+	rows := make([]AggregateRow, 0, len(data)-1)
+	for _, row := range data[1:] {
+		fields, ok := row.([]interface{})
+		if !ok {
+			return nil, fmt.Errorf("invalid row format")
+		}
 
+		rowMap := make(map[string]interface{})
+		for i := 0; i < len(fields); i += 2 {
+			key, ok := fields[i].(string)
+			if !ok {
+				return nil, fmt.Errorf("invalid field key format")
+			}
+			value := fields[i+1]
+			rowMap[key] = value
+		}
+		rows = append(rows, AggregateRow{Fields: rowMap})
+	}
+
+	result := &FTAggregateResult{
+		Total: int(total),
+		Rows:  rows,
+	}
+	return result, nil
 }
 
 func newAggregateCmd(res rueidis.RedisResult) *AggregateCmd {
@@ -4417,7 +4403,33 @@ func (cmd *FTSynDumpCmd) RawResult() (any, error) {
 }
 
 func (cmd *FTSynDumpCmd) from(res rueidis.RedisResult) {
-	// FIXME: impl
+	if err := res.Error(); err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	arr, err := res.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	results := make([]FTSynDumpResult, 0, len(arr)/2)
+	for i := 0; i < len(arr); i += 2 {
+		term, err := arr[i].ToString()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		synonyms, err := arr[i+1].AsStrSlice()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		results = append(results, FTSynDumpResult{
+			Term:     term,
+			Synonyms: synonyms,
+		})
+	}
+	cmd.SetVal(results)
 }
 
 func newFTSynDumpCmd(res rueidis.RedisResult) *FTSynDumpCmd {
