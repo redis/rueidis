@@ -12640,7 +12640,7 @@ func testAdapterSearchRESP2() {
 			Expect(res.Docs[0].Fields["__v_score"]).To(BeEquivalentTo("0"))
 		})
 
-		FIt("should FTCreate and FTSearch text params", Label("search", "ftcreate", "ftsearch"), func() {
+		It("should FTCreate and FTSearch text params", Label("search", "ftcreate", "ftsearch"), func() {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "name", FieldType: SearchFieldTypeText}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
@@ -12752,7 +12752,7 @@ func testAdapterSearchRESP2() {
 			Expect(res.Attributes[0].WithSuffixtrie).To(BeTrue())
 		})
 
-		It("should test dialect 4", Label("search", "ftcreate", "ftsearch", "NonRedisEnterprise"), func() {
+		FIt("should test dialect 4", Label("search", "ftcreate", "ftsearch", "NonRedisEnterprise"), func() {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{
 				Prefix: []interface{}{"resource:"},
 			}, &FieldSchema{

@@ -5425,7 +5425,7 @@ func (c *Compat) FTSearchWithArgs(ctx context.Context, index string, query strin
 		}
 		// [PARAMS nargs name value [ name value ...]]
 		if options.Params != nil {
-			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Params().Nargs(int64(len(options.Params))))
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Params().Nargs(int64(len(options.Params) * 2)))
 			for name, val := range options.Params {
 				_cmd = cmds.Incomplete(cmds.FtSearchParamsNargs(_cmd).NameValue().NameValue(name, str(val)))
 			}
