@@ -12752,7 +12752,7 @@ func testAdapterSearchRESP2() {
 			Expect(res.Attributes[0].WithSuffixtrie).To(BeTrue())
 		})
 
-		FIt("should test dialect 4", Label("search", "ftcreate", "ftsearch", "NonRedisEnterprise"), func() {
+		It("should test dialect 4", Label("search", "ftcreate", "ftsearch", "NonRedisEnterprise"), func() {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{
 				Prefix: []interface{}{"resource:"},
 			}, &FieldSchema{

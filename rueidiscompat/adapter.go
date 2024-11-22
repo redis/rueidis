@@ -5114,7 +5114,10 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 			if sc.VectorArgs.FlatOptions != nil && sc.VectorArgs.HNSWOptions != nil {
 				panic("FT.CREATE: SCHEMA VectorArgs FlatOptions and HNSWOptions are mutually exclusive")
 			}
+			var args []any
+			algorithm := ""
 			if sc.VectorArgs.FlatOptions != nil {
+				algorithm = "FLAT"
 				// args = append(args, "FLAT")
 				// _cmd = cmds.Incomplete(cmds.FtCreateFieldFieldTypeVector(_cmd).())
 				if sc.VectorArgs.FlatOptions.Type == "" || sc.VectorArgs.FlatOptions.Dim == 0 || sc.VectorArgs.FlatOptions.DistanceMetric == "" {
@@ -5131,7 +5134,42 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 				if sc.VectorArgs.FlatOptions.BlockSize > 0 {
 					flatArgs = append(flatArgs, "BLOCK_SIZE", sc.VectorArgs.FlatOptions.BlockSize)
 				}
+				// args = append(args, len(flatArgs))
+				args = flatArgs
+				// args = append(args, flatArgs...)
 			}
+			if sc.VectorArgs.HNSWOptions != nil {
+				algorithm = "HNSW"
+				// args = append(args, "HNSW")
+				if sc.VectorArgs.HNSWOptions.Type == "" || sc.VectorArgs.HNSWOptions.Dim == 0 || sc.VectorArgs.HNSWOptions.DistanceMetric == "" {
+					panic("FT.CREATE: Type, Dim and DistanceMetric are required for VECTOR HNSW")
+				}
+				hnswArgs := []interface{}{
+					"TYPE", sc.VectorArgs.HNSWOptions.Type,
+					"DIM", sc.VectorArgs.HNSWOptions.Dim,
+					"DISTANCE_METRIC", sc.VectorArgs.HNSWOptions.DistanceMetric,
+				}
+				if sc.VectorArgs.HNSWOptions.InitialCapacity > 0 {
+					hnswArgs = append(hnswArgs, "INITIAL_CAP", sc.VectorArgs.HNSWOptions.InitialCapacity)
+				}
+				if sc.VectorArgs.HNSWOptions.MaxEdgesPerNode > 0 {
+					hnswArgs = append(hnswArgs, "M", sc.VectorArgs.HNSWOptions.MaxEdgesPerNode)
+				}
+				if sc.VectorArgs.HNSWOptions.MaxAllowedEdgesPerNode > 0 {
+					hnswArgs = append(hnswArgs, "EF_CONSTRUCTION", sc.VectorArgs.HNSWOptions.MaxAllowedEdgesPerNode)
+				}
+				if sc.VectorArgs.HNSWOptions.EFRunTime > 0 {
+					hnswArgs = append(hnswArgs, "EF_RUNTIME", sc.VectorArgs.HNSWOptions.EFRunTime)
+				}
+				if sc.VectorArgs.HNSWOptions.Epsilon > 0 {
+					hnswArgs = append(hnswArgs, "EPSILON", sc.VectorArgs.HNSWOptions.Epsilon)
+				}
+				// args = append(args, len(hnswArgs))
+				// args = append(args, hnswArgs...)
+				args = hnswArgs
+			}
+			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Vector(algorithm, int64(len(args)), argsToSlice(args)...))
+
 		case SearchFieldTypeGeoShape:
 			// FIXME: geo shape need a block
 			if sc.GeoShapeFieldType == "" {
