@@ -11686,20 +11686,23 @@ func testAdapterSearchRESP3() {
 			val1 := adapter.FTSearchWithArgs(ctx, "txt", "foo bar", &FTSearchOptions{NoContent: true}).RawVal()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val1).To(BeEquivalentTo(res1))
-			totalResults := res1.(map[interface{}]interface{})["total_results"]
+			totalResults := res1.(map[string]interface{})["total_results"]
+			// totalResults := res1.(map[interface{}]interface{})["total_results"]
 			Expect(totalResults).To(BeEquivalentTo(int64(0)))
 			res2, err := adapter.FTSearchWithArgs(ctx, "txt", "foo bar hello world", &FTSearchOptions{NoContent: true}).RawResult()
 			Expect(err).NotTo(HaveOccurred())
-			totalResults2 := res2.(map[interface{}]interface{})["total_results"]
+			totalResults2 := res2.(map[string]interface{})["total_results"]
+			// totalResults2 := res2.(map[interface{}]interface{})["total_results"]
 			Expect(totalResults2).To(BeEquivalentTo(int64(1)))
 
 			// Test with UnstableResp3 false
-			Expect(func() {
-				rawRes2, _ := adapter2resp3.FTSearchWithArgs(ctx, "txt", "foo bar hello world", &FTSearchOptions{NoContent: true}).RawResult()
-				rawVal2 := adapter2resp3.FTSearchWithArgs(ctx, "txt", "foo bar hello world", &FTSearchOptions{NoContent: true}).RawVal()
-				Expect(rawRes2).To(BeNil())
-				Expect(rawVal2).To(BeNil())
-			}).Should(Panic())
+			// NOTE: rueidis can't support this behavior because we cannot know whether UnstableResp3 is enabled or not
+			// Expect(func() {
+			// 	rawRes2, _ := adapter2resp3.FTSearchWithArgs(ctx, "txt", "foo bar hello world", &FTSearchOptions{NoContent: true}).RawResult()
+			// 	rawVal2 := adapter2resp3.FTSearchWithArgs(ctx, "txt", "foo bar hello world", &FTSearchOptions{NoContent: true}).RawVal()
+			// 	Expect(rawRes2).To(BeNil())
+			// 	Expect(rawVal2).To(BeNil())
+			// }).Should(Panic())
 		})
 		It("should handle FTSynDump with Unstable RESP3 Search Module and without stability", Label("search", "ftsyndump"), func() {
 			text1 := &FieldSchema{FieldName: "title", FieldType: SearchFieldTypeText}
