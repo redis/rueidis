@@ -456,7 +456,7 @@ func (r RedisResult) ToMap() (v map[string]RedisMessage, err error) {
 	if r.err != nil {
 		err = r.err
 	} else {
-		v, err = r.val.ToMap()
+		v, err = r.val.AsMap()
 	}
 	return
 }
@@ -469,6 +469,16 @@ func (r RedisResult) ToAny() (v any, err error) {
 		v, err = r.val.ToAny()
 	}
 	return
+}
+
+// IsMap delegates to RedisMessage.IsMap
+func (r RedisResult) IsMap() bool {
+	return r.val.IsMap()
+}
+
+// IsArray delegates to RedisMessage.IsArray
+func (r RedisResult) IsArray() bool {
+	return r.val.IsArray()
 }
 
 // IsCacheHit delegates to RedisMessage.IsCacheHit
