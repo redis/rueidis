@@ -58,8 +58,8 @@ func (cmd *baseCmd[T]) Val() T {
 	return cmd.val
 }
 
-func (cmd *baseCmd[T]) SetRawVal(val T) {
-	cmd.val = val
+func (cmd *baseCmd[T]) SetRawVal(rawVal any) {
+	cmd.rawVal = rawVal
 }
 
 func (cmd *baseCmd[T]) RawVal() any {
@@ -3476,6 +3476,34 @@ func (cmd *AggregateCmd) from(res rueidis.RedisResult) {
 		cmd.SetErr(err)
 		return
 	}
+	anyRes, err := res.ToAny()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetRawVal(anyRes)
+	if !(res.IsMap() || res.IsArray()) {
+		panic("res should be either map(RESP3) or array(RESP2)")
+	}
+	if res.IsMap() {
+		total, docs, err := res.AsFtAggregate()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		aggResult := &FTAggregateResult{Total: int(total)}
+		for _, doc := range docs {
+			anyMap := make(map[string]any, len(doc))
+			for k, v := range doc {
+				anyMap[k] = v
+			}
+			aggResult.Rows = append(aggResult.Rows, AggregateRow{anyMap})
+		}
+		fmt.Println("docs", docs)
+		cmd.SetVal(aggResult)
+		return
+	}
+	// is RESP2 array
 	rows, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
@@ -3998,13 +4026,17 @@ func (cmd *FTInfoCmd) from(res rueidis.RedisResult) {
 		cmd.SetErr(err)
 		return
 	}
-
 	m, err := res.AsMap()
 	if err != nil {
 		cmd.SetErr(err)
 		return
 	}
-
+	anyM, err := res.ToAny()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetRawVal(anyM)
 	anyMap := make(map[string]any, len(m))
 	for k, v := range m {
 		anyMap[k], err = v.ToAny()
@@ -4013,7 +4045,6 @@ func (cmd *FTInfoCmd) from(res rueidis.RedisResult) {
 			return
 		}
 	}
-
 	ftInfoResult, err := parseFTInfo(anyMap)
 	if err != nil {
 		cmd.SetErr(err)
@@ -4061,13 +4092,80 @@ func (cmd *FTSpellCheckCmd) Result() ([]SpellCheckResult, error) {
 }
 
 func (cmd *FTSpellCheckCmd) from(res rueidis.RedisResult) {
-	// FIXME: impl
-	fmt.Println(res.String())
+	if err := res.Error(); err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	if !(res.IsMap() || res.IsArray()) {
+		panic("res should be either map(RESP3) or array(RESP2)")
+	}
+	if res.IsMap() {
+		// is RESP3 map
+		m, err := res.ToMap()
+		if err != nil {
+			cmd.SetErr(err)
+		}
+		// fmt.Println(res.String())
+		fmt.Println(m)
+		anyM, err := res.ToAny()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		cmd.SetRawVal(anyM)
+		spellCheckResults := []SpellCheckResult{}
+		result := m["results"]
+		resultMap, err := result.ToMap()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		for k, v := range resultMap {
+			result := SpellCheckResult{}
+			result.Term = k
+			suggestions, err := v.ToArray()
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+			for _, suggestion := range suggestions {
+				// map key: suggestion, score
+				sugMap, err := suggestion.ToMap()
+				if err != nil {
+					cmd.SetErr(err)
+					return
+				}
+				for _k, _v := range sugMap {
+					score, err := _v.ToFloat64()
+					if err != nil {
+						cmd.SetErr(err)
+						return
+					}
+					fmt.Println("k: ", _k, "v", score)
+					result.Suggestions = append(result.Suggestions, SpellCheckSuggestion{Suggestion: _k, Score: score})
+				}
+
+				// for
+				// result.Suggestions = SpellCheckSuggestion{Suggestion: suggestion}
+			}
+			spellCheckResults = append(spellCheckResults, result)
+		}
+		cmd.SetVal(spellCheckResults)
+		// results := resSpellCheck.(map[interface{}]interface{})["results"].(map[interface{}]interface{})
+		return
+	}
+	// is RESP2 array
 	arr, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
 		return
 	}
+	anyRes, err := res.ToAny()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetRawVal(anyRes)
 	AnyArr := make([]any, 0, len(arr))
 	for _, e := range arr {
 		anyE, err := e.ToAny()
@@ -4082,6 +4180,7 @@ func (cmd *FTSpellCheckCmd) from(res rueidis.RedisResult) {
 		cmd.SetErr(err)
 		return
 	}
+
 	cmd.SetVal(result)
 }
 
