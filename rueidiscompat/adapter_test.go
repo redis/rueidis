@@ -68,7 +68,6 @@ var (
 	adaptersearchresp2 Cmdable
 	adaptercluster2    Cmdable
 	adapterresp3       Cmdable
-	adapter2resp3      Cmdable
 	adaptercluster3    Cmdable
 )
 
@@ -85,7 +84,6 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 	adapterresp3 = NewAdapter(clientresp3)
-	adapter2resp3 = NewAdapter(clientresp3)
 	adaptercluster3 = NewAdapter(clusterresp3)
 	clientresp2, err = rueidis.NewClient(rueidis.ClientOption{
 		InitAddress:  []string{"127.0.0.1:6356"},
@@ -11563,9 +11561,11 @@ func testAdapterCache(resp3 bool) {
 
 func testAdapterSearchRESP3() {
 	var adapter Cmdable
+	var client rueidis.Client
 
 	BeforeEach(func() {
 		adapter = adapterresp3
+		client = clientresp3
 		Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
 		Expect(adapter.FlushAll(ctx).Err()).NotTo(HaveOccurred())
 	})
@@ -11579,7 +11579,7 @@ func testAdapterSearchRESP3() {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1, num1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp3, "idx1", 3)
+			WaitForIndexing(client, "idx1", 3)
 
 			adapter.HSet(ctx, "doc1", "PrimaryKey", "9::362330", "CreatedDateTimeUTC", "637387878524969984")
 			adapter.HSet(ctx, "doc2", "PrimaryKey", "9::362329", "CreatedDateTimeUTC", "637387875859270016")
@@ -11602,8 +11602,8 @@ func testAdapterSearchRESP3() {
 			Expect(rawValResults[0]).To(Or(BeEquivalentTo(results[0]), BeEquivalentTo(results[1])))
 			Expect(rawValResults[1]).To(Or(BeEquivalentTo(results[0]), BeEquivalentTo(results[1])))
 
-			// Test with UnstableResp3 false
 			// NOTE: rueidis can't support this behavior because we cannot know whether UnstableResp3 is enabled or not
+			// Test with UnstableResp3 false
 			// Expect(func() {
 			// 	options = &FTAggregateOptions{Apply: []FTAggregateApply{{Field: "@CreatedDateTimeUTC * 10", As: "CreatedDateTimeUTC"}}}
 			// 	rawRes, _ := adapter2resp3.FTAggregateWithArgs(ctx, "idx1", "*", options).RawResult()
@@ -11617,7 +11617,7 @@ func testAdapterSearchRESP3() {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText, Sortable: true, NoStem: true}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp3, "idx1", 3)
+			WaitForIndexing(client, "idx1", 3)
 
 			resInfo, err := adapter.FTInfo(ctx, "idx1").RawResult()
 			Expect(err).NotTo(HaveOccurred())
@@ -11635,8 +11635,8 @@ func testAdapterSearchRESP3() {
 			flags = attributes[0].(map[string]interface{})["flags"].([]interface{})
 			Expect(flags).To(ConsistOf("SORTABLE", "NOSTEM"))
 
-			// Test with UnstableResp3 false
 			// NOTE: rueidis can't support this behavior because we cannot know whether UnstableResp3 is enabled or not
+			// Test with UnstableResp3 false
 			// Expect(func() {
 			// 	rawResInfo, _ := adapter2resp3.FTInfo(ctx, "idx1").RawResult()
 			// 	rawValInfo := adapter2resp3.FTInfo(ctx, "idx1").RawVal()
@@ -11651,7 +11651,7 @@ func testAdapterSearchRESP3() {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1, text2).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp3, "idx1", 3)
+			WaitForIndexing(client, "idx1", 3)
 
 			adapter.HSet(ctx, "doc1", "f1", "some valid content", "f2", "this is sample text")
 			adapter.HSet(ctx, "doc2", "f1", "very important", "f2", "lorem ipsum")
@@ -11665,8 +11665,8 @@ func testAdapterSearchRESP3() {
 			// Expect(results["impornant"].([]interface{})[0].(map[interface{}]interface{})["important"]).To(BeEquivalentTo(0.5))
 			Expect(results["impornant"].([]interface{})[0].(map[string]interface{})["important"]).To(BeEquivalentTo(0.5))
 
-			// Test with UnstableResp3 false
 			// NOTE: rueidis can't support this behavior because we cannot know whether UnstableResp3 is enabled or not
+			// Test with UnstableResp3 false
 			// Expect(func() {
 			// 	rawResSpellCheck, _ := adapter2resp3.FTSpellCheck(ctx, "idx1", "impornant").RawResult()
 			// 	rawValSpellCheck := adapter2resp3.FTSpellCheck(ctx, "idx1", "impornant").RawVal()
@@ -11675,11 +11675,11 @@ func testAdapterSearchRESP3() {
 			// }).Should(Panic())
 		})
 
-		FIt("should handle FTSearch with Unstable RESP3 Search Module and without stability", Label("search", "ftcreate", "ftsearch"), func() {
+		It("should handle FTSearch with Unstable RESP3 Search Module and without stability", Label("search", "ftcreate", "ftsearch"), func() {
 			val, err := adapter.FTCreate(ctx, "txt", &FTCreateOptions{StopWords: []interface{}{"foo", "bar", "baz"}}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp3, "txt", 3)
+			WaitForIndexing(client, "txt", 3)
 			adapter.HSet(ctx, "doc1", "txt", "foo baz")
 			adapter.HSet(ctx, "doc2", "txt", "hello world")
 			res1, err := adapter.FTSearchWithArgs(ctx, "txt", "foo bar", &FTSearchOptions{NoContent: true}).RawResult()
@@ -11695,8 +11695,8 @@ func testAdapterSearchRESP3() {
 			// totalResults2 := res2.(map[interface{}]interface{})["total_results"]
 			Expect(totalResults2).To(BeEquivalentTo(int64(1)))
 
-			// Test with UnstableResp3 false
 			// NOTE: rueidis can't support this behavior because we cannot know whether UnstableResp3 is enabled or not
+			// Test with UnstableResp3 false
 			// Expect(func() {
 			// 	rawRes2, _ := adapter2resp3.FTSearchWithArgs(ctx, "txt", "foo bar hello world", &FTSearchOptions{NoContent: true}).RawResult()
 			// 	rawVal2 := adapter2resp3.FTSearchWithArgs(ctx, "txt", "foo bar hello world", &FTSearchOptions{NoContent: true}).RawVal()
@@ -11710,7 +11710,7 @@ func testAdapterSearchRESP3() {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{OnHash: true}, text1, text2).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp3, "idx1", 3)
+			WaitForIndexing(client, "idx1", 3)
 
 			resSynUpdate, err := adapter.FTSynUpdate(ctx, "idx1", "id1", []interface{}{"boy", "child", "offspring"}).Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -11728,15 +11728,17 @@ func testAdapterSearchRESP3() {
 			valSynDump := adapter.FTSynDump(ctx, "idx1").RawVal()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(valSynDump).To(BeEquivalentTo(resSynDump))
-			Expect(resSynDump.(map[interface{}]interface{})["baby"]).To(BeEquivalentTo([]interface{}{"id1"}))
+			// Expect(resSynDump.(map[interface{}]interface{})["baby"]).To(BeEquivalentTo([]interface{}{"id1"}))
+			Expect(resSynDump.(map[string]interface{})["baby"]).To(BeEquivalentTo([]interface{}{"id1"}))
 
+			// NOTE: rueidis can't support this behavior because we cannot know whether UnstableResp3 is enabled or not
 			// Test with UnstableResp3 false
-			Expect(func() {
-				rawResSynDump, _ := adapter2resp3.FTSynDump(ctx, "idx1").RawResult()
-				rawValSynDump := adapter2resp3.FTSynDump(ctx, "idx1").RawVal()
-				Expect(rawResSynDump).To(BeNil())
-				Expect(rawValSynDump).To(BeNil())
-			}).Should(Panic())
+			// Expect(func() {
+			// 	rawResSynDump, _ := adapter2resp3.FTSynDump(ctx, "idx1").RawResult()
+			// 	rawValSynDump := adapter2resp3.FTSynDump(ctx, "idx1").RawVal()
+			// 	Expect(rawResSynDump).To(BeNil())
+			// 	Expect(rawValSynDump).To(BeNil())
+			// }).Should(Panic())
 		})
 
 		It("should test not affected Resp 3 Search method - FTExplain", Label("search", "ftexplain"), func() {
@@ -11746,7 +11748,7 @@ func testAdapterSearchRESP3() {
 			val, err := adapter.FTCreate(ctx, "txt", &FTCreateOptions{}, text1, text2, text3).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
-			WaitForIndexing(clientresp3, "txt", 3)
+			WaitForIndexing(client, "txt", 3)
 			res1, err := adapter.FTExplain(ctx, "txt", "@f3:f3_val @f2:f2_val @f1:f1_val").Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res1).ToNot(BeEmpty())

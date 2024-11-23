@@ -4488,89 +4488,6 @@ func (cmd *FTSearchCmd) from(res rueidis.RedisResult) {
 		Total: int(total),
 		Docs:  results,
 	})
-	/// Old, wrong parsing
-
-	// totalResultsMsg, ok := m["total_results"]
-	// if !ok {
-	// 	cmd.SetErr(fmt.Errorf(`result map should contain key "total_results"`))
-	// }
-	// totalResults, err := totalResultsMsg.AsInt64()
-	// if err != nil {
-	// 	cmd.SetErr(err)
-	// 	return
-	// }
-	// resultsMsg, ok := m["results"]
-	// if !ok {
-	// 	cmd.SetErr(fmt.Errorf(`result map should contain key "results"`))
-	// }
-	// resultsArr, err := resultsMsg.ToArray()
-	// if err != nil {
-	// 	cmd.SetErr(err)
-	// 	return
-	// }
-	// ftSearchResult := FTSearchResult{Total: int(totalResults), Docs: make([]Document, 0, len(resultsArr))}
-	// for _, result := range resultsArr {
-	// 	// result: arr:  id, doc2, score, 3, "extra_attributes": [foo, bar]
-	// 	resultMap, err := result.ToMap()
-	// 	if err != nil {
-	// 		cmd.SetErr(err)
-	// 		return
-	// 	}
-	// 	fmt.Println("resultMap", result.String())
-	// 	doc := Document{}
-	// 	for k, v := range resultMap {
-	// 		switch k {
-	// 		case "id":
-	// 			idStr, err := v.ToString()
-	// 			if err != nil {
-	// 				cmd.SetErr(err)
-	// 				return
-	// 			}
-	// 			doc.ID = idStr
-	// 		case "extra_attributes":
-	// 			// doc.ID = resultArr[i+1].String()
-	// 			strMap, err := v.AsStrMap()
-	// 			if err != nil {
-	// 				cmd.SetErr(err)
-	// 				return
-	// 			}
-	// 			doc.Fields = strMap
-	// 			// docs[d].Doc, _ = record.values[j+1].AsStrMap()
-	// 		case "score":
-	// 			score, err := v.AsFloat64()
-	// 			if err != nil {
-	// 				cmd.SetErr(err)
-	// 				return
-	// 			}
-	// 			doc.Score = &score
-	// 		case "payload":
-	// 			if !v.IsNil() {
-	// 				payload, err := v.ToString()
-	// 				if err != nil {
-	// 					cmd.SetErr(err)
-	// 					return
-	// 				}
-	// 				doc.Payload = &payload
-	// 			}
-	// 		case "sortkey":
-	// 			if !v.IsNil() {
-	// 				sortKey, err := v.ToString()
-	// 				if err != nil {
-	// 					cmd.SetErr(err)
-	// 					return
-	// 				}
-	// 				doc.SortKey = &sortKey
-	// 			}
-	// 		}
-	// 	}
-
-	// 	ftSearchResult.Docs = append(ftSearchResult.Docs, doc)
-	// }
-
-	// cmd.SetVal(ftSearchResult)
-
-	// _r, _ := json.MarshalIndent(ftSearchResult, "", "\t")
-	// fmt.Print(string(_r))
 }
 
 func newFTSearchCmd(res rueidis.RedisResult, options *FTSearchOptions) *FTSearchCmd {
@@ -4585,15 +4502,6 @@ type FTSynUpdateOptions struct {
 
 type FTSynDumpCmd struct {
 	baseCmd[[]FTSynDumpResult]
-	rawVal any
-}
-
-func (cmd *FTSynDumpCmd) RawVal() any {
-	return cmd.rawVal
-}
-
-func (cmd *FTSynDumpCmd) RawResult() (any, error) {
-	return cmd.rawVal, cmd.Err()
 }
 
 func (cmd *FTSynDumpCmd) from(res rueidis.RedisResult) {
@@ -4601,6 +4509,37 @@ func (cmd *FTSynDumpCmd) from(res rueidis.RedisResult) {
 		cmd.SetErr(err)
 		return
 	}
+	anyRes, err := res.ToAny()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetRawVal(anyRes)
+	if !(res.IsMap() || res.IsArray()) {
+		panic("res should be either map(RESP3) or array(RESP2)")
+	}
+	if res.IsMap() {
+		// is RESP3 map
+		m, err := res.ToMap()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		fmt.Println(m)
+		fmt.Println(res.String())
+		results := make([]FTSynDumpResult, 0, len(m))
+		for term, synMsg := range m {
+			synonyms, err := synMsg.AsStrSlice()
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+			results = append(results, FTSynDumpResult{Term: term, Synonyms: synonyms})
+		}
+		cmd.SetVal(results)
+		return
+	}
+	// is RESP2 array
 	arr, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
