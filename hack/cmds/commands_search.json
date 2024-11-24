@@ -14,7 +14,10 @@
         "name": "data_type",
         "command": "ON",
         "type": "enum",
-        "enum": ["HASH", "JSON"],
+        "enum": [
+          "HASH",
+          "JSON"
+        ],
         "optional": true
       },
       {
@@ -72,7 +75,9 @@
       {
         "name": "maxtextfields",
         "type": "enum",
-        "enum": ["MAXTEXTFIELDS"],
+        "enum": [
+          "MAXTEXTFIELDS"
+        ],
         "optional": true
       },
       {
@@ -84,25 +89,33 @@
       {
         "name": "nooffsets",
         "type": "enum",
-        "enum": ["NOOFFSETS"],
+        "enum": [
+          "NOOFFSETS"
+        ],
         "optional": true
       },
       {
         "name": "nohl",
         "type": "enum",
-        "enum": ["NOHL"],
+        "enum": [
+          "NOHL"
+        ],
         "optional": true
       },
       {
         "name": "nofields",
         "type": "enum",
-        "enum": ["NOFIELDS"],
+        "enum": [
+          "NOFIELDS"
+        ],
         "optional": true
       },
       {
         "name": "nofreqs",
         "type": "enum",
-        "enum": ["NOFREQS"],
+        "enum": [
+          "NOFREQS"
+        ],
         "optional": true
       },
       {
@@ -125,13 +138,17 @@
       {
         "name": "skipinitialscan",
         "type": "enum",
-        "enum": ["SKIPINITIALSCAN"],
+        "enum": [
+          "SKIPINITIALSCAN"
+        ],
         "optional": true
       },
       {
         "name": "schema",
         "type": "enum",
-        "enum": ["SCHEMA"]
+        "enum": [
+          "SCHEMA"
+        ]
       },
       {
         "name": "field",
@@ -151,7 +168,14 @@
           {
             "name": "field_type",
             "type": "enum",
-            "enum": ["TEXT", "TAG", "NUMERIC", "GEO", "VECTOR", "GEOSHAPE"]
+            "enum": [
+              "TEXT",
+              "TAG",
+              "NUMERIC",
+              "GEO",
+              "VECTOR",
+              "GEOSHAPE"
+            ]
           },
           {
             "name": "option",
@@ -167,12 +191,16 @@
                   {
                     "name": "sortable",
                     "type": "enum",
-                    "enum": ["SORTABLE"]
+                    "enum": [
+                      "SORTABLE"
+                    ]
                   },
                   {
                     "name": "UNF",
                     "type": "enum",
-                    "enum": ["UNF"],
+                    "enum": [
+                      "UNF"
+                    ],
                     "optional": true
                   }
                 ]
@@ -181,13 +209,17 @@
                 "name": "noindex",
                 "type": "enum",
                 "optional": true,
-                "enum": ["NOINDEX"]
+                "enum": [
+                  "NOINDEX"
+                ]
               },
               {
                 "name": "NOSTEM",
                 "type": "enum",
                 "optional": true,
-                "enum": ["NOSTEM"]
+                "enum": [
+                  "NOSTEM"
+                ]
               },
               {
                 "name": "PHONETIC",
@@ -211,25 +243,33 @@
                 "name": "CASESENSITIVE",
                 "type": "enum",
                 "optional": true,
-                "enum": ["CASESENSITIVE"]
+                "enum": [
+                  "CASESENSITIVE"
+                ]
               },
-							{
+              {
                 "name": "WITHSUFFIXTRIE",
                 "type": "enum",
                 "optional": true,
-                "enum": ["WITHSUFFIXTRIE"]
+                "enum": [
+                  "WITHSUFFIXTRIE"
+                ]
               },
-							{
+              {
                 "name": "INDEXEMPTY",
                 "type": "enum",
                 "optional": true,
-                "enum": ["INDEXEMPTY"]
+                "enum": [
+                  "INDEXEMPTY"
+                ]
               },
-							{
+              {
                 "name": "INDEXMISSING",
                 "type": "enum",
                 "optional": true,
-                "enum": ["INDEXMISSING"]
+                "enum": [
+                  "INDEXMISSING"
+                ]
               }
             ]
           }
@@ -308,18 +348,24 @@
       {
         "name": "skipinitialscan",
         "type": "enum",
-        "enum": ["SKIPINITIALSCAN"],
+        "enum": [
+          "SKIPINITIALSCAN"
+        ],
         "optional": true
       },
       {
         "name": "schema",
         "type": "enum",
-        "enum": ["SCHEMA"]
+        "enum": [
+          "SCHEMA"
+        ]
       },
       {
         "name": "add",
         "type": "enum",
-        "enum": ["ADD"]
+        "enum": [
+          "ADD"
+        ]
       },
       {
         "name": "field",
@@ -344,7 +390,9 @@
       {
         "name": "delete docs",
         "type": "enum",
-        "enum": ["DD"],
+        "enum": [
+          "DD"
+        ],
         "optional": true
       }
     ],
@@ -430,7 +478,9 @@
       {
         "name": "increment score",
         "type": "enum",
-        "enum": ["INCR"],
+        "enum": [
+          "INCR"
+        ],
         "optional": true
       },
       {
@@ -458,19 +508,25 @@
       {
         "name": "fuzzy",
         "type": "enum",
-        "enum": ["FUZZY"],
+        "enum": [
+          "FUZZY"
+        ],
         "optional": true
       },
       {
         "name": "withscores",
         "type": "enum",
-        "enum": ["WITHSCORES"],
+        "enum": [
+          "WITHSCORES"
+        ],
         "optional": true
       },
       {
         "name": "withpayloads",
         "type": "enum",
-        "enum": ["WITHPAYLOADS"],
+        "enum": [
+          "WITHPAYLOADS"
+        ],
         "optional": true
       },
       {
@@ -526,7 +582,9 @@
       {
         "name": "skipinitialscan",
         "type": "enum",
-        "enum": ["SKIPINITIALSCAN"],
+        "enum": [
+          "SKIPINITIALSCAN"
+        ],
         "optional": true
       },
       {
@@ -577,7 +635,10 @@
           {
             "name": "inclusion",
             "type": "enum",
-            "enum": ["INCLUDE", "EXCLUDE"]
+            "enum": [
+              "INCLUDE",
+              "EXCLUDE"
+            ]
           },
           {
             "name": "dictionary",
@@ -710,37 +771,49 @@
         "name": "nocontent",
         "type": "enum",
         "optional": true,
-        "enum": ["NOCONTENT"]
+        "enum": [
+          "NOCONTENT"
+        ]
       },
       {
         "name": "verbatim",
         "type": "enum",
         "optional": true,
-        "enum": ["VERBATIM"]
+        "enum": [
+          "VERBATIM"
+        ]
       },
       {
         "name": "nostopwords",
         "type": "enum",
         "optional": true,
-        "enum": ["NOSTOPWORDS"]
+        "enum": [
+          "NOSTOPWORDS"
+        ]
       },
       {
         "name": "withscores",
         "type": "enum",
         "optional": true,
-        "enum": ["WITHSCORES"]
+        "enum": [
+          "WITHSCORES"
+        ]
       },
       {
         "name": "withpayloads",
         "type": "enum",
         "optional": true,
-        "enum": ["WITHPAYLOADS"]
+        "enum": [
+          "WITHPAYLOADS"
+        ]
       },
       {
         "name": "withsortkeys",
         "type": "enum",
         "optional": true,
-        "enum": ["WITHSORTKEYS"]
+        "enum": [
+          "WITHSORTKEYS"
+        ]
       },
       {
         "name": "filter",
@@ -789,7 +862,12 @@
           {
             "name": "radius_type",
             "type": "enum",
-            "enum": ["m", "km", "mi", "ft"]
+            "enum": [
+              "m",
+              "km",
+              "mi",
+              "ft"
+            ]
           }
         ]
       },
@@ -864,7 +942,9 @@
           {
             "name": "summarize",
             "type": "enum",
-            "enum": ["SUMMARIZE"]
+            "enum": [
+              "SUMMARIZE"
+            ]
           },
           {
             "name": "fields",
@@ -911,7 +991,9 @@
           {
             "name": "highlight",
             "type": "enum",
-            "enum": ["HIGHLIGHT"]
+            "enum": [
+              "HIGHLIGHT"
+            ]
           },
           {
             "name": "fields",
@@ -938,11 +1020,19 @@
               {
                 "name": "tags",
                 "type": "enum",
-                "enum": ["TAGS"]
+                "enum": [
+                  "TAGS"
+                ]
               },
               {
-                "name": ["open", "close"],
-                "type": ["string", "string"]
+                "name": [
+                  "open",
+                  "close"
+                ],
+                "type": [
+                  "string",
+                  "string"
+                ]
               }
             ]
           }
@@ -964,7 +1054,9 @@
         "name": "tags",
         "type": "enum",
         "optional": true,
-        "enum": ["INORDER"]
+        "enum": [
+          "INORDER"
+        ]
       },
       {
         "name": "language",
@@ -988,7 +1080,9 @@
         "name": "explainscore",
         "type": "enum",
         "optional": true,
-        "enum": ["EXPLAINSCORE"]
+        "enum": [
+          "EXPLAINSCORE"
+        ]
       },
       {
         "name": "payload",
@@ -1010,13 +1104,18 @@
             "name": "order",
             "type": "enum",
             "optional": true,
-            "enum": ["ASC", "DESC"]
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
           },
           {
             "name": "withcount",
             "type": "enum",
             "optional": true,
-            "enum": ["WITHCOUNT"]
+            "enum": [
+              "WITHCOUNT"
+            ]
           }
         ]
       },
@@ -1028,11 +1127,19 @@
           {
             "name": "limit",
             "type": "enum",
-            "enum": ["LIMIT"]
+            "enum": [
+              "LIMIT"
+            ]
           },
           {
-            "name": ["offset", "num"],
-            "type": ["integer", "integer"]
+            "name": [
+              "offset",
+              "num"
+            ],
+            "type": [
+              "integer",
+              "integer"
+            ]
           }
         ]
       },
@@ -1043,15 +1150,23 @@
           {
             "name": "params",
             "type": "enum",
-            "enum": ["PARAMS"]
+            "enum": [
+              "PARAMS"
+            ]
           },
           {
             "name": "NARGS",
             "type": "integer"
           },
           {
-            "name": ["name", "value"],
-            "type": ["string", "string"],
+            "name": [
+              "name",
+              "value"
+            ],
+            "type": [
+              "string",
+              "string"
+            ],
             "multiple": true
           }
         ]
@@ -1083,7 +1198,9 @@
         "name": "verbatim",
         "type": "enum",
         "optional": true,
-        "enum": ["VERBATIM"]
+        "enum": [
+          "VERBATIM"
+        ]
       },
       {
         "name": "timeout",
@@ -1102,7 +1219,9 @@
             "name": "loadall",
             "type": "enum",
             "optional": true,
-            "enum": ["LOAD *"]
+            "enum": [
+              "LOAD *"
+            ]
           },
           {
             "name": "load",
@@ -1174,7 +1293,10 @@
                   {
                     "name": "order",
                     "type": "enum",
-                    "enum": ["ASC", "DESC"],
+                    "enum": [
+                      "ASC",
+                      "DESC"
+                    ],
                     "optional": true
                   }
                 ]
@@ -1204,7 +1326,10 @@
                   {
                     "name": "order",
                     "type": "enum",
-                    "enum": ["ASC", "DESC"],
+                    "enum": [
+                      "ASC",
+                      "DESC"
+                    ],
                     "optional": true
                   }
                 ]
@@ -1215,10 +1340,12 @@
                 "command": "MAX",
                 "optional": true
               },
-							{
+              {
                 "name": "withcount",
                 "type": "enum",
-								"enum": ["WITHCOUNT"],
+                "enum": [
+                  "WITHCOUNT"
+                ],
                 "optional": true
               }
             ]
@@ -1249,11 +1376,19 @@
               {
                 "name": "limit",
                 "type": "enum",
-                "enum": ["LIMIT"]
+                "enum": [
+                  "LIMIT"
+                ]
               },
               {
-                "name": ["offset", "num"],
-                "type": ["integer", "integer"]
+                "name": [
+                  "offset",
+                  "num"
+                ],
+                "type": [
+                  "integer",
+                  "integer"
+                ]
               }
             ]
           },
@@ -1273,7 +1408,9 @@
           {
             "name": "withcursor",
             "type": "enum",
-            "enum": ["WITHCURSOR"]
+            "enum": [
+              "WITHCURSOR"
+            ]
           },
           {
             "name": "read_size",
@@ -1296,15 +1433,23 @@
           {
             "name": "params",
             "type": "enum",
-            "enum": ["PARAMS"]
+            "enum": [
+              "PARAMS"
+            ]
           },
           {
             "name": "NARGS",
             "type": "integer"
           },
           {
-            "name": ["name", "value"],
-            "type": ["string", "string"],
+            "name": [
+              "name",
+              "value"
+            ],
+            "type": [
+              "string",
+              "string"
+            ],
             "multiple": true
           }
         ]
@@ -1312,7 +1457,9 @@
       {
         "name": "addscores",
         "type": "enum",
-        "enum": ["ADDSCORES"],
+        "enum": [
+          "ADDSCORES"
+        ],
         "optional": true
       },
       {
@@ -1335,12 +1482,17 @@
       {
         "name": "querytype",
         "type": "enum",
-        "enum": ["SEARCH", "AGGREGATE"]
+        "enum": [
+          "SEARCH",
+          "AGGREGATE"
+        ]
       },
       {
         "name": "limited",
         "type": "enum",
-        "enum": ["LIMITED"],
+        "enum": [
+          "LIMITED"
+        ],
         "optional": true
       },
       {
