@@ -5145,9 +5145,6 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 		case SearchFieldTypeGeo:
 			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Geo())
 		case SearchFieldTypeVector:
-			// FIXME: implement this
-			// VECTOR <algorithm> <index_attribute_count> <index_attribute_name> <index_attribute_value>
-			// [<index_attribute_name> <index_attribute_value> ...]
 			// Ref: https://redis.io/docs/latest/develop/interact/search-and-query/advanced-concepts/vectors/#create-a-vector-index
 			if sc.VectorArgs == nil {
 				panic("FT.CREATE: SCHEMA VectorArgs cannot be nil")
@@ -5159,8 +5156,6 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 			algorithm := ""
 			if sc.VectorArgs.FlatOptions != nil {
 				algorithm = "FLAT"
-				// args = append(args, "FLAT")
-				// _cmd = cmds.Incomplete(cmds.FtCreateFieldFieldTypeVector(_cmd).())
 				if sc.VectorArgs.FlatOptions.Type == "" || sc.VectorArgs.FlatOptions.Dim == 0 || sc.VectorArgs.FlatOptions.DistanceMetric == "" {
 					panic("FT.CREATE: Type, Dim and DistanceMetric are required for VECTOR FLAT")
 				}
@@ -5175,13 +5170,10 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 				if sc.VectorArgs.FlatOptions.BlockSize > 0 {
 					flatArgs = append(flatArgs, "BLOCK_SIZE", sc.VectorArgs.FlatOptions.BlockSize)
 				}
-				// args = append(args, len(flatArgs))
 				args = flatArgs
-				// args = append(args, flatArgs...)
 			}
 			if sc.VectorArgs.HNSWOptions != nil {
 				algorithm = "HNSW"
-				// args = append(args, "HNSW")
 				if sc.VectorArgs.HNSWOptions.Type == "" || sc.VectorArgs.HNSWOptions.Dim == 0 || sc.VectorArgs.HNSWOptions.DistanceMetric == "" {
 					panic("FT.CREATE: Type, Dim and DistanceMetric are required for VECTOR HNSW")
 				}
@@ -5205,14 +5197,11 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 				if sc.VectorArgs.HNSWOptions.Epsilon > 0 {
 					hnswArgs = append(hnswArgs, "EPSILON", sc.VectorArgs.HNSWOptions.Epsilon)
 				}
-				// args = append(args, len(hnswArgs))
-				// args = append(args, hnswArgs...)
 				args = hnswArgs
 			}
 			_cmd = cmds.Incomplete(cmds.FtCreateFieldAs(_cmd).Vector(algorithm, int64(len(args)), argsToSlice(args)...))
 
 		case SearchFieldTypeGeoShape:
-			// FIXME: geo shape need a block
 			if sc.GeoShapeFieldType == "" {
 				panic("FT.CREATE: GeoShapeFieldType cannot be empty while SCHEMA FieldType is GEOSHAPE")
 			}
@@ -5255,8 +5244,6 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 			_cmd = cmds.Incomplete(cmds.FtCreateFieldFieldTypeText(_cmd).Indexmissing())
 		}
 	}
-
-	// FIXME: handle index properly
 	cmd := cmds.FtCreateFieldFieldTypeText(_cmd).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
