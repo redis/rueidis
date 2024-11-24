@@ -4840,13 +4840,22 @@ func (c *Compat) FT_List(ctx context.Context) *StringSliceCmd {
 	return newStringSliceCmd(c.client.Do(ctx, cmd))
 }
 
+// FTAggregate - Performs a search query on an index and applies a series of aggregate transformations to the result.
+// The 'index' parameter specifies the index to search, and the 'query' parameter specifies the search query.
+// For more information, please refer to the Redis documentation:
+// [FT.AGGREGATE]: (https://redis.io/commands/ft.aggregate/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L473
 func (c *Compat) FTAggregate(ctx context.Context, index string, query string) *MapStringInterfaceCmd {
 	cmd := c.client.B().FtAggregate().Index(index).Query(query).Build()
 	return newMapStringInterfaceCmd(c.client.Do(ctx, cmd))
 }
 
-// FTAggregateWithArgs aligns with go-redis' implementation.
-// see: go-redis v9.7.0: https://github.com/redis/go-redis/blob/ed37c33a9037483ad2a6b1042e5eb6df89009a1c/search_commands.go#L671
+// FTAggregateWithArgs - Performs a search query on an index and applies a series of aggregate transformations to the result.
+// The 'index' parameter specifies the index to search, and the 'query' parameter specifies the search query.
+// This function also allows for specifying additional options such as: Verbatim, LoadAll, Load, Timeout, GroupBy, SortBy, SortByMax, Apply, LimitOffset, Limit, Filter, WithCursor, Params, and DialectVersion.
+// For more information, please refer to the Redis documentation:
+// [FT.AGGREGATE]: (https://redis.io/commands/ft.aggregate/)
+// see: go-redis v9.7.0: https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L671
 func (c *Compat) FTAggregateWithArgs(ctx context.Context, index string, query string, options *FTAggregateOptions) *AggregateCmd {
 	_cmd := cmds.Incomplete(c.client.B().FtAggregate().Index(index).Query(query))
 	if options != nil {
@@ -4965,21 +4974,43 @@ func (c *Compat) FTAggregateWithArgs(ctx context.Context, index string, query st
 	return newAggregateCmd(c.client.Do(ctx, cmd))
 }
 
+// FTAliasAdd - Adds an alias to an index.
+// The 'index' parameter specifies the index to which the alias is added, and the 'alias' parameter specifies the alias.
+// For more information, please refer to the Redis documentation:
+// [FT.ALIASADD]: (https://redis.io/commands/ft.aliasadd/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L782
 func (c *Compat) FTAliasAdd(ctx context.Context, index string, alias string) *StatusCmd {
 	cmd := c.client.B().FtAliasadd().Alias(alias).Index(index).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
+// FTAliasDel - Removes an alias from an index.
+// The 'alias' parameter specifies the alias to be removed.
+// For more information, please refer to the Redis documentation:
+// [FT.ALIASDEL]: (https://redis.io/commands/ft.aliasdel/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L793
 func (c *Compat) FTAliasDel(ctx context.Context, alias string) *StatusCmd {
 	cmd := c.client.B().FtAliasdel().Alias(alias).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
+// FTAliasUpdate - Updates an alias to an index.
+// The 'index' parameter specifies the index to which the alias is updated, and the 'alias' parameter specifies the alias.
+// If the alias already exists for a different index, it updates the alias to point to the specified index instead.
+// For more information, please refer to the Redis documentation:
+// [FT.ALIASUPDATE]: (https://redis.io/commands/ft.aliasupdate/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L804
 func (c *Compat) FTAliasUpdate(ctx context.Context, index string, alias string) *StatusCmd {
 	cmd := c.client.B().FtAliasupdate().Alias(alias).Index(index).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
+// FTAlter - Alters the definition of an existing index.
+// The 'index' parameter specifies the index to alter, and the 'skipInitialScan' parameter specifies whether to skip the initial scan.
+// The 'definition' parameter specifies the new definition for the index.
+// For more information, please refer to the Redis documentation:
+// [FT.ALTER]: (https://redis.io/commands/ft.alter/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L815
 func (c *Compat) FTAlter(ctx context.Context, index string, skipInitalScan bool, definition []interface{}) *StatusCmd {
 	_cmd := cmds.Incomplete(c.client.B().FtAlter().Index(index))
 	if skipInitalScan {
@@ -4992,11 +5023,21 @@ func (c *Compat) FTAlter(ctx context.Context, index string, skipInitalScan bool,
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
+// FTConfigGet - Retrieves the value of a RediSearch configuration parameter.
+// The 'option' parameter specifies the configuration parameter to retrieve.
+// For more information, please refer to the Redis documentation:
+// [FT.CONFIG GET]: (https://redis.io/commands/ft.config-get/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L831
 func (c *Compat) FTConfigGet(ctx context.Context, option string) *MapMapStringInterfaceCmd {
 	cmd := c.client.B().FtConfigGet().Option(option).Build()
 	return newMapMapStringInterfaceCmd(c.client.Do(ctx, cmd))
 }
 
+// FTConfigSet - Sets the value of a RediSearch configuration parameter.
+// The 'option' parameter specifies the configuration parameter to set, and the 'value' parameter specifies the new value.
+// For more information, please refer to the Redis documentation:
+// [FT.CONFIG SET]: (https://redis.io/commands/ft.config-set/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L841
 func (c *Compat) FTConfigSet(ctx context.Context, option string, value interface{}) *StatusCmd {
 	cmd := c.client.B().FtConfigSet().Option(option).Value(str(value)).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
@@ -5010,7 +5051,7 @@ func (c *Compat) FTConfigSet(ctx context.Context, option string, value interface
 // For more information, please refer to the Redis documentation:
 // [FT.CREATE]: (https://redis.io/commands/ft.create/)
 // FTCreate aligns with go-redis v9.7.0.
-// Ref: https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L854
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L854
 func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOptions, schema ...*FieldSchema) *StatusCmd {
 	_cmd := cmds.Incomplete(c.client.B().FtCreate().Index(index))
 	if options != nil {
@@ -5220,36 +5261,71 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
+// FTCursorDel - Deletes a cursor from an existing index.
+// The 'index' parameter specifies the index from which to delete the cursor, and the 'cursorId' parameter specifies the ID of the cursor to delete.
+// For more information, please refer to the Redis documentation:
+// [FT.CURSOR DEL]: (https://redis.io/commands/ft.cursor-del/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1032
 func (c *Compat) FTCursorDel(ctx context.Context, index string, cursorId int) *StatusCmd {
 	cmd := c.client.B().FtCursorDel().Index(index).CursorId(int64(cursorId)).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
+// FTCursorRead - Reads the next results from an existing cursor.
+// The 'index' parameter specifies the index from which to read the cursor, the 'cursorId' parameter specifies the ID of the cursor to read, and the 'count' parameter specifies the number of results to read.
+// For more information, please refer to the Redis documentation:
+// [FT.CURSOR READ]: (https://redis.io/commands/ft.cursor-read/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1042
 func (c *Compat) FTCursorRead(ctx context.Context, index string, cursorId int, count int) *MapStringInterfaceCmd {
 	cmd := c.client.B().FtCursorRead().Index(index).CursorId(int64(cursorId)).Count(int64(count)).Build()
 	return newMapStringInterfaceCmd(c.client.Do(ctx, cmd))
 }
 
+// FTDictAdd - Adds terms to a dictionary.
+// The 'dict' parameter specifies the dictionary to which to add the terms, and the 'term' parameter specifies the terms to add.
+// For more information, please refer to the Redis documentation:
+// [FT.DICTADD]: (https://redis.io/commands/ft.dictadd/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1056
 func (c *Compat) FTDictAdd(ctx context.Context, dict string, term ...interface{}) *IntCmd {
 	cmd := c.client.B().FtDictadd().Dict(dict).Term(argsToSlice(term)...).Build()
 	return newIntCmd(c.client.Do(ctx, cmd))
 }
 
+// FTDictDel - Deletes terms from a dictionary.
+// The 'dict' parameter specifies the dictionary from which to delete the terms, and the 'term' parameter specifies the terms to delete.
+// For more information, please refer to the Redis documentation:
+// [FT.DICTDEL]: (https://redis.io/commands/ft.dictdel/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1068
 func (c *Compat) FTDictDel(ctx context.Context, dict string, term ...interface{}) *IntCmd {
 	cmd := c.client.B().FtDictdel().Dict(dict).Term(argsToSlice(term)...).Build()
 	return newIntCmd(c.client.Do(ctx, cmd))
 }
 
+// FTDictDump - Returns all terms in the specified dictionary.
+// The 'dict' parameter specifies the dictionary from which to return the terms.
+// For more information, please refer to the Redis documentation:
+// [FT.DICTDUMP]: (https://redis.io/commands/ft.dictdump/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1080
 func (c *Compat) FTDictDump(ctx context.Context, dict string) *StringSliceCmd {
 	cmd := c.client.B().FtDictdump().Dict(dict).Build()
 	return newStringSliceCmd(c.client.Do(ctx, cmd))
 }
 
+// FTDropIndex - Deletes an index.
+// The 'index' parameter specifies the index to delete.
+// For more information, please refer to the Redis documentation:
+// [FT.DROPINDEX]: (https://redis.io/commands/ft.dropindex/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1090
 func (c *Compat) FTDropIndex(ctx context.Context, index string) *StatusCmd {
 	cmd := c.client.B().FtDropindex().Index(index).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
+// FTDropIndexWithArgs - Deletes an index with options.
+// The 'index' parameter specifies the index to delete, and the 'options' parameter specifies the DeleteDocs option for docs deletion.
+// For more information, please refer to the Redis documentation:
+// [FT.DROPINDEX]: (https://redis.io/commands/ft.dropindex/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1101
 func (c *Compat) FTDropIndexWithArgs(ctx context.Context, index string, options *FTDropIndexOptions) *StatusCmd {
 	_cmd := cmds.Incomplete(c.client.B().FtDropindex().Index(index))
 	if options.DeleteDocs {
@@ -5259,11 +5335,21 @@ func (c *Compat) FTDropIndexWithArgs(ctx context.Context, index string, options 
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
+// FTExplain - Returns the execution plan for a complex query.
+// The 'index' parameter specifies the index to query, and the 'query' parameter specifies the query string.
+// For more information, please refer to the Redis documentation:
+// [FT.EXPLAIN]: (https://redis.io/commands/ft.explain/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1117
 func (c *Compat) FTExplain(ctx context.Context, index string, query string) *StringCmd {
 	cmd := c.client.B().FtExplain().Index(index).Query(query).Build()
 	return newStringCmd(c.client.Do(ctx, cmd))
 }
 
+// FTExplainWithArgs - Returns the execution plan for a complex query with options.
+// The 'index' parameter specifies the index to query, the 'query' parameter specifies the query string, and the 'options' parameter specifies the Dialect for the query.
+// For more information, please refer to the Redis documentation:
+// [FT.EXPLAIN]: (https://redis.io/commands/ft.explain/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1127
 func (c *Compat) FTExplainWithArgs(ctx context.Context, index string, query string, options *FTExplainOptions) *StringCmd {
 	_cmd := cmds.Incomplete(c.client.B().FtExplain().Index(index).Query(query))
 	if options != nil {
@@ -5277,17 +5363,34 @@ func (c *Compat) FTExplainWithArgs(ctx context.Context, index string, query stri
 	return newStringCmd(c.client.Do(ctx, cmd))
 }
 
+// FTInfo - Retrieves information about an index.
+// The 'index' parameter specifies the index to retrieve information about.
+// For more information, please refer to the Redis documentation:
+// [FT.INFO]: (https://redis.io/commands/ft.info/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1393
 func (c *Compat) FTInfo(ctx context.Context, index string) *FTInfoCmd {
 	cmd := c.client.B().FtInfo().Index(index).Build()
 	fmt.Println(cmd.Commands())
 	return newFTInfoCmd(c.client.Do(ctx, cmd))
 }
 
+// FTSpellCheck - Checks a query string for spelling errors.
+// For more details about spellcheck query please follow:
+// https://redis.io/docs/interact/search-and-query/advanced-concepts/spellcheck/
+// For more information, please refer to the Redis documentation:
+// [FT.SPELLCHECK]: (https://redis.io/commands/ft.spellcheck/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1404
 func (c *Compat) FTSpellCheck(ctx context.Context, index string, query string) *FTSpellCheckCmd {
 	cmd := c.client.B().FtSpellcheck().Index(index).Query(query).Build()
 	return newFTSpellCheckCmd(c.client.Do(ctx, cmd))
 }
 
+// FTSpellCheckWithArgs - Checks a query string for spelling errors with additional options.
+// For more details about spellcheck query please follow:
+// https://redis.io/docs/interact/search-and-query/advanced-concepts/spellcheck/
+// For more information, please refer to the Redis documentation:
+// [FT.SPELLCHECK]: (https://redis.io/commands/ft.spellcheck/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1416
 func (c *Compat) FTSpellCheckWithArgs(ctx context.Context, index string, query string, options *FTSpellCheckOptions) *FTSpellCheckCmd {
 	_cmd := cmds.Incomplete(c.client.B().FtSpellcheck().Index(index).Query(query))
 	if options != nil {
@@ -5312,6 +5415,11 @@ func (c *Compat) FTSpellCheckWithArgs(ctx context.Context, index string, query s
 	return newFTSpellCheckCmd(c.client.Do(ctx, cmd))
 }
 
+// FTSearch - Executes a search query on an index.
+// The 'index' parameter specifies the index to search, and the 'query' parameter specifies the search query.
+// For more information, please refer to the Redis documentation:
+// [FT.SEARCH]: (https://redis.io/commands/ft.search/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1679
 func (c *Compat) FTSearch(ctx context.Context, index string, query string) *FTSearchCmd {
 	cmd := c.client.B().FtSearch().Index(index).Query(query).Build()
 	return newFTSearchCmd(c.client.Do(ctx, cmd), nil)
@@ -5322,8 +5430,7 @@ func (c *Compat) FTSearch(ctx context.Context, index string, query string) *FTSe
 // and the 'options' parameter specifies additional options for the search.
 // For more information, please refer to the Redis documentation:
 // [FT.SEARCH]: (https://redis.io/commands/ft.search/)
-// FTSearchWithArgs Aligns with go-redis v9.7.0.
-// Ref: https://github.com/redis/go-redis/blob/ed37c33a9037483ad2a6b1042e5eb6df89009a1c/search_commands.go#L1802
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1802
 func (c *Compat) FTSearchWithArgs(ctx context.Context, index string, query string, options *FTSearchOptions) *FTSearchCmd {
 	_cmd := cmds.Incomplete(c.client.B().FtSearch().Index(index).Query(query))
 	if options != nil {
@@ -5478,16 +5585,31 @@ func (c *Compat) FTSearchWithArgs(ctx context.Context, index string, query strin
 	return newFTSearchCmd(c.client.Do(ctx, cmd), options)
 }
 
+// FTSynDump - Dumps the contents of a synonym group.
+// The 'index' parameter specifies the index to dump.
+// For more information, please refer to the Redis documentation:
+// [FT.SYNDUMP]: (https://redis.io/commands/ft.syndump/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1987
 func (c *Compat) FTSynDump(ctx context.Context, index string) *FTSynDumpCmd {
 	cmd := c.client.B().FtSyndump().Index(index).Build()
 	return newFTSynDumpCmd(c.client.Do(ctx, cmd))
 }
 
+// FTSynUpdate - Creates or updates a synonym group with additional terms.
+// The 'index' parameter specifies the index to update, the 'synGroupId' parameter specifies the synonym group id, and the 'terms' parameter specifies the additional terms.
+// For more information, please refer to the Redis documentation:
+// [FT.SYNUPDATE]: (https://redis.io/commands/ft.synupdate/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1997
 func (c *Compat) FTSynUpdate(ctx context.Context, index string, synGroupId interface{}, terms []interface{}) *StatusCmd {
 	cmd := c.client.B().FtSynupdate().Index(index).SynonymGroupId(str(synGroupId)).Term(argToSlice(terms)...).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
+// FTSynUpdateWithArgs - Creates or updates a synonym group with additional terms and options.
+// The 'index' parameter specifies the index to update, the 'synGroupId' parameter specifies the synonym group id, the 'options' parameter specifies additional options for the update, and the 'terms' parameter specifies the additional terms.
+// For more information, please refer to the Redis documentation:
+// [FT.SYNUPDATE]: (https://redis.io/commands/ft.synupdate/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L2009
 func (c *Compat) FTSynUpdateWithArgs(ctx context.Context, index string, synGroupId interface{}, options *FTSynUpdateOptions, terms []interface{}) *StatusCmd {
 	_cmd := cmds.Incomplete(c.client.B().FtSynupdate().Index(index).SynonymGroupId(str(synGroupId)))
 	if options != nil {
@@ -5499,6 +5621,11 @@ func (c *Compat) FTSynUpdateWithArgs(ctx context.Context, index string, synGroup
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
+// FTTagVals - Returns all distinct values indexed in a tag field.
+// The 'index' parameter specifies the index to check, and the 'field' parameter specifies the tag field to retrieve values from.
+// For more information, please refer to the Redis documentation:
+// [FT.TAGVALS]: (https://redis.io/commands/ft.tagvals/)
+// see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L2024
 func (c *Compat) FTTagVals(ctx context.Context, index string, field string) *StringSliceCmd {
 	cmd := c.client.B().FtTagvals().Index(index).FieldName(field).Build()
 	return newStringSliceCmd(c.client.Do(ctx, cmd))
