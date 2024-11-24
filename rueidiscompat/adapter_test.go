@@ -11753,12 +11753,13 @@ func testAdapterSearchRESP3() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res1).ToNot(BeEmpty())
 
+			// NOTE: rueidis can't support this behavior because we cannot know whether UnstableResp3 is enabled or not
 			// Test with UnstableResp3 false
-			Expect(func() {
-				res2, err := adapter2resp3.FTExplain(ctx, "txt", "@f3:f3_val @f2:f2_val @f1:f1_val").Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(res2).ToNot(BeEmpty())
-			}).ShouldNot(Panic())
+			// Expect(func() {
+			// 	res2, err := adapter2resp3.FTExplain(ctx, "txt", "@f3:f3_val @f2:f2_val @f1:f1_val").Result()
+			// 	Expect(err).NotTo(HaveOccurred())
+			// 	Expect(res2).ToNot(BeEmpty())
+			// }).ShouldNot(Panic())
 		})
 	})
 }
