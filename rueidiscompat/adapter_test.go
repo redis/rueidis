@@ -11570,7 +11570,7 @@ func testAdapterSearchRESP3() {
 		Expect(adapter.FlushAll(ctx).Err()).NotTo(HaveOccurred())
 	})
 
-	FDescribe("RediSearch commands Resp 3", Label("search"), func() {
+	Describe("RediSearch commands Resp 3", Label("search"), func() {
 		ctx := context.TODO()
 
 		It("should handle FTAggregate with Unstable RESP3 Search Module and without stability", Label("search", "ftcreate", "ftaggregate"), func() {
