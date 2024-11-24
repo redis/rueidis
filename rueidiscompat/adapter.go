@@ -428,7 +428,6 @@ type CoreCmdable interface {
 	SearchCmdable
 }
 
-// TODO SearchCmdable
 type SearchCmdable interface {
 	FT_List(ctx context.Context) *StringSliceCmd
 	FTAggregate(ctx context.Context, index string, query string) *MapStringInterfaceCmd
@@ -5095,7 +5094,6 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 		}
 		// [TEMPORARY seconds]
 		// FIXME: reudis: Temporary should not be float64
-		// TRY  FT.CREATE myindex2 ON JSON PREFIX 1 doc: TEMPORARY 1.1 SCHEMA $.name AS name TEXT
 		if options.Temporary > 0 {
 			_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Temporary(float64(options.Temporary)))
 		}
