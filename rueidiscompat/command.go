@@ -3499,7 +3499,6 @@ func (cmd *AggregateCmd) from(res rueidis.RedisResult) {
 			}
 			aggResult.Rows = append(aggResult.Rows, AggregateRow{anyMap})
 		}
-		fmt.Println("docs", docs)
 		cmd.SetVal(aggResult)
 		return
 	}
@@ -4105,8 +4104,6 @@ func (cmd *FTSpellCheckCmd) from(res rueidis.RedisResult) {
 		if err != nil {
 			cmd.SetErr(err)
 		}
-		// fmt.Println(res.String())
-		fmt.Println(m)
 		anyM, err := res.ToAny()
 		if err != nil {
 			cmd.SetErr(err)
@@ -4141,17 +4138,12 @@ func (cmd *FTSpellCheckCmd) from(res rueidis.RedisResult) {
 						cmd.SetErr(err)
 						return
 					}
-					fmt.Println("k: ", _k, "v", score)
 					result.Suggestions = append(result.Suggestions, SpellCheckSuggestion{Suggestion: _k, Score: score})
 				}
-
-				// for
-				// result.Suggestions = SpellCheckSuggestion{Suggestion: suggestion}
 			}
 			spellCheckResults = append(spellCheckResults, result)
 		}
 		cmd.SetVal(spellCheckResults)
-		// results := resSpellCheck.(map[interface{}]interface{})["results"].(map[interface{}]interface{})
 		return
 	}
 	// is RESP2 array
@@ -4180,7 +4172,6 @@ func (cmd *FTSpellCheckCmd) from(res rueidis.RedisResult) {
 		cmd.SetErr(err)
 		return
 	}
-
 	cmd.SetVal(result)
 }
 
@@ -4293,10 +4284,6 @@ type FTSearchCmd struct {
 
 // Ref: https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1541
 func (cmd *FTSearchCmd) from(res rueidis.RedisResult) {
-	// redis message type array is not a RESP3 map
-	// res may be Map in RESP3, but is array in RESP2
-	fmt.Printf("\nrueidisresult %#v\n", res.String())
-
 	if err := res.Error(); err != nil {
 		cmd.SetErr(err)
 		return
@@ -4337,13 +4324,11 @@ func (cmd *FTSearchCmd) from(res rueidis.RedisResult) {
 		}
 		ftSearchResult := FTSearchResult{Total: int(totalResults), Docs: make([]Document, 0, len(resultsArr))}
 		for _, result := range resultsArr {
-			// result: arr:  id, doc2, score, 3, "extra_attributes": [foo, bar]
 			resultMap, err := result.ToMap()
 			if err != nil {
 				cmd.SetErr(err)
 				return
 			}
-			fmt.Println("resultMap", result.String())
 			doc := Document{}
 			for k, v := range resultMap {
 				switch k {
@@ -4362,7 +4347,6 @@ func (cmd *FTSearchCmd) from(res rueidis.RedisResult) {
 						return
 					}
 					doc.Fields = strMap
-					// docs[d].Doc, _ = record.values[j+1].AsStrMap()
 				case "score":
 					score, err := v.AsFloat64()
 					if err != nil {
@@ -4525,8 +4509,6 @@ func (cmd *FTSynDumpCmd) from(res rueidis.RedisResult) {
 			cmd.SetErr(err)
 			return
 		}
-		fmt.Println(m)
-		fmt.Println(res.String())
 		results := make([]FTSynDumpResult, 0, len(m))
 		for term, synMsg := range m {
 			synonyms, err := synMsg.AsStrSlice()
