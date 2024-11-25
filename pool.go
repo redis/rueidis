@@ -87,27 +87,27 @@ func (p *pool) startTimerIfNeeded() {
 	p.timerIsActive = true
 	if p.timer == nil {
 		p.timer = time.AfterFunc(p.idleConnTTL, p.removeIdleConns)
-		return
+	} else {
+		p.timer.Reset(p.idleConnTTL)
 	}
-
-	p.timer.Reset(p.idleConnTTL)
 }
 
 func (p *pool) removeIdleConns() {
 	p.cond.L.Lock()
 	defer p.cond.L.Unlock()
 
-	if p.down || p.size <= p.minSize || len(p.list) == 0 {
+	if p.down || len(p.list) <= p.minSize {
 		return
 	}
 
 	newLen := min(p.minSize, len(p.list))
-	for _, w := range p.list[newLen:] {
+	for i, w := range p.list[newLen:] {
 		w.Close()
+		p.list[newLen+i] = nil
+		p.size--
 	}
 
 	p.list = p.list[:newLen]
-	p.size = p.minSize
 	p.timerIsActive = false
 }
 
