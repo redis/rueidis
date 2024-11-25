@@ -4256,7 +4256,7 @@ type Document struct {
 }
 
 type FTSearchResult struct {
-	Total int
+	Total int64
 	Docs  []Document
 }
 
@@ -4338,7 +4338,7 @@ func (cmd *FTSearchCmd) from(res rueidis.RedisResult) {
 			cmd.SetErr(err)
 			return
 		}
-		ftSearchResult := FTSearchResult{Total: int(totalResults), Docs: make([]Document, 0, len(resultsArr))}
+		ftSearchResult := FTSearchResult{Total: totalResults, Docs: make([]Document, 0, len(resultsArr))}
 		for _, result := range resultsArr {
 			resultMap, err := result.ToMap()
 			if err != nil {
@@ -4485,7 +4485,7 @@ func (cmd *FTSearchCmd) from(res rueidis.RedisResult) {
 		results = append(results, doc)
 	}
 	cmd.SetVal(FTSearchResult{
-		Total: int(total),
+		Total: total,
 		Docs:  results,
 	})
 }
