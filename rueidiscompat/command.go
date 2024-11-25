@@ -3482,11 +3482,16 @@ func (cmd *AggregateCmd) from(res rueidis.RedisResult) {
 		return
 	}
 	cmd.SetRawVal(anyRes)
-	if !(res.IsMap() || res.IsArray()) {
+	msg, err := res.ToMessage()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	if !(msg.IsMap() || msg.IsArray()) {
 		panic("res should be either map(RESP3) or array(RESP2)")
 	}
-	if res.IsMap() {
-		total, docs, err := res.AsFtAggregate()
+	if msg.IsMap() {
+		total, docs, err := msg.AsFtAggregate()
 		if err != nil {
 			cmd.SetErr(err)
 			return
@@ -3503,7 +3508,7 @@ func (cmd *AggregateCmd) from(res rueidis.RedisResult) {
 		return
 	}
 	// is RESP2 array
-	rows, err := res.ToArray()
+	rows, err := msg.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
 		return
@@ -4095,16 +4100,22 @@ func (cmd *FTSpellCheckCmd) from(res rueidis.RedisResult) {
 		cmd.SetErr(err)
 		return
 	}
-	if !(res.IsMap() || res.IsArray()) {
+	msg, err := res.ToMessage()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	if !(msg.IsMap() || msg.IsArray()) {
 		panic("res should be either map(RESP3) or array(RESP2)")
 	}
-	if res.IsMap() {
+	if msg.IsMap() {
 		// is RESP3 map
-		m, err := res.ToMap()
+		m, err := msg.ToMap()
 		if err != nil {
 			cmd.SetErr(err)
+			return
 		}
-		anyM, err := res.ToAny()
+		anyM, err := msg.ToAny()
 		if err != nil {
 			cmd.SetErr(err)
 			return
@@ -4147,12 +4158,12 @@ func (cmd *FTSpellCheckCmd) from(res rueidis.RedisResult) {
 		return
 	}
 	// is RESP2 array
-	arr, err := res.ToArray()
+	arr, err := msg.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
 		return
 	}
-	anyRes, err := res.ToAny()
+	anyRes, err := msg.ToAny()
 	if err != nil {
 		cmd.SetErr(err)
 		return
@@ -4294,12 +4305,17 @@ func (cmd *FTSearchCmd) from(res rueidis.RedisResult) {
 		return
 	}
 	cmd.SetRawVal(anyRes)
-	if !(res.IsMap() || res.IsArray()) {
+	msg, err := res.ToMessage()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	if !(msg.IsMap() || msg.IsArray()) {
 		panic("res should be either map(RESP3) or array(RESP2)")
 	}
-	if res.IsMap() {
+	if msg.IsMap() {
 		// is RESP3 map
-		m, err := res.ToMap()
+		m, err := msg.ToMap()
 		if err != nil {
 			cmd.SetErr(err)
 			return
@@ -4381,7 +4397,7 @@ func (cmd *FTSearchCmd) from(res rueidis.RedisResult) {
 		return
 	}
 	// is RESP2 array
-	data, err := res.ToArray()
+	data, err := msg.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
 		return
@@ -4499,12 +4515,17 @@ func (cmd *FTSynDumpCmd) from(res rueidis.RedisResult) {
 		return
 	}
 	cmd.SetRawVal(anyRes)
-	if !(res.IsMap() || res.IsArray()) {
+	msg, err := res.ToMessage()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	if !(msg.IsMap() || msg.IsArray()) {
 		panic("res should be either map(RESP3) or array(RESP2)")
 	}
-	if res.IsMap() {
+	if msg.IsMap() {
 		// is RESP3 map
-		m, err := res.ToMap()
+		m, err := msg.ToMap()
 		if err != nil {
 			cmd.SetErr(err)
 			return
@@ -4522,7 +4543,7 @@ func (cmd *FTSynDumpCmd) from(res rueidis.RedisResult) {
 		return
 	}
 	// is RESP2 array
-	arr, err := res.ToArray()
+	arr, err := msg.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
 		return

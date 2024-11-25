@@ -5355,7 +5355,6 @@ func (c *Compat) FTExplainWithArgs(ctx context.Context, index string, query stri
 // see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1393
 func (c *Compat) FTInfo(ctx context.Context, index string) *FTInfoCmd {
 	cmd := c.client.B().FtInfo().Index(index).Build()
-	fmt.Println(cmd.Commands())
 	return newFTInfoCmd(c.client.Do(ctx, cmd))
 }
 
@@ -5566,7 +5565,6 @@ func (c *Compat) FTSearchWithArgs(ctx context.Context, index string, query strin
 		}
 	}
 	cmd := cmds.FtSearchQuery(_cmd).Build()
-	fmt.Print(cmd.Commands())
 	return newFTSearchCmd(c.client.Do(ctx, cmd), options)
 }
 

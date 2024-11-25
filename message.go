@@ -471,16 +471,6 @@ func (r RedisResult) ToAny() (v any, err error) {
 	return
 }
 
-// IsMap delegates to RedisMessage.IsMap
-func (r RedisResult) IsMap() bool {
-	return r.val.IsMap()
-}
-
-// IsArray delegates to RedisMessage.IsArray
-func (r RedisResult) IsArray() bool {
-	return r.val.IsArray()
-}
-
 // IsCacheHit delegates to RedisMessage.IsCacheHit
 func (r RedisResult) IsCacheHit() bool {
 	return r.val.IsCacheHit()
