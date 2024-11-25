@@ -2845,6 +2845,173 @@ func (c *Pipeline) JSONType(ctx context.Context, key, path string) *JSONSliceCmd
 	return ret
 }
 
+func (c *Pipeline) FT_List(ctx context.Context) *StringSliceCmd {
+	ret := c.comp.FT_List(ctx)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+func (c *Pipeline) FTAggregate(ctx context.Context, index string, query string) *MapStringInterfaceCmd {
+	ret := c.comp.FTAggregate(ctx, index, query)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTAggregateWithArgs(ctx context.Context, index string, query string, options *FTAggregateOptions) *AggregateCmd {
+	ret := c.comp.FTAggregateWithArgs(ctx, index, query, options)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTAliasAdd(ctx context.Context, index string, alias string) *StatusCmd {
+	ret := c.comp.FTAliasAdd(ctx, index, alias)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTAliasDel(ctx context.Context, alias string) *StatusCmd {
+	ret := c.comp.FTAliasDel(ctx, alias)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTAliasUpdate(ctx context.Context, index string, alias string) *StatusCmd {
+	ret := c.comp.FTAliasUpdate(ctx, index, alias)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTAlter(ctx context.Context, index string, skipInitalScan bool, definition []interface{}) *StatusCmd {
+	ret := c.comp.FTAlter(ctx, index, skipInitalScan, definition)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTConfigGet(ctx context.Context, option string) *MapMapStringInterfaceCmd {
+	ret := c.comp.FTConfigGet(ctx, option)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTConfigSet(ctx context.Context, option string, value interface{}) *StatusCmd {
+	ret := c.comp.FTConfigSet(ctx, option, value)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTCreate(ctx context.Context, index string, options *FTCreateOptions, schema ...*FieldSchema) *StatusCmd {
+	ret := c.comp.FTCreate(ctx, index, options, schema...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTCursorDel(ctx context.Context, index string, cursorId int) *StatusCmd {
+	ret := c.comp.FTCursorDel(ctx, index, cursorId)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTCursorRead(ctx context.Context, index string, cursorId int, count int) *MapStringInterfaceCmd {
+	ret := c.comp.FTCursorRead(ctx, index, cursorId, count)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTDictAdd(ctx context.Context, dict string, term ...interface{}) *IntCmd {
+	ret := c.comp.FTDictAdd(ctx, dict, term...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTDictDel(ctx context.Context, dict string, term ...interface{}) *IntCmd {
+	ret := c.comp.FTDictDel(ctx, dict, term...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTDictDump(ctx context.Context, dict string) *StringSliceCmd {
+	ret := c.comp.FTDictDump(ctx, dict)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTDropIndex(ctx context.Context, index string) *StatusCmd {
+	ret := c.comp.FTDropIndex(ctx, index)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTDropIndexWithArgs(ctx context.Context, index string, options *FTDropIndexOptions) *StatusCmd {
+	ret := c.comp.FTDropIndexWithArgs(ctx, index, options)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTExplain(ctx context.Context, index string, query string) *StringCmd {
+	ret := c.comp.FTExplain(ctx, index, query)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTExplainWithArgs(ctx context.Context, index string, query string, options *FTExplainOptions) *StringCmd {
+	ret := c.comp.FTExplainWithArgs(ctx, index, query, options)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTInfo(ctx context.Context, index string) *FTInfoCmd {
+	ret := c.comp.FTInfo(ctx, index)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTSpellCheck(ctx context.Context, index string, query string) *FTSpellCheckCmd {
+	ret := c.comp.FTSpellCheck(ctx, index, query)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTSpellCheckWithArgs(ctx context.Context, index string, query string, options *FTSpellCheckOptions) *FTSpellCheckCmd {
+	ret := c.comp.FTSpellCheckWithArgs(ctx, index, query, options)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTSearch(ctx context.Context, index string, query string) *FTSearchCmd {
+	ret := c.comp.FTSearch(ctx, index, query)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTSearchWithArgs(ctx context.Context, index string, query string, options *FTSearchOptions) *FTSearchCmd {
+	ret := c.comp.FTSearchWithArgs(ctx, index, query, options)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTSynDump(ctx context.Context, index string) *FTSynDumpCmd {
+	ret := c.comp.FTSynDump(ctx, index)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTSynUpdate(ctx context.Context, index string, synGroupId interface{}, terms []interface{}) *StatusCmd {
+	ret := c.comp.FTSynUpdate(ctx, index, synGroupId, terms)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTSynUpdateWithArgs(ctx context.Context, index string, synGroupId interface{}, options *FTSynUpdateOptions, terms []interface{}) *StatusCmd {
+	ret := c.comp.FTSynUpdateWithArgs(ctx, index, synGroupId, options, terms)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) FTTagVals(ctx context.Context, index string, field string) *StringSliceCmd {
+	ret := c.comp.FTTagVals(ctx, index, field)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 // Len returns the number of queued commands.
 func (c *Pipeline) Len() int {
 	return len(c.comp.client.(*proxy).cmds)

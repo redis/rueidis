@@ -173,7 +173,8 @@
               "TAG",
               "NUMERIC",
               "GEO",
-              "VECTOR"
+              "VECTOR",
+              "GEOSHAPE"
             ]
           },
           {
@@ -182,14 +183,6 @@
             "optional": true,
             "multiple": true,
             "block": [
-              {
-                "name": "withsuffixtrie",
-                "type": "enum",
-                "enum": [
-                  "WITHSUFFIXTRIE"
-                ],
-                "optional": true
-              },
               {
                 "name": "sortable",
                 "type": "block",
@@ -252,6 +245,30 @@
                 "optional": true,
                 "enum": [
                   "CASESENSITIVE"
+                ]
+              },
+              {
+                "name": "WITHSUFFIXTRIE",
+                "type": "enum",
+                "optional": true,
+                "enum": [
+                  "WITHSUFFIXTRIE"
+                ]
+              },
+              {
+                "name": "INDEXEMPTY",
+                "type": "enum",
+                "optional": true,
+                "enum": [
+                  "INDEXEMPTY"
+                ]
+              },
+              {
+                "name": "INDEXMISSING",
+                "type": "enum",
+                "optional": true,
+                "enum": [
+                  "INDEXMISSING"
                 ]
               }
             ]
@@ -1092,6 +1109,14 @@
               "ASC",
               "DESC"
             ]
+          },
+          {
+            "name": "withcount",
+            "type": "enum",
+            "optional": true,
+            "enum": [
+              "WITHCOUNT"
+            ]
           }
         ]
       },
@@ -1315,6 +1340,14 @@
                 "type": "integer",
                 "command": "MAX",
                 "optional": true
+              },
+              {
+                "name": "withcount",
+                "type": "enum",
+                "enum": [
+                  "WITHCOUNT"
+                ],
+                "optional": true
               }
             ]
           },
@@ -1421,6 +1454,14 @@
             "multiple": true
           }
         ]
+      },
+      {
+        "name": "addscores",
+        "type": "enum",
+        "enum": [
+          "ADDSCORES"
+        ],
+        "optional": true
       },
       {
         "name": "dialect",

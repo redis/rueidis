@@ -45,8 +45,9 @@ type Cmder interface {
 }
 
 type baseCmd[T any] struct {
-	err error
-	val T
+	err    error
+	val    T
+	rawVal any
 }
 
 func (cmd *baseCmd[T]) SetVal(val T) {
@@ -55,6 +56,14 @@ func (cmd *baseCmd[T]) SetVal(val T) {
 
 func (cmd *baseCmd[T]) Val() T {
 	return cmd.val
+}
+
+func (cmd *baseCmd[T]) SetRawVal(rawVal any) {
+	cmd.rawVal = rawVal
+}
+
+func (cmd *baseCmd[T]) RawVal() any {
+	return cmd.rawVal
 }
 
 func (cmd *baseCmd[T]) SetErr(err error) {
@@ -67,6 +76,10 @@ func (cmd *baseCmd[T]) Err() error {
 
 func (cmd *baseCmd[T]) Result() (T, error) {
 	return cmd.Val(), cmd.Err()
+}
+
+func (cmd *baseCmd[T]) RawResult() (any, error) {
+	return cmd.RawVal(), cmd.Err()
 }
 
 type Cmd struct {
@@ -3347,4 +3360,1221 @@ func newJSONSliceCmd(res rueidis.RedisResult) *JSONSliceCmd {
 	cmd := &JSONSliceCmd{}
 	cmd.from(res)
 	return cmd
+}
+
+type MapMapStringInterfaceCmd struct {
+	baseCmd[map[string]any]
+}
+
+func (cmd *MapMapStringInterfaceCmd) from(res rueidis.RedisResult) {
+	arr, err := res.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	data := make(map[string]any, len(arr)/2)
+	for i := 0; i < len(arr); i++ {
+		arr1, err := arr[i].ToArray()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		for _i := 0; _i < len(arr1); _i += 2 {
+			key, err := arr1[_i].ToString()
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+			if !arr1[_i+1].IsNil() {
+				value, err := arr1[_i+1].ToAny()
+				if err != nil {
+					cmd.SetErr(err)
+					return
+				}
+				data[key] = value
+			} else {
+				data[key] = nil
+			}
+		}
+	}
+	cmd.SetVal(data)
+}
+
+func newMapMapStringInterfaceCmd(res rueidis.RedisResult) *MapMapStringInterfaceCmd {
+	cmd := &MapMapStringInterfaceCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+type FTAggregateResult struct {
+	Total int
+	Rows  []AggregateRow
+}
+
+type AggregateRow struct {
+	Fields map[string]any
+}
+
+// Each AggregateReducer have different args.
+// Please follow https://redis.io/docs/interact/search-and-query/search/aggregations/#supported-groupby-reducers for more information.
+type FTAggregateReducer struct {
+	Reducer SearchAggregator
+	Args    []interface{}
+	As      string
+}
+
+type FTAggregateGroupBy struct {
+	Fields []interface{}
+	Reduce []FTAggregateReducer
+}
+
+type FTAggregateSortBy struct {
+	FieldName string
+	Asc       bool
+	Desc      bool
+}
+
+type FTAggregateApply struct {
+	Field string
+	As    string
+}
+
+type FTAggregateLoad struct {
+	Field string
+	As    string
+}
+
+type FTAggregateWithCursor struct {
+	Count   int
+	MaxIdle int
+}
+
+type FTAggregateOptions struct {
+	Verbatim          bool
+	LoadAll           bool
+	Load              []FTAggregateLoad
+	Timeout           int
+	GroupBy           []FTAggregateGroupBy
+	SortBy            []FTAggregateSortBy
+	SortByMax         int
+	Apply             []FTAggregateApply
+	LimitOffset       int
+	Limit             int
+	Filter            string
+	WithCursor        bool
+	WithCursorOptions *FTAggregateWithCursor
+	Params            map[string]interface{}
+	DialectVersion    int
+}
+
+type AggregateCmd struct {
+	baseCmd[*FTAggregateResult]
+}
+
+func (cmd *AggregateCmd) from(res rueidis.RedisResult) {
+	if err := res.Error(); err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	anyRes, err := res.ToAny()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetRawVal(anyRes)
+	msg, err := res.ToMessage()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	if !(msg.IsMap() || msg.IsArray()) {
+		panic("res should be either map(RESP3) or array(RESP2)")
+	}
+	if msg.IsMap() {
+		total, docs, err := msg.AsFtAggregate()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		aggResult := &FTAggregateResult{Total: int(total)}
+		for _, doc := range docs {
+			anyMap := make(map[string]any, len(doc))
+			for k, v := range doc {
+				anyMap[k] = v
+			}
+			aggResult.Rows = append(aggResult.Rows, AggregateRow{anyMap})
+		}
+		cmd.SetVal(aggResult)
+		return
+	}
+	// is RESP2 array
+	rows, err := msg.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	anyArr := make([]any, 0, len(rows))
+	for _, e := range rows {
+		anyE, err := e.ToAny()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		anyArr = append(anyArr, anyE)
+	}
+	result, err := processAggregateResult(anyArr)
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetVal(result)
+}
+
+// Ref: https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L584
+func processAggregateResult(data []interface{}) (*FTAggregateResult, error) {
+	if len(data) == 0 {
+		return nil, fmt.Errorf("no data returned")
+	}
+
+	total, ok := data[0].(int64)
+	if !ok {
+		return nil, fmt.Errorf("invalid total format")
+	}
+
+	rows := make([]AggregateRow, 0, len(data)-1)
+	for _, row := range data[1:] {
+		fields, ok := row.([]interface{})
+		if !ok {
+			return nil, fmt.Errorf("invalid row format")
+		}
+
+		rowMap := make(map[string]interface{})
+		for i := 0; i < len(fields); i += 2 {
+			key, ok := fields[i].(string)
+			if !ok {
+				return nil, fmt.Errorf("invalid field key format")
+			}
+			value := fields[i+1]
+			rowMap[key] = value
+		}
+		rows = append(rows, AggregateRow{Fields: rowMap})
+	}
+
+	result := &FTAggregateResult{
+		Total: int(total),
+		Rows:  rows,
+	}
+	return result, nil
+}
+
+func newAggregateCmd(res rueidis.RedisResult) *AggregateCmd {
+	cmd := &AggregateCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+type FTCreateOptions struct {
+	OnHash          bool
+	OnJSON          bool
+	Prefix          []any
+	Filter          string
+	DefaultLanguage string
+	LanguageField   string
+	Score           float64
+	ScoreField      string
+	PayloadField    string
+	MaxTextFields   int
+	NoOffsets       bool
+	Temporary       int
+	NoHL            bool
+	NoFields        bool
+	NoFreqs         bool
+	StopWords       []any
+	SkipInitialScan bool
+}
+
+type SearchAggregator int
+
+const (
+	SearchInvalid = SearchAggregator(iota)
+	SearchAvg
+	SearchSum
+	SearchMin
+	SearchMax
+	SearchCount
+	SearchCountDistinct
+	SearchCountDistinctish
+	SearchStdDev
+	SearchQuantile
+	SearchToList
+	SearchFirstValue
+	SearchRandomSample
+)
+
+func (a SearchAggregator) String() string {
+	switch a {
+	case SearchInvalid:
+		return ""
+	case SearchAvg:
+		return "AVG"
+	case SearchSum:
+		return "SUM"
+	case SearchMin:
+		return "MIN"
+	case SearchMax:
+		return "MAX"
+	case SearchCount:
+		return "COUNT"
+	case SearchCountDistinct:
+		return "COUNT_DISTINCT"
+	case SearchCountDistinctish:
+		return "COUNT_DISTINCTISH"
+	case SearchStdDev:
+		return "STDDEV"
+	case SearchQuantile:
+		return "QUANTILE"
+	case SearchToList:
+		return "TOLIST"
+	case SearchFirstValue:
+		return "FIRST_VALUE"
+	case SearchRandomSample:
+		return "RANDOM_SAMPLE"
+	default:
+		return ""
+	}
+}
+
+type SearchFieldType int
+
+const (
+	SearchFieldTypeInvalid = SearchFieldType(iota)
+	SearchFieldTypeNumeric
+	SearchFieldTypeTag
+	SearchFieldTypeText
+	SearchFieldTypeGeo
+	SearchFieldTypeVector
+	SearchFieldTypeGeoShape
+)
+
+func (t SearchFieldType) String() string {
+	switch t {
+	case SearchFieldTypeInvalid:
+		return ""
+	case SearchFieldTypeNumeric:
+		return "NUMERIC"
+	case SearchFieldTypeTag:
+		return "TAG"
+	case SearchFieldTypeText:
+		return "TEXT"
+	case SearchFieldTypeGeo:
+		return "GEO"
+	case SearchFieldTypeVector:
+		return "VECTOR"
+	case SearchFieldTypeGeoShape:
+		return "GEOSHAPE"
+	default:
+		return "TEXT"
+	}
+}
+
+type FieldSchema struct {
+	FieldName         string
+	As                string
+	FieldType         SearchFieldType
+	Sortable          bool
+	UNF               bool
+	NoStem            bool
+	NoIndex           bool
+	PhoneticMatcher   string
+	Weight            float64
+	Separator         string
+	CaseSensitive     bool
+	WithSuffixtrie    bool
+	VectorArgs        *FTVectorArgs
+	GeoShapeFieldType string
+	IndexEmpty        bool
+	IndexMissing      bool
+}
+
+type FTVectorArgs struct {
+	FlatOptions *FTFlatOptions
+	HNSWOptions *FTHNSWOptions
+}
+
+type FTFlatOptions struct {
+	Type            string
+	Dim             int
+	DistanceMetric  string
+	InitialCapacity int
+	BlockSize       int
+}
+
+type FTHNSWOptions struct {
+	Type                   string
+	Dim                    int
+	DistanceMetric         string
+	InitialCapacity        int
+	MaxEdgesPerNode        int
+	MaxAllowedEdgesPerNode int
+	EFRunTime              int
+	Epsilon                float64
+}
+
+type SpellCheckTerms struct {
+	Include    bool
+	Exclude    bool
+	Dictionary string
+}
+
+type FTSearchFilter struct {
+	FieldName any
+	Min       any
+	Max       any
+}
+
+type FTSearchGeoFilter struct {
+	FieldName string
+	Longitude float64
+	Latitude  float64
+	Radius    float64
+	Unit      string
+}
+
+type FTSearchReturn struct {
+	FieldName string
+	As        string
+}
+
+type FTSearchSortBy struct {
+	FieldName string
+	Asc       bool
+	Desc      bool
+}
+
+type FTDropIndexOptions struct {
+	DeleteDocs bool
+}
+
+type FTExplainOptions struct {
+	Dialect string
+}
+
+type IndexErrors struct {
+	IndexingFailures     int `redis:"indexing failures"`
+	LastIndexingError    string
+	LastIndexingErrorKey string
+}
+
+type FTAttribute struct {
+	Identifier      string
+	Attribute       string
+	Type            string
+	Weight          float64
+	Sortable        bool
+	NoStem          bool
+	NoIndex         bool
+	UNF             bool
+	PhoneticMatcher string
+	CaseSensitive   bool
+	WithSuffixtrie  bool
+}
+
+type CursorStats struct {
+	GlobalIdle    int
+	GlobalTotal   int
+	IndexCapacity int
+	IndexTotal    int
+}
+
+type FieldStatistic struct {
+	Identifier  string
+	Attribute   string
+	IndexErrors IndexErrors
+}
+
+type GCStats struct {
+	BytesCollected       int    `redis:"bytes_collected"`
+	TotalMsRun           int    `redis:"total_ms_run"`
+	TotalCycles          int    `redis:"total_cycles"`
+	AverageCycleTimeMs   string `redis:"average_cycle_time_ms"`
+	LastRunTimeMs        int    `redis:"last_run_time_ms"`
+	GCNumericTreesMissed int    `redis:"gc_numeric_trees_missed"`
+	GCBlocksDenied       int    `redis:"gc_blocks_denied"`
+}
+
+type IndexDefinition struct {
+	KeyType      string
+	Prefixes     []string
+	DefaultScore float64
+}
+
+type FTInfoResult struct {
+	IndexErrors              IndexErrors      `redis:"Index Errors"`
+	Attributes               []FTAttribute    `redis:"attributes"`
+	BytesPerRecordAvg        string           `redis:"bytes_per_record_avg"`
+	Cleaning                 int              `redis:"cleaning"`
+	CursorStats              CursorStats      `redis:"cursor_stats"`
+	DialectStats             map[string]int   `redis:"dialect_stats"`
+	DocTableSizeMB           float64          `redis:"doc_table_size_mb"`
+	FieldStatistics          []FieldStatistic `redis:"field statistics"`
+	GCStats                  GCStats          `redis:"gc_stats"`
+	GeoshapesSzMB            float64          `redis:"geoshapes_sz_mb"`
+	HashIndexingFailures     int              `redis:"hash_indexing_failures"`
+	IndexDefinition          IndexDefinition  `redis:"index_definition"`
+	IndexName                string           `redis:"index_name"`
+	IndexOptions             []string         `redis:"index_options"`
+	Indexing                 int              `redis:"indexing"`
+	InvertedSzMB             float64          `redis:"inverted_sz_mb"`
+	KeyTableSizeMB           float64          `redis:"key_table_size_mb"`
+	MaxDocID                 int              `redis:"max_doc_id"`
+	NumDocs                  int              `redis:"num_docs"`
+	NumRecords               int              `redis:"num_records"`
+	NumTerms                 int              `redis:"num_terms"`
+	NumberOfUses             int              `redis:"number_of_uses"`
+	OffsetBitsPerRecordAvg   string           `redis:"offset_bits_per_record_avg"`
+	OffsetVectorsSzMB        float64          `redis:"offset_vectors_sz_mb"`
+	OffsetsPerTermAvg        string           `redis:"offsets_per_term_avg"`
+	PercentIndexed           float64          `redis:"percent_indexed"`
+	RecordsPerDocAvg         string           `redis:"records_per_doc_avg"`
+	SortableValuesSizeMB     float64          `redis:"sortable_values_size_mb"`
+	TagOverheadSzMB          float64          `redis:"tag_overhead_sz_mb"`
+	TextOverheadSzMB         float64          `redis:"text_overhead_sz_mb"`
+	TotalIndexMemorySzMB     float64          `redis:"total_index_memory_sz_mb"`
+	TotalIndexingTime        int              `redis:"total_indexing_time"`
+	TotalInvertedIndexBlocks int              `redis:"total_inverted_index_blocks"`
+	VectorIndexSzMB          float64          `redis:"vector_index_sz_mb"`
+}
+
+type FTInfoCmd struct {
+	baseCmd[FTInfoResult]
+}
+
+// Ref: https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1143
+func parseFTInfo(data map[string]interface{}) (FTInfoResult, error) {
+	var ftInfo FTInfoResult
+	// Manually parse each field from the map
+	if indexErrors, ok := data["Index Errors"].([]interface{}); ok {
+		ftInfo.IndexErrors = IndexErrors{
+			IndexingFailures:     ToInteger(indexErrors[1]),
+			LastIndexingError:    ToString(indexErrors[3]),
+			LastIndexingErrorKey: ToString(indexErrors[5]),
+		}
+	}
+
+	if attributes, ok := data["attributes"].([]interface{}); ok {
+		for _, attr := range attributes {
+			if attrMap, ok := attr.([]interface{}); ok {
+				att := FTAttribute{}
+				for i := 0; i < len(attrMap); i++ {
+					if ToLower(ToString(attrMap[i])) == "attribute" {
+						att.Attribute = ToString(attrMap[i+1])
+						continue
+					}
+					if ToLower(ToString(attrMap[i])) == "identifier" {
+						att.Identifier = ToString(attrMap[i+1])
+						continue
+					}
+					if ToLower(ToString(attrMap[i])) == "type" {
+						att.Type = ToString(attrMap[i+1])
+						continue
+					}
+					if ToLower(ToString(attrMap[i])) == "weight" {
+						att.Weight = ToFloat(attrMap[i+1])
+						continue
+					}
+					if ToLower(ToString(attrMap[i])) == "nostem" {
+						att.NoStem = true
+						continue
+					}
+					if ToLower(ToString(attrMap[i])) == "sortable" {
+						att.Sortable = true
+						continue
+					}
+					if ToLower(ToString(attrMap[i])) == "noindex" {
+						att.NoIndex = true
+						continue
+					}
+					if ToLower(ToString(attrMap[i])) == "unf" {
+						att.UNF = true
+						continue
+					}
+					if ToLower(ToString(attrMap[i])) == "phonetic" {
+						att.PhoneticMatcher = ToString(attrMap[i+1])
+						continue
+					}
+					if ToLower(ToString(attrMap[i])) == "case_sensitive" {
+						att.CaseSensitive = true
+						continue
+					}
+					if ToLower(ToString(attrMap[i])) == "withsuffixtrie" {
+						att.WithSuffixtrie = true
+						continue
+					}
+
+				}
+				ftInfo.Attributes = append(ftInfo.Attributes, att)
+			}
+		}
+	}
+
+	ftInfo.BytesPerRecordAvg = ToString(data["bytes_per_record_avg"])
+	ftInfo.Cleaning = ToInteger(data["cleaning"])
+
+	if cursorStats, ok := data["cursor_stats"].([]interface{}); ok {
+		ftInfo.CursorStats = CursorStats{
+			GlobalIdle:    ToInteger(cursorStats[1]),
+			GlobalTotal:   ToInteger(cursorStats[3]),
+			IndexCapacity: ToInteger(cursorStats[5]),
+			IndexTotal:    ToInteger(cursorStats[7]),
+		}
+	}
+
+	if dialectStats, ok := data["dialect_stats"].([]interface{}); ok {
+		ftInfo.DialectStats = make(map[string]int)
+		for i := 0; i < len(dialectStats); i += 2 {
+			ftInfo.DialectStats[ToString(dialectStats[i])] = ToInteger(dialectStats[i+1])
+		}
+	}
+
+	ftInfo.DocTableSizeMB = ToFloat(data["doc_table_size_mb"])
+
+	if fieldStats, ok := data["field statistics"].([]interface{}); ok {
+		for _, stat := range fieldStats {
+			if statMap, ok := stat.([]interface{}); ok {
+				ftInfo.FieldStatistics = append(ftInfo.FieldStatistics, FieldStatistic{
+					Identifier: ToString(statMap[1]),
+					Attribute:  ToString(statMap[3]),
+					IndexErrors: IndexErrors{
+						IndexingFailures:     ToInteger(statMap[5].([]interface{})[1]),
+						LastIndexingError:    ToString(statMap[5].([]interface{})[3]),
+						LastIndexingErrorKey: ToString(statMap[5].([]interface{})[5]),
+					},
+				})
+			}
+		}
+	}
+
+	if gcStats, ok := data["gc_stats"].([]interface{}); ok {
+		ftInfo.GCStats = GCStats{}
+		for i := 0; i < len(gcStats); i += 2 {
+			if ToLower(ToString(gcStats[i])) == "bytes_collected" {
+				ftInfo.GCStats.BytesCollected = ToInteger(gcStats[i+1])
+				continue
+			}
+			if ToLower(ToString(gcStats[i])) == "total_ms_run" {
+				ftInfo.GCStats.TotalMsRun = ToInteger(gcStats[i+1])
+				continue
+			}
+			if ToLower(ToString(gcStats[i])) == "total_cycles" {
+				ftInfo.GCStats.TotalCycles = ToInteger(gcStats[i+1])
+				continue
+			}
+			if ToLower(ToString(gcStats[i])) == "average_cycle_time_ms" {
+				ftInfo.GCStats.AverageCycleTimeMs = ToString(gcStats[i+1])
+				continue
+			}
+			if ToLower(ToString(gcStats[i])) == "last_run_time_ms" {
+				ftInfo.GCStats.LastRunTimeMs = ToInteger(gcStats[i+1])
+				continue
+			}
+			if ToLower(ToString(gcStats[i])) == "gc_numeric_trees_missed" {
+				ftInfo.GCStats.GCNumericTreesMissed = ToInteger(gcStats[i+1])
+				continue
+			}
+			if ToLower(ToString(gcStats[i])) == "gc_blocks_denied" {
+				ftInfo.GCStats.GCBlocksDenied = ToInteger(gcStats[i+1])
+				continue
+			}
+		}
+	}
+
+	ftInfo.GeoshapesSzMB = ToFloat(data["geoshapes_sz_mb"])
+	ftInfo.HashIndexingFailures = ToInteger(data["hash_indexing_failures"])
+
+	if indexDef, ok := data["index_definition"].([]interface{}); ok {
+		ftInfo.IndexDefinition = IndexDefinition{
+			KeyType:      ToString(indexDef[1]),
+			Prefixes:     ToStringSlice(indexDef[3]),
+			DefaultScore: ToFloat(indexDef[5]),
+		}
+	}
+
+	ftInfo.IndexName = ToString(data["index_name"])
+	ftInfo.IndexOptions = ToStringSlice(data["index_options"].([]interface{}))
+	ftInfo.Indexing = ToInteger(data["indexing"])
+	ftInfo.InvertedSzMB = ToFloat(data["inverted_sz_mb"])
+	ftInfo.KeyTableSizeMB = ToFloat(data["key_table_size_mb"])
+	ftInfo.MaxDocID = ToInteger(data["max_doc_id"])
+	ftInfo.NumDocs = ToInteger(data["num_docs"])
+	ftInfo.NumRecords = ToInteger(data["num_records"])
+	ftInfo.NumTerms = ToInteger(data["num_terms"])
+	ftInfo.NumberOfUses = ToInteger(data["number_of_uses"])
+	ftInfo.OffsetBitsPerRecordAvg = ToString(data["offset_bits_per_record_avg"])
+	ftInfo.OffsetVectorsSzMB = ToFloat(data["offset_vectors_sz_mb"])
+	ftInfo.OffsetsPerTermAvg = ToString(data["offsets_per_term_avg"])
+	ftInfo.PercentIndexed = ToFloat(data["percent_indexed"])
+	ftInfo.RecordsPerDocAvg = ToString(data["records_per_doc_avg"])
+	ftInfo.SortableValuesSizeMB = ToFloat(data["sortable_values_size_mb"])
+	ftInfo.TagOverheadSzMB = ToFloat(data["tag_overhead_sz_mb"])
+	ftInfo.TextOverheadSzMB = ToFloat(data["text_overhead_sz_mb"])
+	ftInfo.TotalIndexMemorySzMB = ToFloat(data["total_index_memory_sz_mb"])
+	ftInfo.TotalIndexingTime = ToInteger(data["total_indexing_time"])
+	ftInfo.TotalInvertedIndexBlocks = ToInteger(data["total_inverted_index_blocks"])
+	ftInfo.VectorIndexSzMB = ToFloat(data["vector_index_sz_mb"])
+
+	return ftInfo, nil
+}
+
+func (cmd *FTInfoCmd) from(res rueidis.RedisResult) {
+	if err := res.Error(); err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	m, err := res.AsMap()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	anyM, err := res.ToAny()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetRawVal(anyM)
+	anyMap := make(map[string]any, len(m))
+	for k, v := range m {
+		anyMap[k], err = v.ToAny()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+	}
+	ftInfoResult, err := parseFTInfo(anyMap)
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetVal(ftInfoResult)
+}
+
+func newFTInfoCmd(res rueidis.RedisResult) *FTInfoCmd {
+	cmd := &FTInfoCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+type FTSpellCheckOptions struct {
+	Distance int
+	Terms    *FTSpellCheckTerms
+	Dialect  int
+}
+
+type FTSpellCheckTerms struct {
+	Inclusion  string // Either "INCLUDE" or "EXCLUDE"
+	Dictionary string
+	Terms      []interface{}
+}
+
+type SpellCheckResult struct {
+	Term        string
+	Suggestions []SpellCheckSuggestion
+}
+
+type SpellCheckSuggestion struct {
+	Score      float64
+	Suggestion string
+}
+
+type FTSpellCheckCmd struct{ baseCmd[[]SpellCheckResult] }
+
+func (cmd *FTSpellCheckCmd) Val() []SpellCheckResult {
+	return cmd.val
+}
+
+func (cmd *FTSpellCheckCmd) Result() ([]SpellCheckResult, error) {
+	return cmd.Val(), cmd.Err()
+}
+
+func (cmd *FTSpellCheckCmd) from(res rueidis.RedisResult) {
+	if err := res.Error(); err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	msg, err := res.ToMessage()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	if !(msg.IsMap() || msg.IsArray()) {
+		panic("res should be either map(RESP3) or array(RESP2)")
+	}
+	if msg.IsMap() {
+		// is RESP3 map
+		m, err := msg.ToMap()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		anyM, err := msg.ToAny()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		cmd.SetRawVal(anyM)
+		spellCheckResults := []SpellCheckResult{}
+		result := m["results"]
+		resultMap, err := result.ToMap()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		for k, v := range resultMap {
+			result := SpellCheckResult{}
+			result.Term = k
+			suggestions, err := v.ToArray()
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+			for _, suggestion := range suggestions {
+				// map key: suggestion, score
+				sugMap, err := suggestion.ToMap()
+				if err != nil {
+					cmd.SetErr(err)
+					return
+				}
+				for _k, _v := range sugMap {
+					score, err := _v.ToFloat64()
+					if err != nil {
+						cmd.SetErr(err)
+						return
+					}
+					result.Suggestions = append(result.Suggestions, SpellCheckSuggestion{Suggestion: _k, Score: score})
+				}
+			}
+			spellCheckResults = append(spellCheckResults, result)
+		}
+		cmd.SetVal(spellCheckResults)
+		return
+	}
+	// is RESP2 array
+	arr, err := msg.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	anyRes, err := msg.ToAny()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetRawVal(anyRes)
+	AnyArr := make([]any, 0, len(arr))
+	for _, e := range arr {
+		anyE, err := e.ToAny()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		AnyArr = append(AnyArr, anyE)
+	}
+	result, err := parseFTSpellCheck(AnyArr)
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetVal(result)
+}
+
+func newFTSpellCheckCmd(res rueidis.RedisResult) *FTSpellCheckCmd {
+	cmd := &FTSpellCheckCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+func parseFTSpellCheck(data []interface{}) ([]SpellCheckResult, error) {
+	results := make([]SpellCheckResult, 0, len(data))
+
+	for _, termData := range data {
+		termInfo, ok := termData.([]interface{})
+		if !ok || len(termInfo) != 3 {
+			return nil, fmt.Errorf("invalid term format")
+		}
+
+		term, ok := termInfo[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("invalid term format")
+		}
+
+		suggestionsData, ok := termInfo[2].([]interface{})
+		if !ok {
+			return nil, fmt.Errorf("invalid suggestions format")
+		}
+
+		suggestions := make([]SpellCheckSuggestion, 0, len(suggestionsData))
+		for _, suggestionData := range suggestionsData {
+			suggestionInfo, ok := suggestionData.([]interface{})
+			if !ok || len(suggestionInfo) != 2 {
+				return nil, fmt.Errorf("invalid suggestion format")
+			}
+
+			scoreStr, ok := suggestionInfo[0].(string)
+			if !ok {
+				return nil, fmt.Errorf("invalid suggestion score format")
+			}
+			score, err := strconv.ParseFloat(scoreStr, 64)
+			if err != nil {
+				return nil, fmt.Errorf("invalid suggestion score value")
+			}
+
+			suggestion, ok := suggestionInfo[1].(string)
+			if !ok {
+				return nil, fmt.Errorf("invalid suggestion format")
+			}
+
+			suggestions = append(suggestions, SpellCheckSuggestion{
+				Score:      score,
+				Suggestion: suggestion,
+			})
+		}
+
+		results = append(results, SpellCheckResult{
+			Term:        term,
+			Suggestions: suggestions,
+		})
+	}
+
+	return results, nil
+}
+
+type Document struct {
+	ID      string
+	Score   *float64
+	Payload *string
+	SortKey *string
+	Fields  map[string]string
+}
+
+type FTSearchResult struct {
+	Total int
+	Docs  []Document
+}
+
+type FTSearchOptions struct {
+	NoContent       bool
+	Verbatim        bool
+	NoStopWords     bool
+	WithScores      bool
+	WithPayloads    bool
+	WithSortKeys    bool
+	Filters         []FTSearchFilter
+	GeoFilter       []FTSearchGeoFilter
+	InKeys          []interface{}
+	InFields        []interface{}
+	Return          []FTSearchReturn
+	Slop            int
+	Timeout         int
+	InOrder         bool
+	Language        string
+	Expander        string
+	Scorer          string
+	ExplainScore    bool
+	Payload         string
+	SortBy          []FTSearchSortBy
+	SortByWithCount bool
+	LimitOffset     int
+	Limit           int
+	Params          map[string]interface{}
+	DialectVersion  int
+}
+
+type FTSearchCmd struct {
+	baseCmd[FTSearchResult]
+	options *FTSearchOptions
+}
+
+// Ref: https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1541
+func (cmd *FTSearchCmd) from(res rueidis.RedisResult) {
+	if err := res.Error(); err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	anyRes, err := res.ToAny()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetRawVal(anyRes)
+	msg, err := res.ToMessage()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	if !(msg.IsMap() || msg.IsArray()) {
+		panic("res should be either map(RESP3) or array(RESP2)")
+	}
+	if msg.IsMap() {
+		// is RESP3 map
+		m, err := msg.ToMap()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		totalResultsMsg, ok := m["total_results"]
+		if !ok {
+			cmd.SetErr(fmt.Errorf(`result map should contain key "total_results"`))
+		}
+		totalResults, err := totalResultsMsg.AsInt64()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		resultsMsg, ok := m["results"]
+		if !ok {
+			cmd.SetErr(fmt.Errorf(`result map should contain key "results"`))
+		}
+		resultsArr, err := resultsMsg.ToArray()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		ftSearchResult := FTSearchResult{Total: int(totalResults), Docs: make([]Document, 0, len(resultsArr))}
+		for _, result := range resultsArr {
+			resultMap, err := result.ToMap()
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+			doc := Document{}
+			for k, v := range resultMap {
+				switch k {
+				case "id":
+					idStr, err := v.ToString()
+					if err != nil {
+						cmd.SetErr(err)
+						return
+					}
+					doc.ID = idStr
+				case "extra_attributes":
+					// doc.ID = resultArr[i+1].String()
+					strMap, err := v.AsStrMap()
+					if err != nil {
+						cmd.SetErr(err)
+						return
+					}
+					doc.Fields = strMap
+				case "score":
+					score, err := v.AsFloat64()
+					if err != nil {
+						cmd.SetErr(err)
+						return
+					}
+					doc.Score = &score
+				case "payload":
+					if !v.IsNil() {
+						payload, err := v.ToString()
+						if err != nil {
+							cmd.SetErr(err)
+							return
+						}
+						doc.Payload = &payload
+					}
+				case "sortkey":
+					if !v.IsNil() {
+						sortKey, err := v.ToString()
+						if err != nil {
+							cmd.SetErr(err)
+							return
+						}
+						doc.SortKey = &sortKey
+					}
+				}
+			}
+
+			ftSearchResult.Docs = append(ftSearchResult.Docs, doc)
+		}
+		cmd.SetVal(ftSearchResult)
+		return
+	}
+	// is RESP2 array
+	data, err := msg.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	if len(data) < 1 {
+		cmd.SetErr(fmt.Errorf("unexpected search result format"))
+		return
+	}
+	total, err := data[0].AsInt64()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	var results []Document
+	for i := 1; i < len(data); {
+		docID, err := data[i].ToString()
+		if err != nil {
+			cmd.SetErr(fmt.Errorf("invalid total results format: %w", err))
+			return
+		}
+		doc := Document{
+			ID:     docID,
+			Fields: make(map[string]string),
+		}
+		i++
+		if cmd.options != nil {
+			if cmd.options.NoContent {
+				results = append(results, doc)
+				continue
+			}
+			if cmd.options.WithScores && i < len(data) {
+				scoreStr, err := data[i].ToString()
+				if err != nil {
+					cmd.SetErr(fmt.Errorf("invalid score format: %w", err))
+					return
+				}
+				score, err := strconv.ParseFloat(scoreStr, 64)
+				if err != nil {
+					cmd.SetErr(fmt.Errorf("invalid score format: %w", err))
+					return
+				}
+				doc.Score = &score
+				i++
+			}
+			if cmd.options.WithPayloads && i < len(data) {
+				payload, err := data[i].ToString()
+				if err != nil {
+					cmd.SetErr(fmt.Errorf("invalid payload format: %w", err))
+					return
+				}
+				doc.Payload = &payload
+				i++
+			}
+			if cmd.options.WithSortKeys && i < len(data) {
+				sortKey, err := data[i].ToString()
+				if err != nil {
+					cmd.SetErr(fmt.Errorf("invalid payload format: %w", err))
+					return
+				}
+				doc.SortKey = &sortKey
+				i++
+			}
+		}
+		if i < len(data) {
+			fields, err := data[i].ToArray()
+			if err != nil {
+				cmd.SetErr(fmt.Errorf("invalid document fields format: %w", err))
+				return
+			}
+			for j := 0; j < len(fields); j += 2 {
+				key, err := fields[j].ToString()
+				if err != nil {
+					cmd.SetErr(fmt.Errorf("invalid field key format: %w", err))
+					return
+				}
+				value, err := fields[j+1].ToString()
+				if err != nil {
+					cmd.SetErr(fmt.Errorf("invalid field value format: %w", err))
+					return
+				}
+				doc.Fields[key] = value
+			}
+			i++
+		}
+		results = append(results, doc)
+	}
+	cmd.SetVal(FTSearchResult{
+		Total: int(total),
+		Docs:  results,
+	})
+}
+
+func newFTSearchCmd(res rueidis.RedisResult, options *FTSearchOptions) *FTSearchCmd {
+	cmd := &FTSearchCmd{options: options}
+	cmd.from(res)
+	return cmd
+}
+
+type FTSynUpdateOptions struct {
+	SkipInitialScan bool
+}
+
+type FTSynDumpCmd struct {
+	baseCmd[[]FTSynDumpResult]
+}
+
+func (cmd *FTSynDumpCmd) from(res rueidis.RedisResult) {
+	if err := res.Error(); err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	anyRes, err := res.ToAny()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetRawVal(anyRes)
+	msg, err := res.ToMessage()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	if !(msg.IsMap() || msg.IsArray()) {
+		panic("res should be either map(RESP3) or array(RESP2)")
+	}
+	if msg.IsMap() {
+		// is RESP3 map
+		m, err := msg.ToMap()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		results := make([]FTSynDumpResult, 0, len(m))
+		for term, synMsg := range m {
+			synonyms, err := synMsg.AsStrSlice()
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+			results = append(results, FTSynDumpResult{Term: term, Synonyms: synonyms})
+		}
+		cmd.SetVal(results)
+		return
+	}
+	// is RESP2 array
+	arr, err := msg.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	results := make([]FTSynDumpResult, 0, len(arr)/2)
+	for i := 0; i < len(arr); i += 2 {
+		term, err := arr[i].ToString()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		synonyms, err := arr[i+1].AsStrSlice()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		results = append(results, FTSynDumpResult{
+			Term:     term,
+			Synonyms: synonyms,
+		})
+	}
+	cmd.SetVal(results)
+}
+
+func newFTSynDumpCmd(res rueidis.RedisResult) *FTSynDumpCmd {
+	cmd := &FTSynDumpCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+type FTSynDumpResult struct {
+	Term     string
+	Synonyms []string
 }
