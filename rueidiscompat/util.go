@@ -27,24 +27,10 @@
 package rueidiscompat
 
 import (
-	"context"
 	"net"
 	"strconv"
 	"strings"
-	"time"
 )
-
-func Sleep(ctx context.Context, dur time.Duration) error {
-	t := time.NewTimer(dur)
-	defer t.Stop()
-
-	select {
-	case <-t.C:
-		return nil
-	case <-ctx.Done():
-		return ctx.Err()
-	}
-}
 
 func ToLower(s string) string {
 	if isLower(s) {
