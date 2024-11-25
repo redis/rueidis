@@ -456,7 +456,7 @@ func (r RedisResult) ToMap() (v map[string]RedisMessage, err error) {
 	if r.err != nil {
 		err = r.err
 	} else {
-		v, err = r.val.AsMap()
+		v, err = r.val.ToMap()
 	}
 	return
 }
