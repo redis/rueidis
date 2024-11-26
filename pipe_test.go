@@ -1005,7 +1005,7 @@ func TestDoStreamRecycle(t *testing.T) {
 	go func() {
 		mock.Expect("PING").ReplyString("OK")
 	}()
-	conns := newPool(1, nil, nil)
+	conns := newPool(1, nil, 0, 0, nil)
 	s := p.DoStream(context.Background(), conns, cmds.NewCompleted([]string{"PING"}))
 	buf := bytes.NewBuffer(nil)
 	if err := s.Error(); err != nil {
@@ -1058,7 +1058,7 @@ func TestDoStreamRecycleDestinationFull(t *testing.T) {
 	go func() {
 		mock.Expect("PING").ReplyBlobString("OK")
 	}()
-	conns := newPool(1, nil, nil)
+	conns := newPool(1, nil, 0, 0, nil)
 	s := p.DoStream(context.Background(), conns, cmds.NewCompleted([]string{"PING"}))
 	buf := &limitedbuffer{buf: make([]byte, 1)}
 	if err := s.Error(); err != nil {
@@ -1091,7 +1091,7 @@ func TestDoMultiStreamRecycle(t *testing.T) {
 	go func() {
 		mock.Expect("PING").Expect("PING").ReplyString("OK").ReplyString("OK")
 	}()
-	conns := newPool(1, nil, nil)
+	conns := newPool(1, nil, 0, 0, nil)
 	s := p.DoMultiStream(context.Background(), conns, cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"}))
 	buf := bytes.NewBuffer(nil)
 	if err := s.Error(); err != nil {
@@ -1124,7 +1124,7 @@ func TestDoMultiStreamRecycleDestinationFull(t *testing.T) {
 	go func() {
 		mock.Expect("PING").Expect("PING").ReplyBlobString("OK").ReplyBlobString("OK")
 	}()
-	conns := newPool(1, nil, nil)
+	conns := newPool(1, nil, 0, 0, nil)
 	s := p.DoMultiStream(context.Background(), conns, cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"}))
 	buf := &limitedbuffer{buf: make([]byte, 1)}
 	if err := s.Error(); err != nil {
@@ -3569,7 +3569,7 @@ func TestAlreadyCanceledContext(t *testing.T) {
 		t.Fatalf("unexpected err %v", err)
 	}
 
-	cp := newPool(1, nil, nil)
+	cp := newPool(1, nil, 0, 0, nil)
 	if s := p.DoStream(ctx, cp, cmds.NewCompleted([]string{"GET", "a"})); !errors.Is(s.Error(), context.Canceled) {
 		t.Fatalf("unexpected err %v", s.Error())
 	}
@@ -3614,7 +3614,7 @@ func TestCancelContext_DoStream(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*50)
 	defer cancel()
 
-	cp := newPool(1, nil, nil)
+	cp := newPool(1, nil, 0, 0, nil)
 	s := p.DoStream(ctx, cp, cmds.NewCompleted([]string{"GET", "a"}))
 	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
 		t.Fatalf("unexpected err %v", err)
@@ -3631,7 +3631,7 @@ func TestWriteDeadlineIsShorterThanContextDeadline_DoStream(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	cp := newPool(1, nil, nil)
+	cp := newPool(1, nil, 0, 0, nil)
 	startTime := time.Now()
 	s := p.DoStream(ctx, cp, cmds.NewCompleted([]string{"GET", "a"}))
 	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
@@ -3652,7 +3652,7 @@ func TestWriteDeadlineIsNoShorterThanContextDeadline_DoStreamBlocked(t *testing.
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
 
-	cp := newPool(1, nil, nil)
+	cp := newPool(1, nil, 0, 0, nil)
 	startTime := time.Now()
 	s := p.DoStream(ctx, cp, cmds.NewBlockingCompleted([]string{"BLPOP", "a"}))
 	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
@@ -3727,7 +3727,7 @@ func TestCancelContext_DoMultiStream(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*50)
 	defer cancel()
 
-	cp := newPool(1, nil, nil)
+	cp := newPool(1, nil, 0, 0, nil)
 	s := p.DoMultiStream(ctx, cp, cmds.NewCompleted([]string{"GET", "a"}))
 	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
 		t.Fatalf("unexpected err %v", err)
@@ -3744,7 +3744,7 @@ func TestWriteDeadlineIsShorterThanContextDeadline_DoMultiStream(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	cp := newPool(1, nil, nil)
+	cp := newPool(1, nil, 0, 0, nil)
 	startTime := time.Now()
 	s := p.DoMultiStream(ctx, cp, cmds.NewCompleted([]string{"GET", "a"}))
 	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
@@ -3765,7 +3765,7 @@ func TestWriteDeadlineIsNoShorterThanContextDeadline_DoMultiStreamBlocked(t *tes
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
 
-	cp := newPool(1, nil, nil)
+	cp := newPool(1, nil, 0, 0, nil)
 	startTime := time.Now()
 	s := p.DoMultiStream(ctx, cp, cmds.NewBlockingCompleted([]string{"BLPOP", "a"}))
 	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
@@ -3797,7 +3797,7 @@ func TestTimeout_DoStream(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, _ := setup(t, ClientOption{ConnWriteTimeout: time.Millisecond * 30})
 
-	cp := newPool(1, nil, nil)
+	cp := newPool(1, nil, 0, 0, nil)
 
 	s := p.DoStream(context.Background(), cp, cmds.NewCompleted([]string{"GET", "a"}))
 	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
@@ -3817,7 +3817,7 @@ func TestForceClose_DoStream_Block(t *testing.T) {
 		p.Close()
 	}()
 
-	cp := newPool(1, nil, nil)
+	cp := newPool(1, nil, 0, 0, nil)
 
 	s := p.DoStream(context.Background(), cp, cmds.NewBlockingCompleted([]string{"GET", "a"}))
 	if s.Error() != nil {
@@ -3874,7 +3874,7 @@ func TestTimeout_DoMultiStream(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, _ := setup(t, ClientOption{ConnWriteTimeout: time.Millisecond * 30})
 
-	cp := newPool(1, nil, nil)
+	cp := newPool(1, nil, 0, 0, nil)
 
 	s := p.DoMultiStream(context.Background(), cp, cmds.NewCompleted([]string{"GET", "a"}))
 	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
@@ -3894,7 +3894,7 @@ func TestForceClose_DoMultiStream_Block(t *testing.T) {
 		p.Close()
 	}()
 
-	cp := newPool(1, nil, nil)
+	cp := newPool(1, nil, 0, 0, nil)
 
 	s := p.DoMultiStream(context.Background(), cp, cmds.NewBlockingCompleted([]string{"GET", "a"}))
 	if s.Error() != nil {

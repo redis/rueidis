@@ -5,6 +5,7 @@ import (
 	"runtime"
 	"sync/atomic"
 	"testing"
+	"time"
 )
 
 var dead = deadFn()
@@ -14,7 +15,7 @@ func TestPool(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	setup := func(size int) (*pool, *int32) {
 		var count int32
-		return newPool(size, dead, func() wire {
+		return newPool(size, dead, 0, 0, func() wire {
 			atomic.AddInt32(&count, 1)
 			closed := false
 			return &mockWire{
@@ -32,7 +33,7 @@ func TestPool(t *testing.T) {
 	}
 
 	t.Run("DefaultPoolSize", func(t *testing.T) {
-		p := newPool(0, dead, func() wire { return nil })
+		p := newPool(0, dead, 0, 0, func() wire { return nil })
 		if cap(p.list) == 0 {
 			t.Fatalf("DefaultPoolSize is not applied")
 		}
@@ -180,7 +181,7 @@ func TestPoolError(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	setup := func(size int) (*pool, *int32) {
 		var count int32
-		return newPool(size, dead, func() wire {
+		return newPool(size, dead, 0, 0, func() wire {
 			w := &pipe{}
 			w.pshks.Store(emptypshks)
 			c := atomic.AddInt32(&count, 1)
@@ -209,5 +210,94 @@ func TestPoolError(t *testing.T) {
 		if atomic.LoadInt32(count) != int32(len(conn)+len(conn)/2) {
 			t.Fatalf("unexpected acquire count")
 		}
+	})
+}
+
+func TestPoolWithIdleTTL(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	setup := func(size int, ttl time.Duration, minSize int) *pool {
+		return newPool(size, dead, ttl, minSize, func() wire {
+			closed := false
+			return &mockWire{
+				CloseFn: func() {
+					closed = true
+				},
+				ErrorFn: func() error {
+					if closed {
+						return ErrClosing
+					}
+					return nil
+				},
+			}
+		})
+	}
+
+	t.Run("Removing idle conns. Min size is not 0", func(t *testing.T) {
+		minSize := 3
+		p := setup(0, time.Millisecond*50, minSize)
+		conns := make([]wire, 10)
+
+		for i := 0; i < 2; i++ {
+			for i := range conns {
+				w := p.Acquire()
+				conns[i] = w
+			}
+
+			for _, w := range conns {
+				p.Store(w)
+			}
+
+			time.Sleep(time.Millisecond * 60)
+			p.cond.Broadcast()
+			time.Sleep(time.Millisecond * 40)
+
+			p.cond.L.Lock()
+			if p.size != minSize {
+				defer p.cond.L.Unlock()
+				t.Fatalf("size must be equal to %d, actual: %d", minSize, p.size)
+			}
+
+			if len(p.list) != minSize {
+				defer p.cond.L.Unlock()
+				t.Fatalf("pool len must equal to %d, actual: %d", minSize, len(p.list))
+			}
+			p.cond.L.Unlock()
+		}
+
+		p.Close()
+	})
+
+	t.Run("Removing idle conns. Min size is 0", func(t *testing.T) {
+		p := setup(0, time.Millisecond*50, 0)
+		conns := make([]wire, 10)
+
+		for i := 0; i < 2; i++ {
+			for i := range conns {
+				w := p.Acquire()
+				conns[i] = w
+			}
+
+			for _, w := range conns {
+				p.Store(w)
+			}
+
+			time.Sleep(time.Millisecond * 60)
+			p.cond.Broadcast()
+			time.Sleep(time.Millisecond * 40)
+
+			p.cond.L.Lock()
+			if p.size != 0 {
+				defer p.cond.L.Unlock()
+				t.Fatalf("size must be equal to 0, actual: %d", p.size)
+			}
+
+			if len(p.list) != 0 {
+				defer p.cond.L.Unlock()
+				t.Fatalf("pool len must equal to 0, actual: %d", len(p.list))
+			}
+			p.cond.L.Unlock()
+		}
+
+		p.Close()
 	})
 }
