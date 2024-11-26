@@ -3,6 +3,7 @@ package rueidis
 import (
 	"bufio"
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -321,10 +322,19 @@ func (p *pipe) _exit(err error) {
 	p.clhks.Load().(func(error))(err)
 }
 
+func disableNoDelay(conn net.Conn) {
+	if c, ok := conn.(*tls.Conn); ok {
+		conn = c.NetConn()
+	}
+	if c, ok := conn.(*net.TCPConn); ok {
+		c.SetNoDelay(false)
+	}
+}
+
 func (p *pipe) _background() {
 	p.conn.SetDeadline(time.Time{})
-	if conn, ok := p.conn.(*net.TCPConn); ok && p.noNoDelay {
-		conn.SetNoDelay(false)
+	if p.noNoDelay {
+		disableNoDelay(p.conn)
 	}
 	go func() {
 		p._exit(p._backgroundWrite())

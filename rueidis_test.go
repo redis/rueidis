@@ -302,8 +302,9 @@ func TestTLSClient(t *testing.T) {
 
 	_, port, _ := net.SplitHostPort(ln.Addr().String())
 	client, err := NewClient(ClientOption{
-		InitAddress: []string{"127.0.0.1:" + port},
-		TLSConfig:   config,
+		InitAddress:       []string{"127.0.0.1:" + port},
+		TLSConfig:         config,
+		DisableTCPNoDelay: true,
 	})
 	if err != nil {
 		t.Fatal(err)
