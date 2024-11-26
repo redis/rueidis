@@ -5,35 +5,35 @@ import (
 	"time"
 )
 
-func newPool(cap int, dead wire, idleConnTTL time.Duration, minSize int, makeFn func() wire) *pool {
+func newPool(cap int, dead wire, cleanup time.Duration, minSize int, makeFn func() wire) *pool {
 	if cap <= 0 {
 		cap = DefaultPoolSize
 	}
 
 	return &pool{
-		size:        0,
-		minSize:     minSize,
-		cap:         cap,
-		dead:        dead,
-		make:        makeFn,
-		list:        make([]wire, 0, 4),
-		cond:        sync.NewCond(&sync.Mutex{}),
-		idleConnTTL: idleConnTTL,
+		size:    0,
+		minSize: minSize,
+		cap:     cap,
+		dead:    dead,
+		make:    makeFn,
+		list:    make([]wire, 0, 4),
+		cond:    sync.NewCond(&sync.Mutex{}),
+		cleanup: cleanup,
 	}
 }
 
 type pool struct {
-	dead          wire
-	cond          *sync.Cond
-	make          func() wire
-	list          []wire
-	size          int
-	minSize       int
-	cap           int
-	down          bool
-	idleConnTTL   time.Duration
-	timer         *time.Timer
-	timerIsActive bool
+	dead    wire
+	cond    *sync.Cond
+	timer   *time.Timer
+	make    func() wire
+	list    []wire
+	cleanup time.Duration
+	size    int
+	minSize int
+	cap     int
+	down    bool
+	timerOn bool
 }
 
 func (p *pool) Acquire() (v wire) {
@@ -49,6 +49,7 @@ func (p *pool) Acquire() (v wire) {
 	} else {
 		i := len(p.list) - 1
 		v = p.list[i]
+		p.list[i] = nil
 		p.list = p.list[:i]
 	}
 	p.cond.L.Unlock()
@@ -80,25 +81,21 @@ func (p *pool) Close() {
 }
 
 func (p *pool) startTimerIfNeeded() {
-	if p.idleConnTTL == 0 || p.timerIsActive || len(p.list) <= p.minSize {
+	if p.cleanup == 0 || p.timerOn || len(p.list) <= p.minSize {
 		return
 	}
 
-	p.timerIsActive = true
+	p.timerOn = true
 	if p.timer == nil {
-		p.timer = time.AfterFunc(p.idleConnTTL, p.removeIdleConns)
+		p.timer = time.AfterFunc(p.cleanup, p.removeIdleConns)
 	} else {
-		p.timer.Reset(p.idleConnTTL)
+		p.timer.Reset(p.cleanup)
 	}
 }
 
 func (p *pool) removeIdleConns() {
 	p.cond.L.Lock()
 	defer p.cond.L.Unlock()
-
-	if p.down || len(p.list) <= p.minSize {
-		return
-	}
 
 	newLen := min(p.minSize, len(p.list))
 	for i, w := range p.list[newLen:] {
@@ -108,11 +105,11 @@ func (p *pool) removeIdleConns() {
 	}
 
 	p.list = p.list[:newLen]
-	p.timerIsActive = false
+	p.timerOn = false
 }
 
 func (p *pool) stopTimer() {
-	p.timerIsActive = false
+	p.timerOn = false
 	if p.timer != nil {
 		p.timer.Stop()
 	}

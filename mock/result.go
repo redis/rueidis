@@ -140,12 +140,17 @@ type result struct {
 }
 
 type pool struct {
-	dead any
-	cond *sync.Cond
-	make func() any
-	list []any
-	size int
-	down bool
+	dead    any
+	cond    *sync.Cond
+	timer   *time.Timer
+	make    func() any
+	list    []any
+	cleanup time.Duration
+	size    int
+	minSize int
+	cap     int
+	down    bool
+	timerOn bool
 }
 
 type pipe struct {
