@@ -1015,3 +1015,40 @@ func TestKvrocksSingleClientIntegration(t *testing.T) {
 
 	client.Close()
 }
+
+func TestNegativeConnWriteTimeout(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	client, err := NewClient(ClientOption{
+		InitAddress:      []string{"127.0.0.1:6379"},
+		ConnWriteTimeout: -1,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.Close()
+}
+
+func TestNegativeKeepalive(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	client, err := NewClient(ClientOption{
+		InitAddress: []string{"127.0.0.1:6379"},
+		Dialer:      net.Dialer{KeepAlive: -1},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.Close()
+}
+
+func TestNegativeConnWriteTimeoutKeepalive(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	client, err := NewClient(ClientOption{
+		InitAddress:      []string{"127.0.0.1:6379"},
+		Dialer:           net.Dialer{KeepAlive: -1},
+		ConnWriteTimeout: -1,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.Close()
+}
