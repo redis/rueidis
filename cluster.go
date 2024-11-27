@@ -144,8 +144,14 @@ func (s clusterslots) parse(tls bool) map[string]group {
 }
 
 func getClusterSlots(c conn, timeout time.Duration) clusterslots {
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
+	var ctx context.Context
+	var cancel context.CancelFunc
+	if timeout > 0 {
+		ctx, cancel = context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+	} else {
+		ctx = context.Background()
+	}
 	v := c.Version()
 	if v < 8 {
 		return clusterslots{reply: c.Do(ctx, cmds.SlotCmd), addr: c.Addr(), ver: v}
