@@ -22,18 +22,17 @@ type Result struct {
 }
 
 type RateLimiterClient interface {
-	Check(ctx context.Context, identifier string) (Result, error)
-	Allow(ctx context.Context, identifier string) (Result, error)
-	AllowN(ctx context.Context, identifier string, n int64) (Result, error)
+	Check(ctx context.Context, identifier string, options ...RateLimitOption) (Result, error)
+	Allow(ctx context.Context, identifier string, options ...RateLimitOption) (Result, error)
+	AllowN(ctx context.Context, identifier string, n int64, options ...RateLimitOption) (Result, error)
 }
 
 const PlaceholderPrefix = "rueidislimiter"
 
 type rateLimiter struct {
-	client    rueidis.Client
-	keyPrefix string
-	limit     int
-	window    time.Duration
+	client           rueidis.Client
+	keyPrefix        string
+	defaultRateLimit RateLimitOption
 }
 
 type RateLimiterOption struct {
@@ -56,8 +55,10 @@ func NewRateLimiter(option RateLimiterOption) (RateLimiterClient, error) {
 	}
 
 	rl := &rateLimiter{
-		limit:  option.Limit,
-		window: option.Window,
+		defaultRateLimit: RateLimitOption{
+			limit:  int64(option.Limit),
+			window: option.Window,
+		},
 	}
 
 	var err error
@@ -74,27 +75,31 @@ func NewRateLimiter(option RateLimiterOption) (RateLimiterClient, error) {
 }
 
 func (l *rateLimiter) Limit() int {
-	return l.limit
+	return int(l.defaultRateLimit.limit)
 }
 
-func (l *rateLimiter) Check(ctx context.Context, identifier string) (Result, error) {
-	return l.AllowN(ctx, identifier, 0)
+func (l *rateLimiter) Check(ctx context.Context, identifier string, options ...RateLimitOption) (Result, error) {
+	return l.AllowN(ctx, identifier, 0, options...)
 }
 
-func (l *rateLimiter) Allow(ctx context.Context, identifier string) (Result, error) {
-	return l.AllowN(ctx, identifier, 1)
+func (l *rateLimiter) Allow(ctx context.Context, identifier string, options ...RateLimitOption) (Result, error) {
+	return l.AllowN(ctx, identifier, 1, options...)
 }
 
-func (l *rateLimiter) AllowN(ctx context.Context, identifier string, n int64) (Result, error) {
+func (l *rateLimiter) AllowN(ctx context.Context, identifier string, n int64, options ...RateLimitOption) (Result, error) {
 	if n < 0 {
 		return Result{}, ErrInvalidTokens
+	}
+	rl := l.defaultRateLimit
+	if len(options) > 0 {
+		rl = options[len(options)-1]
 	}
 
 	now := time.Now().UTC()
 	keys := []string{l.getKey(identifier)}
 	args := []string{
 		strconv.FormatInt(n, 10),
-		strconv.FormatInt(now.Add(l.window).UnixMilli(), 10),
+		strconv.FormatInt(now.Add(rl.window).UnixMilli(), 10),
 		strconv.FormatInt(now.UnixMilli(), 10),
 	}
 
@@ -109,14 +114,14 @@ func (l *rateLimiter) AllowN(ctx context.Context, identifier string, n int64) (R
 	}
 
 	current := data[0]
-	remaining := int64(l.limit) - current
+	remaining := rl.limit - current
 	if remaining < 0 {
 		remaining = 0
 	}
 
-	allowed := current <= int64(l.limit)
+	allowed := current <= rl.limit
 	if n == 0 {
-		allowed = current < int64(l.limit)
+		allowed = current < rl.limit
 	}
 
 	return Result{
