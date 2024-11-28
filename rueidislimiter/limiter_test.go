@@ -94,6 +94,27 @@ func TestRateLimiter(t *testing.T) {
 		}
 	})
 
+	t.Run("Check allowed with limit option", func(t *testing.T) {
+		key := randStr()
+		generateLoad(t, limiter, key, 3)
+
+		result, err := limiter.Check(context.Background(), key)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if result.Allowed {
+			t.Fatalf("Expected Allowed=false; got Allowed=%v", result.Allowed)
+		}
+
+		result, err = limiter.Check(context.Background(), key, rueidislimiter.WithCustomRateLimit(10, time.Millisecond*100))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !result.Allowed || result.Remaining != 7 || result.ResetAtMs < now.UnixMilli() {
+			t.Fatalf("Expected Allowed=true, Remaining=7, ResetAt >= now after reset; got Allowed=%v, Remaining=%v, ResetAt=%v", result.Allowed, result.Remaining, result.ResetAtMs)
+		}
+	})
+
 	t.Run("AllowN defaults", func(t *testing.T) {
 		limiter, err := rueidislimiter.NewRateLimiter(rueidislimiter.RateLimiterOption{
 			ClientBuilder: func(option rueidis.ClientOption) (rueidis.Client, error) {
