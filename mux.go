@@ -136,11 +136,14 @@ func (m *mux) _pipe(i uint16) (w wire, err error) {
 		return w, nil
 	}
 
+	var sc2 *singleconnect
+
 	m.mu[i].Lock()
 	sc := m.sc[i]
-	if m.sc[i] == nil {
-		m.sc[i] = &singleconnect{}
-		m.sc[i].g.Add(1)
+	if sc == nil {
+		sc2 = &singleconnect{}
+		sc2.g.Add(1)
+		m.sc[i] = sc2
 	}
 	m.mu[i].Unlock()
 
@@ -161,13 +164,14 @@ func (m *mux) _pipe(i uint16) (w wire, err error) {
 	}
 
 	m.mu[i].Lock()
-	sc = m.sc[i]
-	m.sc[i] = nil
+	if m.sc[i] == sc2 {
+		m.sc[i] = nil
+	}
 	m.mu[i].Unlock()
 
-	sc.w = w
-	sc.e = err
-	sc.g.Done()
+	sc2.w = w
+	sc2.e = err
+	sc2.g.Done()
 
 	return w, err
 }
