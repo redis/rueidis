@@ -87,7 +87,7 @@ func BenchmarkPipelining(b *testing.B, client rueidis.Client) {
 }
 ```
 
-### Benchmark comparison with go-redis v9
+### Benchmark Comparison with go-redis v9
 
 Compared to go-redis, Rueidis has higher throughput across 1, 8, and 64 parallelism settings.
 
@@ -99,7 +99,7 @@ Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
 A benchmark result performed on two GCP n2-highcpu-2 machines also shows that rueidis can achieve higher throughput with lower latencies: https://github.com/redis/rueidis/pull/93
 
-### Disable auto pipelining
+### Disable Auto Pipelining
 
 While auto pipelining maximizes throughput, it relys on additional goroutines to process requests and responses and may add some latencies due to goroutine scheduling and head of line blocking.
 
@@ -231,6 +231,11 @@ Please note that though operations can return early, the command is likely sent 
 Manually canceling a context is only work in pipeline mode, as it requires an additional goroutine to monitor the context.
 Pipeline mode will be started automatically when there are concurrent requests on the same connection, but you can start it in advance with `ClientOption.AlwaysPipelining`
 to make sure manually cancellation is respected, especially for blocking requests which are sent with a dedicated connection where pipeline mode isn't started.
+
+### Disable Auto Retry
+
+All read-only commands are automatically retried on failures by default before their context deadlines exceeded.
+You can disable this by setting `DisableRetry` or adjust the number of retries and durations between retries using `RetryDelay` function.
 
 ## Pub/Sub
 
@@ -511,7 +516,7 @@ client.Do(ctx, client.B().FtSearch().Index("idx").Query("@f:v").Build()).AsFtSea
 client.Do(ctx, client.B().Geosearch().Key("k").Fromlonlat(1, 1).Bybox(1).Height(1).Km().Build()).AsGeosearch()
 ```
 
-## Use DecodeSliceOfJSON to scan array result
+## Use DecodeSliceOfJSON to Scan Array Result
 
 DecodeSliceOfJSON is useful when you would like to scan the results of an array into a slice of a specific struct.
 
@@ -569,7 +574,7 @@ if err := rueidis.DecodeSliceOfJSON(client.Do(ctx, client.B().Mget().Key("user1"
 Contributions are welcome, including [issues](https://github.com/redis/rueidis/issues), [pull requests](https://github.com/redis/rueidis/pulls), and [discussions](https://github.com/redis/rueidis/discussions).
 Contributions mean a lot to us and help us improve this library and the community!
 
-### Generate command builders
+### Generate Command Builders
 
 Command builders are generated based on the definitions in [./hack/cmds](./hack/cmds) by running:
 
