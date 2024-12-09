@@ -521,7 +521,7 @@ func (p *pipe) _backgroundRead() (err error) {
 					unsub = false
 					continue
 				}
-				panic(protocolbug)
+				panic(msg.String())
 			}
 			if multi == nil {
 				multi = ones
