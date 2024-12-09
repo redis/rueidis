@@ -39,6 +39,7 @@ type clusterClient struct {
 type connrole struct {
 	conn    conn
 	replica bool
+	hidden  bool
 }
 
 func newClusterClient(opt *ClientOption, connFn connFn, retryer retryHandler) (*clusterClient, error) {
@@ -204,7 +205,8 @@ func (c *clusterClient) _refresh() (err error) {
 	for _, addr := range c.opt.InitAddress {
 		if _, ok := conns[addr]; !ok {
 			conns[addr] = connrole{
-				conn: c.connFn(addr, c.opt),
+				conn:   c.connFn(addr, c.opt),
+				hidden: true,
 			}
 		}
 	}
@@ -218,6 +220,7 @@ func (c *clusterClient) _refresh() (err error) {
 			conns[addr] = connrole{
 				conn:    cc.conn,
 				replica: fresh.replica,
+				hidden:  fresh.hidden,
 			}
 		} else {
 			removes = append(removes, cc.conn)
@@ -1113,7 +1116,9 @@ func (c *clusterClient) Nodes() map[string]Client {
 	nodes := make(map[string]Client, len(c.conns))
 	disableCache := c.opt != nil && c.opt.DisableCache
 	for addr, cc := range c.conns {
-		nodes[addr] = newSingleClientWithConn(cc.conn, c.cmd, c.retry, disableCache, c.retryHandler)
+		if !cc.hidden {
+			nodes[addr] = newSingleClientWithConn(cc.conn, c.cmd, c.retry, disableCache, c.retryHandler)
+		}
 	}
 	c.mu.RUnlock()
 	return nodes
