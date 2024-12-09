@@ -876,9 +876,10 @@ func TestClusterClientInit(t *testing.T) {
 		testFunc := func(t *testing.T, client *clusterClient, num *int64) {
 			nodes := client.nodes()
 			sort.Strings(nodes)
-			if len(nodes) != 2 ||
+			if len(nodes) != 3 ||
 				nodes[0] != "127.0.0.1:0" ||
-				nodes[1] != "127.0.1.1:1" {
+				nodes[1] != "127.0.1.1:1" ||
+				nodes[2] != "127.0.2.1:2" {
 				t.Fatalf("unexpected nodes %v", nodes)
 			}
 
@@ -890,8 +891,10 @@ func TestClusterClientInit(t *testing.T) {
 
 			nodes = client.nodes()
 			sort.Strings(nodes)
-			if len(nodes) != 1 ||
-				nodes[0] != "127.0.3.1:3" {
+			if len(nodes) != 3 ||
+				nodes[0] != "127.0.1.1:1" ||
+				nodes[1] != "127.0.2.1:2" ||
+				nodes[2] != "127.0.3.1:3" {
 				t.Fatalf("unexpected nodes %v", nodes)
 			}
 		}
@@ -942,6 +945,94 @@ func TestClusterClientInit(t *testing.T) {
 		})
 	})
 
+	t.Run("Refresh InitAddress which is not in CLUSTER SLOTS / CLUSTER SHARDS should be hidden", func(t *testing.T) {
+		testFunc := func(t *testing.T, client *clusterClient, num *int64) {
+			nodesWithHidden := client.nodes()
+			sort.Strings(nodesWithHidden)
+			if len(nodesWithHidden) != 4 ||
+				nodesWithHidden[0] != "127.0.0.1:0" ||
+				nodesWithHidden[1] != "127.0.1.1:1" ||
+				nodesWithHidden[2] != "127.0.2.1:2" ||
+				nodesWithHidden[3] != "redis.example.com" {
+				t.Fatalf("unexpected nodes %v", nodesWithHidden)
+			}
+
+			nodes := client.Nodes()
+			_, ok := nodes["127.0.0.1:0"]
+			_, ok2 := nodes["127.0.1.1:1"]
+			if len(nodes) != 2 || !ok || !ok2 {
+				t.Fatalf("unexpected nodes %v", nodes)
+			}
+
+			atomic.AddInt64(num, 1)
+
+			if err := client.refresh(context.Background()); err != nil {
+				t.Fatalf("unexpected err %v", err)
+			}
+
+			nodesWithHidden = client.nodes()
+			sort.Strings(nodesWithHidden)
+			if len(nodesWithHidden) != 4 ||
+				nodesWithHidden[0] != "127.0.1.1:1" ||
+				nodesWithHidden[1] != "127.0.2.1:2" ||
+				nodesWithHidden[2] != "127.0.3.1:3" ||
+				nodesWithHidden[3] != "redis.example.com" {
+				t.Fatalf("unexpected nodes %v", nodesWithHidden)
+			}
+
+			nodes = client.Nodes()
+			_, ok = nodes["127.0.3.1:3"]
+			if len(nodes) != 1 || !ok {
+				t.Fatalf("unexpected nodes %v", nodes)
+			}
+		}
+
+		t.Run("slots", func(t *testing.T) {
+			var first int64
+			client, err := newClusterClient(
+				&ClientOption{InitAddress: []string{"127.0.1.1:1", "127.0.2.1:2", "redis.example.com"}},
+				func(dst string, opt *ClientOption) conn {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							if atomic.LoadInt64(&first) == 1 {
+								return singleSlotResp2
+							}
+							return slotsResp
+						},
+					}
+				},
+				newRetryer(defaultRetryDelayFn),
+			)
+			if err != nil {
+				t.Fatalf("unexpected err %v", err)
+			}
+			testFunc(t, client, &first)
+		})
+
+		t.Run("shards", func(t *testing.T) {
+			var first int64
+			client, err := newClusterClient(
+				&ClientOption{InitAddress: []string{"127.0.1.1:1", "127.0.2.1:2", "redis.example.com"}},
+				func(dst string, opt *ClientOption) conn {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							if atomic.LoadInt64(&first) == 1 {
+								return singleShardResp2
+							}
+							return shardsResp
+						},
+						VersionFn: func() int { return 8 },
+					}
+				},
+				newRetryer(defaultRetryDelayFn),
+			)
+			if err != nil {
+				t.Fatalf("unexpected err %v", err)
+			}
+			testFunc(t, client, &first)
+		})
+	})
+
 	t.Run("Shards tls", func(t *testing.T) {
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{"127.0.0.1:0"}, TLSConfig: &tls.Config{}},
@@ -960,11 +1051,11 @@ func TestClusterClientInit(t *testing.T) {
 		}
 		nodes := client.nodes()
 		sort.Strings(nodes)
-		if len(nodes) != 3 ||
-			// 127.0.0.1:0 is hidden
-			nodes[0] != "127.0.1.1:1" ||
-			nodes[1] != "127.0.2.1:2" ||
-			nodes[2] != "127.0.3.1:3" {
+		if len(nodes) != 4 ||
+			nodes[0] != "127.0.0.1:0" ||
+			nodes[1] != "127.0.1.1:1" ||
+			nodes[2] != "127.0.2.1:2" ||
+			nodes[3] != "127.0.3.1:3" {
 			t.Fatalf("unexpected nodes %v", nodes)
 		}
 	})

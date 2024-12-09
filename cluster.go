@@ -292,11 +292,8 @@ func (c *clusterClient) single() (conn conn) {
 func (c *clusterClient) nodes() []string {
 	c.mu.RLock()
 	nodes := make([]string, 0, len(c.conns))
-	for addr, role := range c.conns {
-		// only display non-hidden connrole
-		if !role.hidden {
-			nodes = append(nodes, addr)
-		}
+	for addr := range c.conns {
+		nodes = append(nodes, addr)
 	}
 	c.mu.RUnlock()
 	return nodes
