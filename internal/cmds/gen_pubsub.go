@@ -193,7 +193,7 @@ func (c PubsubShardnumsubChannel) Build() Completed {
 type Punsubscribe Incomplete
 
 func (b Builder) Punsubscribe() (c Punsubscribe) {
-	c = Punsubscribe{cs: get(), ks: b.ks, cf: int16(noRetTag)}
+	c = Punsubscribe{cs: get(), ks: b.ks, cf: int16(unsubTag)}
 	c.cs.s = append(c.cs.s, "PUNSUBSCRIBE")
 	return c
 }
@@ -325,7 +325,7 @@ func (c SubscribeChannel) Build() Completed {
 type Sunsubscribe Incomplete
 
 func (b Builder) Sunsubscribe() (c Sunsubscribe) {
-	c = Sunsubscribe{cs: get(), ks: b.ks, cf: int16(noRetTag)}
+	c = Sunsubscribe{cs: get(), ks: b.ks, cf: int16(unsubTag)}
 	c.cs.s = append(c.cs.s, "SUNSUBSCRIBE")
 	return c
 }
@@ -375,7 +375,7 @@ func (c SunsubscribeChannel) Build() Completed {
 type Unsubscribe Incomplete
 
 func (b Builder) Unsubscribe() (c Unsubscribe) {
-	c = Unsubscribe{cs: get(), ks: b.ks, cf: int16(noRetTag)}
+	c = Unsubscribe{cs: get(), ks: b.ks, cf: int16(unsubTag)}
 	c.cs.s = append(c.cs.s, "UNSUBSCRIBE")
 	return c
 }

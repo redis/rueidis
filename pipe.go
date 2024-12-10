@@ -25,6 +25,10 @@ const LibVer = "1.0.51"
 
 var noHello = regexp.MustCompile("unknown command .?(HELLO|hello).?")
 
+func isUnsubReply(msg RedisMessage) bool {
+	return msg.string == "PONG" || (len(msg.values) != 0 && msg.values[0].string == "pong")
+}
+
 type wire interface {
 	Do(ctx context.Context, cmd Completed) RedisResult
 	DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) RedisResult
@@ -438,6 +442,9 @@ func (p *pipe) _backgroundWrite() (err error) {
 		}
 		for _, cmd := range multi {
 			err = writeCmd(p.w, cmd.Commands())
+			if cmd.IsUnsub() { // See https://github.com/redis/rueidis/pull/691
+				err = writeCmd(p.w, cmds.PingCmd.Commands())
+			}
 		}
 	}
 	return
@@ -456,7 +463,10 @@ func (p *pipe) _backgroundRead() (err error) {
 		ver   = p.version
 		prply bool // push reply
 		unsub bool // unsubscribe notification
-		r2ps  = p.r2ps
+
+		skipUnsubReply bool // if unsubscribe is replied
+
+		r2ps = p.r2ps
 	)
 
 	defer func() {
@@ -516,9 +526,14 @@ func (p *pipe) _backgroundRead() (err error) {
 				// We should ignore them and go fetch next message.
 				// We also treat all the other unsubscribe notifications just like sunsubscribe,
 				// so that we don't need to track how many channels we have subscribed to deal with wildcard unsubscribe command
+				// See https://github.com/redis/rueidis/pull/691
 				if unsub {
 					prply = false
 					unsub = false
+					continue
+				}
+				if skipUnsubReply && isUnsubReply(msg) {
+					skipUnsubReply = false
 					continue
 				}
 				panic(protocolbug)
@@ -555,7 +570,8 @@ func (p *pipe) _backgroundRead() (err error) {
 			// We should ignore them and go fetch next message.
 			// We also treat all the other unsubscribe notifications just like sunsubscribe,
 			// so that we don't need to track how many channels we have subscribed to deal with wildcard unsubscribe command
-			if unsub && (!multi[ff].NoReply() || !strings.HasSuffix(multi[ff].Commands()[0], "UNSUBSCRIBE")) {
+			// See https://github.com/redis/rueidis/pull/691
+			if unsub {
 				prply = false
 				unsub = false
 				continue
@@ -569,6 +585,16 @@ func (p *pipe) _backgroundRead() (err error) {
 			msg = RedisMessage{} // override successful subscribe/unsubscribe response to empty
 		} else if multi[ff].NoReply() && msg.string == "QUEUED" {
 			panic(multiexecsub)
+		} else if multi[ff].IsUnsub() && !isUnsubReply(msg) {
+			// See https://github.com/redis/rueidis/pull/691
+			skipUnsubReply = true
+		} else if skipUnsubReply {
+			// See https://github.com/redis/rueidis/pull/691
+			if !isUnsubReply(msg) {
+				panic(protocolbug)
+			}
+			skipUnsubReply = false
+			continue
 		}
 		resp := newResult(msg, err)
 		if resps != nil {
