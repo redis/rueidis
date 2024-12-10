@@ -9,6 +9,7 @@ const (
 	noRetTag = uint16(1<<12) | readonly // make noRetTag can also be retried
 	mtGetTag = uint16(1<<11) | readonly // make mtGetTag can also be retried
 	scrRoTag = uint16(1<<10) | readonly // make scrRoTag can also be retried
+	unsubTag = uint16(1<<9) | noRetTag
 	// InitSlot indicates that the command be sent to any redis node in cluster
 	// When SendToReplicas is set, InitSlot command will be sent to primary node
 	InitSlot = uint16(1 << 14)
@@ -38,17 +39,17 @@ var (
 	// UnsubscribeCmd is predefined UNSUBSCRIBE
 	UnsubscribeCmd = Completed{
 		cs: newCommandSlice([]string{"UNSUBSCRIBE"}),
-		cf: noRetTag,
+		cf: unsubTag,
 	}
 	// PUnsubscribeCmd is predefined PUNSUBSCRIBE
 	PUnsubscribeCmd = Completed{
 		cs: newCommandSlice([]string{"PUNSUBSCRIBE"}),
-		cf: noRetTag,
+		cf: unsubTag,
 	}
 	// SUnsubscribeCmd is predefined SUNSUBSCRIBE
 	SUnsubscribeCmd = Completed{
 		cs: newCommandSlice([]string{"SUNSUBSCRIBE"}),
-		cf: noRetTag,
+		cf: unsubTag,
 	}
 	// PingCmd is predefined PING
 	PingCmd = Completed{
@@ -74,7 +75,7 @@ var (
 	// SentinelUnSubscribe is predefined UNSUBSCRIBE ASKING
 	SentinelUnSubscribe = Completed{
 		cs: newCommandSlice([]string{"UNSUBSCRIBE", "+sentinel", "+slave", "-sdown", "+sdown", "+switch-master", "+reboot"}),
-		cf: noRetTag,
+		cf: unsubTag,
 	}
 
 	// DiscardCmd is predefined DISCARD
@@ -126,6 +127,11 @@ func (c *Completed) IsBlock() bool {
 // NoReply checks if it is one of the SUBSCRIBE, PSUBSCRIBE, UNSUBSCRIBE or PUNSUBSCRIBE commands.
 func (c *Completed) NoReply() bool {
 	return c.cf&noRetTag == noRetTag
+}
+
+// IsUnsub checks if it is one of the UNSUBSCRIBE, PUNSUBSCRIBE, or SUNSUBSCRIBE commands.
+func (c *Completed) IsUnsub() bool {
+	return c.cf&unsubTag == unsubTag
 }
 
 // IsReadOnly checks if it is readonly command and can be retried when network error.
