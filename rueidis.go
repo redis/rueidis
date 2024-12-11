@@ -210,6 +210,7 @@ type ClientOption struct {
 	ClusterOption ClusterOption
 
 	// ReaderNodeSelector selects a reader node to send read-only commands to.
+	// If the function is set, the client will send read-only commands to the selected node.
 	// Returned value is the index of the replica node in the replicas slice.
 	// If the returned value is out of range, the primary node will be selected.
 	// If replica nodes are empty, the primary node will be selected and
