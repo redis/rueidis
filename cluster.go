@@ -19,7 +19,7 @@ var ErrNoSlot = errors.New("the slot has no redis node")
 var ErrReplicaOnlyConflict = errors.New("ReplicaOnly conflicts with SendToReplicas option")
 var ErrInvalidShardsRefreshInterval = errors.New("ShardsRefreshInterval must be greater than or equal to 0")
 var ErrReplicaOnlyConflictWithReaderNodeSelector = errors.New("ReplicaOnly conflicts with ReaderNodeSelector option")
-var ErrSendToReplicasConflictWithReaderNodeSelector = errors.New("SendToReplicas conflicts with ReadPreference option")
+var ErrSendToReplicasConflictWithReaderNodeSelector = errors.New("SendToReplicas conflicts with ReaderNodeSelector option")
 
 type clusterClient struct {
 	pslots       [16384]conn
