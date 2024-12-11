@@ -156,6 +156,56 @@ func TestNewClusterClientError(t *testing.T) {
 			t.Errorf("unexpected error %v", err)
 		}
 	})
+
+	t.Run("replica only and reader node selector option conflict", func(t *testing.T) {
+		ln, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer ln.Close()
+
+		_, port, _ := net.SplitHostPort(ln.Addr().String())
+		client, err := NewClient(ClientOption{
+			InitAddress: []string{"127.0.0.1:" + port},
+			ReplicaOnly: true,
+			ReaderNodeSelector: func(slot uint16, replicas []ReplicaInfo) int {
+				return 0
+			},
+		})
+		if client != nil || err == nil {
+			t.Errorf("unexpected return %v %v", client, err)
+		}
+
+		if !strings.Contains(err.Error(), ErrReplicaOnlyConflictWithReaderNodeSelector.Error()) {
+			t.Errorf("unexpected error %v", err)
+		}
+	})
+
+	t.Run("send to replicas and reader node selector option conflict", func(t *testing.T) {
+		ln, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer ln.Close()
+
+		_, port, _ := net.SplitHostPort(ln.Addr().String())
+		client, err := NewClient(ClientOption{
+			InitAddress: []string{"127.0.0.1:" + port},
+			SendToReplicas: func(cmd Completed) bool {
+				return true
+			},
+			ReaderNodeSelector: func(slot uint16, replicas []ReplicaInfo) int {
+				return 0
+			},
+		})
+		if client != nil || err == nil {
+			t.Errorf("unexpected return %v %v", client, err)
+		}
+
+		if !strings.Contains(err.Error(), ErrSendToReplicasConflictWithReaderNodeSelector.Error()) {
+			t.Errorf("unexpected error %v", err)
+		}
+	})
 }
 
 func TestFallBackSingleClient(t *testing.T) {

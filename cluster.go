@@ -18,6 +18,8 @@ import (
 var ErrNoSlot = errors.New("the slot has no redis node")
 var ErrReplicaOnlyConflict = errors.New("ReplicaOnly conflicts with SendToReplicas option")
 var ErrInvalidShardsRefreshInterval = errors.New("ShardsRefreshInterval must be greater than or equal to 0")
+var ErrReplicaOnlyConflictWithReaderNodeSelector = errors.New("ReplicaOnly conflicts with ReaderNodeSelector option")
+var ErrSendToReplicasConflictWithReaderNodeSelector = errors.New("SendToReplicas conflicts with ReadPreference option")
 
 type clusterClient struct {
 	pslots       [16384]conn
@@ -41,6 +43,14 @@ type connrole struct {
 	replica bool
 }
 
+var sendToReader = func(cmd Completed) bool {
+	return cmd.IsReadOnly()
+}
+
+var replicaOnlySelector = func(_ uint16, replicas []ReplicaInfo) int {
+	return util.FastRand(len(replicas))
+}
+
 func newClusterClient(opt *ClientOption, connFn connFn, retryer retryHandler) (*clusterClient, error) {
 	client := &clusterClient{
 		cmd:          cmds.NewBuilder(cmds.InitSlot),
@@ -55,8 +65,20 @@ func newClusterClient(opt *ClientOption, connFn connFn, retryer retryHandler) (*
 	if opt.ReplicaOnly && opt.SendToReplicas != nil {
 		return nil, ErrReplicaOnlyConflict
 	}
+	if opt.ReplicaOnly && opt.ReaderNodeSelector != nil {
+		return nil, ErrReplicaOnlyConflictWithReaderNodeSelector
+	}
+	if opt.SendToReplicas != nil && opt.ReaderNodeSelector != nil {
+		return nil, ErrSendToReplicasConflictWithReaderNodeSelector
+	}
 
 	if opt.SendToReplicas != nil {
+		opt.ReaderNodeSelector = replicaOnlySelector
+	} else if opt.ReaderNodeSelector != nil {
+		opt.SendToReplicas = sendToReader
+	}
+
+	if opt.SendToReplicas != nil || opt.ReaderNodeSelector != nil {
 		rOpt := *opt
 		rOpt.ReplicaOnly = true
 		client.rOpt = &rOpt
@@ -236,15 +258,27 @@ func (c *clusterClient) _refresh() (err error) {
 					pslots[i] = conns[g.nodes[1+util.FastRand(nodesCount-1)]].conn
 				}
 			}
-		case c.rOpt != nil: // implies c.opt.SendToReplicas != nil
+		case c.rOpt != nil:
 			if len(rslots) == 0 { // lazy init
 				rslots = make([]conn, 16384)
 			}
 			if len(g.nodes) > 1 {
+				n := len(g.nodes) - 1
+				replicas := make([]ReplicaInfo, 0, n)
+				for _, addr := range g.nodes[1:] {
+					replicas = append(replicas, ReplicaInfo{Addr: addr})
+				}
+
 				for _, slot := range g.slots {
 					for i := slot[0]; i <= slot[1]; i++ {
 						pslots[i] = conns[master].conn
-						rslots[i] = conns[g.nodes[1+util.FastRand(len(g.nodes)-1)]].conn
+
+						rIndex := c.opt.ReaderNodeSelector(uint16(i), replicas)
+						if rIndex >= 0 && rIndex < n {
+							rslots[i] = conns[g.nodes[1+rIndex]].conn
+						} else {
+							rslots[i] = conns[master].conn
+						}
 					}
 				}
 			} else {
