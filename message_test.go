@@ -1996,4 +1996,50 @@ func TestRedisMessage(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("CacheMarshal and CacheUnmarshalView", func(t *testing.T) {
+		m1 := RedisMessage{typ: '_'}
+		m2 := RedisMessage{typ: '+', string: "random"}
+		m3 := RedisMessage{typ: '#', integer: 1}
+		m4 := RedisMessage{typ: ':', integer: -1234}
+		m5 := RedisMessage{typ: ',', string: "-1.5"}
+		m6 := RedisMessage{typ: '%', values: nil}
+		m7 := RedisMessage{typ: '~', values: []RedisMessage{m1, m2, m3, m4, m5, m6}}
+		m8 := RedisMessage{typ: '*', values: []RedisMessage{m1, m2, m3, m4, m5, m6, m7}}
+		msgs := []RedisMessage{m1, m2, m3, m4, m5, m6, m7, m8}
+		now := time.Now()
+		for i := range msgs {
+			msgs[i].setExpireAt(now.Add(time.Second * time.Duration(i)).UnixMilli())
+		}
+		for i, m1 := range msgs {
+			siz := m1.CacheSize()
+			bs1 := m1.CacheMarshal(nil)
+			if len(bs1) != siz {
+				t.Fatal("size not match")
+			}
+			bs2 := m1.CacheMarshal(bs1)
+			if !bytes.Equal(bs2[:siz], bs2[siz:]) {
+				t.Fatal("byte not match")
+			}
+			var m2 RedisMessage
+			if err := m2.CacheUnmarshalView(bs1); err != nil {
+				t.Fatal(err)
+			}
+			if m1.String() != m2.String() {
+				t.Fatal("content not match")
+			}
+			if !m2.IsCacheHit() {
+				t.Fatal("should be cache hit")
+			}
+			if m2.CachePXAT() != now.Add(time.Second*time.Duration(i)).UnixMilli() {
+				t.Fatal("should have the same ttl")
+			}
+			for l := 0; l < siz; l++ {
+				var m3 RedisMessage
+				if err := m3.CacheUnmarshalView(bs2[:l]); err != ErrCacheUnmarshal {
+					t.Fatal("should fail as expected")
+				}
+			}
+		}
+	})
 }
