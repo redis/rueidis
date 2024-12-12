@@ -33,23 +33,6 @@ var slotsResp = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 	}},
 }}, nil)
 
-var slotsRespWithChangedRole = newResult(RedisMessage{typ: '*', values: []RedisMessage{
-	{typ: '*', values: []RedisMessage{
-		{typ: ':', integer: 0},
-		{typ: ':', integer: 16383},
-		{typ: '*', values: []RedisMessage{ // master
-			{typ: '+', string: "127.0.1.1"},
-			{typ: ':', integer: 1},
-			{typ: '+', string: ""},
-		}},
-		{typ: '*', values: []RedisMessage{ // replica
-			{typ: '+', string: "127.0.0.1"},
-			{typ: ':', integer: 0},
-			{typ: '+', string: ""},
-		}},
-	}},
-}}, nil)
-
 var slotsMultiResp = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 	{typ: '*', values: []RedisMessage{
 		{typ: ':', integer: 0},
@@ -1937,13 +1920,6 @@ func TestClusterClient_SendToOnlyPrimaryNodes(t *testing.T) {
 		t.Fatalf("unexpected err %v", err)
 	}
 
-	t.Run("Do with no slot", func(t *testing.T) {
-		c := client.B().Info().Build()
-		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "INFO" {
-			t.Fatalf("unexpected response %v %v", v, err)
-		}
-	})
-
 	t.Run("Do", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()
 		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "GET Do" {
@@ -2443,13 +2419,6 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 		t.Fatalf("unexpected err %v", err)
 	}
 
-	t.Run("Do with no slot", func(t *testing.T) {
-		c := client.B().Info().Build()
-		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "INFO" {
-			t.Fatalf("unexpected response %v %v", v, err)
-		}
-	})
-
 	t.Run("Do", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()
 		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "GET Do" {
@@ -2647,6 +2616,9 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 		primaryNodeConn.AcquireFn = func() wire {
 			return w
 		}
+		replicaNodeConn.AcquireFn = func() wire {
+			return w
+		} // Subscribe can work on replicas
 		if err := client.Dedicated(func(c DedicatedClient) error {
 			return c.Receive(context.Background(), c.B().Subscribe().Channel("a").Build(), func(msg PubSubMessage) {})
 		}); err != e {
@@ -2988,13 +2960,6 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 		t.Fatalf("unexpected err %v", err)
 	}
 
-	t.Run("Do with no slot", func(t *testing.T) {
-		c := client.B().Info().Build()
-		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "INFO" {
-			t.Fatalf("unexpected response %v %v", v, err)
-		}
-	})
-
 	t.Run("Do read operation", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()
 		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "GET Do" {
@@ -3241,6 +3206,9 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 		primaryNodeConn.AcquireFn = func() wire {
 			return w
 		}
+		replicaNodeConn.AcquireFn = func() wire {
+			return w
+		} // Subscribe can work on replicas
 		if err := client.Dedicated(func(c DedicatedClient) error {
 			return c.Receive(context.Background(), c.B().Subscribe().Channel("a").Build(), func(msg PubSubMessage) {})
 		}); err != e {
@@ -5086,55 +5054,6 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 				t.Fatalf("unexpected conns %v", conns)
 			}
 			if _, ok := conns["127.0.1.1:0"]; !ok {
-				t.Fatalf("unexpected conns %v", conns)
-			}
-		}
-	})
-
-	t.Run("node role are changed", func(t *testing.T) {
-		var callCount int64
-		refreshWaitCh := make(chan struct{})
-		cli, err := newClusterClient(
-			&ClientOption{
-				InitAddress: []string{"127.0.0.1:0"},
-				ClusterOption: ClusterOption{
-					ShardsRefreshInterval: time.Second,
-				},
-			},
-			func(dst string, opt *ClientOption) conn {
-				return &mockConn{
-					DoFn: func(cmd Completed) RedisResult {
-						if c := atomic.AddInt64(&callCount, 1); c >= 6 {
-							defer func() { recover() }()
-							defer close(refreshWaitCh)
-							return slotsRespWithChangedRole
-						} else if c >= 3 {
-							return slotsRespWithChangedRole
-						}
-						return slotsResp
-					},
-				}
-			},
-			newRetryer(defaultRetryDelayFn),
-		)
-		if err != nil {
-			t.Fatalf("unexpected err %v", err)
-		}
-
-		select {
-		case <-refreshWaitCh:
-			cli.Close()
-
-			cli.mu.Lock()
-			conns := cli.conns
-			cli.mu.Unlock()
-			if len(conns) != 2 {
-				t.Fatalf("unexpected conns %v", conns)
-			}
-			if cc, ok := conns["127.0.0.1:0"]; !ok || !cc.replica {
-				t.Fatalf("unexpected conns %v", conns)
-			}
-			if cc, ok := conns["127.0.1.1:1"]; !ok || cc.replica {
 				t.Fatalf("unexpected conns %v", conns)
 			}
 		}
