@@ -11,7 +11,6 @@ const (
 	scrRoTag = uint16(1<<10) | readonly // make scrRoTag can also be retried
 	unsubTag = uint16(1<<9) | noRetTag
 	// InitSlot indicates that the command be sent to any redis node in cluster
-	// When SendToReplicas is set, InitSlot command will be sent to primary node
 	InitSlot = uint16(1 << 14)
 	// NoSlot indicates that the command has no key slot specified
 	NoSlot = uint16(1 << 15)
