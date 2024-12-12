@@ -37,9 +37,9 @@ type clusterClient struct {
 
 // NOTE: connrole and conn must be initialized at the same time
 type connrole struct {
-	conn    conn
-	replica bool
-	hidden  bool
+	conn   conn
+	hidden bool
+	//replica bool <- this field is removed because a server may have mixed roles at the same time in the future. https://github.com/valkey-io/valkey/issues/1372
 }
 
 func newClusterClient(opt *ClientOption, connFn connFn, retryer retryHandler) (*clusterClient, error) {
@@ -192,12 +192,14 @@ func (c *clusterClient) _refresh() (err error) {
 	groups := result.parse(c.opt.TLSConfig != nil)
 	conns := make(map[string]connrole, len(groups))
 	for master, g := range groups {
-		conns[master] = connrole{conn: c.connFn(master, c.opt), replica: false}
-		for _, addr := range g.nodes[1:] {
-			if c.rOpt != nil {
-				conns[addr] = connrole{conn: c.connFn(addr, c.rOpt), replica: true}
-			} else {
-				conns[addr] = connrole{conn: c.connFn(addr, c.opt), replica: true}
+		conns[master] = connrole{conn: c.connFn(master, c.opt)}
+		if c.rOpt != nil {
+			for _, addr := range g.nodes[1:] {
+				conns[addr] = connrole{conn: c.connFn(addr, c.rOpt)}
+			}
+		} else {
+			for _, addr := range g.nodes[1:] {
+				conns[addr] = connrole{conn: c.connFn(addr, c.opt)}
 			}
 		}
 	}
@@ -215,13 +217,9 @@ func (c *clusterClient) _refresh() (err error) {
 
 	c.mu.RLock()
 	for addr, cc := range c.conns {
-		fresh, ok := conns[addr]
-		if ok && (cc.replica == fresh.replica || c.rOpt == nil) {
-			conns[addr] = connrole{
-				conn:    cc.conn,
-				replica: fresh.replica,
-				hidden:  fresh.hidden,
-			}
+		if fresh, ok := conns[addr]; ok {
+			fresh.conn = cc.conn
+			conns[addr] = fresh
 		} else {
 			removes = append(removes, cc.conn)
 		}
@@ -397,9 +395,6 @@ func (c *clusterClient) _pick(slot uint16, toReplica bool) (p conn) {
 	c.mu.RLock()
 	if slot == cmds.InitSlot {
 		for _, cc := range c.conns {
-			if cc.replica {
-				continue
-			}
 			p = cc.conn
 			break
 		}
@@ -434,7 +429,7 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn, slot uint16, mode 
 	c.mu.Lock()
 	if cc = c.conns[addr]; cc.conn == nil {
 		p := c.connFn(addr, c.opt)
-		cc = connrole{conn: p, replica: false}
+		cc = connrole{conn: p}
 		c.conns[addr] = cc
 		if mode == RedirectMove {
 			c.pslots[slot] = p
@@ -448,14 +443,10 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn, slot uint16, mode 
 			prev.Close()
 		}(prev)
 		p := c.connFn(addr, c.opt)
-		cc = connrole{conn: p, replica: cc.replica}
+		cc = connrole{conn: p}
 		c.conns[addr] = cc
-		if mode == RedirectMove {
-			if cc.replica {
-				c.rslots[slot] = p
-			} else {
-				c.pslots[slot] = p
-			}
+		if mode == RedirectMove { // MOVED should always point to the primary.
+			c.pslots[slot] = p
 		}
 	}
 	c.mu.Unlock()
