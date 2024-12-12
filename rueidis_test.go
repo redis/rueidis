@@ -157,7 +157,7 @@ func TestNewClusterClientError(t *testing.T) {
 		}
 	})
 
-	t.Run("replica only and reader node selector option conflict", func(t *testing.T) {
+	t.Run("replica only and replica selector option conflict", func(t *testing.T) {
 		ln, err := net.Listen("tcp", "127.0.0.1:0")
 		if err != nil {
 			t.Fatal(err)
@@ -168,7 +168,7 @@ func TestNewClusterClientError(t *testing.T) {
 		client, err := NewClient(ClientOption{
 			InitAddress: []string{"127.0.0.1:" + port},
 			ReplicaOnly: true,
-			ReaderNodeSelector: func(slot uint16, replicas []ReplicaInfo) int {
+			ReplicaSelector: func(slot uint16, replicas []ReplicaInfo) int {
 				return 0
 			},
 		})
@@ -176,12 +176,12 @@ func TestNewClusterClientError(t *testing.T) {
 			t.Errorf("unexpected return %v %v", client, err)
 		}
 
-		if !strings.Contains(err.Error(), ErrReplicaOnlyConflictWithReaderNodeSelector.Error()) {
+		if !strings.Contains(err.Error(), ErrReplicaOnlyConflictWithReplicaSelector.Error()) {
 			t.Errorf("unexpected error %v", err)
 		}
 	})
 
-	t.Run("send to replicas and reader node selector option conflict", func(t *testing.T) {
+	t.Run("send to replicas should be set when replica selector is set", func(t *testing.T) {
 		ln, err := net.Listen("tcp", "127.0.0.1:0")
 		if err != nil {
 			t.Fatal(err)
@@ -191,10 +191,7 @@ func TestNewClusterClientError(t *testing.T) {
 		_, port, _ := net.SplitHostPort(ln.Addr().String())
 		client, err := NewClient(ClientOption{
 			InitAddress: []string{"127.0.0.1:" + port},
-			SendToReplicas: func(cmd Completed) bool {
-				return true
-			},
-			ReaderNodeSelector: func(slot uint16, replicas []ReplicaInfo) int {
+			ReplicaSelector: func(slot uint16, replicas []ReplicaInfo) int {
 				return 0
 			},
 		})
@@ -202,7 +199,7 @@ func TestNewClusterClientError(t *testing.T) {
 			t.Errorf("unexpected return %v %v", client, err)
 		}
 
-		if !strings.Contains(err.Error(), ErrSendToReplicasConflictWithReaderNodeSelector.Error()) {
+		if !strings.Contains(err.Error(), ErrSendToReplicasNotSet.Error()) {
 			t.Errorf("unexpected error %v", err)
 		}
 	})

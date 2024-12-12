@@ -18,8 +18,8 @@ import (
 var ErrNoSlot = errors.New("the slot has no redis node")
 var ErrReplicaOnlyConflict = errors.New("ReplicaOnly conflicts with SendToReplicas option")
 var ErrInvalidShardsRefreshInterval = errors.New("ShardsRefreshInterval must be greater than or equal to 0")
-var ErrReplicaOnlyConflictWithReaderNodeSelector = errors.New("ReplicaOnly conflicts with ReaderNodeSelector option")
-var ErrSendToReplicasConflictWithReaderNodeSelector = errors.New("SendToReplicas conflicts with ReaderNodeSelector option")
+var ErrReplicaOnlyConflictWithReplicaSelector = errors.New("ReplicaOnly conflicts with ReplicaSelector option")
+var ErrSendToReplicasNotSet = errors.New("SendToReplicas must be set when ReplicaSelector is set")
 
 type clusterClient struct {
 	pslots       [16384]conn
@@ -43,10 +43,6 @@ type connrole struct {
 	replica bool
 }
 
-var sendToReader = func(cmd Completed) bool {
-	return cmd.IsReadOnly()
-}
-
 var replicaOnlySelector = func(_ uint16, replicas []ReplicaInfo) int {
 	return util.FastRand(len(replicas))
 }
@@ -65,20 +61,18 @@ func newClusterClient(opt *ClientOption, connFn connFn, retryer retryHandler) (*
 	if opt.ReplicaOnly && opt.SendToReplicas != nil {
 		return nil, ErrReplicaOnlyConflict
 	}
-	if opt.ReplicaOnly && opt.ReaderNodeSelector != nil {
-		return nil, ErrReplicaOnlyConflictWithReaderNodeSelector
+	if opt.ReplicaOnly && opt.ReplicaSelector != nil {
+		return nil, ErrReplicaOnlyConflictWithReplicaSelector
 	}
-	if opt.SendToReplicas != nil && opt.ReaderNodeSelector != nil {
-		return nil, ErrSendToReplicasConflictWithReaderNodeSelector
+	if opt.ReplicaSelector != nil && opt.SendToReplicas == nil {
+		return nil, ErrSendToReplicasNotSet
+	}
+
+	if opt.SendToReplicas != nil && opt.ReplicaSelector == nil {
+		opt.ReplicaSelector = replicaOnlySelector
 	}
 
 	if opt.SendToReplicas != nil {
-		opt.ReaderNodeSelector = replicaOnlySelector
-	} else if opt.ReaderNodeSelector != nil {
-		opt.SendToReplicas = sendToReader
-	}
-
-	if opt.SendToReplicas != nil || opt.ReaderNodeSelector != nil {
 		rOpt := *opt
 		rOpt.ReplicaOnly = true
 		client.rOpt = &rOpt
@@ -273,7 +267,7 @@ func (c *clusterClient) _refresh() (err error) {
 					for i := slot[0]; i <= slot[1]; i++ {
 						pslots[i] = conns[master].conn
 
-						rIndex := c.opt.ReaderNodeSelector(uint16(i), replicas)
+						rIndex := c.opt.ReplicaSelector(uint16(i), replicas)
 						if rIndex >= 0 && rIndex < n {
 							rslots[i] = conns[g.nodes[1+rIndex]].conn
 						} else {

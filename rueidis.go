@@ -209,15 +209,16 @@ type ClientOption struct {
 	// ClusterOption is the options for the redis cluster client.
 	ClusterOption ClusterOption
 
-	// ReaderNodeSelector selects a reader node to send read-only commands to.
-	// If the function is set, the client will send read-only commands to the selected node.
+	// ReplicaSelector selects a replica node when `SendToReplicas` returns true.
+	// If the function is set, the client will send selected command to the replica node.
 	// Returned value is the index of the replica node in the replicas slice.
 	// If the returned value is out of range, the primary node will be selected.
-	// If replica nodes are empty, the primary node will be selected and
-	// the function will not be called.
+	// If primary node does not have any replica, the primary node will be selected
+	// and function will not be called.
+	// currently only used for cluster client.
 	// NOTE: This function can't be used with ReplicaOnly option.
-	// NOTE: This function can't be used with SendToReplicas option.
-	ReaderNodeSelector func(slot uint16, replicas []ReplicaInfo) int
+	// NOTE: This function must be used with SendToReplicas function.
+	ReplicaSelector func(slot uint16, replicas []ReplicaInfo) int
 }
 
 // SentinelOption contains MasterSet,
