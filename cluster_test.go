@@ -5048,13 +5048,15 @@ func TestClusterShardsParsing(t *testing.T) {
 			t.Fatalf("unexpected result %v", result)
 		}
 		for _, val := range result {
-			nodes := val.nodes
-			sort.Strings(nodes)
-			if len(nodes) != 3 ||
-				nodes[0] != "127.0.1.1:1" ||
-				nodes[1] != "127.0.2.1:2" ||
-				nodes[2] != "127.0.3.1:3" {
-				t.Fatalf("unexpected nodes %v", nodes)
+			_nodes := val.nodes
+			sort.Slice(_nodes, func(i, j int) bool {
+				return _nodes[i].Addr < _nodes[j].Addr
+			})
+			if len(_nodes) != 3 ||
+				_nodes[0].Addr != "127.0.1.1:1" ||
+				_nodes[1].Addr != "127.0.2.1:2" ||
+				_nodes[2].Addr != "127.0.3.1:3" {
+				t.Fatalf("unexpected nodes %v", _nodes)
 			}
 		}
 
@@ -5063,13 +5065,15 @@ func TestClusterShardsParsing(t *testing.T) {
 			t.Fatalf("unexpected result %v", result)
 		}
 		for _, val := range result {
-			nodes := val.nodes
-			sort.Strings(nodes)
-			if len(nodes) != 3 ||
-				nodes[0] != "127.0.1.1:0" ||
-				nodes[1] != "127.0.2.1:0" ||
-				nodes[2] != "127.0.3.1:3" {
-				t.Fatalf("unexpected nodes %v", nodes)
+			_nodes := val.nodes
+			sort.Slice(_nodes, func(i, j int) bool {
+				return _nodes[i].Addr < _nodes[j].Addr
+			})
+			if len(_nodes) != 3 ||
+				_nodes[0].Addr != "127.0.1.1:0" ||
+				_nodes[1].Addr != "127.0.2.1:0" ||
+				_nodes[2].Addr != "127.0.3.1:3" {
+				t.Fatalf("unexpected nodes %v", _nodes)
 			}
 		}
 	})
@@ -5080,7 +5084,7 @@ func TestClusterShardsParsing(t *testing.T) {
 			t.Fatalf("unexpected result %v", result)
 		}
 		for master, group := range result {
-			if len(group.nodes) == 0 || group.nodes[0] != master {
+			if len(group.nodes) == 0 || group.nodes[0].Addr != master {
 				t.Fatalf("unexpected first node %v", group)
 			}
 		}

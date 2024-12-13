@@ -215,7 +215,8 @@ type ClientOption struct {
 	// If the returned value is out of range, the primary node will be selected.
 	// If primary node does not have any replica, the primary node will be selected
 	// and function will not be called.
-	// currently only used for cluster client.
+	// Currently only used for cluster client.
+	// Each ReplicaInfo must not be modified.
 	// NOTE: This function can't be used with ReplicaOnly option.
 	// NOTE: This function must be used with SendToReplicas function.
 	ReplicaSelector func(slot uint16, replicas []ReplicaInfo) int
