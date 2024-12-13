@@ -555,15 +555,36 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, last 
 		return retries, last, toReplica
 	}
 
+	inits := 0
 	for _, cmd := range multi {
 		if cmd.Slot() == cmds.InitSlot {
+			inits++
 			continue
+		}
+		if last == cmds.InitSlot {
+			last = cmd.Slot()
+		} else if init && last != cmd.Slot() {
+			panic(panicMixCxSlot)
 		}
 		p := c.pslots[cmd.Slot()]
 		if p == nil {
 			return nil, 0, false
 		}
 		count.m[p]++
+	}
+
+	if last == cmds.InitSlot {
+		// if all commands have no slots, such as INFO, we pick a non-nil slot.
+		for i, p := range c.pslots {
+			if p != nil {
+				last = uint16(i)
+				count.m[p] = inits
+				break
+			}
+		}
+		if last == cmds.InitSlot {
+			return nil, 0, false
+		}
 	}
 
 	retries = connretryp.Get(len(count.m), len(count.m))
@@ -573,17 +594,15 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, last 
 	conncountp.Put(count)
 
 	for i, cmd := range multi {
+		var cc conn
 		if cmd.Slot() != cmds.InitSlot {
-			if last == cmds.InitSlot {
-				last = cmd.Slot()
-			} else if init && last != cmd.Slot() {
-				panic(panicMixCxSlot)
-			}
-			cc := c.pslots[cmd.Slot()]
-			re := retries.m[cc]
-			re.commands = append(re.commands, cmd)
-			re.cIndexes = append(re.cIndexes, i)
+			cc = c.pslots[cmd.Slot()]
+		} else {
+			cc = c.pslots[last]
 		}
+		re := retries.m[cc]
+		re.commands = append(re.commands, cmd)
+		re.cIndexes = append(re.cIndexes, i)
 	}
 	return retries, last, false
 }
@@ -669,18 +688,11 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...Completed) []Redis
 		return nil
 	}
 
-	retries, slot, toReplica, err := c.pickMulti(ctx, multi)
+	retries, _, _, err := c.pickMulti(ctx, multi)
 	if err != nil {
 		return fillErrs(len(multi), err)
 	}
 	defer connretryp.Put(retries)
-
-	if len(retries.m) <= 1 {
-		for _, re := range retries.m {
-			retryp.Put(re)
-		}
-		return c.doMulti(ctx, slot, multi, toReplica)
-	}
 
 	var wg sync.WaitGroup
 	var mu sync.Mutex
@@ -728,44 +740,6 @@ func fillErrs(n int, err error) (results []RedisResult) {
 		results[i] = newErrResult(err)
 	}
 	return results
-}
-
-func (c *clusterClient) doMulti(ctx context.Context, slot uint16, multi []Completed, toReplica bool) []RedisResult {
-	attempts := 1
-
-retry:
-	cc, err := c.pick(ctx, slot, toReplica)
-	if err != nil {
-		return fillErrs(len(multi), err)
-	}
-	resps := cc.DoMulti(ctx, multi...)
-process:
-	for i, resp := range resps.s {
-		switch addr, mode := c.shouldRefreshRetry(resp.Error(), ctx); mode {
-		case RedirectMove:
-			if c.retry && allReadOnly(multi) {
-				resultsp.Put(resps)
-				resps = c.redirectOrNew(addr, cc, multi[i].Slot(), mode).DoMulti(ctx, multi...)
-				goto process
-			}
-		case RedirectAsk:
-			if c.retry && allReadOnly(multi) {
-				resultsp.Put(resps)
-				resps = askingMulti(c.redirectOrNew(addr, cc, multi[i].Slot(), mode), ctx, multi)
-				goto process
-			}
-		case RedirectRetry:
-			if c.retry && allReadOnly(multi) {
-				shouldRetry := c.retryHandler.WaitOrSkipRetry(ctx, attempts, multi[i], resp.Error())
-				if shouldRetry {
-					resultsp.Put(resps)
-					attempts++
-					goto retry
-				}
-			}
-		}
-	}
-	return resps.s
 }
 
 func (c *clusterClient) doCache(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult) {

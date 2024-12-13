@@ -5239,3 +5239,72 @@ func TestClusterClientLoadingRetry(t *testing.T) {
 		}
 	})
 }
+
+func TestClusterClientMovedRetry(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+
+	setup := func() (*clusterClient, *mockConn) {
+		m := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+					return slotsMultiResp
+				}
+				return RedisResult{}
+			},
+		}
+		client, err := newClusterClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		return client, m
+	}
+
+	t.Run("DoMulti Retry on MOVED", func(t *testing.T) {
+		client, m := setup()
+
+		attempts := 0
+		m.DoMultiFn = func(multi ...Completed) *redisresults {
+			attempts++
+			if attempts == 1 {
+				return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '-', string: "MOVED 0 127.0.0.1"}, nil)}}
+			}
+			return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "OK"}, nil)}}
+		}
+
+		cmd := client.B().Set().Key("test").Value(`test`).Build()
+		resps := client.DoMulti(context.Background(), cmd)
+		if len(resps) != 1 {
+			t.Fatalf("unexpected response length %v", len(resps))
+		}
+		if v, err := resps[0].ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMulti Retry on ASK", func(t *testing.T) {
+		client, m := setup()
+
+		attempts := 0
+		m.DoMultiFn = func(multi ...Completed) *redisresults {
+			attempts++
+			if attempts == 1 {
+				return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '-', string: "ASK 0 127.0.0.1"}, nil)}}
+			}
+			return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "OK"}, nil), newResult(RedisMessage{typ: '+', string: "OK"}, nil)}}
+		}
+
+		cmd := client.B().Set().Key("test").Value(`test`).Build()
+		resps := client.DoMulti(context.Background(), cmd)
+		if len(resps) != 1 {
+			t.Fatalf("unexpected response length %v", len(resps))
+		}
+		if v, err := resps[0].ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+}
