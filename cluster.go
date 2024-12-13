@@ -538,8 +538,6 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry) {
 		conncountp.Put(count)
 
 		for i, cmd := range multi {
-			last = cmd.Slot()
-
 			var cc conn
 			if c.opt.SendToReplicas(cmd) {
 				cc = c.rslots[cmd.Slot()]
