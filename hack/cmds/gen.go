@@ -458,6 +458,7 @@ func main() {
 	}
 
 	checkAllUsed("noRetCMDs", noRetCMDs)
+	checkAllUsed("unsubCMDs", unsubCMDs)
 	checkAllUsed("blockingCMDs", blockingCMDs)
 	checkAllUsed("cacheableCMDs", cacheableCMDs)
 	checkAllUsed("readOnlyCMDs", readOnlyCMDs)
@@ -725,6 +726,13 @@ func rootCf(root goStruct) (tag string) {
 			panic("root cf collision")
 		}
 		tag = "noRetTag"
+	}
+
+	if within(root, unsubCMDs) {
+		if tag != "" {
+			panic("root cf collision")
+		}
+		tag = "unsubTag"
 	}
 
 	if within(root, mtGetCMDs) {
@@ -1022,11 +1030,14 @@ func within(cmd goStruct, cmds map[string]bool) bool {
 }
 
 var noRetCMDs = map[string]bool{
-	"subscribe":    false,
-	"psubscribe":   false,
+	"subscribe":  false,
+	"psubscribe": false,
+	"ssubscribe": false,
+}
+
+var unsubCMDs = map[string]bool{
 	"unsubscribe":  false,
 	"punsubscribe": false,
-	"ssubscribe":   false,
 	"sunsubscribe": false,
 }
 

@@ -33,23 +33,6 @@ var slotsResp = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 	}},
 }}, nil)
 
-var slotsRespWithChangedRole = newResult(RedisMessage{typ: '*', values: []RedisMessage{
-	{typ: '*', values: []RedisMessage{
-		{typ: ':', integer: 0},
-		{typ: ':', integer: 16383},
-		{typ: '*', values: []RedisMessage{ // master
-			{typ: '+', string: "127.0.1.1"},
-			{typ: ':', integer: 1},
-			{typ: '+', string: ""},
-		}},
-		{typ: '*', values: []RedisMessage{ // replica
-			{typ: '+', string: "127.0.0.1"},
-			{typ: ':', integer: 0},
-			{typ: '+', string: ""},
-		}},
-	}},
-}}, nil)
-
 var slotsMultiResp = newResult(RedisMessage{typ: '*', values: []RedisMessage{
 	{typ: '*', values: []RedisMessage{
 		{typ: ':', integer: 0},
@@ -925,6 +908,94 @@ func TestClusterClientInit(t *testing.T) {
 			var first int64
 			client, err := newClusterClient(
 				&ClientOption{InitAddress: []string{"127.0.1.1:1", "127.0.2.1:2"}},
+				func(dst string, opt *ClientOption) conn {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							if atomic.LoadInt64(&first) == 1 {
+								return singleShardResp2
+							}
+							return shardsResp
+						},
+						VersionFn: func() int { return 8 },
+					}
+				},
+				newRetryer(defaultRetryDelayFn),
+			)
+			if err != nil {
+				t.Fatalf("unexpected err %v", err)
+			}
+			testFunc(t, client, &first)
+		})
+	})
+
+	t.Run("Refresh InitAddress which is not in CLUSTER SLOTS / CLUSTER SHARDS should be hidden", func(t *testing.T) {
+		testFunc := func(t *testing.T, client *clusterClient, num *int64) {
+			nodesWithHidden := client.nodes()
+			sort.Strings(nodesWithHidden)
+			if len(nodesWithHidden) != 4 ||
+				nodesWithHidden[0] != "127.0.0.1:0" ||
+				nodesWithHidden[1] != "127.0.1.1:1" ||
+				nodesWithHidden[2] != "127.0.2.1:2" ||
+				nodesWithHidden[3] != "redis.example.com" {
+				t.Fatalf("unexpected nodes %v", nodesWithHidden)
+			}
+
+			nodes := client.Nodes()
+			_, ok := nodes["127.0.0.1:0"]
+			_, ok2 := nodes["127.0.1.1:1"]
+			if len(nodes) != 2 || !ok || !ok2 {
+				t.Fatalf("unexpected nodes %v", nodes)
+			}
+
+			atomic.AddInt64(num, 1)
+
+			if err := client.refresh(context.Background()); err != nil {
+				t.Fatalf("unexpected err %v", err)
+			}
+
+			nodesWithHidden = client.nodes()
+			sort.Strings(nodesWithHidden)
+			if len(nodesWithHidden) != 4 ||
+				nodesWithHidden[0] != "127.0.1.1:1" ||
+				nodesWithHidden[1] != "127.0.2.1:2" ||
+				nodesWithHidden[2] != "127.0.3.1:3" ||
+				nodesWithHidden[3] != "redis.example.com" {
+				t.Fatalf("unexpected nodes %v", nodesWithHidden)
+			}
+
+			nodes = client.Nodes()
+			_, ok = nodes["127.0.3.1:3"]
+			if len(nodes) != 1 || !ok {
+				t.Fatalf("unexpected nodes %v", nodes)
+			}
+		}
+
+		t.Run("slots", func(t *testing.T) {
+			var first int64
+			client, err := newClusterClient(
+				&ClientOption{InitAddress: []string{"127.0.1.1:1", "127.0.2.1:2", "redis.example.com"}},
+				func(dst string, opt *ClientOption) conn {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							if atomic.LoadInt64(&first) == 1 {
+								return singleSlotResp2
+							}
+							return slotsResp
+						},
+					}
+				},
+				newRetryer(defaultRetryDelayFn),
+			)
+			if err != nil {
+				t.Fatalf("unexpected err %v", err)
+			}
+			testFunc(t, client, &first)
+		})
+
+		t.Run("shards", func(t *testing.T) {
+			var first int64
+			client, err := newClusterClient(
+				&ClientOption{InitAddress: []string{"127.0.1.1:1", "127.0.2.1:2", "redis.example.com"}},
 				func(dst string, opt *ClientOption) conn {
 					return &mockConn{
 						DoFn: func(cmd Completed) RedisResult {
@@ -2079,13 +2150,6 @@ func TestClusterClient_SendToOnlyPrimaryNodes(t *testing.T) {
 		t.Fatalf("unexpected err %v", err)
 	}
 
-	t.Run("Do with no slot", func(t *testing.T) {
-		c := client.B().Info().Build()
-		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "INFO" {
-			t.Fatalf("unexpected response %v %v", v, err)
-		}
-	})
-
 	t.Run("Do", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()
 		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "GET Do" {
@@ -2585,13 +2649,6 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 		t.Fatalf("unexpected err %v", err)
 	}
 
-	t.Run("Do with no slot", func(t *testing.T) {
-		c := client.B().Info().Build()
-		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "INFO" {
-			t.Fatalf("unexpected response %v %v", v, err)
-		}
-	})
-
 	t.Run("Do", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()
 		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "GET Do" {
@@ -2789,6 +2846,9 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 		primaryNodeConn.AcquireFn = func() wire {
 			return w
 		}
+		replicaNodeConn.AcquireFn = func() wire {
+			return w
+		} // Subscribe can work on replicas
 		if err := client.Dedicated(func(c DedicatedClient) error {
 			return c.Receive(context.Background(), c.B().Subscribe().Channel("a").Build(), func(msg PubSubMessage) {})
 		}); err != e {
@@ -3130,13 +3190,6 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 		t.Fatalf("unexpected err %v", err)
 	}
 
-	t.Run("Do with no slot", func(t *testing.T) {
-		c := client.B().Info().Build()
-		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "INFO" {
-			t.Fatalf("unexpected response %v %v", v, err)
-		}
-	})
-
 	t.Run("Do read operation", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()
 		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "GET Do" {
@@ -3383,6 +3436,9 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 		primaryNodeConn.AcquireFn = func() wire {
 			return w
 		}
+		replicaNodeConn.AcquireFn = func() wire {
+			return w
+		} // Subscribe can work on replicas
 		if err := client.Dedicated(func(c DedicatedClient) error {
 			return c.Receive(context.Background(), c.B().Subscribe().Channel("a").Build(), func(msg PubSubMessage) {})
 		}); err != e {
@@ -5232,55 +5288,6 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 			}
 		}
 	})
-
-	t.Run("node role are changed", func(t *testing.T) {
-		var callCount int64
-		refreshWaitCh := make(chan struct{})
-		cli, err := newClusterClient(
-			&ClientOption{
-				InitAddress: []string{"127.0.0.1:0"},
-				ClusterOption: ClusterOption{
-					ShardsRefreshInterval: time.Second,
-				},
-			},
-			func(dst string, opt *ClientOption) conn {
-				return &mockConn{
-					DoFn: func(cmd Completed) RedisResult {
-						if c := atomic.AddInt64(&callCount, 1); c >= 6 {
-							defer func() { recover() }()
-							defer close(refreshWaitCh)
-							return slotsRespWithChangedRole
-						} else if c >= 3 {
-							return slotsRespWithChangedRole
-						}
-						return slotsResp
-					},
-				}
-			},
-			newRetryer(defaultRetryDelayFn),
-		)
-		if err != nil {
-			t.Fatalf("unexpected err %v", err)
-		}
-
-		select {
-		case <-refreshWaitCh:
-			cli.Close()
-
-			cli.mu.Lock()
-			conns := cli.conns
-			cli.mu.Unlock()
-			if len(conns) != 2 {
-				t.Fatalf("unexpected conns %v", conns)
-			}
-			if cc, ok := conns["127.0.0.1:0"]; !ok || !cc.replica {
-				t.Fatalf("unexpected conns %v", conns)
-			}
-			if cc, ok := conns["127.0.1.1:1"]; !ok || cc.replica {
-				t.Fatalf("unexpected conns %v", conns)
-			}
-		}
-	})
 }
 
 func TestClusterClientLoadingRetry(t *testing.T) {
@@ -5463,6 +5470,74 @@ func TestClusterClientLoadingRetry(t *testing.T) {
 	})
 }
 
+func TestClusterClientMovedRetry(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+
+	setup := func() (*clusterClient, *mockConn) {
+		m := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+					return slotsMultiResp
+				}
+				return RedisResult{}
+			},
+		}
+		client, err := newClusterClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		return client, m
+	}
+
+	t.Run("DoMulti Retry on MOVED", func(t *testing.T) {
+		client, m := setup()
+
+		attempts := 0
+		m.DoMultiFn = func(multi ...Completed) *redisresults {
+			attempts++
+			if attempts == 1 {
+				return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '-', string: "MOVED 0 127.0.0.1"}, nil)}}
+			}
+			return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "OK"}, nil)}}
+		}
+
+		cmd := client.B().Set().Key("test").Value(`test`).Build()
+		resps := client.DoMulti(context.Background(), cmd)
+		if len(resps) != 1 {
+			t.Fatalf("unexpected response length %v", len(resps))
+		}
+		if v, err := resps[0].ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMulti Retry on ASK", func(t *testing.T) {
+		client, m := setup()
+
+		attempts := 0
+		m.DoMultiFn = func(multi ...Completed) *redisresults {
+			attempts++
+			if attempts == 1 {
+				return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '-', string: "ASK 0 127.0.0.1"}, nil)}}
+			}
+			return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "OK"}, nil), newResult(RedisMessage{typ: '+', string: "OK"}, nil)}}
+		}
+
+		cmd := client.B().Set().Key("test").Value(`test`).Build()
+		resps := client.DoMulti(context.Background(), cmd)
+		if len(resps) != 1 {
+			t.Fatalf("unexpected response length %v", len(resps))
+		}
+		if v, err := resps[0].ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+}
+
 //gocyclo:ignore
 func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
@@ -5584,13 +5659,6 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
 	}
-
-	t.Run("Do with no slot", func(t *testing.T) {
-		c := client.B().Info().Build()
-		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "INFO" {
-			t.Fatalf("unexpected response %v %v", v, err)
-		}
-	})
 
 	t.Run("Do read operation", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()
@@ -6567,4 +6635,22 @@ func TestClusterClient_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T
 			t.Fatalf("Dedicated desn't delegate Close")
 		}
 	})
+}
+
+type nodeInfo []ReplicaInfo
+
+func Test__(t *testing.T) {
+	nodes := nodeInfo{
+		{
+			Addr: "aaaa",
+		},
+		{
+			Addr: "bbbb",
+		},
+		{
+			Addr: "cccc",
+		},
+	}
+
+	_ = []ReplicaInfo(nodes[1:])
 }

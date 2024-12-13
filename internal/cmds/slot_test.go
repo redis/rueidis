@@ -18,8 +18,8 @@ func TestSlot(t *testing.T) {
 		}
 	})
 	t.Run("not use tag", func(t *testing.T) {
-		for i := 0; i < 100; i++ {
-			key1 := strconv.Itoa(rand.Int())
+		for i := 0; i < 1000; i++ {
+			key1 := strconv.Itoa(i)
 			key2 := fmt.Sprintf("%s{}", key1)
 			if slot(key1) == slot(key2) {
 				t.Fatalf("%v and %v should not be in the same slot", key1, key2)
