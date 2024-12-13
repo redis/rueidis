@@ -526,8 +526,8 @@ func (c *clusterClient) toReplica(cmd Completed) bool {
 	return false
 }
 
-func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, last uint16, toReplica bool) {
-	last = cmds.InitSlot
+func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry) {
+	last := cmds.InitSlot
 	init := false
 
 	for _, cmd := range multi {
@@ -551,7 +551,7 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, last 
 				p = c.pslots[cmd.Slot()]
 			}
 			if p == nil {
-				return nil, 0, false
+				return nil
 			}
 			count.m[p]++
 		}
@@ -563,11 +563,8 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, last 
 		conncountp.Put(count)
 
 		for i, cmd := range multi {
-			last = cmd.Slot()
-
 			var cc conn
 			if c.opt.SendToReplicas(cmd) {
-				toReplica = true
 				cc = c.rslots[cmd.Slot()]
 			} else {
 				cc = c.pslots[cmd.Slot()]
@@ -577,7 +574,7 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, last 
 			re.commands = append(re.commands, cmd)
 			re.cIndexes = append(re.cIndexes, i)
 		}
-		return retries, last, toReplica
+		return retries
 	}
 
 	inits := 0
@@ -593,7 +590,7 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, last 
 		}
 		p := c.pslots[cmd.Slot()]
 		if p == nil {
-			return nil, 0, false
+			return nil
 		}
 		count.m[p]++
 	}
@@ -608,7 +605,7 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, last 
 			}
 		}
 		if last == cmds.InitSlot {
-			return nil, 0, false
+			return nil
 		}
 	}
 
@@ -629,20 +626,20 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, last 
 		re.commands = append(re.commands, cmd)
 		re.cIndexes = append(re.cIndexes, i)
 	}
-	return retries, last, false
+	return retries
 }
 
-func (c *clusterClient) pickMulti(ctx context.Context, multi []Completed) (*connretry, uint16, bool, error) {
-	conns, slot, toReplica := c._pickMulti(multi)
+func (c *clusterClient) pickMulti(ctx context.Context, multi []Completed) (*connretry, error) {
+	conns := c._pickMulti(multi)
 	if conns == nil {
 		if err := c.refresh(ctx); err != nil {
-			return nil, 0, false, err
+			return nil, err
 		}
-		if conns, slot, toReplica = c._pickMulti(multi); conns == nil {
-			return nil, 0, false, ErrNoSlot
+		if conns = c._pickMulti(multi); conns == nil {
+			return nil, ErrNoSlot
 		}
 	}
-	return conns, slot, toReplica, nil
+	return conns, nil
 }
 
 func (c *clusterClient) doresultfn(
@@ -713,7 +710,7 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...Completed) []Redis
 		return nil
 	}
 
-	retries, _, _, err := c.pickMulti(ctx, multi)
+	retries, err := c.pickMulti(ctx, multi)
 	if err != nil {
 		return fillErrs(len(multi), err)
 	}
