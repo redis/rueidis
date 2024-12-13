@@ -6636,21 +6636,3 @@ func TestClusterClient_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T
 		}
 	})
 }
-
-type nodeInfo []ReplicaInfo
-
-func Test__(t *testing.T) {
-	nodes := nodeInfo{
-		{
-			Addr: "aaaa",
-		},
-		{
-			Addr: "bbbb",
-		},
-		{
-			Addr: "cccc",
-		},
-	}
-
-	_ = []ReplicaInfo(nodes[1:])
-}
