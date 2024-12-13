@@ -208,6 +208,18 @@ type ClientOption struct {
 
 	// ClusterOption is the options for the redis cluster client.
 	ClusterOption ClusterOption
+
+	// ReplicaSelector selects a replica node when `SendToReplicas` returns true.
+	// If the function is set, the client will send selected command to the replica node.
+	// Returned value is the index of the replica node in the replicas slice.
+	// If the returned value is out of range, the primary node will be selected.
+	// If primary node does not have any replica, the primary node will be selected
+	// and function will not be called.
+	// Currently only used for cluster client.
+	// Each ReplicaInfo must not be modified.
+	// NOTE: This function can't be used with ReplicaOnly option.
+	// NOTE: This function must be used with SendToReplicas function.
+	ReplicaSelector func(slot uint16, replicas []ReplicaInfo) int
 }
 
 // SentinelOption contains MasterSet,
@@ -232,6 +244,11 @@ type ClusterOption struct {
 	// If the value is zero, refreshment will be disabled.
 	// Cluster topology cache refresh happens always in the background after successful scan.
 	ShardsRefreshInterval time.Duration
+}
+
+// ReplicaInfo is the information of a replica node in a redis cluster.
+type ReplicaInfo struct {
+	Addr string
 }
 
 // Client is the redis client interface for both single redis instance and redis cluster. It should be created from the NewClient()
