@@ -544,16 +544,16 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry) {
 
 	if !init && c.rslots != nil && c.opt.SendToReplicas != nil {
 		for _, cmd := range multi {
-			var p conn
+			var cc conn
 			if c.opt.SendToReplicas(cmd) {
-				p = c.rslots[cmd.Slot()]
+				cc = c.rslots[cmd.Slot()]
 			} else {
-				p = c.pslots[cmd.Slot()]
+				cc = c.pslots[cmd.Slot()]
 			}
-			if p == nil {
+			if cc == nil {
 				return nil
 			}
-			count.m[p]++
+			count.m[cc]++
 		}
 
 		retries = connretryp.Get(len(count.m), len(count.m))
@@ -569,7 +569,9 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry) {
 			} else {
 				cc = c.pslots[cmd.Slot()]
 			}
-
+			if cc == nil { // check cc == nil again in case of non-deterministic SendToReplicas.
+				return nil
+			}
 			re := retries.m[cc]
 			re.commands = append(re.commands, cmd)
 			re.cIndexes = append(re.cIndexes, i)
@@ -726,13 +728,22 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...Completed) []Redis
 retry:
 	retries.RetryDelay = -1 // Assume no retry. Because client retry flag can be set to false.
 
+	var cc1 conn
+	var re1 *retry
 	wg.Add(len(retries.m))
 	mu.Lock()
+	for cc, re := range retries.m {
+		delete(retries.m, cc)
+		cc1 = cc
+		re1 = re
+		break
+	}
 	for cc, re := range retries.m {
 		delete(retries.m, cc)
 		go c.doretry(ctx, cc, results, retries, re, &mu, &wg, attempts)
 	}
 	mu.Unlock()
+	c.doretry(ctx, cc1, results, retries, re1, &mu, &wg, attempts)
 	wg.Wait()
 
 	if len(retries.m) != 0 {
@@ -997,13 +1008,22 @@ func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL)
 retry:
 	retries.RetryDelay = -1 // Assume no retry. Because client retry flag can be set to false.
 
+	var cc1 conn
+	var re1 *retrycache
 	wg.Add(len(retries.m))
 	mu.Lock()
+	for cc, re := range retries.m {
+		delete(retries.m, cc)
+		cc1 = cc
+		re1 = re
+		break
+	}
 	for cc, re := range retries.m {
 		delete(retries.m, cc)
 		go c.doretrycache(ctx, cc, results, retries, re, &mu, &wg, attempts)
 	}
 	mu.Unlock()
+	c.doretrycache(ctx, cc1, results, retries, re1, &mu, &wg, attempts)
 	wg.Wait()
 
 	if len(retries.m) != 0 {
