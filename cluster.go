@@ -249,7 +249,7 @@ func (c *clusterClient) _refresh() (err error) {
 		case c.opt.ReplicaOnly && len(g.nodes) > 1:
 			nodesCount := len(g.nodes)
 			for _, slot := range g.slots {
-				for i := slot[0]; i <= slot[1]; i++ {
+				for i := slot[0]; i <= slot[1] && i >= 0 && i < 16384; i++ {
 					pslots[i] = conns[g.nodes[1+util.FastRand(nodesCount-1)].Addr].conn
 				}
 			}
@@ -260,9 +260,8 @@ func (c *clusterClient) _refresh() (err error) {
 			if len(g.nodes) > 1 {
 				n := len(g.nodes) - 1
 				for _, slot := range g.slots {
-					for i := slot[0]; i <= slot[1]; i++ {
+					for i := slot[0]; i <= slot[1] && i >= 0 && i < 16384; i++ {
 						pslots[i] = conns[master].conn
-
 						rIndex := c.opt.ReplicaSelector(uint16(i), g.nodes[1:])
 						if rIndex >= 0 && rIndex < n {
 							rslots[i] = conns[g.nodes[1+rIndex].Addr].conn
@@ -273,7 +272,7 @@ func (c *clusterClient) _refresh() (err error) {
 				}
 			} else {
 				for _, slot := range g.slots {
-					for i := slot[0]; i <= slot[1]; i++ {
+					for i := slot[0]; i <= slot[1] && i >= 0 && i < 16384; i++ {
 						pslots[i] = conns[master].conn
 						rslots[i] = conns[master].conn
 					}
@@ -281,7 +280,7 @@ func (c *clusterClient) _refresh() (err error) {
 			}
 		default:
 			for _, slot := range g.slots {
-				for i := slot[0]; i <= slot[1]; i++ {
+				for i := slot[0]; i <= slot[1] && i >= 0 && i < 16384; i++ {
 					pslots[i] = conns[master].conn
 				}
 			}
