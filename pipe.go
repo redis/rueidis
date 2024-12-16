@@ -1315,7 +1315,7 @@ func (p *pipe) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) Re
 	if err != nil {
 		if _, ok := err.(*RedisError); ok {
 			err = ErrDoCacheAborted
-			if preErr := resp.s[2].Error(); preErr != nil { // if PTTL command get a RedisError
+			if preErr := resp.s[3].Error(); preErr != nil { // if {cmd} get a RedisError
 				if _, ok := preErr.(*RedisError); ok {
 					err = preErr
 				}
@@ -1384,12 +1384,9 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 		if err != nil {
 			if _, ok := err.(*RedisError); ok {
 				err = ErrDoCacheAborted
-				for j := 0; j < keys+1; j++ {
-					if preErr := resp.s[len(multi)-2-j].Error(); preErr != nil {
-						if _, ok := preErr.(*RedisError); ok {
-							err = preErr
-							break
-						}
+				if preErr := resp.s[len(multi)-2].Error(); preErr != nil { // if {rewritten} get a RedisError
+					if _, ok := preErr.(*RedisError); ok {
+						err = preErr
 					}
 				}
 			}
@@ -1487,7 +1484,7 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 			if err := resp.s[i].Error(); err != nil {
 				if _, ok := err.(*RedisError); ok {
 					err = ErrDoCacheAborted
-					if preErr := resp.s[i-2].Error(); preErr != nil { // if PTTL command get a RedisError
+					if preErr := resp.s[i-1].Error(); preErr != nil { // if {cmd} get a RedisError
 						if _, ok := preErr.(*RedisError); ok {
 							err = preErr
 						}
@@ -1515,7 +1512,7 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 				if err != nil {
 					if _, ok := err.(*RedisError); ok {
 						err = ErrDoCacheAborted
-						if preErr := resp.s[i-2].Error(); preErr != nil { // if PTTL command get a RedisError
+						if preErr := resp.s[i-1].Error(); preErr != nil { // if {cmd} get a RedisError
 							if _, ok := preErr.(*RedisError); ok {
 								err = preErr
 							}

@@ -828,20 +828,17 @@ func askingMulti(cc conn, ctx context.Context, multi []Completed) *redisresults 
 }
 
 func askingMultiCache(cc conn, ctx context.Context, multi []CacheableTTL) *redisresults {
-	commands := make([]Completed, 0, len(multi)*7)
+	commands := make([]Completed, 0, len(multi)*6)
 	for _, cmd := range multi {
 		ck, _ := cmds.CacheKey(cmd.Cmd)
-		commands = append(commands, cmds.OptInCmd, cmds.MultiCmd, cmds.AskingCmd, cmds.NewCompleted([]string{"PTTL", ck}), cmds.AskingCmd, Completed(cmd.Cmd), cmds.ExecCmd)
+		commands = append(commands, cmds.OptInCmd, cmds.MultiCmd, cmds.AskingCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(cmd.Cmd), cmds.ExecCmd)
 	}
 	results := resultsp.Get(0, len(multi))
 	resps := cc.DoMulti(ctx, commands...)
-	for i := 6; i < len(resps.s); i += 7 {
+	for i := 5; i < len(resps.s); i += 6 {
 		if arr, err := resps.s[i].ToArray(); err != nil {
-			for _, j := range []int{i - 3, i - 1} { // check if PTTL or {Cmd} failed
-				if preErr := resps.s[j].Error(); preErr != nil {
-					err = preErr
-					break
-				}
+			if preErr := resps.s[i-1].Error(); preErr != nil { // if {Cmd} get a RedisError
+				err = preErr
 			}
 			results.s = append(results.s, newErrResult(err))
 		} else {
