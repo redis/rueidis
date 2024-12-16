@@ -4628,9 +4628,9 @@ func TestClusterClientErr(t *testing.T) {
 					},
 					DoMultiFn: func(multi ...Completed) *redisresults {
 						if atomic.AddInt64(&count, 1) <= 3 {
-							return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)}}
+							return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, {}, newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)}}
 						}
-						return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '*', values: []RedisMessage{{}, {typ: '+', string: "b"}}}, nil)}}
+						return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, {}, newResult(RedisMessage{typ: '*', values: []RedisMessage{{}, {typ: '+', string: "b"}}}, nil)}}
 					},
 				}
 			},
@@ -4658,9 +4658,9 @@ func TestClusterClientErr(t *testing.T) {
 					},
 					DoMultiFn: func(multi ...Completed) *redisresults {
 						if atomic.AddInt64(&count, 1) <= 3 {
-							return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)}}
+							return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, {}, newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil)}}
 						}
-						return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '*', values: []RedisMessage{{}, {typ: '+', string: "b"}}}, nil)}}
+						return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, {}, newResult(RedisMessage{typ: '*', values: []RedisMessage{{}, {typ: '+', string: "b"}}}, nil)}}
 					},
 				}
 			},
@@ -4689,13 +4689,13 @@ func TestClusterClientErr(t *testing.T) {
 					DoMultiFn: func(multi ...Completed) *redisresults {
 						if atomic.AddInt64(&count, 1) <= 3 {
 							return &redisresults{s: []RedisResult{
-								{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil),
-								{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil),
+								{}, {}, {}, {}, {}, {}, newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil),
+								{}, {}, {}, {}, {}, {}, newResult(RedisMessage{typ: '-', string: "ASK 0 :1"}, nil),
 							}}
 						}
 						return &redisresults{s: []RedisResult{
-							{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '*', values: []RedisMessage{{}, {}, {typ: '+', string: multi[4].Commands()[1]}}}, nil),
-							{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '*', values: []RedisMessage{{}, {}, {typ: '+', string: multi[10].Commands()[1]}}}, nil),
+							{}, {}, {}, {}, {}, {}, newResult(RedisMessage{typ: '*', values: []RedisMessage{{}, {}, {typ: '+', string: multi[5].Commands()[1]}}}, nil),
+							{}, {}, {}, {}, {}, {}, newResult(RedisMessage{typ: '*', values: []RedisMessage{{}, {}, {typ: '+', string: multi[12].Commands()[1]}}}, nil),
 						}}
 					},
 				}
