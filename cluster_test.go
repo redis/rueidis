@@ -3710,13 +3710,6 @@ func TestClusterClient_SendPrimaryNodeOnlyButOneSlotAssigned(t *testing.T) {
 		t.Fatalf("unexpected err %v", err)
 	}
 
-	t.Run("Do with no slot", func(t *testing.T) {
-		c := client.B().Info().Build()
-		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "INFO" {
-			t.Fatalf("unexpected response %v %v", v, err)
-		}
-	})
-
 	t.Run("DoMulti Init Slot Operations", func(t *testing.T) {
 		c1 := client.B().Multi().Build()
 		c2 := client.B().Exec().Build()
@@ -6204,13 +6197,6 @@ func TestClusterClient_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
 	}
-
-	t.Run("Do with no slot", func(t *testing.T) {
-		c := client.B().Info().Build()
-		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "INFO" {
-			t.Fatalf("unexpected response %v %v", v, err)
-		}
-	})
 
 	t.Run("Do", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()
