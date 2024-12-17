@@ -837,6 +837,9 @@ func askingMultiCache(cc conn, ctx context.Context, multi []CacheableTTL) *redis
 	resps := cc.DoMulti(ctx, commands...)
 	for i := 5; i < len(resps.s); i += 6 {
 		if arr, err := resps.s[i].ToArray(); err != nil {
+			if preErr := resps.s[i-1].Error(); preErr != nil { // if {Cmd} get a RedisError
+				err = preErr
+			}
 			results.s = append(results.s, newErrResult(err))
 		} else {
 			results.s = append(results.s, newResult(arr[len(arr)-1], nil))
