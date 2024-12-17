@@ -5542,6 +5542,75 @@ func TestClusterClientMovedRetry(t *testing.T) {
 	})
 }
 
+func TestClusterClientCacheASKRetry(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+
+	setup := func() (*clusterClient, *mockConn) {
+		m := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+					return slotsMultiResp
+				}
+				return RedisResult{}
+			},
+		}
+		client, err := newClusterClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		return client, m
+	}
+
+	t.Run("DoCache Retry on ASK", func(t *testing.T) {
+		client, m := setup()
+		attempts := 0
+		m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
+			return newResult(RedisMessage{typ: '-', string: "ASK 0 :0"}, nil)
+		}
+		m.DoMultiFn = func(multi ...Completed) *redisresults {
+			attempts++
+			if attempts == 1 {
+				return &redisresults{s: []RedisResult{{}, {}, {}, {}, newResult(RedisMessage{typ: '-', string: "ASK 0 :0"}, nil), newResult(RedisMessage{typ: '_'}, nil)}}
+			}
+			return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '*', values: []RedisMessage{{}, {}, {}, {}, {}, {typ: '+', string: "OK"}}}, nil)}}
+		}
+		resp := client.DoCache(context.Background(), client.B().Get().Key("a1").Cache(), 10*time.Second)
+		if v, err := resp.ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if attempts != 2 {
+			t.Fatalf("expected 2 attempts, got %v", attempts)
+		}
+	})
+
+	t.Run("DoMultiCache Retry on ASK", func(t *testing.T) {
+		client, m := setup()
+
+		attempts := 0
+		m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
+			return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '-', string: "ASK 0 :0"}, nil)}}
+		}
+		m.DoMultiFn = func(multi ...Completed) *redisresults {
+			attempts++
+			if attempts == 1 {
+				return &redisresults{s: []RedisResult{{}, {}, {}, {}, newResult(RedisMessage{typ: '-', string: "ASK 0 :0"}, nil), newResult(RedisMessage{typ: '_'}, nil)}}
+			}
+			return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, newResult(RedisMessage{typ: '*', values: []RedisMessage{{}, {}, {}, {}, {}, RedisMessage{typ: '+', string: "OK"}}}, nil)}}
+		}
+		resps := client.DoMultiCache(context.Background(), CT(client.B().Get().Key("a1").Cache(), 10*time.Second))
+		if v, err := resps[0].ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if attempts != 2 {
+			t.Fatalf("expected 2 attempts, got %v", attempts)
+		}
+	})
+}
+
 //gocyclo:ignore
 func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
