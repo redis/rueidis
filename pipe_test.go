@@ -1669,25 +1669,13 @@ func TestClientSideCachingExecAbortMGet(t *testing.T) {
 			Expect("EXEC").
 			ReplyString("OK").
 			ReplyString("OK").
-			ReplyError("MOVED 0 127.0.0.1").
-			ReplyString("OK").
-			ReplyString("OK").
-			Reply(RedisMessage{typ: '_'})
-		mock.Expect("CLIENT", "CACHING", "YES").
-			Expect("MULTI").
-			Expect("PTTL", "c1").
-			Expect("PTTL", "c2").
-			Expect("MGET", "c1", "c2").
-			Expect("EXEC").
-			ReplyString("OK").
 			ReplyString("OK").
 			ReplyString("OK").
 			ReplyError("MOVED 0 127.0.0.1").
-			ReplyString("OK").
 			Reply(RedisMessage{typ: '_'})
 	}()
 
-	for i, pair := range [][2]string{{"a1", "a2"}, {"b1", "b2"}, {"c1", "c2"}} {
+	for i, pair := range [][2]string{{"a1", "a2"}, {"b1", "b2"}} {
 		v, err := p.DoCache(context.Background(), Cacheable(cmds.NewMGetCompleted([]string{"MGET", pair[0], pair[1]})), 10*time.Second).ToMessage()
 		if i == 0 {
 			if err != ErrDoCacheAborted {
@@ -1999,8 +1987,8 @@ func TestClientSideCachingExecAbortDoMultiCache(t *testing.T) {
 				Reply(RedisMessage{typ: '_'}).
 				ReplyString("OK").
 				ReplyString("OK").
+				ReplyString("OK").
 				ReplyError("MOVED 0 127.0.0.1").
-				Reply(RedisMessage{typ: '_'}).
 				Reply(RedisMessage{typ: '_'})
 		}()
 
