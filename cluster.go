@@ -831,7 +831,7 @@ func askingMultiCache(cc conn, ctx context.Context, multi []CacheableTTL) *redis
 	commands := make([]Completed, 0, len(multi)*6)
 	for _, cmd := range multi {
 		ck, _ := cmds.CacheKey(cmd.Cmd)
-		commands = append(commands, cmds.OptInCmd, cmds.MultiCmd, cmds.AskingCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(cmd.Cmd), cmds.ExecCmd)
+		commands = append(commands, cmds.OptInCmd, cmds.AskingCmd, cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(cmd.Cmd), cmds.ExecCmd)
 	}
 	results := resultsp.Get(0, len(multi))
 	resps := cc.DoMulti(ctx, commands...)
