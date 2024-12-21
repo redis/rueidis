@@ -138,13 +138,13 @@ type CoreCmdable interface {
 	BitPos(ctx context.Context, key string, bit int64, pos ...int64) *IntCmd
 	BitPosSpan(ctx context.Context, key string, bit int64, start, end int64, span string) *IntCmd
 	BitField(ctx context.Context, key string, args ...any) *IntSliceCmd
-	// TODO BitFieldRO(ctx context.Context, key string, values ...interface{}) *IntSliceCmd
+	BitFieldRO(ctx context.Context, key string, values ...any) *IntSliceCmd
 
 	Scan(ctx context.Context, cursor uint64, match string, count int64) *ScanCmd
 	ScanType(ctx context.Context, cursor uint64, match string, count int64, keyType string) *ScanCmd
 	SScan(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd
 	HScan(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd
-	// TODO HScanNoValues(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd
+	HScanNoValues(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd
 	ZScan(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd
 
 	HDel(ctx context.Context, key string, fields ...string) *IntCmd
@@ -320,7 +320,7 @@ type CoreCmdable interface {
 	ClientKill(ctx context.Context, ipPort string) *StatusCmd
 	ClientKillByFilter(ctx context.Context, keys ...string) *IntCmd
 	ClientList(ctx context.Context) *StringCmd
-	// TODO ClientInfo(ctx context.Context) *ClientInfoCmd
+	ClientInfo(ctx context.Context) *ClientInfoCmd
 	ClientPause(ctx context.Context, dur time.Duration) *BoolCmd
 	ClientUnpause(ctx context.Context) *BoolCmd
 	ClientID(ctx context.Context) *IntCmd
@@ -1245,6 +1245,15 @@ func (c *Compat) BitField(ctx context.Context, key string, args ...any) *IntSlic
 	return newIntSliceCmd(resp)
 }
 
+func (c *Compat) BitFieldRO(ctx context.Context, key string, args ...any) *IntSliceCmd {
+	cmd := c.client.B().Arbitrary("BITFIELD_RO").Keys(key)
+	for i := 0; i < len(args); i += 2 {
+		cmd = cmd.Args("GET", str(args[i]), str(args[i+1]))
+	}
+	resp := c.client.Do(ctx, cmd.ReadOnly())
+	return newIntSliceCmd(resp)
+}
+
 func (c *Compat) Scan(ctx context.Context, cursor uint64, match string, count int64) *ScanCmd {
 	cmd := c.client.B().Arbitrary("SCAN", strconv.FormatInt(int64(cursor), 10))
 	if match != "" {
@@ -1289,6 +1298,19 @@ func (c *Compat) HScan(ctx context.Context, key string, cursor uint64, match str
 	if count > 0 {
 		cmd = cmd.Args("COUNT", strconv.FormatInt(count, 10))
 	}
+	resp := c.client.Do(ctx, cmd.ReadOnly())
+	return newScanCmd(resp)
+}
+
+func (c *Compat) HScanNoValues(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd {
+	cmd := c.client.B().Arbitrary("HSCAN").Keys(key).Args(strconv.FormatInt(int64(cursor), 10))
+	if match != "" {
+		cmd = cmd.Args("MATCH", match)
+	}
+	if count > 0 {
+		cmd = cmd.Args("COUNT", strconv.FormatInt(count, 10))
+	}
+	cmd = cmd.Args("NOVALUES")
 	resp := c.client.Do(ctx, cmd.ReadOnly())
 	return newScanCmd(resp)
 }
@@ -2615,6 +2637,10 @@ func (c *Compat) ClientUnblock(ctx context.Context, id int64) *IntCmd {
 
 func (c *Compat) ClientUnblockWithError(ctx context.Context, id int64) *IntCmd {
 	return newIntCmd(c.client.Do(ctx, c.client.B().ClientUnblock().ClientId(id).Error().Build()))
+}
+
+func (c *Compat) ClientInfo(ctx context.Context) *ClientInfoCmd {
+	return newClientInfoCmd(c.client.Do(ctx, c.client.B().ClientInfo().Build()))
 }
 
 func (c *Compat) ConfigGet(ctx context.Context, parameter string) *StringStringMapCmd {
@@ -5658,6 +5684,15 @@ func (c CacheCompat) BitPosSpan(ctx context.Context, key string, bit, start, end
 		resp = c.client.DoCache(ctx, c.client.B().Bitpos().Key(key).Bit(bit).Start(start).End(end).Byte().Cache(), c.ttl)
 	}
 	return newIntCmd(resp)
+}
+
+func (c CacheCompat) BitFieldRO(ctx context.Context, key string, args ...any) *IntSliceCmd {
+	cmd := c.client.B().Arbitrary("BITFIELD_RO").Keys(key)
+	for i := 0; i < len(args); i += 2 {
+		cmd = cmd.Args("GET", str(args[i]), str(args[i+1]))
+	}
+	resp := c.client.DoCache(ctx, rueidis.Cacheable(cmd.ReadOnly()), c.ttl)
+	return newIntSliceCmd(resp)
 }
 
 func (c CacheCompat) EvalRO(ctx context.Context, script string, keys []string, args ...any) *Cmd {

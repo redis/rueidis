@@ -1114,6 +1114,25 @@ func testAdapter(resp3 bool) {
 			Expect(cursor).NotTo(BeZero())
 		})
 
+		if resp3 {
+			It("should HScan without values", func() {
+				for i := 0; i < 1000; i++ {
+					sadd := adapter.HSet(ctx, "myhash", fmt.Sprintf("key%d", i), "hello")
+					Expect(sadd.Err()).NotTo(HaveOccurred())
+				}
+
+				keys, cursor, err := adapter.HScanNoValues(ctx, "myhash", 0, "", 0).Result()
+				Expect(err).NotTo(HaveOccurred())
+				// If we don't get at least two items back, it's really strange.
+				Expect(cursor).To(BeNumerically(">=", 2))
+				Expect(len(keys)).To(BeNumerically(">=", 2))
+				Expect(keys[0]).To(HavePrefix("key"))
+				Expect(keys[1]).To(HavePrefix("key"))
+				Expect(keys).NotTo(BeEmpty())
+				Expect(cursor).NotTo(BeZero())
+			})
+		}
+
 		It("should ZScan", func() {
 			for i := 0; i < 1000; i++ {
 				err := adapter.ZAdd(ctx, "myset", Z{
@@ -1326,6 +1345,22 @@ func testAdapter(resp3 bool) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(nn).To(Equal([]int64{1, 0}))
 		})
+
+		if resp3 {
+			It("should BitFieldRO", func() {
+				nn, err := adapter.BitField(ctx, "mykey", "SET", "u8", 8, 255).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(nn).To(Equal([]int64{0}))
+
+				nn, err = adapter.BitFieldRO(ctx, "mykey", "u8", 0).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(nn).To(Equal([]int64{0}))
+
+				nn, err = adapter.BitFieldRO(ctx, "mykey", "u8", 0, "u4", 8, "u4", 12, "u4", 13).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(nn).To(Equal([]int64{0, 15, 15, 14}))
+			})
+		}
 
 		It("should Decr", func() {
 			set := adapter.Set(ctx, "key", "10", 0)
@@ -6746,6 +6781,12 @@ func testAdapterCache(resp3 bool) {
 			Expect(r).To(Equal(int64(0)))
 		})
 
+		It("should ClientInfo", func() {
+			info, err := adapter.ClientInfo(ctx).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(info).NotTo(BeNil())
+		})
+
 		It("ClientPause", func() {
 			Expect(adapter.ClientPause(ctx, time.Second).Err()).NotTo(HaveOccurred())
 		})
@@ -7358,6 +7399,20 @@ func testAdapterCache(resp3 bool) {
 			pos, err = adapter.Cache(time.Hour).BitPosSpan(ctx, "mykey", 0, 1, 3, "bit").Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(pos).To(Equal(int64(1)))
+		})
+
+		It("should BitFieldRO", func() {
+			nn, err := adapter.BitField(ctx, "mykey", "SET", "u8", 8, 255).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(nn).To(Equal([]int64{0}))
+
+			nn, err = adapter.Cache(time.Hour).BitFieldRO(ctx, "mykey", "u8", 0).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(nn).To(Equal([]int64{0}))
+
+			nn, err = adapter.Cache(time.Hour).BitFieldRO(ctx, "mykey", "u8", 0, "u4", 8, "u4", 12, "u4", 13).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(nn).To(Equal([]int64{0, 15, 15, 14}))
 		})
 
 		Describe("EvalRO", func() {

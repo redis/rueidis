@@ -541,6 +541,12 @@ func (c *Pipeline) BitField(ctx context.Context, key string, args ...any) *IntSl
 	return ret
 }
 
+func (c *Pipeline) BitFieldRO(ctx context.Context, key string, args ...any) *IntSliceCmd {
+	ret := c.comp.BitFieldRO(ctx, key, args...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) Scan(ctx context.Context, cursor uint64, match string, count int64) *ScanCmd {
 	ret := c.comp.Scan(ctx, cursor, match, count)
 	c.rets = append(c.rets, ret)
@@ -561,6 +567,12 @@ func (c *Pipeline) SScan(ctx context.Context, key string, cursor uint64, match s
 
 func (c *Pipeline) HScan(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd {
 	ret := c.comp.HScan(ctx, key, cursor, match, count)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) HScanNoValues(ctx context.Context, key string, cursor uint64, match string, count int64) *ScanCmd {
+	ret := c.comp.HScanNoValues(ctx, key, cursor, match, count)
 	c.rets = append(c.rets, ret)
 	return ret
 }
@@ -1587,6 +1599,12 @@ func (c *Pipeline) ClientUnblock(ctx context.Context, id int64) *IntCmd {
 
 func (c *Pipeline) ClientUnblockWithError(ctx context.Context, id int64) *IntCmd {
 	ret := c.comp.ClientUnblockWithError(ctx, id)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) ClientInfo(ctx context.Context) *ClientInfoCmd {
+	ret := c.comp.ClientInfo(ctx)
 	c.rets = append(c.rets, ret)
 	return ret
 }
