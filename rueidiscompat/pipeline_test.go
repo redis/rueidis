@@ -197,10 +197,12 @@ func TestPipeliner(t *testing.T) {
 		p.BitPos(ctx, "1", 0, 0, 1)
 		p.BitPosSpan(ctx, "1", 0, 1, 2, "1")
 		p.BitField(ctx, "1", "2", "3")
+		p.BitFieldRO(ctx, "1", "2", "3")
 		p.Scan(ctx, 0, "*", 1)
 		p.ScanType(ctx, 0, "*", 1, "1")
 		p.SScan(ctx, "1", 0, "*", 1)
 		p.HScan(ctx, "1", 0, "*", 1)
+		p.HScanNoValues(ctx, "1", 0, "*", 1)
 		p.ZScan(ctx, "1", 0, "*", 1)
 		p.HDel(ctx, "1", "2", "3")
 		p.HExists(ctx, "1", "2")
@@ -388,6 +390,7 @@ func TestPipeliner(t *testing.T) {
 		p.ClientID(ctx)
 		p.ClientUnblock(ctx, 1)
 		p.ClientUnblockWithError(ctx, 1)
+		p.ClientInfo(ctx)
 		p.ConfigGet(ctx, "1")
 		p.ConfigResetStat(ctx)
 		p.ConfigSet(ctx, "1", "v")
@@ -598,7 +601,7 @@ func TestPipeliner(t *testing.T) {
 		p.JSONToggle(ctx, "1", "1")
 		p.JSONType(ctx, "1", "1")
 
-		if n := len(p.rets); n != 474 {
+		if n := len(p.rets); n != 477 {
 			t.Fatalf("unexpected pipeline calls: %v", n)
 		}
 		for i, cmd := range p.rets {
@@ -606,7 +609,7 @@ func TestPipeliner(t *testing.T) {
 				t.Fatalf("unexpected pipeline placeholder err(%d): %v", i, err)
 			}
 		}
-		if n := len(p.comp.client.(*proxy).cmds); n != 474 {
+		if n := len(p.comp.client.(*proxy).cmds); n != 477 {
 			t.Fatalf("unexpected pipeline commands: %v", n)
 		}
 		var pipeline [][]string
@@ -712,10 +715,12 @@ var golden = `[
     ["BITPOS","1","0","0","1"],
     ["BITPOS","1","0","1","2","BYTE"],
     ["BITFIELD","1","2","3"],
+    ["BITFIELD_RO","1","GET","2","3"],
     ["SCAN","0","MATCH","*","COUNT","1"],
     ["SCAN","0","MATCH","*","COUNT","1","TYPE","1"],
     ["SSCAN","1","0","MATCH","*","COUNT","1"],
     ["HSCAN","1","0","MATCH","*","COUNT","1"],
+    ["HSCAN","1","0","MATCH","*","COUNT","1","NOVALUES"],
     ["ZSCAN","1","0","MATCH","*","COUNT","1"],
     ["HDEL","1","2","3"],
     ["HEXISTS","1","2"],
@@ -903,6 +908,7 @@ var golden = `[
     ["CLIENT","ID"],
     ["CLIENT","UNBLOCK","1"],
     ["CLIENT","UNBLOCK","1","ERROR"],
+    ["CLIENT","INFO"],
     ["CONFIG","GET","1"],
     ["CONFIG","RESETSTAT"],
     ["CONFIG","SET","1","v"],
