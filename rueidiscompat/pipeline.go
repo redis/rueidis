@@ -1699,6 +1699,12 @@ func (c *Pipeline) ShutdownNoSave(ctx context.Context) *StatusCmd {
 	return ret
 }
 
+func (c *Pipeline) SlaveOf(ctx context.Context, host, port string) *StatusCmd {
+	ret := c.comp.SlaveOf(ctx, host, port)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) Time(ctx context.Context) *TimeCmd {
 	ret := c.comp.Time(ctx)
 	c.rets = append(c.rets, ret)
@@ -1881,6 +1887,12 @@ func (c *Pipeline) PubSubShardChannels(ctx context.Context, pattern string) *Str
 
 func (c *Pipeline) PubSubShardNumSub(ctx context.Context, channels ...string) *StringIntMapCmd {
 	ret := c.comp.PubSubShardNumSub(ctx, channels...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) ClusterMyShardID(ctx context.Context) *StringCmd {
+	ret := c.comp.ClusterMyShardID(ctx)
 	c.rets = append(c.rets, ret)
 	return ret
 }
@@ -3026,6 +3038,12 @@ func (c *Pipeline) FTSynUpdateWithArgs(ctx context.Context, index string, synGro
 
 func (c *Pipeline) FTTagVals(ctx context.Context, index string, field string) *StringSliceCmd {
 	ret := c.comp.FTTagVals(ctx, index, field)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) ModuleLoadex(ctx context.Context, conf *ModuleLoadexConfig) *StringCmd {
+	ret := c.comp.ModuleLoadex(ctx, conf)
 	c.rets = append(c.rets, ret)
 	return ret
 }

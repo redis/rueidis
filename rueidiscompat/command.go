@@ -4833,3 +4833,11 @@ func (cmd *ClientInfoCmd) from(res rueidis.RedisResult) {
 
 	cmd.SetVal(info)
 }
+
+// ModuleLoadexConfig struct is used to specify the arguments for the MODULE LOADEX command of redis.
+// `MODULE LOADEX path [CONFIG name value [CONFIG name value ...]] [ARGS args [args ...]]`
+type ModuleLoadexConfig struct {
+	Path string
+	Conf map[string]interface{}
+	Args []interface{}
+}

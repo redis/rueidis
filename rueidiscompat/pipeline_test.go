@@ -600,8 +600,15 @@ func TestPipeliner(t *testing.T) {
 		p.JSONStrLen(ctx, "1", "1")
 		p.JSONToggle(ctx, "1", "1")
 		p.JSONType(ctx, "1", "1")
+		p.SlaveOf(ctx, "NO", "ONE")
+		p.ClusterMyShardID(ctx)
+		p.ModuleLoadex(ctx, &ModuleLoadexConfig{
+			Path: "/",
+			Conf: map[string]any{"k": "v"},
+			Args: []any{"1", "2"},
+		})
 
-		if n := len(p.rets); n != 477 {
+		if n := len(p.rets); n != 480 {
 			t.Fatalf("unexpected pipeline calls: %v", n)
 		}
 		for i, cmd := range p.rets {
@@ -609,7 +616,7 @@ func TestPipeliner(t *testing.T) {
 				t.Fatalf("unexpected pipeline placeholder err(%d): %v", i, err)
 			}
 		}
-		if n := len(p.comp.client.(*proxy).cmds); n != 477 {
+		if n := len(p.comp.client.(*proxy).cmds); n != 480 {
 			t.Fatalf("unexpected pipeline commands: %v", n)
 		}
 		var pipeline [][]string
@@ -1117,5 +1124,8 @@ var golden = `[
     ["JSON.STRAPPEND","1","1","1"],
     ["JSON.STRLEN","1","1"],
     ["JSON.TOGGLE","1","1"],
-    ["JSON.TYPE","1","1"]
+    ["JSON.TYPE","1","1"],
+    ["SLAVEOF","NO","ONE"],
+    ["CLUSTER","MYSHARDID"],
+    ["MODULE","LOADEX","/","CONFIG","k","v","ARGS","1","2"]
 ]`
