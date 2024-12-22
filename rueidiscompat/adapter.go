@@ -341,7 +341,7 @@ type CoreCmdable interface {
 	Shutdown(ctx context.Context) *StatusCmd
 	ShutdownSave(ctx context.Context) *StatusCmd
 	ShutdownNoSave(ctx context.Context) *StatusCmd
-	// TODO SlaveOf(ctx context.Context, host, port string) *StatusCmd
+	SlaveOf(ctx context.Context, host, port string) *StatusCmd
 	// TODO SlowLogGet(ctx context.Context, num int64) *SlowLogCmd
 	Time(ctx context.Context) *TimeCmd
 	DebugObject(ctx context.Context, key string) *StringCmd
@@ -379,7 +379,7 @@ type CoreCmdable interface {
 	PubSubShardChannels(ctx context.Context, pattern string) *StringSliceCmd
 	PubSubShardNumSub(ctx context.Context, channels ...string) *StringIntMapCmd
 
-	// TODO ClusterMyShardID(ctx context.Context) *StringCmd
+	ClusterMyShardID(ctx context.Context) *StringCmd
 	ClusterSlots(ctx context.Context) *ClusterSlotsCmd
 	ClusterShards(ctx context.Context) *ClusterShardsCmd
 	// TODO ClusterLinks(ctx context.Context) *ClusterLinksCmd
@@ -401,8 +401,6 @@ type CoreCmdable interface {
 	ClusterFailover(ctx context.Context) *StatusCmd
 	ClusterAddSlots(ctx context.Context, slots ...int64) *StatusCmd
 	ClusterAddSlotsRange(ctx context.Context, min, max int64) *StatusCmd
-	// TODO ReadOnly(ctx context.Context) *StatusCmd
-	// TODO ReadWrite(ctx context.Context) *StatusCmd
 
 	GeoAdd(ctx context.Context, key string, geoLocation ...GeoLocation) *IntCmd
 	GeoPos(ctx context.Context, key string, members ...string) *GeoPosCmd
@@ -420,7 +418,7 @@ type CoreCmdable interface {
 	// TODO ACLLog(ctx context.Context, count int64) *ACLLogCmd
 	// TODO ACLLogReset(ctx context.Context) *StatusCmd
 
-	// TODO ModuleLoadex(ctx context.Context, conf *ModuleLoadexConfig) *StringCmd
+	ModuleLoadex(ctx context.Context, conf *ModuleLoadexConfig) *StringCmd
 	GearsCmdable
 	ProbabilisticCmdable
 	TimeseriesCmdable
@@ -2733,6 +2731,12 @@ func (c *Compat) ShutdownNoSave(ctx context.Context) *StatusCmd {
 	})
 }
 
+func (c *Compat) SlaveOf(ctx context.Context, host, port string) *StatusCmd {
+	cmd := c.client.B().Arbitrary("SLAVEOF").Args(host, port).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
 func (c *Compat) Time(ctx context.Context) *TimeCmd {
 	cmd := c.client.B().Time().Build()
 	resp := c.client.Do(ctx, cmd)
@@ -2938,6 +2942,12 @@ func (c *Compat) PubSubShardNumSub(ctx context.Context, channels ...string) *Str
 	cmd := c.client.B().PubsubShardnumsub().Channel(channels...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringIntMapCmd(resp)
+}
+
+func (c *Compat) ClusterMyShardID(ctx context.Context) *StringCmd {
+	cmd := c.client.B().ClusterMyshardid().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringCmd(resp)
 }
 
 func (c *Compat) ClusterSlots(ctx context.Context) *ClusterSlotsCmd {
@@ -5638,6 +5648,20 @@ func (c *Compat) FTSynUpdateWithArgs(ctx context.Context, index string, synGroup
 func (c *Compat) FTTagVals(ctx context.Context, index string, field string) *StringSliceCmd {
 	cmd := c.client.B().FtTagvals().Index(index).FieldName(field).Build()
 	return newStringSliceCmd(c.client.Do(ctx, cmd))
+}
+
+func (c *Compat) ModuleLoadex(ctx context.Context, conf *ModuleLoadexConfig) *StringCmd {
+	cmd := c.client.B().ModuleLoadex().Path(conf.Path).Config()
+	for k, v := range conf.Conf {
+		cmd = cmd.Config(k, str(v))
+	}
+	var resp rueidis.RedisResult
+	if len(conf.Args) > 0 {
+		resp = c.client.Do(ctx, cmd.Args(argsToSlice(conf.Args)...).Build())
+	} else {
+		resp = c.client.Do(ctx, cmd.Build())
+	}
+	return newStringCmd(resp)
 }
 
 func (c CacheCompat) BitCount(ctx context.Context, key string, bitCount *BitCount) *IntCmd {
