@@ -680,7 +680,7 @@ func (c *clusterClient) doresultfn(
 				}
 				for ei = i; ei < len(commands) && !isMulti(commands[ei]) && !isExec(commands[ei]); ei++ {
 				}
-				if mi >= 0 && mi < ei && ei < len(commands) && isMulti(commands[mi]) && isExec(commands[ei]) && resps[mi].val.string == ok { // a transaction is found.
+				if mi >= 0 && ei < len(commands) && isMulti(commands[mi]) && isExec(commands[ei]) && resps[mi].val.string == ok { // a transaction is found.
 					mu.Lock()
 					retries.Redirects++
 					nr := retries.m[nc]
@@ -703,7 +703,7 @@ func (c *clusterClient) doresultfn(
 					continue // the transaction has been added to the retries, go to the next cmd.
 				}
 			}
-			if hasInit && mi < i && i < ei && mi >= 0 && ei < len(commands) && isMulti(commands[mi]) {
+			if hasInit && mi < i && i < ei && mi >= 0 && isMulti(commands[mi]) {
 				continue // the current cmd is in the processed transaction and has been added to the retries.
 			}
 			mu.Lock()
