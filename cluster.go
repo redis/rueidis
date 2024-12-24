@@ -858,14 +858,23 @@ func (c *clusterClient) DoCache(ctx context.Context, cmd Cacheable, ttl time.Dur
 }
 
 func askingMulti(cc conn, ctx context.Context, multi []Completed) *redisresults {
+	var inTx bool
 	commands := make([]Completed, 0, len(multi)*2)
 	for _, cmd := range multi {
-		commands = append(commands, cmds.AskingCmd, cmd)
+		if inTx {
+			commands = append(commands, cmd)
+			inTx = !isExec(cmd)
+		} else {
+			commands = append(commands, cmds.AskingCmd, cmd)
+			inTx = isMulti(cmd)
+		}
 	}
 	results := resultsp.Get(0, len(multi))
 	resps := cc.DoMulti(ctx, commands...)
-	for i := 1; i < len(resps.s); i += 2 {
-		results.s = append(results.s, resps.s[i])
+	for i, resp := range resps.s {
+		if commands[i] != cmds.AskingCmd {
+			results.s = append(results.s, resp)
+		}
 	}
 	resultsp.Put(resps)
 	return results
