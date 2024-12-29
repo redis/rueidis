@@ -38,6 +38,7 @@ type pool struct {
 
 func (p *pool) Acquire() (v wire) {
 	p.cond.L.Lock()
+retry:
 	for len(p.list) == 0 && p.size == p.cap && !p.down {
 		p.cond.Wait()
 	}
@@ -51,6 +52,11 @@ func (p *pool) Acquire() (v wire) {
 		v = p.list[i]
 		p.list[i] = nil
 		p.list = p.list[:i]
+		if v.Error() != nil {
+			p.size--
+			v.Close()
+			goto retry
+		}
 	}
 	p.cond.L.Unlock()
 	return v

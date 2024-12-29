@@ -49,6 +49,34 @@ func TestPool(t *testing.T) {
 		}
 	})
 
+	t.Run("Reuse without broken connections", func(t *testing.T) {
+		pool, count := setup(100)
+		c1 := pool.Acquire()
+		c2 := pool.Acquire()
+		pool.Store(c1)
+		pool.Store(c2)
+		pool.cond.L.Lock()
+		for _, p := range pool.list {
+			p.Close()
+		}
+		pool.cond.L.Unlock()
+		c3 := pool.Acquire()
+		if c3.Error() != nil {
+			t.Fatalf("c3.Error() is not nil")
+		}
+		if atomic.LoadInt32(count) != 3 {
+			t.Fatalf("pool does not clean borken connections")
+		}
+		pool.cond.L.Lock()
+		defer pool.cond.L.Unlock()
+		if pool.size != 1 {
+			t.Fatalf("pool size is not 1")
+		}
+		if len(pool.list) != 0 {
+			t.Fatalf("pool list is not empty")
+		}
+	})
+
 	t.Run("NotExceed", func(t *testing.T) {
 		conn := make([]wire, 100)
 		pool, count := setup(len(conn))
