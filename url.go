@@ -89,6 +89,18 @@ func ParseURL(str string) (opt ClientOption, err error) {
 		_, addr = parseAddr(addr)
 		opt.InitAddress = append(opt.InitAddress, addr)
 	}
+	if opt.TLSConfig != nil && q.Has("skip_verify") {
+		skipVerifyParam := q.Get("skip_verify")
+		if skipVerifyParam == "" {
+			opt.TLSConfig.InsecureSkipVerify = true
+		} else {
+			skipVerify, err := strconv.ParseBool(skipVerifyParam)
+			if err != nil {
+				return opt, fmt.Errorf("valkey: invalid skip verify: %q", skipVerifyParam)
+			}
+			opt.TLSConfig.InsecureSkipVerify = skipVerify
+		}
+	}
 	opt.AlwaysRESP2 = q.Get("protocol") == "2"
 	opt.DisableCache = q.Get("client_cache") == "0"
 	opt.DisableRetry = q.Get("max_retries") == "0"
