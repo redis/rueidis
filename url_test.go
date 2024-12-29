@@ -15,7 +15,13 @@ func TestParseURL(t *testing.T) {
 	if opt, err := ParseURL("rediss://"); err != nil || opt.TLSConfig == nil {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}
+	if opt, err := ParseURL("valkeys://"); err != nil || opt.TLSConfig == nil {
+		t.Fatalf("unexpected %v %v", opt, err)
+	}
 	if opt, err := ParseURL("unix://"); err != nil || opt.DialFn == nil {
+		t.Fatalf("unexpected %v %v", opt, err)
+	}
+	if opt, err := ParseURL("valkey://"); err != nil {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}
 	if opt, err := ParseURL("redis://"); err != nil || opt.InitAddress[0] != "localhost:6379" {

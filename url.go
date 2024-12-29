@@ -41,11 +41,11 @@ func ParseURL(str string) (opt ClientOption, err error) {
 			return dialer.Dial("unix", s)
 		}
 		opt.InitAddress = []string{strings.TrimSpace(u.Path)}
-	case "rediss":
+	case "rediss", "valkeys":
 		opt.TLSConfig = &tls.Config{
 			MinVersion: tls.VersionTLS12,
 		}
-	case "redis":
+	case "redis", "valkey":
 	default:
 		return opt, fmt.Errorf("redis: invalid URL scheme: %s", u.Scheme)
 	}
