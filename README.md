@@ -103,7 +103,7 @@ A benchmark result performed on two GCP n2-highcpu-2 machines also shows that ru
 
 While auto pipelining maximizes throughput, it relys on additional goroutines to process requests and responses and may add some latencies due to goroutine scheduling and head of line blocking.
 
-You can avoid this by setting `DisableAutoPipelining` to ture, then it will switch to connection pooling approach and serve each request with dedicated connection on the same goroutine.
+You can avoid this by setting `DisableAutoPipelining` to true, then it will switch to connection pooling approach and serve each request with dedicated connection on the same goroutine.
 
 ### Manual Pipelining
 
