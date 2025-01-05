@@ -173,8 +173,13 @@ func (a *adapterEntry) set(val RedisMessage, err error) {
 }
 
 func (a *adapterEntry) Wait(ctx context.Context) (RedisMessage, error) {
+	ctxCh := ctx.Done()
+	if ctxCh == nil {
+		<-a.ch
+		return a.val, a.err
+	}
 	select {
-	case <-ctx.Done():
+	case <-ctxCh:
 		return RedisMessage{}, ctx.Err()
 	case <-a.ch:
 		return a.val, a.err
@@ -191,7 +196,7 @@ type flatentry struct {
 	ttl  int64
 	size int64
 	mark int64
-	mu   sync.Mutex
+	mu   sync.RWMutex
 }
 
 func (f *flatentry) insert(e *flatentry) {
@@ -214,9 +219,9 @@ func (f *flatentry) find(cmd string, ts int64) (ret RedisMessage, expired bool) 
 		_ = ret.CacheUnmarshalView(f.val)
 		return
 	}
-	f.mu.Lock()
+	f.mu.RLock()
 	ovfl := f.ovfl
-	f.mu.Unlock()
+	f.mu.RUnlock()
 	return ovfl.find(cmd, ts)
 }
 
