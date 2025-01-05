@@ -183,6 +183,11 @@ func TestCacheStore(t *testing.T) {
 			return NewSimpleCacheAdapter(&simple{store: map[string]RedisMessage{}})
 		})
 	})
+	t.Run("FlattenCache", func(t *testing.T) {
+		test(t, func() CacheStore {
+			return NewFlattenCache(DefaultCacheBytes)
+		})
+	})
 }
 
 type simple struct {
