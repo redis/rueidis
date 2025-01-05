@@ -259,7 +259,7 @@ func doMultiSet(cc Client, ctx context.Context, cmds []Completed) (ret map[strin
 	ret = make(map[string]error, len(cmds))
 	resps := cc.DoMulti(ctx, cmds...)
 	for i, resp := range resps {
-		if ret[cmds[i].Commands()[1]] = resp.Error(); resp.err == nil {
+		if ret[cmds[i].Commands()[1]] = resp.error(); resp.err == nil {
 			intl.PutCompletedForce(cmds[i])
 		}
 	}

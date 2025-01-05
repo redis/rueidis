@@ -136,6 +136,10 @@ func (r RedisResult) NonRedisError() error {
 
 // Error returns either underlying error or redis error or nil
 func (r RedisResult) Error() (err error) {
+	return r.error()
+}
+
+func (r *RedisResult) error() (err error) {
 	if r.err != nil {
 		err = r.err
 	} else {

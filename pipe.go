@@ -216,7 +216,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 			if i == 0 {
 				p.info, err = r.AsMap()
 			} else {
-				err = r.Error()
+				err = r.error()
 			}
 			if err != nil {
 				if init[i][0] == "READONLY" {
@@ -301,7 +301,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 					// ignore READONLY command error
 					continue
 				}
-				if err = r.Error(); err != nil {
+				if err = r.error(); err != nil {
 					p.Close()
 					return nil, err
 				}
@@ -1315,7 +1315,7 @@ func (p *pipe) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) Re
 	if err != nil {
 		if _, ok := err.(*RedisError); ok {
 			err = ErrDoCacheAborted
-			if preErr := resp.s[3].Error(); preErr != nil { // if {cmd} get a RedisError
+			if preErr := resp.s[3].error(); preErr != nil { // if {cmd} get a RedisError
 				if _, ok := preErr.(*RedisError); ok {
 					err = preErr
 				}
@@ -1384,7 +1384,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 		if err != nil {
 			if _, ok := err.(*RedisError); ok {
 				err = ErrDoCacheAborted
-				if preErr := resp.s[len(multi)-2].Error(); preErr != nil { // if {rewritten} get a RedisError
+				if preErr := resp.s[len(multi)-2].error(); preErr != nil { // if {rewritten} get a RedisError
 					if _, ok := preErr.(*RedisError); ok {
 						err = preErr
 					}
@@ -1481,10 +1481,10 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 		resp = p.DoMulti(ctx, missing...)
 		defer resultsp.Put(resp)
 		for i := 4; i < len(resp.s); i += 5 {
-			if err := resp.s[i].Error(); err != nil {
+			if err := resp.s[i].error(); err != nil {
 				if _, ok := err.(*RedisError); ok {
 					err = ErrDoCacheAborted
-					if preErr := resp.s[i-1].Error(); preErr != nil { // if {cmd} get a RedisError
+					if preErr := resp.s[i-1].error(); preErr != nil { // if {cmd} get a RedisError
 						if _, ok := preErr.(*RedisError); ok {
 							err = preErr
 						}
@@ -1512,7 +1512,7 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 				if err != nil {
 					if _, ok := err.(*RedisError); ok {
 						err = ErrDoCacheAborted
-						if preErr := resp.s[i-1].Error(); preErr != nil { // if {cmd} get a RedisError
+						if preErr := resp.s[i-1].error(); preErr != nil { // if {cmd} get a RedisError
 							if _, ok := preErr.(*RedisError); ok {
 								err = preErr
 							}
