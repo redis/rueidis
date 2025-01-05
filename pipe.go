@@ -630,7 +630,7 @@ func (p *pipe) backgroundPing() {
 			}
 			ch := make(chan error, 1)
 			tm := time.NewTimer(p.timeout)
-			go func() { ch <- p.Do(context.Background(), cmds.PingCmd).NonRedisError() }()
+			go func() { ch <- p.Do(context.Background(), cmds.PingCmd).err }()
 			select {
 			case <-tm.C:
 				err = os.ErrDeadlineExceeded

@@ -239,7 +239,7 @@ block:
 func (m *mux) blocking(pool *pool, ctx context.Context, cmd Completed) (resp RedisResult) {
 	wire := pool.Acquire()
 	resp = wire.Do(ctx, cmd)
-	if resp.NonRedisError() != nil { // abort the wire if blocking command return early (ex. context.DeadlineExceeded)
+	if resp.err != nil { // abort the wire if blocking command return early (ex. context.DeadlineExceeded)
 		wire.Close()
 	}
 	pool.Store(wire)
@@ -250,7 +250,7 @@ func (m *mux) blockingMulti(pool *pool, ctx context.Context, cmd []Completed) (r
 	wire := pool.Acquire()
 	resp = wire.DoMulti(ctx, cmd...)
 	for _, res := range resp.s {
-		if res.NonRedisError() != nil { // abort the wire if blocking command return early (ex. context.DeadlineExceeded)
+		if res.err != nil { // abort the wire if blocking command return early (ex. context.DeadlineExceeded)
 			wire.Close()
 			break
 		}
@@ -262,7 +262,7 @@ func (m *mux) blockingMulti(pool *pool, ctx context.Context, cmd []Completed) (r
 func (m *mux) pipeline(ctx context.Context, cmd Completed) (resp RedisResult) {
 	slot := slotfn(len(m.wire), cmd.Slot(), cmd.NoReply())
 	wire := m.pipe(slot)
-	if resp = wire.Do(ctx, cmd); isBroken(resp.NonRedisError(), wire) {
+	if resp = wire.Do(ctx, cmd); isBroken(resp.err, wire) {
 		m.wire[slot].CompareAndSwap(wire, m.init)
 	}
 	return resp
@@ -273,7 +273,7 @@ func (m *mux) pipelineMulti(ctx context.Context, cmd []Completed) (resp *redisre
 	wire := m.pipe(slot)
 	resp = wire.DoMulti(ctx, cmd...)
 	for _, r := range resp.s {
-		if isBroken(r.NonRedisError(), wire) {
+		if isBroken(r.err, wire) {
 			m.wire[slot].CompareAndSwap(wire, m.init)
 			return resp
 		}
@@ -285,7 +285,7 @@ func (m *mux) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) Red
 	slot := cmd.Slot() & uint16(len(m.wire)-1)
 	wire := m.pipe(slot)
 	resp := wire.DoCache(ctx, cmd, ttl)
-	if isBroken(resp.NonRedisError(), wire) {
+	if isBroken(resp.err, wire) {
 		m.wire[slot].CompareAndSwap(wire, m.init)
 	}
 	return resp
@@ -344,7 +344,7 @@ func (m *mux) doMultiCache(ctx context.Context, slot uint16, multi []CacheableTT
 	wire := m.pipe(slot)
 	resps = wire.DoMultiCache(ctx, multi...)
 	for _, r := range resps.s {
-		if isBroken(r.NonRedisError(), wire) {
+		if isBroken(r.err, wire) {
 			m.wire[slot].CompareAndSwap(wire, m.init)
 			return resps
 		}

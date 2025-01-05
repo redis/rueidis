@@ -234,7 +234,7 @@ func doMultiCache(cc Client, ctx context.Context, cmds []CacheableTTL, keys []st
 	resps := cc.DoMultiCache(ctx, cmds...)
 	defer resultsp.Put(&redisresults{s: resps})
 	for i, resp := range resps {
-		if err := resp.NonRedisError(); err != nil {
+		if err := resp.err; err != nil {
 			return nil, err
 		}
 		ret[keys[i]] = resp.val
@@ -247,7 +247,7 @@ func doMultiGet(cc Client, ctx context.Context, cmds []Completed, keys []string)
 	resps := cc.DoMulti(ctx, cmds...)
 	defer resultsp.Put(&redisresults{s: resps})
 	for i, resp := range resps {
-		if err := resp.NonRedisError(); err != nil {
+		if err := resp.err; err != nil {
 			return nil, err
 		}
 		ret[keys[i]] = resp.val
@@ -259,7 +259,7 @@ func doMultiSet(cc Client, ctx context.Context, cmds []Completed) (ret map[strin
 	ret = make(map[string]error, len(cmds))
 	resps := cc.DoMulti(ctx, cmds...)
 	for i, resp := range resps {
-		if ret[cmds[i].Commands()[1]] = resp.Error(); resp.NonRedisError() == nil {
+		if ret[cmds[i].Commands()[1]] = resp.Error(); resp.err == nil {
 			intl.PutCompletedForce(cmds[i])
 		}
 	}

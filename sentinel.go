@@ -75,7 +75,7 @@ retry:
 			goto retry
 		}
 	}
-	if resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
+	if resp.err == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
 		cmds.PutCompleted(cmd)
 	}
 	return resp
@@ -104,7 +104,7 @@ retry:
 		}
 	}
 	for i, cmd := range multi {
-		if resps.s[i].NonRedisError() == nil {
+		if resps.s[i].err == nil {
 			cmds.PutCompleted(cmd)
 		}
 	}
@@ -123,7 +123,7 @@ retry:
 		}
 
 	}
-	if err := resp.NonRedisError(); err == nil || err == ErrDoCacheAborted {
+	if err := resp.err; err == nil || err == ErrDoCacheAborted {
 		cmds.PutCacheable(cmd)
 	}
 	return resp
@@ -151,7 +151,7 @@ retry:
 		}
 	}
 	for i, cmd := range multi {
-		if err := resps.s[i].NonRedisError(); err == nil || err == ErrDoCacheAborted {
+		if err := resps.s[i].err; err == nil || err == ErrDoCacheAborted {
 			cmds.PutCacheable(cmd.Cmd)
 		}
 	}

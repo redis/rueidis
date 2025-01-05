@@ -482,7 +482,7 @@ func (c *clusterClient) B() Builder {
 }
 
 func (c *clusterClient) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
-	if resp = c.do(ctx, cmd); resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
+	if resp = c.do(ctx, cmd); resp.err == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
 		cmds.PutCompleted(cmd)
 	}
 	return resp
@@ -659,7 +659,7 @@ func (c *clusterClient) doresultfn(
 	ei := -1
 	clean = true
 	for i, resp := range resps {
-		clean = clean && resp.NonRedisError() == nil
+		clean = clean && resp.err == nil
 		ii := cIndexes[i]
 		cm := commands[i]
 		results.s[ii] = resp
@@ -803,7 +803,7 @@ retry:
 	}
 
 	for i, cmd := range multi {
-		if results.s[i].NonRedisError() == nil {
+		if results.s[i].err == nil {
 			cmds.PutCompleted(cmd)
 		}
 	}
@@ -851,7 +851,7 @@ process:
 
 func (c *clusterClient) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult) {
 	resp = c.doCache(ctx, cmd, ttl)
-	if err := resp.NonRedisError(); err == nil || err == ErrDoCacheAborted {
+	if err := resp.err; err == nil || err == ErrDoCacheAborted {
 		cmds.PutCacheable(cmd)
 	}
 	return resp
@@ -984,7 +984,7 @@ func (c *clusterClient) resultcachefn(
 ) (clean bool) {
 	clean = true
 	for i, resp := range resps {
-		clean = clean && resp.NonRedisError() == nil
+		clean = clean && resp.err == nil
 		ii := cIndexes[i]
 		cm := commands[i]
 		results.s[ii] = resp
@@ -1097,7 +1097,7 @@ retry:
 	}
 
 	for i, cmd := range multi {
-		if err := results.s[i].NonRedisError(); err == nil || err == ErrDoCacheAborted {
+		if err := results.s[i].err; err == nil || err == ErrDoCacheAborted {
 			cmds.PutCacheable(cmd.Cmd)
 		}
 	}
@@ -1308,7 +1308,7 @@ retry:
 			}
 		}
 	}
-	if resp.NonRedisError() == nil {
+	if resp.err == nil {
 		cmds.PutCompleted(cmd)
 	}
 	return resp
@@ -1352,7 +1352,7 @@ retry:
 		}
 	}
 	for i, cmd := range multi {
-		if resp[i].NonRedisError() == nil {
+		if resp[i].err == nil {
 			cmds.PutCompleted(cmd)
 		}
 	}
