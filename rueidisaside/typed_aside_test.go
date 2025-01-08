@@ -39,7 +39,8 @@ func TestTypedCacheAsideClient_Get(t *testing.T) {
 
 	t.Run("successful get and cache", func(t *testing.T) {
 		expected := &testStruct{ID: 1, Name: "test"}
-		val, err := client.Get(context.Background(), time.Second, "test-key", func(ctx context.Context, key string) (*testStruct, error) {
+		key := randStr()
+		val, err := client.Get(context.Background(), time.Second, key, func(ctx context.Context, key string) (*testStruct, error) {
 			return expected, nil
 		})
 
@@ -51,7 +52,7 @@ func TestTypedCacheAsideClient_Get(t *testing.T) {
 		}
 
 		// Test cached value
-		val2, err := client.Get(context.Background(), time.Second, "test-key", nil)
+		val2, err := client.Get(context.Background(), time.Second, key, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -66,7 +67,8 @@ func TestTypedCacheAsideClient_Get(t *testing.T) {
 		}
 		clientWithBadSerializer := NewTypedCacheAsideClient[testStruct](baseClient, badSerializer, deserializer)
 
-		_, err := clientWithBadSerializer.Get(context.Background(), time.Second, "test-key", func(ctx context.Context, key string) (*testStruct, error) {
+		key := randStr()
+		_, err := clientWithBadSerializer.Get(context.Background(), time.Second, key, func(ctx context.Context, key string) (*testStruct, error) {
 			return &testStruct{ID: 1, Name: "test"}, nil
 		})
 
@@ -81,7 +83,8 @@ func TestTypedCacheAsideClient_Get(t *testing.T) {
 		}
 		clientWithBadDeserializer := NewTypedCacheAsideClient[testStruct](baseClient, serializer, badDeserializer)
 
-		_, err := clientWithBadDeserializer.Get(context.Background(), time.Second, "test-key", func(ctx context.Context, key string) (*testStruct, error) {
+		key := randStr()
+		_, err := clientWithBadDeserializer.Get(context.Background(), time.Second, key, func(ctx context.Context, key string) (*testStruct, error) {
 			return &testStruct{ID: 1, Name: "test"}, nil
 		})
 
@@ -91,7 +94,8 @@ func TestTypedCacheAsideClient_Get(t *testing.T) {
 	})
 
 	t.Run("nil value handling", func(t *testing.T) {
-		val, err := client.Get(context.Background(), time.Second, "test-key", func(ctx context.Context, key string) (*testStruct, error) {
+		key := randStr()
+		val, err := client.Get(context.Background(), time.Second, key, func(ctx context.Context, key string) (*testStruct, error) {
 			return nil, nil
 		})
 
@@ -122,8 +126,9 @@ func TestTypedCacheAsideClient_Del(t *testing.T) {
 	client := NewTypedCacheAsideClient[testStruct](baseClient, serializer, deserializer)
 
 	// Set a value first
+	key := randStr()
 	testVal := &testStruct{ID: 1, Name: "test"}
-	_, err := client.Get(context.Background(), time.Second, "test-key", func(ctx context.Context, key string) (*testStruct, error) {
+	_, err := client.Get(context.Background(), time.Second, key, func(ctx context.Context, key string) (*testStruct, error) {
 		return testVal, nil
 	})
 	if err != nil {
@@ -131,7 +136,7 @@ func TestTypedCacheAsideClient_Del(t *testing.T) {
 	}
 
 	// Verify it's cached
-	_, err = client.Get(context.Background(), time.Second, "test-key", func(ctx context.Context, key string) (*testStruct, error) {
+	_, err = client.Get(context.Background(), time.Second, key, func(ctx context.Context, key string) (*testStruct, error) {
 		t.Fatal("this function should not be called because the value should be cached")
 		return testVal, nil
 	})
@@ -140,14 +145,14 @@ func TestTypedCacheAsideClient_Del(t *testing.T) {
 	}
 
 	// Delete the value
-	err = client.Del(context.Background(), "test-key")
+	err = client.Del(context.Background(), key)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Verify it's deleted
 	called := false
-	_, err = client.Get(context.Background(), time.Second, "test-key", func(ctx context.Context, key string) (val *testStruct, err error) {
+	_, err = client.Get(context.Background(), time.Second, key, func(ctx context.Context, key string) (val *testStruct, err error) {
 		called = true
 		return testVal, nil
 	})
