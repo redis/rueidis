@@ -86,7 +86,7 @@ func main() {
 		b, err := json.Marshal(val)
 		return string(b), err
 	}
-    deserializer := func(s string) (*MyValue, error) {
+	deserializer := func(s string) (*MyValue, error) {
 		var val MyValue
 		if err := json.Unmarshal([]byte(s), &val); err != nil {
 			return nil, err
