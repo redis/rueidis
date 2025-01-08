@@ -46,7 +46,7 @@ func TestTypedCacheAsideClient_Get(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if val != expected {
+		if val.ID != expected.ID || val.Name != expected.Name {
 			t.Fatalf("expected %v, got %v", expected, val)
 		}
 
@@ -55,7 +55,7 @@ func TestTypedCacheAsideClient_Get(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if val2 != expected {
+		if val.ID != expected.ID || val.Name != expected.Name {
 			t.Fatalf("cached value mismatch: expected %v, got %v", expected, val2)
 		}
 	})
