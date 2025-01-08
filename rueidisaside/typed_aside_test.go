@@ -130,6 +130,15 @@ func TestTypedCacheAsideClient_Del(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	// Verify it's cached
+	_, err = client.Get(context.Background(), time.Second, "test-key", func(ctx context.Context, key string) (*testStruct, error) {
+		t.Fatal("this function should not be called because the value should be cached")
+		return testVal, nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	// Delete the value
 	err = client.Del(context.Background(), "test-key")
 	if err != nil {
@@ -137,8 +146,15 @@ func TestTypedCacheAsideClient_Del(t *testing.T) {
 	}
 
 	// Verify it's deleted
-	_, err = client.Get(context.Background(), time.Second, "test-key", nil)
+	called := false
+	_, err = client.Get(context.Background(), time.Second, "test-key", func(ctx context.Context, key string) (val *testStruct, err error) {
+		called = true
+		return testVal, nil
+	})
 	if err != nil && !rueidis.IsRedisNil(err) {
 		t.Fatal("expected error for deleted key")
+	}
+	if !called {
+		t.Fatal("expected function to be called because the value should be deleted")
 	}
 }
