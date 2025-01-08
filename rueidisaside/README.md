@@ -54,6 +54,63 @@ func main() {
 }
 ```
 
+If you want to use cache typed value, not string, you can use `rueidisaside.TypedCacheAsideClient` instead of `rueidisaside.CacheAsideClient`.
+
+```go
+package main
+
+import (
+	"context"
+	"database/sql"
+	"encoding/json"
+	"time"
+
+	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/rueidisaside"
+)
+
+type MyValue struct {
+	Val string `json:"val"`
+}
+
+func main() {
+	var db sql.DB
+	client, err := rueidisaside.NewClient(rueidisaside.ClientOption{
+		ClientOption: rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}},
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	serializer := func(val *MyValue) (string, error) {
+		b, err := json.Marshal(val)
+		return string(b), err
+	}
+    deserializer := func(s string) (*MyValue, error) {
+		var val MyValue
+		if err := json.Unmarshal([]byte(s), &val); err != nil {
+			return nil, err
+		}
+		return &val, nil
+	}
+
+	typedClient, err := rueidisaside.NewTypedCacheAsideClient[MyValue](client, serializer, deserializer)
+	if err != nil {
+        panic(err)
+    }
+	val, err := typedClient.Get(context.Background(), time.Minute, "myKey", func(ctx context.Context, key string) (*MyValue,error) {
+		var val MyValue
+        if err := db.QueryRowContext(ctx, "SELECT val FROM mytab WHERE id = ?", key).Scan(&val.Val); err == sql.ErrNoRows {
+            return nil, nil
+        } else if err != nil {
+            return nil, err
+        }
+        return &val, nil
+	})
+	// ...
+}
+```
+
 ## Limitation
 
 Currently, requires Redis >= 7.0.
