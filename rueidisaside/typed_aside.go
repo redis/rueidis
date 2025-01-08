@@ -54,7 +54,7 @@ func (c typedCacheAsideClient[T]) Get(ctx context.Context, ttl time.Duration, ke
 		return strVal, nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("cache get key %s failed: %w", key, err)
+		return nil, err
 	}
 	result, err := c.deserializer(strVal)
 	if err != nil {
