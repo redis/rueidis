@@ -30,12 +30,12 @@ func NewTypedCacheAsideClient[T any](
 	client CacheAsideClient,
 	serializer func(*T) (string, error),
 	deserializer func(string) (*T, error),
-) (TypedCacheAsideClient[T], error) {
+) TypedCacheAsideClient[T] {
 	return &typedCacheAsideClient[T]{
 		client:       client,
 		serializer:   serializer,
 		deserializer: deserializer,
-	}, nil
+	}
 }
 
 // Get retrieves a value of type T from the cache, or fetches it using the provided

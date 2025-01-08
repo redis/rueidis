@@ -15,36 +15,6 @@ type testStruct struct {
 	Name string `json:"name"`
 }
 
-func TestNewTypedCacheAsideClient(t *testing.T) {
-	baseClient := makeClient(t, addr)
-	t.Cleanup(baseClient.Close)
-
-	serializer := func(v *testStruct) (string, error) {
-		if v == nil {
-			return "nilTestStruct", nil
-		}
-		b, err := json.Marshal(v)
-		return string(b), err
-	}
-	deserializer := func(s string) (*testStruct, error) {
-		if s == "nilTestStruct" {
-			return nil, nil
-		}
-		var v testStruct
-		err := json.Unmarshal([]byte(s), &v)
-		return &v, err
-	}
-
-	client, err := NewTypedCacheAsideClient[testStruct](baseClient, serializer, deserializer)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if client == nil {
-		t.Fatal("client should not be nil")
-	}
-}
-
 func TestTypedCacheAsideClient_Get(t *testing.T) {
 	baseClient := makeClient(t, addr)
 	t.Cleanup(baseClient.Close)
@@ -65,7 +35,7 @@ func TestTypedCacheAsideClient_Get(t *testing.T) {
 		return &v, err
 	}
 
-	client, _ := NewTypedCacheAsideClient[testStruct](baseClient, serializer, deserializer)
+	client := NewTypedCacheAsideClient[testStruct](baseClient, serializer, deserializer)
 
 	t.Run("successful get and cache", func(t *testing.T) {
 		expected := &testStruct{ID: 1, Name: "test"}
@@ -94,7 +64,7 @@ func TestTypedCacheAsideClient_Get(t *testing.T) {
 		badSerializer := func(v *testStruct) (string, error) {
 			return "", errors.New("serialization error")
 		}
-		clientWithBadSerializer, _ := NewTypedCacheAsideClient[testStruct](baseClient, badSerializer, deserializer)
+		clientWithBadSerializer := NewTypedCacheAsideClient[testStruct](baseClient, badSerializer, deserializer)
 
 		_, err := clientWithBadSerializer.Get(context.Background(), time.Second, "test-key", func(ctx context.Context, key string) (*testStruct, error) {
 			return &testStruct{ID: 1, Name: "test"}, nil
@@ -109,7 +79,7 @@ func TestTypedCacheAsideClient_Get(t *testing.T) {
 		badDeserializer := func(s string) (*testStruct, error) {
 			return nil, errors.New("deserialization error")
 		}
-		clientWithBadDeserializer, _ := NewTypedCacheAsideClient[testStruct](baseClient, serializer, badDeserializer)
+		clientWithBadDeserializer := NewTypedCacheAsideClient[testStruct](baseClient, serializer, badDeserializer)
 
 		_, err := clientWithBadDeserializer.Get(context.Background(), time.Second, "test-key", func(ctx context.Context, key string) (*testStruct, error) {
 			return &testStruct{ID: 1, Name: "test"}, nil
@@ -149,7 +119,7 @@ func TestTypedCacheAsideClient_Del(t *testing.T) {
 		return &v, err
 	}
 
-	client, _ := NewTypedCacheAsideClient[testStruct](baseClient, serializer, deserializer)
+	client := NewTypedCacheAsideClient[testStruct](baseClient, serializer, deserializer)
 
 	// Set a value first
 	testVal := &testStruct{ID: 1, Name: "test"}
