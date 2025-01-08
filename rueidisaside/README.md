@@ -97,12 +97,12 @@ func main() {
 	typedClient := rueidisaside.NewTypedCacheAsideClient[MyValue](client, serializer, deserializer)
 	val, err := typedClient.Get(context.Background(), time.Minute, "myKey", func(ctx context.Context, key string) (*MyValue,error) {
 		var val MyValue
-        if err := db.QueryRowContext(ctx, "SELECT val FROM mytab WHERE id = ?", key).Scan(&val.Val); err == sql.ErrNoRows {
-            return nil, nil
-        } else if err != nil {
-            return nil, err
-        }
-        return &val, nil
+		if err := db.QueryRowContext(ctx, "SELECT val FROM mytab WHERE id = ?", key).Scan(&val.Val); err == sql.ErrNoRows {
+			return nil, nil
+		} else if err != nil {
+			return nil, err
+		}
+		return &val, nil
 	})
 	// ...
 }
