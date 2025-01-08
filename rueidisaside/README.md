@@ -87,11 +87,11 @@ func main() {
 		return string(b), err
 	}
 	deserializer := func(s string) (*MyValue, error) {
-		var val MyValue
+		var val *MyValue
 		if err := json.Unmarshal([]byte(s), &val); err != nil {
 			return nil, err
 		}
-		return &val, nil
+		return val, nil
 	}
 
 	typedClient := rueidisaside.NewTypedCacheAsideClient[MyValue](client, serializer, deserializer)
