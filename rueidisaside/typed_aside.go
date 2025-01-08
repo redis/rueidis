@@ -2,7 +2,6 @@ package rueidisaside
 
 import (
 	"context"
-	"fmt"
 	"time"
 )
 
@@ -49,7 +48,7 @@ func (c typedCacheAsideClient[T]) Get(ctx context.Context, ttl time.Duration, ke
 		}
 		strVal, err := c.serializer(result)
 		if err != nil {
-			return "", fmt.Errorf("serialize value %v: %w", result, err)
+			return "", err
 		}
 		return strVal, nil
 	})
@@ -58,7 +57,7 @@ func (c typedCacheAsideClient[T]) Get(ctx context.Context, ttl time.Duration, ke
 	}
 	result, err := c.deserializer(strVal)
 	if err != nil {
-		return nil, fmt.Errorf("deserialize value %s: %w", strVal, err)
+		return nil, err
 	}
 	return result, nil
 }
