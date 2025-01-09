@@ -54,7 +54,7 @@ func main() {
 }
 ```
 
-If you want to use cache typed value, not string, you can use `rueidisaside.TypedCacheAsideClient` instead of `rueidisaside.CacheAsideClient`.
+If you want to use cache typed value, not string, you can use `rueidisaside.TypedCacheAsideClient`.
 
 ```go
 package main
