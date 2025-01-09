@@ -46,20 +46,12 @@ func (c typedCacheAsideClient[T]) Get(ctx context.Context, ttl time.Duration, ke
 		if err != nil {
 			return "", err
 		}
-		strVal, err := c.serializer(result)
-		if err != nil {
-			return "", err
-		}
-		return strVal, nil
+		return c.serializer(result)
 	})
 	if err != nil {
 		return nil, err
 	}
-	result, err := c.deserializer(strVal)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
+	return c.deserializer(strVal)
 }
 
 // Del deletes the value associated with the given key from the cache.
