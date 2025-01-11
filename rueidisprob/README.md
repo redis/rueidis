@@ -134,3 +134,62 @@ func main() {
     fmt.Println(count) // 1
 }
 ```
+
+### Sliding Window Bloom Filter
+
+It is a variation of the standard Bloom filter that adds a sliding window mechanism. 
+Useful for use cases where you need to keep track of items for a certain amount of time.
+
+Example:
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/rueidisprob"
+)
+
+func main() {
+	client, err := rueidis.NewClient(rueidis.ClientOption{
+		InitAddress: []string{"localhost:6379"},
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	sbf, err := NewSlidingBloomFilter(client, "sliding_bloom_filter", 1000, 0.01, time.Minute)
+
+	err = sbf.Add(context.Background(), "hello")
+	if err != nil {
+		panic(err)
+	}
+
+	err = sbf.Add(context.Background(), "world")
+	if err != nil {
+		panic(err)
+	}
+
+	exists, err := sbf.Exists(context.Background(), "hello")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(exists) // true
+
+	exists, err = sbf.Exists(context.Background(), "world")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(exists) // true
+
+	count, err := sbf.Count(context.Background())
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(count) // 2
+}
+```
