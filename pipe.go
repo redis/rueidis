@@ -28,8 +28,9 @@ var noHello = regexp.MustCompile("unknown command .?(HELLO|hello).?")
 // See https://github.com/redis/rueidis/pull/691
 func isUnsubReply(msg *RedisMessage) bool {
 	// ex. NOPERM User limiteduser has no permissions to run the 'ping' command
-	// ex. LOADING Redis is loading the dataset in memory
-	if msg.typ == '-' && (strings.HasPrefix(msg.string, "LOADING") || strings.Contains(msg.string, "'ping'")) {
+	// ex. LOADING server is loading the dataset in memory
+	// ex. BUSY
+	if msg.typ == '-' && (strings.HasPrefix(msg.string, "LOADING") || strings.HasPrefix(msg.string, "BUSY") || strings.Contains(msg.string, "'ping'")) {
 		msg.typ = '+'
 		msg.string = "PONG"
 		return true
