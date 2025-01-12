@@ -32,6 +32,7 @@ type conn interface {
 	DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisResultStream
 	Info() map[string]RedisMessage
 	Version() int
+	AZ() string
 	Error() error
 	Close()
 	Dial() error
@@ -188,6 +189,10 @@ func (m *mux) Info() map[string]RedisMessage {
 
 func (m *mux) Version() int {
 	return m.pipe(0).Version()
+}
+
+func (m *mux) AZ() string {
+	return m.pipe(0).AZ()
 }
 
 func (m *mux) Error() error {

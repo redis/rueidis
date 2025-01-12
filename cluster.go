@@ -207,15 +207,26 @@ func (c *clusterClient) _refresh() (err error) {
 
 	groups := result.parse(c.opt.TLSConfig != nil)
 	conns := make(map[string]connrole, len(groups))
-	for master, g := range groups {
-		conns[master] = connrole{conn: c.connFn(master, c.opt)}
+	for primary, g := range groups {
+		primaryConn := c.connFn(primary, c.opt)
+		conns[primary] = connrole{conn: primaryConn}
+		if len(g.nodes) > 0 {
+			g.nodes[0].AZ = primaryConn.AZ()
+		}
+
 		if c.rOpt != nil {
-			for _, nodeInfo := range g.nodes[1:] {
-				conns[nodeInfo.Addr] = connrole{conn: c.connFn(nodeInfo.Addr, c.rOpt)}
+			for i, nodeInfo := range g.nodes[1:] {
+				replicaConn := c.connFn(nodeInfo.Addr, c.rOpt)
+				conns[nodeInfo.Addr] = connrole{conn: replicaConn}
+
+				g.nodes[i+1].AZ = replicaConn.AZ()
 			}
 		} else {
-			for _, nodeInfo := range g.nodes[1:] {
-				conns[nodeInfo.Addr] = connrole{conn: c.connFn(nodeInfo.Addr, c.opt)}
+			for i, nodeInfo := range g.nodes[1:] {
+				replicaConn := c.connFn(nodeInfo.Addr, c.opt)
+				conns[nodeInfo.Addr] = connrole{conn: replicaConn}
+
+				g.nodes[i+1].AZ = replicaConn.AZ()
 			}
 		}
 	}

@@ -249,6 +249,7 @@ type ClusterOption struct {
 // ReplicaInfo is the information of a replica node in a redis cluster.
 type ReplicaInfo struct {
 	Addr string
+	AZ   string
 }
 
 // Client is the redis client interface for both single redis instance and redis cluster. It should be created from the NewClient()
