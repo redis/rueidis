@@ -74,7 +74,6 @@ type pipe struct {
 	nsubs           *subs                       // pubsub  message subscriptions
 	psubs           *subs                       // pubsub pmessage subscriptions
 	info            map[string]RedisMessage
-	az              string
 	timeout         time.Duration
 	pinggap         time.Duration
 	maxFlushDelay   time.Duration
@@ -204,7 +203,6 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 	defer cancel()
 
 	r2 := option.AlwaysRESP2
-	isServerVersionLowerThan6 := false
 	if !r2 && !r2ps {
 		resp := p.DoMulti(ctx, cmds.NewMultiCompleted(init)...)
 		defer resultsp.Put(resp)
@@ -229,7 +227,6 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 				if re, ok := err.(*RedisError); ok {
 					if !r2 && noHello.MatchString(re.string) {
 						r2 = true
-						isServerVersionLowerThan6 = true
 						continue
 					} else if init[i][0] == "CLIENT" {
 						err = fmt.Errorf("%s: %v\n%w", re.string, init[i], ErrNoCache)
@@ -252,9 +249,6 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 				p.version = int32(vv)
 			}
 		}
-		if az, ok := p.info["availability_zone"]; ok {
-			p.az = az.string
-		}
 		p.onInvalidations = option.OnInvalidations
 	} else {
 		if !option.DisableCache {
@@ -262,9 +256,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 			return nil, ErrNoCache
 		}
 		init = init[:0]
-		if !isServerVersionLowerThan6 {
-			init = append(init, []string{"HELLO"})
-		}
+		init = append(init, []string{"HELLO"})
 		if password != "" && username == "" {
 			init = append(init, []string{"AUTH", password})
 		} else if username != "" {
@@ -318,11 +310,8 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 					p.Close()
 					return nil, err
 				}
-				if !isServerVersionLowerThan6 && i == 0 {
+				if i == 0 {
 					p.info, err = r.AsMap()
-					if az, ok := p.info["availability_zone"]; ok {
-						p.az = az.string
-					}
 				}
 			}
 		}
@@ -860,7 +849,7 @@ func (p *pipe) Version() int {
 }
 
 func (p *pipe) AZ() string {
-	return p.az
+	return p.info["availability_zone"].string
 }
 
 func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
