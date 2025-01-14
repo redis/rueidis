@@ -167,10 +167,6 @@ redis.call('SET', nextCounterKey, 0)
 	lastRotationSuffix = ":lr"
 )
 
-type Logger interface {
-	Error(msg string, args ...any)
-}
-
 var (
 	_                              BloomFilter = (*slidingBloomFilter)(nil)
 	ErrWindowSizeLessThanOneSecond             = errors.New("window size cannot be less than 1 second")
