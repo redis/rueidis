@@ -312,7 +312,8 @@ func TestCountingBloomFilterAddMulti(t *testing.T) {
 			t.Error("Count is not 4")
 		}
 
-		existingIndexes := bf.(*countingBloomFilter).indexes([]string{"1"})
+		buf := make([]byte, 0)
+		existingIndexes := bf.(*countingBloomFilter).indexes([]string{"1"}, &buf)
 		resp := client.Do(
 			context.Background(),
 			client.B().
@@ -928,7 +929,9 @@ func TestCountingBloomFilterRemoveMulti(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		removedIndexes := bf.(*countingBloomFilter).indexes([]string{"1", "2", "3"})
+
+		buf := make([]byte, 0)
+		removedIndexes := bf.(*countingBloomFilter).indexes([]string{"1", "2", "3"}, &buf)
 		resp := client.Do(
 			context.Background(),
 			client.B().
@@ -1005,7 +1008,8 @@ func TestCountingBloomFilterRemoveMulti(t *testing.T) {
 			t.Error("Count is not 2")
 		}
 
-		removedIndexes := bf.(*countingBloomFilter).indexes([]string{"1", "2"})
+		buf := make([]byte, 0)
+		removedIndexes := bf.(*countingBloomFilter).indexes([]string{"1", "2"}, &buf)
 		resp := client.Do(
 			context.Background(),
 			client.B().
@@ -1073,7 +1077,8 @@ func TestCountingBloomFilterRemoveMulti(t *testing.T) {
 			t.Error("Count is not 0")
 		}
 
-		removedIndexes := bf.(*countingBloomFilter).indexes([]string{"1"})
+		buf := make([]byte, 0)
+		removedIndexes := bf.(*countingBloomFilter).indexes([]string{"1"}, &buf)
 		resp := client.Do(
 			context.Background(),
 			client.B().
