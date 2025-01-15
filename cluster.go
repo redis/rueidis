@@ -207,26 +207,15 @@ func (c *clusterClient) _refresh() (err error) {
 
 	groups := result.parse(c.opt.TLSConfig != nil)
 	conns := make(map[string]connrole, len(groups))
-	for primary, g := range groups {
-		primaryConn := c.connFn(primary, c.opt)
-		conns[primary] = connrole{conn: primaryConn}
-		if len(g.nodes) > 0 {
-			g.nodes[0].AZ = primaryConn.AZ()
-		}
-
+	for master, g := range groups {
+		conns[master] = connrole{conn: c.connFn(master, c.opt)}
 		if c.rOpt != nil {
-			for i, nodeInfo := range g.nodes[1:] {
-				replicaConn := c.connFn(nodeInfo.Addr, c.rOpt)
-				conns[nodeInfo.Addr] = connrole{conn: replicaConn}
-
-				g.nodes[i+1].AZ = replicaConn.AZ()
+			for _, nodeInfo := range g.nodes[1:] {
+				conns[nodeInfo.Addr] = connrole{conn: c.connFn(nodeInfo.Addr, c.rOpt)}
 			}
 		} else {
-			for i, nodeInfo := range g.nodes[1:] {
-				replicaConn := c.connFn(nodeInfo.Addr, c.opt)
-				conns[nodeInfo.Addr] = connrole{conn: replicaConn}
-
-				g.nodes[i+1].AZ = replicaConn.AZ()
+			for _, nodeInfo := range g.nodes[1:] {
+				conns[nodeInfo.Addr] = connrole{conn: c.connFn(nodeInfo.Addr, c.opt)}
 			}
 		}
 	}
@@ -270,6 +259,10 @@ func (c *clusterClient) _refresh() (err error) {
 			}
 			if len(g.nodes) > 1 {
 				n := len(g.nodes) - 1
+				for i, replica := range g.nodes[1:] {
+					rConn := conns[replica.Addr].conn
+					g.nodes[i+1].AZ = rConn.AZ()
+				}
 				for _, slot := range g.slots {
 					for i := slot[0]; i <= slot[1] && i >= 0 && i < 16384; i++ {
 						pslots[i] = conns[master].conn
