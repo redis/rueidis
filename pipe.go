@@ -256,7 +256,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 			return nil, ErrNoCache
 		}
 		init = init[:0]
-		init = append(init, []string{"HELLO"})
+		init = append(init, []string{"HELLO", "2"})
 		if password != "" && username == "" {
 			init = append(init, []string{"AUTH", password})
 		} else if username != "" {
