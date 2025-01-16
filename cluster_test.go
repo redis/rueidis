@@ -1478,6 +1478,7 @@ func TestClusterClientInit(t *testing.T) {
 					}
 					return -1
 				},
+				EnableReplicaAZLookUp: true,
 			},
 			func(dst string, opt *ClientOption) conn {
 				switch {

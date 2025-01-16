@@ -220,6 +220,10 @@ type ClientOption struct {
 	// NOTE: This function can't be used with ReplicaOnly option.
 	// NOTE: This function must be used with SendToReplicas function.
 	ReplicaSelector func(slot uint16, replicas []ReplicaInfo) int
+
+	// EnableReplicaAZLookUp enables the client to look up the AZ of the replica node.
+	// If true, the client will set `AZ` field in `ReplicaInfo`.
+	EnableReplicaAZLookUp bool
 }
 
 // SentinelOption contains MasterSet,
