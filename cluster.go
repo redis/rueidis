@@ -265,7 +265,7 @@ func (c *clusterClient) _refresh() (err error) {
 						mu sync.Mutex
 						wg sync.WaitGroup
 					)
-					for i := 0; i < n; i += 4 {
+					for i := 0; i < n; i += 4 { // batch 4 nodes for each goroutine
 						for j := i; j < i+4 && j < n; j++ {
 							replica := g.nodes[j+1]
 							rConn := conns[replica.Addr].conn
