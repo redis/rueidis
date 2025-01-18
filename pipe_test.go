@@ -211,6 +211,8 @@ func TestNewPipe(t *testing.T) {
 					values: []RedisMessage{
 						{typ: '+', string: "proto"},
 						{typ: ':', integer: 3},
+						{typ: '+', string: "availability_zone"},
+						{typ: '+', string: "us-west-1a"},
 					},
 				})
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
@@ -238,6 +240,9 @@ func TestNewPipe(t *testing.T) {
 			t.Fatalf("pipe setup failed: %v", err)
 		}
 		go func() { mock.Expect("PING").ReplyString("OK") }()
+		if p.AZ() != "us-west-1a" {
+			t.Fatalf("unexpected az: %v", p.AZ())
+		}
 		p.Close()
 		mock.Close()
 		n1.Close()
@@ -247,6 +252,16 @@ func TestNewPipe(t *testing.T) {
 		n1, n2 := net.Pipe()
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
+			mock.Expect("HELLO", "2").
+				Reply(RedisMessage{
+					typ: '*',
+					values: []RedisMessage{
+						{typ: '+', string: "proto"},
+						{typ: ':', integer: 2},
+						{typ: '+', string: "availability_zone"},
+						{typ: '+', string: "us-west-1a"},
+					},
+				})
 			mock.Expect("AUTH", "pa").
 				ReplyString("OK")
 			mock.Expect("CLIENT", "SETNAME", "cn").
@@ -276,6 +291,9 @@ func TestNewPipe(t *testing.T) {
 			t.Fatalf("pipe setup failed: %v", err)
 		}
 		go func() { mock.Expect("PING").ReplyString("OK") }()
+		if p.AZ() != "us-west-1a" {
+			t.Fatalf("unexpected az: %v", p.AZ())
+		}
 		p.Close()
 		mock.Close()
 		n1.Close()
@@ -312,6 +330,9 @@ func TestNewPipe(t *testing.T) {
 			t.Fatalf("pipe setup failed: %v", err)
 		}
 		go func() { mock.Expect("PING").ReplyString("OK") }()
+		if p.AZ() != "" {
+			t.Fatalf("unexpected az: %v", p.AZ())
+		}
 		p.Close()
 		mock.Close()
 		n1.Close()
@@ -578,6 +599,21 @@ func TestNewRESP2Pipe(t *testing.T) {
 					{typ: '+', string: "redis"},
 					{typ: '+', string: "proto"},
 					{typ: ':', integer: 2},
+					{typ: '+', string: "availability_zone"},
+					{typ: '+', string: "us-west-1a"},
+				}})
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("HELLO", "2").
+				Reply(RedisMessage{typ: '*', values: []RedisMessage{
+					{typ: '+', string: "server"},
+					{typ: '+', string: "redis"},
+					{typ: '+', string: "proto"},
+					{typ: ':', integer: 2},
+					{typ: '+', string: "availability_zone"},
+					{typ: '+', string: "us-west-1a"},
 				}})
 			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
 				ReplyError("UNKNOWN COMMAND")
@@ -592,6 +628,9 @@ func TestNewRESP2Pipe(t *testing.T) {
 		}
 		if p.version >= 6 {
 			t.Fatalf("unexpected p.version: %v", p.version)
+		}
+		if p.AZ() != "us-west-1a" {
+			t.Fatalf("unexpected az: %v", p.AZ())
 		}
 		go func() { mock.Expect("PING").ReplyString("OK") }()
 		p.Close()
@@ -611,6 +650,8 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("HELLO", "2").
+				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("AUTH", "pa").
 				ReplyString("OK")
 			mock.Expect("CLIENT", "SETNAME", "cn").
@@ -652,6 +693,8 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("HELLO", "2").
+				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("AUTH", "ua", "pa").
 				ReplyString("OK")
 			mock.Expect("CLIENT", "SETNAME", "cn").
@@ -696,6 +739,8 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("HELLO", "2").
+				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("AUTH", "pa").
 				ReplyString("OK")
 			mock.Expect("CLIENT", "SETNAME", "cn").
@@ -742,6 +787,8 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("HELLO", "2").
+				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("AUTH", "pa").
 				ReplyString("OK")
 			mock.Expect("CLIENT", "SETNAME", "cn").
@@ -805,6 +852,8 @@ func TestNewRESP2Pipe(t *testing.T) {
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
 			mock.Expect("HELLO", "3").
+				ReplyError("ERR unknown command `HELLO`")
+			mock.Expect("HELLO", "2").
 				ReplyError("ERR unknown command `HELLO`")
 		}()
 		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{

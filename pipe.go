@@ -48,6 +48,7 @@ type wire interface {
 	DoMultiStream(ctx context.Context, pool *pool, multi ...Completed) MultiRedisResultStream
 	Info() map[string]RedisMessage
 	Version() int
+	AZ() string
 	Error() error
 	Close()
 
@@ -257,6 +258,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 			return nil, ErrNoCache
 		}
 		init = init[:0]
+		init = append(init, []string{"HELLO", "2"})
 		if password != "" && username == "" {
 			init = append(init, []string{"AUTH", password})
 		} else if username != "" {
@@ -304,8 +306,14 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 					continue
 				}
 				if err = r.Error(); err != nil {
+					if re, ok := err.(*RedisError); ok && noHello.MatchString(re.string) {
+						continue
+					}
 					p.Close()
 					return nil, err
+				}
+				if i == 0 {
+					p.info, err = r.AsMap()
 				}
 			}
 		}
@@ -840,6 +848,10 @@ func (p *pipe) Info() map[string]RedisMessage {
 
 func (p *pipe) Version() int {
 	return int(p.version)
+}
+
+func (p *pipe) AZ() string {
+	return p.info["availability_zone"].string
 }
 
 func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {

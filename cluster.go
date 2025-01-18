@@ -259,6 +259,26 @@ func (c *clusterClient) _refresh() (err error) {
 			}
 			if len(g.nodes) > 1 {
 				n := len(g.nodes) - 1
+
+				if c.opt.EnableReplicaInfoAZ {
+					var wg sync.WaitGroup
+					for i := 0; i < n; i += 4 { // batch AZ() for every 4 connections
+						for j := i; j < i+4 && j < n; j++ {
+							replica := g.nodes[j+1]
+							rConn := conns[replica.Addr].conn
+
+							wg.Add(1)
+							go func(j int, rConn conn) {
+								defer wg.Done()
+
+								g.nodes[j+1].AZ = rConn.AZ()
+							}(j, rConn)
+						}
+
+						wg.Wait()
+					}
+				}
+
 				for _, slot := range g.slots {
 					for i := slot[0]; i <= slot[1] && i >= 0 && i < 16384; i++ {
 						pslots[i] = conns[master].conn

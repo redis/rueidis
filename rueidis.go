@@ -220,6 +220,10 @@ type ClientOption struct {
 	// NOTE: This function can't be used with ReplicaOnly option.
 	// NOTE: This function must be used with SendToReplicas function.
 	ReplicaSelector func(slot uint16, replicas []ReplicaInfo) int
+
+	// EnableReplicaInfoAZ enables the client to load the replica node's availability zone.
+	// If true, the client will set the `AZ` field in `ReplicaInfo`.
+	EnableReplicaInfoAZ bool
 }
 
 // SentinelOption contains MasterSet,
@@ -249,6 +253,7 @@ type ClusterOption struct {
 // ReplicaInfo is the information of a replica node in a redis cluster.
 type ReplicaInfo struct {
 	Addr string
+	AZ   string
 }
 
 // Client is the redis client interface for both single redis instance and redis cluster. It should be created from the NewClient()

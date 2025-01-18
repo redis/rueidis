@@ -22,6 +22,7 @@ type mockConn struct {
 	DoMultiStreamFn func(cmd ...Completed) MultiRedisResultStream
 	InfoFn          func() map[string]RedisMessage
 	VersionFn       func() int
+	AZFn            func() string
 	ErrorFn         func() error
 	CloseFn         func()
 	DialFn          func() error
@@ -161,6 +162,13 @@ func (m *mockConn) Version() int {
 		return m.VersionFn()
 	}
 	return 0
+}
+
+func (m *mockConn) AZ() string {
+	if m.AZFn != nil {
+		return m.AZFn()
+	}
+	return ""
 }
 
 func (m *mockConn) Error() error {

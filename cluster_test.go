@@ -1418,6 +1418,111 @@ func TestClusterClientInit(t *testing.T) {
 			t.Fatalf("unexpected node assigned to rslot 16383")
 		}
 	})
+
+	t.Run("Refresh cluster which has multi replicas with az", func(t *testing.T) {
+		primaryNodeConn := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+					return slotsMultiRespWithMultiReplicas
+				}
+				return RedisResult{
+					err: errors.New("unexpected call"),
+				}
+			},
+			AZFn: func() string {
+				return "us-west-1a"
+			},
+		}
+		replicaNodeConn1 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return RedisResult{
+					err: errors.New("unexpected call"),
+				}
+			},
+			AZFn: func() string {
+				return "us-west-1a"
+			},
+		}
+		replicaNodeConn2 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return RedisResult{
+					err: errors.New("unexpected call"),
+				}
+			},
+			AZFn: func() string {
+				return "us-west-1b"
+			},
+		}
+		replicaNodeConn3 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return RedisResult{
+					err: errors.New("unexpected call"),
+				}
+			},
+			AZFn: func() string {
+				return "us-west-1c"
+			},
+		}
+
+		client, err := newClusterClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				SendToReplicas: func(cmd Completed) bool {
+					return true
+				},
+				ReplicaSelector: func(slot uint16, replicas []ReplicaInfo) int {
+					for i, replica := range replicas {
+						if replica.AZ == "us-west-1b" {
+							return i
+						}
+					}
+					return -1
+				},
+				EnableReplicaInfoAZ: true,
+			},
+			func(dst string, opt *ClientOption) conn {
+				switch {
+				case dst == "127.0.0.2:1" || dst == "127.0.1.2:1":
+					return replicaNodeConn1
+				case dst == "127.0.0.3:2" || dst == "127.0.1.3:2":
+					return replicaNodeConn2
+				case dst == "127.0.0.4:3" || dst == "127.0.1.4:3":
+					return replicaNodeConn3
+				default:
+					return primaryNodeConn
+				}
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		if client.pslots[0] != primaryNodeConn {
+			t.Fatalf("unexpected node assigned to pslot 0")
+		}
+		if client.pslots[8192] != primaryNodeConn {
+			t.Fatalf("unexpected node assigned to pslot 8192")
+		}
+		if client.pslots[8193] != primaryNodeConn {
+			t.Fatalf("unexpected node assigned to pslot 8193")
+		}
+		if client.pslots[16383] != primaryNodeConn {
+			t.Fatalf("unexpected node assigned to pslot 16383")
+		}
+		if client.rslots[0] != replicaNodeConn2 {
+			t.Fatalf("unexpected node assigned to rslot 0")
+		}
+		if client.rslots[8192] != replicaNodeConn2 {
+			t.Fatalf("unexpected node assigned to rslot 8192")
+		}
+		if client.rslots[8193] != replicaNodeConn2 {
+			t.Fatalf("unexpected node assigned to rslot 8193")
+		}
+		if client.rslots[16383] != replicaNodeConn2 {
+			t.Fatalf("unexpected node assigned to rslot 16383")
+		}
+	})
 }
 
 //gocyclo:ignore
