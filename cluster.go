@@ -260,12 +260,9 @@ func (c *clusterClient) _refresh() (err error) {
 			if len(g.nodes) > 1 {
 				n := len(g.nodes) - 1
 
-				if c.opt.EnableReplicaAZLookUp {
-					var (
-						mu sync.Mutex
-						wg sync.WaitGroup
-					)
-					for i := 0; i < n; i += 4 { // batch 4 nodes for each goroutine
+				if c.opt.EnableReplicaInfoAZ {
+					var wg sync.WaitGroup
+					for i := 0; i < n; i += 4 { // batch AZ() for every 4 connections
 						for j := i; j < i+4 && j < n; j++ {
 							replica := g.nodes[j+1]
 							rConn := conns[replica.Addr].conn
@@ -274,11 +271,7 @@ func (c *clusterClient) _refresh() (err error) {
 							go func(j int, rConn conn) {
 								defer wg.Done()
 
-								az := rConn.AZ()
-
-								mu.Lock()
-								defer mu.Unlock()
-								g.nodes[j+1].AZ = az
+								g.nodes[j+1].AZ = rConn.AZ()
 							}(j, rConn)
 						}
 
