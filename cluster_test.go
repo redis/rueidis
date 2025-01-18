@@ -1478,7 +1478,7 @@ func TestClusterClientInit(t *testing.T) {
 					}
 					return -1
 				},
-				EnableReplicaInfoAZ: true,
+				EnableReplicaAZInfo: true,
 			},
 			func(dst string, opt *ClientOption) conn {
 				switch {
