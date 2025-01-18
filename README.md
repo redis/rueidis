@@ -5,7 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/redis/rueidis)](https://goreportcard.com/report/github.com/redis/rueidis)
 [![codecov](https://codecov.io/gh/redis/rueidis/branch/master/graph/badge.svg?token=wGTB8GdY06)](https://codecov.io/gh/redis/rueidis)
 
-A fast Golang Redis client that does auto pipelining and supports server-assisted client-side caching.
+A fast Golang Redis client that does auto pipelining and supports server-assisted client-side caching.,
 
 ## Features
 
