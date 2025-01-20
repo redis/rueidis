@@ -232,7 +232,7 @@ const lrBatchSize = 64
 const flattEntrySize = unsafe.Sizeof(flatentry{})
 
 type lrBatch struct {
-	m map[*flatentry]struct{}
+	m map[*flatentry]bool
 }
 
 func NewFlattenCache(limit int) CacheStore {
@@ -247,7 +247,7 @@ func NewFlattenCache(limit int) CacheStore {
 	f.head.next = unsafe.Pointer(f.tail)
 	f.tail.prev = unsafe.Pointer(f.head)
 	f.lrup = sync.Pool{New: func() any {
-		b := &lrBatch{m: make(map[*flatentry]struct{}, lrBatchSize)}
+		b := &lrBatch{m: make(map[*flatentry]bool, lrBatchSize)}
 		runtime.SetFinalizer(b, func(b *lrBatch) {
 			if len(b.m) >= 0 {
 				f.mu.Lock()
@@ -287,15 +287,19 @@ func (f *flatten) llDel(e *flatentry) {
 }
 
 func (f *flatten) llTail(e *flatentry) {
-	if e.mark == f.mark {
-		f.llDel(e)
-		f.llAdd(e)
-	}
+	f.llDel(e)
+	f.llAdd(e)
 }
 
 func (f *flatten) llTailBatch(b *lrBatch) {
-	for e := range b.m {
-		f.llTail(e)
+	for e, expired := range b.m {
+		if e.mark == f.mark {
+			if expired {
+				f.remove(e)
+			} else {
+				f.llTail(e)
+			}
+		}
 	}
 	clear(b.m)
 }
@@ -311,18 +315,20 @@ func (f *flatten) Flight(key, cmd string, ttl time.Duration, now time.Time) (Red
 	e := f.cache[key]
 	f.mu.RUnlock()
 	ts := now.UnixMilli()
-	if v, _ := e.find(cmd, ts); v != nil {
+	if v, expired := e.find(cmd, ts); v != nil || expired {
 		batch := f.lrup.Get().(*lrBatch)
-		batch.m[e] = struct{}{}
+		batch.m[e] = expired
 		if len(batch.m) >= lrBatchSize {
 			f.mu.Lock()
 			f.llTailBatch(batch)
 			f.mu.Unlock()
 		}
 		f.lrup.Put(batch)
-		var ret RedisMessage
-		_ = ret.CacheUnmarshalView(v)
-		return ret, nil
+		if v != nil {
+			var ret RedisMessage
+			_ = ret.CacheUnmarshalView(v)
+			return ret, nil
+		}
 	}
 	fk := key + cmd
 	f.mu.RLock()
