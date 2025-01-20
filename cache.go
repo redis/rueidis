@@ -249,9 +249,11 @@ func NewFlattenCache(limit int) CacheStore {
 	f.lrup = sync.Pool{New: func() any {
 		b := &lrBatch{m: make(map[*flatentry]struct{}, lrBatchSize)}
 		runtime.SetFinalizer(b, func(b *lrBatch) {
-			f.mu.Lock()
-			f.llTailBatch(b)
-			f.mu.Unlock()
+			if len(b.m) >= 0 {
+				f.mu.Lock()
+				f.llTailBatch(b)
+				f.mu.Unlock()
+			}
 		})
 		return b
 	}}
@@ -312,7 +314,7 @@ func (f *flatten) Flight(key, cmd string, ttl time.Duration, now time.Time) (Red
 	if v, _ := e.find(cmd, ts); v != nil {
 		batch := f.lrup.Get().(*lrBatch)
 		batch.m[e] = struct{}{}
-		if len(batch.m) == lrBatchSize {
+		if len(batch.m) >= lrBatchSize {
 			f.mu.Lock()
 			f.llTailBatch(batch)
 			f.mu.Unlock()
