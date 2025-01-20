@@ -338,15 +338,16 @@ func (f *flatten) Flight(key, cmd string, ttl time.Duration, now time.Time) (Red
 		return RedisMessage{}, af
 	}
 	f.mu.Lock()
-	defer f.mu.Unlock()
 	e = f.cache[key]
 	v, expired := e.find(cmd, ts)
 	if v != nil {
 		f.llTail(e)
+		f.mu.Unlock()
 		var ret RedisMessage
 		_ = ret.CacheUnmarshalView(v)
 		return ret, nil
 	}
+	defer f.mu.Unlock()
 	if expired {
 		f.remove(e)
 	}
