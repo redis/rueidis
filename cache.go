@@ -212,22 +212,20 @@ func (f *flatentry) insert(e *flatentry) {
 	f.mu.Unlock()
 }
 
-func (f *flatentry) find(cmd string, ts int64) (ret RedisMessage, expired bool) {
+func (f *flatentry) find(cmd string, ts int64) ([]byte, bool) {
 	for next := f; next != nil; {
 		if ts >= next.ttl {
-			expired = true
-			return
+			return nil, true
 		}
 		if cmd == next.cmd {
-			_ = ret.CacheUnmarshalView(next.val)
-			return
+			return next.val, false
 		}
 		next.mu.RLock()
 		ovfl := next.ovfl
 		next.mu.RUnlock()
 		next = ovfl
 	}
-	return
+	return nil, false
 }
 
 const lrBatchSize = 64
@@ -311,7 +309,7 @@ func (f *flatten) Flight(key, cmd string, ttl time.Duration, now time.Time) (Red
 	e := f.cache[key]
 	f.mu.RUnlock()
 	ts := now.UnixMilli()
-	if v, _ := e.find(cmd, ts); v.typ != 0 {
+	if v, _ := e.find(cmd, ts); v != nil {
 		batch := f.lrup.Get().(*lrBatch)
 		batch.m[e] = struct{}{}
 		if len(batch.m) == lrBatchSize {
@@ -320,7 +318,9 @@ func (f *flatten) Flight(key, cmd string, ttl time.Duration, now time.Time) (Red
 			f.mu.Unlock()
 		}
 		f.lrup.Put(batch)
-		return v, nil
+		var ret RedisMessage
+		_ = ret.CacheUnmarshalView(v)
+		return ret, nil
 	}
 	fk := key + cmd
 	f.mu.RLock()
@@ -333,9 +333,11 @@ func (f *flatten) Flight(key, cmd string, ttl time.Duration, now time.Time) (Red
 	defer f.mu.Unlock()
 	e = f.cache[key]
 	v, expired := e.find(cmd, ts)
-	if v.typ != 0 {
+	if v != nil {
 		f.llTail(e)
-		return v, nil
+		var ret RedisMessage
+		_ = ret.CacheUnmarshalView(v)
+		return ret, nil
 	}
 	if expired {
 		f.remove(e)
