@@ -206,6 +206,7 @@ type flatentry struct {
 
 func (f *flatentry) insert(e *flatentry) {
 	f.size += e.size
+	f.ttl = e.ttl
 	f.mu.Lock()
 	e.ovfl = f.ovfl
 	f.ovfl = e
@@ -213,10 +214,10 @@ func (f *flatentry) insert(e *flatentry) {
 }
 
 func (f *flatentry) find(cmd string, ts int64) ([]byte, bool) {
+	if f != nil && ts >= f.ttl {
+		return nil, true
+	}
 	for next := f; next != nil; {
-		if ts >= next.ttl {
-			return nil, true
-		}
 		if cmd == next.cmd {
 			return next.val, false
 		}
@@ -232,7 +233,7 @@ const lrBatchSize = 64
 const flattEntrySize = unsafe.Sizeof(flatentry{})
 
 type lrBatch struct {
-	m map[*flatentry]bool
+	m map[*flatentry]struct{}
 }
 
 func NewFlattenCache(limit int) CacheStore {
@@ -247,7 +248,7 @@ func NewFlattenCache(limit int) CacheStore {
 	f.head.next = unsafe.Pointer(f.tail)
 	f.tail.prev = unsafe.Pointer(f.head)
 	f.lrup = sync.Pool{New: func() any {
-		b := &lrBatch{m: make(map[*flatentry]bool, lrBatchSize)}
+		b := &lrBatch{m: make(map[*flatentry]struct{}, lrBatchSize)}
 		runtime.SetFinalizer(b, func(b *lrBatch) {
 			if len(b.m) >= 0 {
 				f.mu.Lock()
@@ -292,13 +293,9 @@ func (f *flatten) llTail(e *flatentry) {
 }
 
 func (f *flatten) llTailBatch(b *lrBatch) {
-	for e, expired := range b.m {
+	for e := range b.m {
 		if e.mark == f.mark {
-			if expired {
-				f.remove(e)
-			} else {
-				f.llTail(e)
-			}
+			f.llTail(e)
 		}
 	}
 	clear(b.m)
@@ -315,20 +312,18 @@ func (f *flatten) Flight(key, cmd string, ttl time.Duration, now time.Time) (Red
 	e := f.cache[key]
 	f.mu.RUnlock()
 	ts := now.UnixMilli()
-	if v, expired := e.find(cmd, ts); v != nil || expired {
+	if v, _ := e.find(cmd, ts); v != nil {
 		batch := f.lrup.Get().(*lrBatch)
-		batch.m[e] = expired
+		batch.m[e] = struct{}{}
 		if len(batch.m) >= lrBatchSize {
 			f.mu.Lock()
 			f.llTailBatch(batch)
 			f.mu.Unlock()
 		}
 		f.lrup.Put(batch)
-		if v != nil {
-			var ret RedisMessage
-			_ = ret.CacheUnmarshalView(v)
-			return ret, nil
-		}
+		var ret RedisMessage
+		_ = ret.CacheUnmarshalView(v)
+		return ret, nil
 	}
 	fk := key + cmd
 	f.mu.RLock()
