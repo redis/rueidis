@@ -377,7 +377,13 @@ func (f *flatten) Update(key, cmd string, val RedisMessage) (sxat int64) {
 				f.remove(e)
 				ep = e.next
 			}
-			if e := f.cache[key]; e == nil {
+			e := f.cache[key]
+			if e != nil && e.cmd == cmd {
+				f.size -= e.size
+				f.llDel(e)
+				e = nil
+			}
+			if e == nil {
 				fe.key = key
 				f.cache[key] = fe
 				f.llAdd(fe)
