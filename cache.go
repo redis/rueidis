@@ -283,7 +283,7 @@ func (f *flatten) llAdd(e *flatentry) {
 func (f *flatten) llDel(e *flatentry) {
 	(*flatentry)(e.prev).next = e.next
 	(*flatentry)(e.next).prev = e.prev
-	e.mark = 0
+	e.mark = -1
 }
 
 func (f *flatten) llTail(e *flatentry) {
