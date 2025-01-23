@@ -367,7 +367,7 @@ func (f *flatten) Update(key, cmd string, val RedisMessage) (sxat int64) {
 			val.setExpireAt(sxat)
 		}
 		bs := val.CacheMarshal(nil)
-		fe := &flatentry{cmd: cmd, val: bs, ttl: sxat, size: int64(len(bs)+len(key)+len(cmd)) + int64(flattEntrySize)}
+		fe := &flatentry{cmd: cmd, val: bs, ttl: sxat, size: int64(len(bs)+len(key)+len(cmd)) + int64(flattEntrySize) + 64} // 64 for 2 map entries
 		f.mu.Lock()
 		if f.flights != nil {
 			delete(f.flights, fk)
