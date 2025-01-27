@@ -55,6 +55,8 @@ type wire interface {
 	CleanSubscriptions()
 	SetPubSubHooks(hooks PubSubHooks) <-chan error
 	SetOnCloseHook(fn func(error))
+	StopTimer()
+	ResetTimer()
 }
 
 var _ wire = (*pipe)(nil)
@@ -89,6 +91,10 @@ type pipe struct {
 	recvs           int32
 	r2ps            bool // identify this pipe is used for resp2 pubsub or not
 	noNoDelay       bool
+	lftm            time.Duration // lifetime
+	lftmMu          sync.Mutex    // guards lifetime timer
+	lftmOn          bool
+	lftmTimer       *time.Timer // lifetime timer
 }
 
 type pipeFn func(connFn func() (net.Conn, error), option *ClientOption) (p *pipe, err error)
@@ -326,6 +332,10 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 			go p.backgroundPing()
 		}
 	}
+	if option.ConnLifetime > 0 {
+		p.lftm = option.ConnLifetime
+		p.lftmTimer = time.AfterFunc(option.ConnLifetime, p.expired)
+	}
 	return p, nil
 }
 
@@ -373,6 +383,7 @@ func (p *pipe) _background() {
 			}()
 		}
 	}
+	p.StopTimer()
 	err := p.Error()
 	p.nsubs.Close()
 	p.psubs.Close()
@@ -1576,6 +1587,7 @@ func (p *pipe) Close() {
 	}
 	atomic.AddInt32(&p.waits, -1)
 	atomic.AddInt32(&p.blcksig, -1)
+	p.StopTimer()
 	if p.conn != nil {
 		p.conn.Close()
 	}
@@ -1584,6 +1596,37 @@ func (p *pipe) Close() {
 		p.r2pipe.Close()
 	}
 	p.r2mu.Unlock()
+}
+
+func (p *pipe) StopTimer() {
+	if p.lftmTimer == nil {
+		return
+	}
+	p.lftmMu.Lock()
+	defer p.lftmMu.Unlock()
+	if !p.lftmOn {
+		return
+	}
+	p.lftmOn = false
+	p.lftmTimer.Stop()
+}
+
+func (p *pipe) ResetTimer() {
+	if p.lftmTimer == nil || p.Error() != nil {
+		return
+	}
+	p.lftmMu.Lock()
+	defer p.lftmMu.Unlock()
+	if p.lftmOn {
+		return
+	}
+	p.lftmOn = true
+	p.lftmTimer.Reset(p.lftm)
+}
+
+func (p *pipe) expired() {
+	p.error.CompareAndSwap(nil, errExpired)
+	p.Close()
 }
 
 type pshks struct {
@@ -1625,6 +1668,9 @@ const (
 )
 
 var cacheMark = &(RedisMessage{})
-var errClosing = &errs{error: ErrClosing}
+var (
+	errClosing = &errs{error: ErrClosing}
+	errExpired = &errs{error: errConnExpired}
+)
 
 type errs struct{ error }

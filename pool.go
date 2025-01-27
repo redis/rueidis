@@ -59,6 +59,7 @@ retry:
 		}
 	}
 	p.cond.L.Unlock()
+	v.StopTimer()
 	return v
 }
 
@@ -67,6 +68,7 @@ func (p *pool) Store(v wire) {
 	if !p.down && v.Error() == nil {
 		p.list = append(p.list, v)
 		p.startTimerIfNeeded()
+		v.ResetTimer()
 	} else {
 		p.size--
 		v.Close()
