@@ -1,6 +1,6 @@
 module github.com/redis/rueidis/rueidiscompat
 
-go 1.21
+go 1.22
 
 replace github.com/redis/rueidis => ../
 
