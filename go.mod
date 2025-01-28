@@ -2,8 +2,6 @@ module github.com/redis/rueidis
 
 go 1.22.0
 
-toolchain go1.23.5
-
 require (
 	github.com/onsi/gomega v1.36.2
 	golang.org/x/sys v0.29.0
