@@ -10,7 +10,7 @@ replace (
 require (
 	github.com/redis/rueidis v1.0.53
 	github.com/redis/rueidis/mock v1.0.53
-	go.uber.org/mock v0.4.0
+	go.uber.org/mock v0.5.0
 )
 
 require golang.org/x/sys v0.29.0 // indirect

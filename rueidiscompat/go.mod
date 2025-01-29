@@ -7,11 +7,11 @@ replace github.com/redis/rueidis => ../
 replace github.com/redis/rueidis/mock => ../mock
 
 require (
-	github.com/onsi/ginkgo/v2 v2.22.1
+	github.com/onsi/ginkgo/v2 v2.22.2
 	github.com/onsi/gomega v1.36.2
 	github.com/redis/rueidis v1.0.53
 	github.com/redis/rueidis/mock v1.0.53
-	go.uber.org/mock v0.4.0
+	go.uber.org/mock v0.5.0
 )
 
 require (
