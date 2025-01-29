@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"runtime"
 	"strconv"
 	"strings"
@@ -210,6 +211,8 @@ func TestNewPipe(t *testing.T) {
 					values: []RedisMessage{
 						{typ: '+', string: "proto"},
 						{typ: ':', integer: 3},
+						{typ: '+', string: "availability_zone"},
+						{typ: '+', string: "us-west-1a"},
 					},
 				})
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
@@ -237,6 +240,9 @@ func TestNewPipe(t *testing.T) {
 			t.Fatalf("pipe setup failed: %v", err)
 		}
 		go func() { mock.Expect("PING").ReplyString("OK") }()
+		if p.AZ() != "us-west-1a" {
+			t.Fatalf("unexpected az: %v", p.AZ())
+		}
 		p.Close()
 		mock.Close()
 		n1.Close()
@@ -246,6 +252,16 @@ func TestNewPipe(t *testing.T) {
 		n1, n2 := net.Pipe()
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
+			mock.Expect("HELLO", "2").
+				Reply(RedisMessage{
+					typ: '*',
+					values: []RedisMessage{
+						{typ: '+', string: "proto"},
+						{typ: ':', integer: 2},
+						{typ: '+', string: "availability_zone"},
+						{typ: '+', string: "us-west-1a"},
+					},
+				})
 			mock.Expect("AUTH", "pa").
 				ReplyString("OK")
 			mock.Expect("CLIENT", "SETNAME", "cn").
@@ -275,6 +291,9 @@ func TestNewPipe(t *testing.T) {
 			t.Fatalf("pipe setup failed: %v", err)
 		}
 		go func() { mock.Expect("PING").ReplyString("OK") }()
+		if p.AZ() != "us-west-1a" {
+			t.Fatalf("unexpected az: %v", p.AZ())
+		}
 		p.Close()
 		mock.Close()
 		n1.Close()
@@ -311,6 +330,9 @@ func TestNewPipe(t *testing.T) {
 			t.Fatalf("pipe setup failed: %v", err)
 		}
 		go func() { mock.Expect("PING").ReplyString("OK") }()
+		if p.AZ() != "" {
+			t.Fatalf("unexpected az: %v", p.AZ())
+		}
 		p.Close()
 		mock.Close()
 		n1.Close()
@@ -491,6 +513,36 @@ func TestNewPipe(t *testing.T) {
 		n1.Close()
 		n2.Close()
 	})
+	t.Run("With DisableClientSetInfo", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+		go func() {
+			mock.Expect("HELLO", "3").
+				Reply(RedisMessage{
+					typ: '%',
+					values: []RedisMessage{
+						{typ: '+', string: "proto"},
+						{typ: ':', integer: 3},
+					},
+				})
+			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
+				ReplyString("OK")
+		}()
+		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+			ClientSetInfo: DisableClientSetInfo,
+		})
+		go func() {
+			mock.Expect("PING").
+				ReplyString("OK")
+		}()
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
 }
 
 func TestNewRESP2Pipe(t *testing.T) {
@@ -547,6 +599,21 @@ func TestNewRESP2Pipe(t *testing.T) {
 					{typ: '+', string: "redis"},
 					{typ: '+', string: "proto"},
 					{typ: ':', integer: 2},
+					{typ: '+', string: "availability_zone"},
+					{typ: '+', string: "us-west-1a"},
+				}})
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("HELLO", "2").
+				Reply(RedisMessage{typ: '*', values: []RedisMessage{
+					{typ: '+', string: "server"},
+					{typ: '+', string: "redis"},
+					{typ: '+', string: "proto"},
+					{typ: ':', integer: 2},
+					{typ: '+', string: "availability_zone"},
+					{typ: '+', string: "us-west-1a"},
 				}})
 			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
 				ReplyError("UNKNOWN COMMAND")
@@ -561,6 +628,9 @@ func TestNewRESP2Pipe(t *testing.T) {
 		}
 		if p.version >= 6 {
 			t.Fatalf("unexpected p.version: %v", p.version)
+		}
+		if p.AZ() != "us-west-1a" {
+			t.Fatalf("unexpected az: %v", p.AZ())
 		}
 		go func() { mock.Expect("PING").ReplyString("OK") }()
 		p.Close()
@@ -580,6 +650,8 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("HELLO", "2").
+				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("AUTH", "pa").
 				ReplyString("OK")
 			mock.Expect("CLIENT", "SETNAME", "cn").
@@ -621,6 +693,8 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("HELLO", "2").
+				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("AUTH", "ua", "pa").
 				ReplyString("OK")
 			mock.Expect("CLIENT", "SETNAME", "cn").
@@ -665,6 +739,8 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("HELLO", "2").
+				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("AUTH", "pa").
 				ReplyString("OK")
 			mock.Expect("CLIENT", "SETNAME", "cn").
@@ -711,6 +787,8 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("HELLO", "2").
+				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("AUTH", "pa").
 				ReplyString("OK")
 			mock.Expect("CLIENT", "SETNAME", "cn").
@@ -768,6 +846,31 @@ func TestNewRESP2Pipe(t *testing.T) {
 		if err != io.ErrClosedPipe {
 			t.Fatalf("pipe setup should failed with io.ErrClosedPipe, but got %v", err)
 		}
+	})
+	t.Run("With DisableClientSetInfo", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+		go func() {
+			mock.Expect("HELLO", "3").
+				ReplyError("ERR unknown command `HELLO`")
+			mock.Expect("HELLO", "2").
+				ReplyError("ERR unknown command `HELLO`")
+		}()
+		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+			DisableCache:  true,
+			ClientSetInfo: DisableClientSetInfo,
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		if p.version >= 6 {
+			t.Fatalf("unexpected p.version: %v", p.version)
+		}
+		go func() { mock.Expect("PING").ReplyString("OK") }()
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
 	})
 }
 
@@ -951,7 +1054,7 @@ func TestDoStreamRecycle(t *testing.T) {
 	go func() {
 		mock.Expect("PING").ReplyString("OK")
 	}()
-	conns := newPool(1, nil, nil)
+	conns := newPool(1, nil, 0, 0, nil)
 	s := p.DoStream(context.Background(), conns, cmds.NewCompleted([]string{"PING"}))
 	buf := bytes.NewBuffer(nil)
 	if err := s.Error(); err != nil {
@@ -1004,7 +1107,7 @@ func TestDoStreamRecycleDestinationFull(t *testing.T) {
 	go func() {
 		mock.Expect("PING").ReplyBlobString("OK")
 	}()
-	conns := newPool(1, nil, nil)
+	conns := newPool(1, nil, 0, 0, nil)
 	s := p.DoStream(context.Background(), conns, cmds.NewCompleted([]string{"PING"}))
 	buf := &limitedbuffer{buf: make([]byte, 1)}
 	if err := s.Error(); err != nil {
@@ -1037,7 +1140,7 @@ func TestDoMultiStreamRecycle(t *testing.T) {
 	go func() {
 		mock.Expect("PING").Expect("PING").ReplyString("OK").ReplyString("OK")
 	}()
-	conns := newPool(1, nil, nil)
+	conns := newPool(1, nil, 0, 0, nil)
 	s := p.DoMultiStream(context.Background(), conns, cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"}))
 	buf := bytes.NewBuffer(nil)
 	if err := s.Error(); err != nil {
@@ -1070,7 +1173,7 @@ func TestDoMultiStreamRecycleDestinationFull(t *testing.T) {
 	go func() {
 		mock.Expect("PING").Expect("PING").ReplyBlobString("OK").ReplyBlobString("OK")
 	}()
-	conns := newPool(1, nil, nil)
+	conns := newPool(1, nil, 0, 0, nil)
 	s := p.DoMultiStream(context.Background(), conns, cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"}))
 	buf := &limitedbuffer{buf: make([]byte, 1)}
 	if err := s.Error(); err != nil {
@@ -1117,7 +1220,7 @@ func TestNoReplyExceedRingSize(t *testing.T) {
 			{typ: '+', string: "unsubscribe"},
 			{typ: '+', string: "1"},
 			{typ: ':', integer: 0},
-		}})
+		}}).Expect(cmds.PingCmd.Commands()...).Reply(RedisMessage{typ: '+', string: "PONG"})
 	}
 	<-wait
 }
@@ -1262,25 +1365,45 @@ func TestClientSideCachingExecAbort(t *testing.T) {
 	go func() {
 		mock.Expect("CLIENT", "CACHING", "YES").
 			Expect("MULTI").
-			Expect("PTTL", "a").
-			Expect("GET", "a").
+			Expect("PTTL", "a1").
+			Expect("GET", "a1").
 			Expect("EXEC").
 			ReplyString("OK").
 			ReplyString("OK").
 			ReplyString("OK").
 			ReplyString("OK").
 			Reply(RedisMessage{typ: '_'})
+		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("MULTI").
+			Expect("PTTL", "a2").
+			Expect("GET", "a2").
+			Expect("EXEC").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyError("MOVED 0 127.0.0.1").
+			ReplyError("MOVED 0 127.0.0.1").
+			Reply(RedisMessage{typ: '_'})
 	}()
 
-	v, err := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
-	if err != ErrDoCacheAborted {
-		t.Errorf("unexpected err, got %v", err)
-	}
-	if v.IsCacheHit() {
-		t.Errorf("unexpected cache hit")
-	}
-	if v, entry := p.cache.Flight("a", "GET", time.Second, time.Now()); v.typ != 0 || entry != nil {
-		t.Errorf("unexpected cache value and entry %v %v", v, entry)
+	for i, key := range []string{"a1", "a2"} {
+		v, err := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", key})), 10*time.Second).ToMessage()
+		if i == 0 {
+			if err != ErrDoCacheAborted {
+				t.Errorf("unexpected err, got %v", err)
+			}
+		} else {
+			if re, ok := err.(*RedisError); !ok {
+				t.Errorf("unexpected err, got %v", err)
+			} else if _, moved := re.IsMoved(); !moved {
+				t.Errorf("unexpected err, got %v", err)
+			}
+		}
+		if v.IsCacheHit() {
+			t.Errorf("unexpected cache hit")
+		}
+		if v, entry := p.cache.Flight(key, "GET", time.Second, time.Now()); v.typ != 0 || entry != nil {
+			t.Errorf("unexpected cache value and entry %v %v", v, entry)
+		}
 	}
 }
 
@@ -1587,20 +1710,42 @@ func TestClientSideCachingExecAbortMGet(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			Reply(RedisMessage{typ: '_'})
+		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("MULTI").
+			Expect("PTTL", "b1").
+			Expect("PTTL", "b2").
+			Expect("MGET", "b1", "b2").
+			Expect("EXEC").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyError("MOVED 0 127.0.0.1").
+			Reply(RedisMessage{typ: '_'})
 	}()
 
-	v, err := p.DoCache(context.Background(), Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1", "a2"})), 10*time.Second).ToMessage()
-	if err != ErrDoCacheAborted {
-		t.Errorf("unexpected err, got %v", err)
-	}
-	if v.IsCacheHit() {
-		t.Errorf("unexpected cache hit")
-	}
-	if v, entry := p.cache.Flight("a1", "GET", time.Second, time.Now()); v.typ != 0 || entry != nil {
-		t.Errorf("unexpected cache value and entry %v %v", v, entry)
-	}
-	if v, entry := p.cache.Flight("a2", "GET", time.Second, time.Now()); v.typ != 0 || entry != nil {
-		t.Errorf("unexpected cache value and entry %v %v", v, entry)
+	for i, pair := range [][2]string{{"a1", "a2"}, {"b1", "b2"}} {
+		v, err := p.DoCache(context.Background(), Cacheable(cmds.NewMGetCompleted([]string{"MGET", pair[0], pair[1]})), 10*time.Second).ToMessage()
+		if i == 0 {
+			if err != ErrDoCacheAborted {
+				t.Errorf("unexpected err, got %v", err)
+			}
+		} else {
+			if re, ok := err.(*RedisError); !ok {
+				t.Errorf("unexpected err, got %v", err)
+			} else if _, moved := re.IsMoved(); !moved {
+				t.Errorf("unexpected err, got %v", err)
+			}
+		}
+		if v.IsCacheHit() {
+			t.Errorf("unexpected cache hit")
+		}
+		if v, entry := p.cache.Flight(pair[0], "GET", time.Second, time.Now()); v.typ != 0 || entry != nil {
+			t.Errorf("unexpected cache value and entry %v %v", v, entry)
+		}
+		if v, entry := p.cache.Flight(pair[1], "GET", time.Second, time.Now()); v.typ != 0 || entry != nil {
+			t.Errorf("unexpected cache value and entry %v %v", v, entry)
+		}
 	}
 }
 
@@ -1871,6 +2016,11 @@ func TestClientSideCachingExecAbortDoMultiCache(t *testing.T) {
 				Expect("PTTL", "a2").
 				Expect("GET", "a2").
 				Expect("EXEC").
+				Expect("CLIENT", "CACHING", "YES").
+				Expect("MULTI").
+				Expect("PTTL", "a3").
+				Expect("GET", "a3").
+				Expect("EXEC").
 				ReplyString("OK").
 				ReplyString("OK").
 				ReplyString("OK").
@@ -1883,12 +2033,18 @@ func TestClientSideCachingExecAbortDoMultiCache(t *testing.T) {
 				ReplyString("OK").
 				ReplyString("OK").
 				ReplyString("OK").
+				Reply(RedisMessage{typ: '_'}).
+				ReplyString("OK").
+				ReplyString("OK").
+				ReplyString("OK").
+				ReplyError("MOVED 0 127.0.0.1").
 				Reply(RedisMessage{typ: '_'})
 		}()
 
 		arr := p.DoMultiCache(context.Background(), []CacheableTTL{
 			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
 			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a3"})), time.Second*10),
 		}...).s
 		for i, resp := range arr {
 			v, err := resp.ToMessage()
@@ -1896,8 +2052,17 @@ func TestClientSideCachingExecAbortDoMultiCache(t *testing.T) {
 				if v.integer != 1 {
 					t.Errorf("unexpected cached response, expected %v, got %v", 1, v.integer)
 				}
-			} else {
+			} else if i == 1 {
 				if err != ErrDoCacheAborted {
+					t.Errorf("unexpected err, got %v", err)
+				}
+				if v.IsCacheHit() {
+					t.Errorf("unexpected cache hit")
+				}
+			} else if i == 2 {
+				if re, ok := err.(*RedisError); !ok {
+					t.Errorf("unexpected err, got %v", err)
+				} else if _, moved := re.IsMoved(); !moved {
 					t.Errorf("unexpected err, got %v", err)
 				}
 				if v.IsCacheHit() {
@@ -2465,10 +2630,17 @@ func TestPubSub(t *testing.T) {
 
 		go func() {
 			for _, c := range commands {
-				mock.Expect(c.Commands()...).Reply(RedisMessage{typ: '>', values: []RedisMessage{
-					{typ: '+', string: strings.ToLower(c.Commands()[0])},
-					{typ: '+', string: strings.ToLower(c.Commands()[1])},
-				}})
+				if c.IsUnsub() {
+					mock.Expect(c.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(RedisMessage{typ: '>', values: []RedisMessage{
+						{typ: '+', string: strings.ToLower(c.Commands()[0])},
+						{typ: '+', string: strings.ToLower(c.Commands()[1])},
+					}}).Reply(RedisMessage{typ: '+', string: "PONG"})
+				} else {
+					mock.Expect(c.Commands()...).Reply(RedisMessage{typ: '>', values: []RedisMessage{
+						{typ: '+', string: strings.ToLower(c.Commands()[0])},
+						{typ: '+', string: strings.ToLower(c.Commands()[1])},
+					}})
+				}
 				mock.Expect("GET", "k").ReplyString("v")
 			}
 		}()
@@ -2494,10 +2666,17 @@ func TestPubSub(t *testing.T) {
 
 		go func() {
 			for _, c := range commands {
-				mock.Expect(c.Commands()...).Reply(RedisMessage{typ: '>', values: []RedisMessage{
-					{typ: '+', string: strings.ToLower(c.Commands()[0])},
-					{typ: '+', string: strings.ToLower(c.Commands()[1])},
-				}})
+				if c.IsUnsub() {
+					mock.Expect(c.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(RedisMessage{typ: '>', values: []RedisMessage{
+						{typ: '+', string: strings.ToLower(c.Commands()[0])},
+						{typ: '+', string: strings.ToLower(c.Commands()[1])},
+					}}).Reply(RedisMessage{typ: '+', string: "PONG"})
+				} else {
+					mock.Expect(c.Commands()...).Reply(RedisMessage{typ: '>', values: []RedisMessage{
+						{typ: '+', string: strings.ToLower(c.Commands()[0])},
+						{typ: '+', string: strings.ToLower(c.Commands()[1])},
+					}})
+				}
 			}
 			mock.Expect("GET", "k").ReplyString("v")
 		}()
@@ -2527,13 +2706,13 @@ func TestPubSub(t *testing.T) {
 					{typ: '+', string: "2"},
 				}},
 			)
-			mock.Expect(deactivate.Commands()...).Reply(
+			mock.Expect(deactivate.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(
 				RedisMessage{typ: '>', values: []RedisMessage{
 					{typ: '+', string: "unsubscribe"},
 					{typ: '+', string: "1"},
 					{typ: ':', integer: 0},
 				}},
-			)
+			).Reply(RedisMessage{typ: '+', string: "PONG"})
 		}()
 
 		if err := p.Receive(ctx, activate, func(msg PubSubMessage) {
@@ -2568,13 +2747,13 @@ func TestPubSub(t *testing.T) {
 					{typ: '+', string: "2"},
 				}},
 			)
-			mock.Expect(deactivate.Commands()...).Reply(
+			mock.Expect(deactivate.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(
 				RedisMessage{typ: '>', values: []RedisMessage{
 					{typ: '+', string: "sunsubscribe"},
 					{typ: '+', string: "1"},
 					{typ: ':', integer: 0},
 				}},
-			)
+			).Reply(RedisMessage{typ: '+', string: "PONG"})
 		}()
 
 		if err := p.Receive(ctx, activate, func(msg PubSubMessage) {
@@ -2610,13 +2789,13 @@ func TestPubSub(t *testing.T) {
 					{typ: '+', string: "3"},
 				}},
 			)
-			mock.Expect(deactivate.Commands()...).Reply(
+			mock.Expect(deactivate.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(
 				RedisMessage{typ: '>', values: []RedisMessage{
 					{typ: '+', string: "punsubscribe"},
 					{typ: '+', string: "1"},
 					{typ: ':', integer: 0},
 				}},
-			)
+			).Reply(RedisMessage{typ: '+', string: "PONG"})
 		}()
 
 		if err := p.Receive(ctx, activate, func(msg PubSubMessage) {
@@ -2700,7 +2879,11 @@ func TestPubSub(t *testing.T) {
 		}
 		go func() {
 			for _, cmd := range commands {
-				mock.Expect(cmd.Commands()...).Reply(RedisMessage{typ: '-', string: cmd.Commands()[0]})
+				if cmd.IsUnsub() {
+					mock.Expect(cmd.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(RedisMessage{typ: '-', string: cmd.Commands()[0]}).Reply(RedisMessage{typ: '+', string: "PONG"})
+				} else {
+					mock.Expect(cmd.Commands()...).Reply(RedisMessage{typ: '-', string: cmd.Commands()[0]})
+				}
 			}
 		}()
 		for _, cmd := range commands {
@@ -2728,23 +2911,44 @@ func TestPubSub(t *testing.T) {
 		for i, cmd1 := range commands {
 			cmd2 := builder.Get().Key(strconv.Itoa(i)).Build()
 			go func() {
-				mock.Expect(cmd1.Commands()...).Reply(
-					RedisMessage{typ: '>', values: []RedisMessage{
-						{typ: '+', string: "subscribe"},
-						{typ: '+', string: "a"},
-						{typ: ':', integer: 1},
-					}},
-					RedisMessage{typ: '>', values: []RedisMessage{ // skip
-						{typ: '+', string: "subscribe"},
-						{typ: '+', string: "b"},
-						{typ: ':', integer: 1},
-					}},
-					RedisMessage{typ: '>', values: []RedisMessage{ // skip
-						{typ: '+', string: "subscribe"},
-						{typ: '+', string: "c"},
-						{typ: ':', integer: 1},
-					}},
-				).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+				if cmd1.IsUnsub() {
+					mock.Expect(cmd1.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(
+						RedisMessage{typ: '>', values: []RedisMessage{
+							{typ: '+', string: "unsubscribe"},
+							{typ: '+', string: "a"},
+							{typ: ':', integer: 1},
+						}},
+						RedisMessage{typ: '>', values: []RedisMessage{ // skip
+							{typ: '+', string: "unsubscribe"},
+							{typ: '+', string: "b"},
+							{typ: ':', integer: 1},
+						}},
+						RedisMessage{typ: '>', values: []RedisMessage{ // skip
+							{typ: '+', string: "unsubscribe"},
+							{typ: '+', string: "c"},
+							{typ: ':', integer: 1},
+						}},
+					).Reply(RedisMessage{typ: '+', string: "PONG"}).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+				} else {
+					mock.Expect(cmd1.Commands()...).Reply(
+						RedisMessage{typ: '>', values: []RedisMessage{
+							{typ: '+', string: "subscribe"},
+							{typ: '+', string: "a"},
+							{typ: ':', integer: 1},
+						}},
+						RedisMessage{typ: '>', values: []RedisMessage{ // skip
+							{typ: '+', string: "subscribe"},
+							{typ: '+', string: "b"},
+							{typ: ':', integer: 1},
+						}},
+						RedisMessage{typ: '>', values: []RedisMessage{ // skip
+							{typ: '+', string: "subscribe"},
+							{typ: '+', string: "c"},
+							{typ: ':', integer: 1},
+						}},
+					).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+				}
+
 			}()
 
 			if err := p.Do(ctx, cmd1).Error(); err != nil {
@@ -2807,7 +3011,7 @@ func TestPubSub(t *testing.T) {
 		for i, cmd1 := range commands {
 			cmd2 := builder.Get().Key(strconv.Itoa(i)).Build()
 			go func() {
-				mock.Expect(cmd1.Commands()...).Reply(replies[i]...).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+				mock.Expect(cmd1.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(replies[i]...).Reply(RedisMessage{typ: '+', string: "PONG"}).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
 			}()
 
 			if err := p.Do(ctx, cmd1).Error(); err != nil {
@@ -2820,7 +3024,7 @@ func TestPubSub(t *testing.T) {
 		cancel()
 	})
 
-	t.Run("PubSub Proactive UNSUBSCRIBE/PUNSUBSCRIBE/SUNSCRIBE", func(t *testing.T) {
+	t.Run("PubSub Proactive UNSUBSCRIBE/PUNSUBSCRIBE/SUNSUBSCRIBE", func(t *testing.T) {
 		for _, command := range []string{
 			"unsubscribe",
 			"punsubscribe",
@@ -2908,7 +3112,11 @@ func TestPubSub(t *testing.T) {
 				for i, cmd1 := range commands {
 					cmd2 := builder.Get().Key(strconv.Itoa(i)).Build()
 					go func() {
-						mock.Expect(cmd1.Commands()...).Reply(replies[i]...).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+						if cmd1.IsUnsub() {
+							mock.Expect(cmd1.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(replies[i]...).Reply(RedisMessage{typ: '+', string: "PONG"}).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+						} else {
+							mock.Expect(cmd1.Commands()...).Reply(replies[i]...).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+						}
 					}()
 					if err := p.Do(ctx, cmd1).Error(); err != nil {
 						t.Fatalf("unexpected err %v", err)
@@ -2920,6 +3128,426 @@ func TestPubSub(t *testing.T) {
 				cancel()
 			})
 		}
+	})
+
+	t.Run("PubSub Proactive SUNSUBSCRIBE with Slot Migration", func(t *testing.T) {
+		ctx := context.Background()
+		p, mock, cancel, _ := setup(t, ClientOption{})
+
+		commands := []Completed{
+			builder.Sunsubscribe().Channel("1").Build(),
+			builder.Sunsubscribe().Channel("2").Build(),
+			builder.Sunsubscribe().Channel("3").Build(),
+			builder.Get().Key("mk").Build(),
+		}
+
+		replies := [][]RedisMessage{
+			{
+				{ // proactive unsubscribe before user unsubscribe
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "sunsubscribe"},
+						{typ: '+', string: "a"},
+						{typ: ':', integer: 0},
+					},
+				},
+				{ // proactive unsubscribe before user unsubscribe
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "sunsubscribe"},
+						{typ: '+', string: "b"},
+						{typ: ':', integer: 0},
+					},
+				},
+				{ // user unsubscribe, but error
+					typ:    '-',
+					string: "MOVED 1111",
+				},
+			}, {
+				{ // user unsubscribe, but error
+					typ:    '-',
+					string: "MOVED 222",
+				},
+			}, {
+				{ // user unsubscribe success
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "sunsubscribe"},
+						{typ: '+', string: "c"},
+						{typ: ':', integer: 0},
+					},
+				},
+			}, {
+				{ // proactive unsubscribe after user unsubscribe
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "sunsubscribe"},
+						{typ: '_'},
+						{typ: ':', integer: 0},
+					},
+				},
+				{typ: '+', string: "mk"},
+			},
+		}
+
+		p.background()
+
+		// proactive unsubscribe before other commands
+		mock.Expect().Reply(RedisMessage{ // proactive unsubscribe before user unsubscribe
+			typ: '>',
+			values: []RedisMessage{
+				{typ: '+', string: "sunsubscribe"},
+				{typ: '+', string: "0"},
+				{typ: ':', integer: 0},
+			},
+		})
+
+		time.Sleep(time.Millisecond * 100)
+
+		for i, cmd1 := range commands {
+			cmd2 := builder.Get().Key(strconv.Itoa(i)).Build()
+			go func() {
+				if cmd1.IsUnsub() {
+					mock.Expect(cmd1.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(replies[i]...).Reply(RedisMessage{typ: '+', string: "PONG"}).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+				} else {
+					mock.Expect(cmd1.Commands()...).Reply(replies[i]...).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+				}
+			}()
+			if err := p.Do(ctx, cmd1).Error(); err != nil {
+				if i < 2 && strings.HasPrefix(err.Error(), "MOVED") {
+					// OK
+				} else {
+					t.Fatalf("unexpected err %v", err)
+				}
+			}
+			if v, err := p.Do(ctx, cmd2).ToString(); err != nil || v != strconv.Itoa(i) {
+				t.Fatalf("unexpected val %v %v", v, err)
+			}
+		}
+		cancel()
+	})
+
+	t.Run("PubSub missing unsubReply", func(t *testing.T) {
+		shouldPanic := func(push cmds.Completed) (pass bool) {
+			defer func() { pass = recover() == protocolbug }()
+
+			p, mock, _, _ := setup(t, ClientOption{})
+			atomic.StoreInt32(&p.state, 1)
+			p.queue.PutOne(push)
+			_, _, ch := p.queue.NextWriteCmd()
+			go func() {
+				mock.Expect().Reply(RedisMessage{
+					typ: '-', string: "MOVED",
+				}).Reply(RedisMessage{
+					typ: '-', string: "MOVED",
+				})
+			}()
+			go func() {
+				<-ch
+			}()
+			p._backgroundRead()
+			return
+		}
+		for _, push := range []cmds.Completed{
+			builder.Sunsubscribe().Channel("ch1").Build(),
+		} {
+			if !shouldPanic(push) {
+				t.Fatalf("should panic on protocolbug")
+			}
+		}
+	})
+
+	t.Run("PubSub missing unsubReply more", func(t *testing.T) {
+		shouldPanic := func(push cmds.Completed) (pass bool) {
+			defer func() { pass = recover() == protocolbug }()
+
+			p, mock, _, _ := setup(t, ClientOption{})
+			atomic.StoreInt32(&p.state, 1)
+			p.queue.PutOne(push)
+			p.queue.PutOne(cmds.PingCmd)
+			_, _, ch := p.queue.NextWriteCmd()
+			_, _, _ = p.queue.NextWriteCmd()
+			go func() {
+				mock.Expect().Reply(RedisMessage{
+					typ: '-', string: "MOVED",
+				}).Reply(RedisMessage{
+					typ: '-', string: "MOVED",
+				})
+			}()
+			go func() {
+				<-ch
+			}()
+			p._backgroundRead()
+			return
+		}
+		for _, push := range []cmds.Completed{
+			builder.Sunsubscribe().Channel("ch1").Build(),
+		} {
+			if !shouldPanic(push) {
+				t.Fatalf("should panic on protocolbug")
+			}
+		}
+	})
+
+	t.Run("PubSub unsubReply failed because of NOPERM error from server", func(t *testing.T) {
+		ctx := context.Background()
+		p, mock, cancel, _ := setup(t, ClientOption{})
+
+		commands := []Completed{
+			builder.Sunsubscribe().Channel("1").Build(),
+			builder.Sunsubscribe().Channel("2").Build(),
+			builder.Get().Key("mk").Build(),
+		}
+
+		replies := [][]RedisMessage{
+			{
+				{ // proactive unsubscribe before user unsubscribe
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "sunsubscribe"},
+						{typ: '+', string: "a"},
+						{typ: ':', integer: 0},
+					},
+				},
+				{ // proactive unsubscribe before user unsubscribe
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "sunsubscribe"},
+						{typ: '+', string: "b"},
+						{typ: ':', integer: 0},
+					},
+				},
+			}, {
+				// empty
+			}, {
+				{ // proactive unsubscribe after user unsubscribe
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "sunsubscribe"},
+						{typ: '_'},
+						{typ: ':', integer: 0},
+					},
+				},
+				{typ: '+', string: "mk"},
+			},
+		}
+
+		p.background()
+
+		// proactive unsubscribe before other commands
+		mock.Expect().Reply(RedisMessage{ // proactive unsubscribe before user unsubscribe
+			typ: '>',
+			values: []RedisMessage{
+				{typ: '+', string: "sunsubscribe"},
+				{typ: '+', string: "0"},
+				{typ: ':', integer: 0},
+			},
+		})
+
+		time.Sleep(time.Millisecond * 100)
+
+		for i, cmd1 := range commands {
+			cmd2 := builder.Get().Key(strconv.Itoa(i)).Build()
+			go func() {
+				if cmd1.IsUnsub() {
+					mock.Expect(cmd1.Commands()...).Expect(cmds.PingCmd.Commands()...).
+						Reply(replies[i]...).
+						Reply(RedisMessage{ // failed unsubReply
+							typ:    '-',
+							string: "NOPERM User u has no permissions to run the 'ping' command",
+						}).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+				} else {
+					mock.Expect(cmd1.Commands()...).Reply(replies[i]...).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+				}
+			}()
+			if i == 2 {
+				if v, err := p.Do(ctx, cmd1).ToString(); err != nil || v != "mk" {
+					t.Fatalf("unexpected err %v", err)
+				}
+			} else {
+				if err := p.Do(ctx, cmd1).Error(); err != nil {
+					t.Fatalf("unexpected err %v", err)
+				}
+			}
+			if v, err := p.Do(ctx, cmd2).ToString(); err != nil || v != strconv.Itoa(i) {
+				t.Fatalf("unexpected val %v %v", v, err)
+			}
+		}
+		cancel()
+	})
+
+	t.Run("PubSub unsubReply failed because of error LOADING from server", func(t *testing.T) {
+		ctx := context.Background()
+		p, mock, cancel, _ := setup(t, ClientOption{})
+
+		commands := []Completed{
+			builder.Sunsubscribe().Channel("1").Build(),
+			builder.Sunsubscribe().Channel("2").Build(),
+			builder.Get().Key("mk").Build(),
+		}
+
+		replies := [][]RedisMessage{
+			{
+				{ // proactive unsubscribe before user unsubscribe
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "sunsubscribe"},
+						{typ: '+', string: "a"},
+						{typ: ':', integer: 0},
+					},
+				},
+				{ // proactive unsubscribe before user unsubscribe
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "sunsubscribe"},
+						{typ: '+', string: "b"},
+						{typ: ':', integer: 0},
+					},
+				},
+			}, {
+				// empty
+			}, {
+				{ // proactive unsubscribe after user unsubscribe
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "sunsubscribe"},
+						{typ: '_'},
+						{typ: ':', integer: 0},
+					},
+				},
+				{typ: '+', string: "mk"},
+			},
+		}
+
+		p.background()
+
+		// proactive unsubscribe before other commands
+		mock.Expect().Reply(RedisMessage{ // proactive unsubscribe before user unsubscribe
+			typ: '>',
+			values: []RedisMessage{
+				{typ: '+', string: "sunsubscribe"},
+				{typ: '+', string: "0"},
+				{typ: ':', integer: 0},
+			},
+		})
+
+		time.Sleep(time.Millisecond * 100)
+
+		for i, cmd1 := range commands {
+			cmd2 := builder.Get().Key(strconv.Itoa(i)).Build()
+			go func() {
+				if cmd1.IsUnsub() {
+					mock.Expect(cmd1.Commands()...).Expect(cmds.PingCmd.Commands()...).
+						Reply(replies[i]...).
+						Reply(RedisMessage{ // failed unsubReply
+							typ:    '-',
+							string: "LOADING server is loading the dataset in memory",
+						}).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+				} else {
+					mock.Expect(cmd1.Commands()...).Reply(replies[i]...).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+				}
+			}()
+			if i == 2 {
+				if v, err := p.Do(ctx, cmd1).ToString(); err != nil || v != "mk" {
+					t.Fatalf("unexpected err %v", err)
+				}
+			} else {
+				if err := p.Do(ctx, cmd1).Error(); err != nil {
+					t.Fatalf("unexpected err %v", err)
+				}
+			}
+			if v, err := p.Do(ctx, cmd2).ToString(); err != nil || v != strconv.Itoa(i) {
+				t.Fatalf("unexpected val %v %v", v, err)
+			}
+		}
+		cancel()
+	})
+
+	t.Run("PubSub unsubReply failed because of error BUSY from server", func(t *testing.T) {
+		ctx := context.Background()
+		p, mock, cancel, _ := setup(t, ClientOption{})
+
+		commands := []Completed{
+			builder.Sunsubscribe().Channel("1").Build(),
+			builder.Sunsubscribe().Channel("2").Build(),
+			builder.Get().Key("mk").Build(),
+		}
+
+		replies := [][]RedisMessage{
+			{
+				{ // proactive unsubscribe before user unsubscribe
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "sunsubscribe"},
+						{typ: '+', string: "a"},
+						{typ: ':', integer: 0},
+					},
+				},
+				{ // proactive unsubscribe before user unsubscribe
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "sunsubscribe"},
+						{typ: '+', string: "b"},
+						{typ: ':', integer: 0},
+					},
+				},
+			}, {
+				// empty
+			}, {
+				{ // proactive unsubscribe after user unsubscribe
+					typ: '>',
+					values: []RedisMessage{
+						{typ: '+', string: "sunsubscribe"},
+						{typ: '_'},
+						{typ: ':', integer: 0},
+					},
+				},
+				{typ: '+', string: "mk"},
+			},
+		}
+
+		p.background()
+
+		// proactive unsubscribe before other commands
+		mock.Expect().Reply(RedisMessage{ // proactive unsubscribe before user unsubscribe
+			typ: '>',
+			values: []RedisMessage{
+				{typ: '+', string: "sunsubscribe"},
+				{typ: '+', string: "0"},
+				{typ: ':', integer: 0},
+			},
+		})
+
+		time.Sleep(time.Millisecond * 100)
+
+		for i, cmd1 := range commands {
+			cmd2 := builder.Get().Key(strconv.Itoa(i)).Build()
+			go func() {
+				if cmd1.IsUnsub() {
+					mock.Expect(cmd1.Commands()...).Expect(cmds.PingCmd.Commands()...).
+						Reply(replies[i]...).
+						Reply(RedisMessage{ // failed unsubReply
+							typ:    '-',
+							string: "BUSY",
+						}).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+				} else {
+					mock.Expect(cmd1.Commands()...).Reply(replies[i]...).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+				}
+			}()
+			if i == 2 {
+				if v, err := p.Do(ctx, cmd1).ToString(); err != nil || v != "mk" {
+					t.Fatalf("unexpected err %v", err)
+				}
+			} else {
+				if err := p.Do(ctx, cmd1).Error(); err != nil {
+					t.Fatalf("unexpected err %v", err)
+				}
+			}
+			if v, err := p.Do(ctx, cmd2).ToString(); err != nil || v != strconv.Itoa(i) {
+				t.Fatalf("unexpected val %v %v", v, err)
+			}
+		}
+		cancel()
 	})
 
 	t.Run("PubSub Unexpected Subscribe", func(t *testing.T) {
@@ -2976,6 +3604,22 @@ func TestPubSub(t *testing.T) {
 		} {
 			if !shouldPanic(push) {
 				t.Fatalf("should panic on protocolbug")
+			}
+		}
+	})
+
+	t.Run("PubSub blocking mixed", func(t *testing.T) {
+		p, _, cancel, _ := setup(t, ClientOption{})
+		defer cancel()
+
+		commands := []Completed{
+			builder.Subscribe().Channel("a").Build(),
+			builder.Psubscribe().Pattern("b").Build(),
+			builder.Blpop().Key("c").Timeout(0).Build(),
+		}
+		for _, resp := range p.DoMulti(context.Background(), commands...).s {
+			if e := resp.Error(); e != ErrBlockingPubSubMixed {
+				t.Fatalf("unexpected err %v", e)
 			}
 		}
 	})
@@ -3117,17 +3761,19 @@ func TestPubSubHooks(t *testing.T) {
 					{typ: '+', string: "222"},
 				}},
 			)
-			mock.Expect(deactivate1.Commands()...).Expect(deactivate2.Commands()...).Reply(
+			mock.Expect(deactivate1.Commands()...).Expect(cmds.PingCmd.Commands()...).Expect(deactivate2.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(
 				RedisMessage{typ: '>', values: []RedisMessage{
 					{typ: '+', string: "unsubscribe"},
 					{typ: '+', string: "1"},
 					{typ: ':', integer: 1},
 				}},
+				RedisMessage{typ: '+', string: "PONG"},
 				RedisMessage{typ: '>', values: []RedisMessage{
 					{typ: '+', string: "punsubscribe"},
 					{typ: '+', string: "2"},
 					{typ: ':', integer: 2},
 				}},
+				RedisMessage{typ: '+', string: "PONG"},
 			)
 			cancel()
 		}()
@@ -3146,16 +3792,16 @@ func TestPubSubHooks(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		if !s1 {
-			t.Fatalf("unexpecetd s1")
+			t.Fatalf("unexpected s1")
 		}
 		if !s2 {
-			t.Fatalf("unexpecetd s2")
+			t.Fatalf("unexpected s2")
 		}
 		if !u1 {
-			t.Fatalf("unexpecetd u1")
+			t.Fatalf("unexpected u1")
 		}
 		if !u2 {
-			t.Fatalf("unexpecetd u2")
+			t.Fatalf("unexpected u2")
 		}
 	})
 
@@ -3204,17 +3850,19 @@ func TestPubSubHooks(t *testing.T) {
 					{typ: '+', string: "222"},
 				}},
 			)
-			mock.Expect(deactivate1.Commands()...).Expect(deactivate2.Commands()...).Reply(
+			mock.Expect(deactivate1.Commands()...).Expect(cmds.PingCmd.Commands()...).Expect(deactivate2.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(
 				RedisMessage{typ: '>', values: []RedisMessage{
 					{typ: '+', string: "unsubscribe"},
 					{typ: '+', string: "1"},
 					{typ: ':', integer: 1},
 				}},
+				RedisMessage{typ: '+', string: "PONG"},
 				RedisMessage{typ: '>', values: []RedisMessage{
 					{typ: '+', string: "punsubscribe"},
 					{typ: '+', string: "2"},
 					{typ: ':', integer: 2},
 				}},
+				RedisMessage{typ: '+', string: "PONG"},
 			)
 			cancel()
 		}()
@@ -3233,10 +3881,10 @@ func TestPubSubHooks(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		if !m1 {
-			t.Fatalf("unexpecetd m1")
+			t.Fatalf("unexpected m1")
 		}
 		if !m2 {
-			t.Fatalf("unexpecetd m2")
+			t.Fatalf("unexpected m2")
 		}
 	})
 }
@@ -3333,7 +3981,7 @@ func TestExitOnRingFullAndPingTimout(t *testing.T) {
 	// fill the ring
 	for i := 0; i < len(p.queue.(*ring).store); i++ {
 		go func() {
-			if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); err != context.DeadlineExceeded {
+			if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); !errors.Is(err, os.ErrDeadlineExceeded) {
 				t.Errorf("unexpected result, expected context.DeadlineExceeded, got %v", err)
 			}
 		}()
@@ -3343,7 +3991,7 @@ func TestExitOnRingFullAndPingTimout(t *testing.T) {
 		mock.Expect("GET", "a")
 	}
 
-	if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); err != context.DeadlineExceeded {
+	if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); !errors.Is(err, os.ErrDeadlineExceeded) {
 		t.Errorf("unexpected result, expected context.DeadlineExceeded, got %v", err)
 	}
 }
@@ -3499,7 +4147,7 @@ func TestAlreadyCanceledContext(t *testing.T) {
 		t.Fatalf("unexpected err %v", err)
 	}
 
-	cp := newPool(1, nil, nil)
+	cp := newPool(1, nil, 0, 0, nil)
 	if s := p.DoStream(ctx, cp, cmds.NewCompleted([]string{"GET", "a"})); !errors.Is(s.Error(), context.Canceled) {
 		t.Fatalf("unexpected err %v", s.Error())
 	}
@@ -3544,7 +4192,7 @@ func TestCancelContext_DoStream(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*50)
 	defer cancel()
 
-	cp := newPool(1, nil, nil)
+	cp := newPool(1, nil, 0, 0, nil)
 	s := p.DoStream(ctx, cp, cmds.NewCompleted([]string{"GET", "a"}))
 	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
 		t.Fatalf("unexpected err %v", err)
@@ -3561,13 +4209,34 @@ func TestWriteDeadlineIsShorterThanContextDeadline_DoStream(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	cp := newPool(1, nil, nil)
+	cp := newPool(1, nil, 0, 0, nil)
 	startTime := time.Now()
 	s := p.DoStream(ctx, cp, cmds.NewCompleted([]string{"GET", "a"}))
 	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
 		t.Fatalf("unexpected err %v", err)
 	}
 	if time.Since(startTime) >= time.Second {
+		t.Fatalf("unexpected time %v", time.Since(startTime))
+	}
+	if len(cp.list) != 0 {
+		t.Fatalf("unexpected pool length %v", len(cp.list))
+	}
+}
+
+func TestWriteDeadlineIsNoShorterThanContextDeadline_DoStreamBlocked(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, _ := setup(t, ClientOption{ConnWriteTimeout: 5 * time.Millisecond})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	cp := newPool(1, nil, 0, 0, nil)
+	startTime := time.Now()
+	s := p.DoStream(ctx, cp, cmds.NewBlockingCompleted([]string{"BLPOP", "a"}))
+	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if time.Since(startTime) < 100*time.Millisecond {
 		t.Fatalf("unexpected time %v", time.Since(startTime))
 	}
 	if len(cp.list) != 0 {
@@ -3636,7 +4305,7 @@ func TestCancelContext_DoMultiStream(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*50)
 	defer cancel()
 
-	cp := newPool(1, nil, nil)
+	cp := newPool(1, nil, 0, 0, nil)
 	s := p.DoMultiStream(ctx, cp, cmds.NewCompleted([]string{"GET", "a"}))
 	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
 		t.Fatalf("unexpected err %v", err)
@@ -3653,13 +4322,34 @@ func TestWriteDeadlineIsShorterThanContextDeadline_DoMultiStream(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	cp := newPool(1, nil, nil)
+	cp := newPool(1, nil, 0, 0, nil)
 	startTime := time.Now()
 	s := p.DoMultiStream(ctx, cp, cmds.NewCompleted([]string{"GET", "a"}))
 	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
 		t.Fatalf("unexpected err %v", err)
 	}
 	if time.Since(startTime) >= time.Second {
+		t.Fatalf("unexpected time %v", time.Since(startTime))
+	}
+	if len(cp.list) != 0 {
+		t.Fatalf("unexpected pool length %v", len(cp.list))
+	}
+}
+
+func TestWriteDeadlineIsNoShorterThanContextDeadline_DoMultiStreamBlocked(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, _ := setup(t, ClientOption{ConnWriteTimeout: 5 * time.Millisecond})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	cp := newPool(1, nil, 0, 0, nil)
+	startTime := time.Now()
+	s := p.DoMultiStream(ctx, cp, cmds.NewBlockingCompleted([]string{"BLPOP", "a"}))
+	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if time.Since(startTime) < 100*time.Millisecond {
 		t.Fatalf("unexpected time %v", time.Since(startTime))
 	}
 	if len(cp.list) != 0 {
@@ -3685,7 +4375,7 @@ func TestTimeout_DoStream(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, _ := setup(t, ClientOption{ConnWriteTimeout: time.Millisecond * 30})
 
-	cp := newPool(1, nil, nil)
+	cp := newPool(1, nil, 0, 0, nil)
 
 	s := p.DoStream(context.Background(), cp, cmds.NewCompleted([]string{"GET", "a"}))
 	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
@@ -3705,7 +4395,7 @@ func TestForceClose_DoStream_Block(t *testing.T) {
 		p.Close()
 	}()
 
-	cp := newPool(1, nil, nil)
+	cp := newPool(1, nil, 0, 0, nil)
 
 	s := p.DoStream(context.Background(), cp, cmds.NewBlockingCompleted([]string{"GET", "a"}))
 	if s.Error() != nil {
@@ -3762,7 +4452,7 @@ func TestTimeout_DoMultiStream(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, _ := setup(t, ClientOption{ConnWriteTimeout: time.Millisecond * 30})
 
-	cp := newPool(1, nil, nil)
+	cp := newPool(1, nil, 0, 0, nil)
 
 	s := p.DoMultiStream(context.Background(), cp, cmds.NewCompleted([]string{"GET", "a"}))
 	if err := s.Error(); err != io.EOF && !strings.Contains(err.Error(), "i/o") {
@@ -3782,7 +4472,7 @@ func TestForceClose_DoMultiStream_Block(t *testing.T) {
 		p.Close()
 	}()
 
-	cp := newPool(1, nil, nil)
+	cp := newPool(1, nil, 0, 0, nil)
 
 	s := p.DoMultiStream(context.Background(), cp, cmds.NewBlockingCompleted([]string{"GET", "a"}))
 	if s.Error() != nil {
@@ -3833,7 +4523,7 @@ func TestSyncModeSwitchingWithDeadlineExceed_Do(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go func() {
-			if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+			if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, os.ErrDeadlineExceeded) {
 				t.Errorf("unexpected err %v", err)
 			}
 			wg.Done()
@@ -3859,7 +4549,7 @@ func TestSyncModeSwitchingWithDeadlineExceed_DoMulti(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go func() {
-			if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+			if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, os.ErrDeadlineExceeded) {
 				t.Errorf("unexpected err %v", err)
 			}
 			wg.Done()
@@ -3873,9 +4563,9 @@ func TestSyncModeSwitchingWithDeadlineExceed_DoMulti(t *testing.T) {
 	p.Close()
 }
 
-func TestOngoingDeadlineContextInSyncMode_Do(t *testing.T) {
+func TestOngoingDeadlineShortContextInSyncMode_Do(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
-	p, _, _, closeConn := setup(t, ClientOption{})
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 1 * time.Second})
 	defer closeConn()
 
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Second/2))
@@ -3887,12 +4577,26 @@ func TestOngoingDeadlineContextInSyncMode_Do(t *testing.T) {
 	p.Close()
 }
 
+func TestOngoingDeadlineLongContextInSyncMode_Do(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 1 * time.Second / 4})
+	defer closeConn()
+
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Second/2))
+	defer cancel()
+
+	if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, os.ErrDeadlineExceeded) {
+		t.Fatalf("unexpected err %v", err)
+	}
+	p.Close()
+}
+
 func TestWriteDeadlineInSyncMode_Do(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 1 * time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	defer closeConn()
 
-	if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+	if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, os.ErrDeadlineExceeded) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	p.Close()
@@ -3907,7 +4611,7 @@ func TestWriteDeadlineIsShorterThanContextDeadlineInSyncMode_Do(t *testing.T) {
 	defer cancel()
 
 	startTime := time.Now()
-	if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+	if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, os.ErrDeadlineExceeded) {
 		t.Fatalf("unexpected err %v", err)
 	}
 
@@ -3918,9 +4622,29 @@ func TestWriteDeadlineIsShorterThanContextDeadlineInSyncMode_Do(t *testing.T) {
 	p.Close()
 }
 
-func TestOngoingDeadlineContextInSyncMode_DoMulti(t *testing.T) {
+func TestWriteDeadlineIsNoShorterThanContextDeadlineInSyncMode_DoBlocked(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
-	p, _, _, closeConn := setup(t, ClientOption{})
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 5 * time.Second, Dialer: net.Dialer{KeepAlive: time.Second}})
+	defer closeConn()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	startTime := time.Now()
+	if err := p.Do(ctx, cmds.NewBlockingCompleted([]string{"BLPOP", "a"})).NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	if time.Since(startTime) < 100*time.Millisecond {
+		t.Fatalf("unexpected time %v", time.Since(startTime))
+	}
+
+	p.Close()
+}
+
+func TestOngoingDeadlineShortContextInSyncMode_DoMulti(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second})
 	defer closeConn()
 
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Second/2))
@@ -3932,12 +4656,26 @@ func TestOngoingDeadlineContextInSyncMode_DoMulti(t *testing.T) {
 	p.Close()
 }
 
+func TestOngoingDeadlineLongContextInSyncMode_DoMulti(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 4})
+	defer closeConn()
+
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(1*time.Second/2))
+	defer cancel()
+
+	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, os.ErrDeadlineExceeded) {
+		t.Fatalf("unexpected err %v", err)
+	}
+	p.Close()
+}
+
 func TestWriteDeadlineInSyncMode_DoMulti(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
 	defer closeConn()
 
-	if err := p.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+	if err := p.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, os.ErrDeadlineExceeded) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	p.Close()
@@ -3952,11 +4690,51 @@ func TestWriteDeadlineIsShorterThanContextDeadlineInSyncMode_DoMulti(t *testing.
 	defer cancel()
 
 	startTime := time.Now()
+	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, os.ErrDeadlineExceeded) {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	if time.Since(startTime) >= time.Second {
+		t.Fatalf("unexpected time %v", time.Since(startTime))
+	}
+
+	p.Close()
+}
+
+func TestWriteDeadlineIsNoShorterThanContextDeadlineInSyncMode_DoMulti(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second, Dialer: net.Dialer{KeepAlive: time.Second}})
+	defer closeConn()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second/2)
+	defer cancel()
+
+	startTime := time.Now()
 	if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("unexpected err %v", err)
 	}
 
 	if time.Since(startTime) >= time.Second {
+		t.Fatalf("unexpected time %v", time.Since(startTime))
+	}
+
+	p.Close()
+}
+
+func TestWriteDeadlineIsNoShorterThanContextDeadlineInSyncMode_DoMultiBlocked(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: 5 * time.Millisecond, Dialer: net.Dialer{KeepAlive: time.Second}})
+	defer closeConn()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+
+	startTime := time.Now()
+	if err := p.DoMulti(ctx, cmds.NewBlockingCompleted([]string{"BLPOP", "a"})).s[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	if time.Since(startTime) < 100*time.Millisecond {
 		t.Fatalf("unexpected time %v", time.Since(startTime))
 	}
 
@@ -4019,7 +4797,7 @@ func TestOngoingWriteTimeoutInPipelineMode_Do(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		go func() {
 			_, err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).ToString()
-			if errors.Is(err, context.DeadlineExceeded) {
+			if errors.Is(err, os.ErrDeadlineExceeded) {
 				atomic.AddInt32(&timeout, 1)
 			} else {
 				t.Errorf("unexpected err %v", err)
@@ -4093,10 +4871,10 @@ func TestOngoingWriteTimeoutInPipelineMode_DoMulti(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		go func() {
 			_, err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].ToString()
-			if errors.Is(err, context.DeadlineExceeded) {
+			if errors.Is(err, os.ErrDeadlineExceeded) {
 				atomic.AddInt32(&timeout, 1)
 			} else {
-				t.Errorf("unexpecetd err %v", err)
+				t.Errorf("unexpected err %v", err)
 			}
 		}()
 	}
@@ -4119,19 +4897,38 @@ func TestPipe_CleanSubscriptions_6(t *testing.T) {
 	go func() {
 		p.CleanSubscriptions()
 	}()
-	mock.Expect("UNSUBSCRIBE").Expect("PUNSUBSCRIBE").Expect("DISCARD").Reply(
+	mock.Expect("UNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("PUNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("DISCARD").Reply(
 		RedisMessage{typ: '>', values: []RedisMessage{
 			{typ: '+', string: "unsubscribe"},
 			{typ: '_'},
 			{typ: ':', integer: 1},
 		}},
+		RedisMessage{typ: '+', string: "PONG"},
 		RedisMessage{typ: '>', values: []RedisMessage{
 			{typ: '+', string: "punsubscribe"},
 			{typ: '_'},
 			{typ: ':', integer: 2},
 		}},
+		RedisMessage{typ: '+', string: "PONG"},
 		RedisMessage{typ: '+', string: "OK"},
 	)
+}
+
+func TestPipe_CleanSubscriptions_Blocking(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{ConnWriteTimeout: time.Second / 2, Dialer: net.Dialer{KeepAlive: time.Second / 3}})
+	defer cancel()
+	p.background()
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		mock.Expect("BLPOP")
+		cancel()
+	}()
+	p.Do(ctx, cmds.NewBlockingCompleted([]string{"BLPOP"}))
+	p.CleanSubscriptions()
+	if p.Error() != ErrClosing {
+		t.Fatal("unexpected error")
+	}
 }
 
 func TestPipe_CleanSubscriptions_7(t *testing.T) {
@@ -4143,22 +4940,25 @@ func TestPipe_CleanSubscriptions_7(t *testing.T) {
 	go func() {
 		p.CleanSubscriptions()
 	}()
-	mock.Expect("UNSUBSCRIBE").Expect("PUNSUBSCRIBE").Expect("SUNSUBSCRIBE").Expect("DISCARD").Reply(
+	mock.Expect("UNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("PUNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("SUNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("DISCARD").Reply(
 		RedisMessage{typ: '>', values: []RedisMessage{
 			{typ: '+', string: "unsubscribe"},
 			{typ: '_'},
 			{typ: ':', integer: 1},
 		}},
+		RedisMessage{typ: '+', string: "PONG"},
 		RedisMessage{typ: '>', values: []RedisMessage{
 			{typ: '+', string: "punsubscribe"},
 			{typ: '_'},
 			{typ: ':', integer: 2},
 		}},
+		RedisMessage{typ: '+', string: "PONG"},
 		RedisMessage{typ: '>', values: []RedisMessage{
 			{typ: '+', string: "sunsubscribe"},
 			{typ: '_'},
 			{typ: ':', integer: 3},
 		}},
+		RedisMessage{typ: '+', string: "PONG"},
 		RedisMessage{typ: '+', string: "OK"},
 	)
 }

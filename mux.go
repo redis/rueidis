@@ -22,27 +22,6 @@ type singleconnect struct {
 	g sync.WaitGroup
 }
 
-type batchcache struct {
-	cIndexes []int
-	commands []CacheableTTL
-}
-
-func (r *batchcache) Capacity() int {
-	return cap(r.commands)
-}
-
-func (r *batchcache) ResetLen(n int) {
-	r.cIndexes = r.cIndexes[:n]
-	r.commands = r.commands[:n]
-}
-
-var batchcachep = util.NewPool(func(capacity int) *batchcache {
-	return &batchcache{
-		cIndexes: make([]int, 0, capacity),
-		commands: make([]CacheableTTL, 0, capacity),
-	}
-})
-
 type conn interface {
 	Do(ctx context.Context, cmd Completed) RedisResult
 	DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) RedisResult
@@ -53,6 +32,7 @@ type conn interface {
 	DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisResultStream
 	Info() map[string]RedisMessage
 	Version() int
+	AZ() string
 	Error() error
 	Close()
 	Dial() error
@@ -77,6 +57,9 @@ type mux struct {
 	sc     []*singleconnect
 	mu     []sync.Mutex
 	maxp   int
+	maxm   int
+
+	usePool bool
 }
 
 func makeMux(dst string, option *ClientOption, dialFn dialFn) *mux {
@@ -109,13 +92,17 @@ func newMux(dst string, option *ClientOption, init, dead wire, wireFn wireFn, wi
 		mu:   make([]sync.Mutex, multiplex),
 		sc:   make([]*singleconnect, multiplex),
 		maxp: runtime.GOMAXPROCS(0),
+		maxm: option.BlockingPipeline,
+
+		usePool: option.DisableAutoPipelining,
 	}
 	m.clhks.Store(emptyclhks)
 	for i := 0; i < len(m.wire); i++ {
 		m.wire[i].Store(init)
 	}
-	m.dpool = newPool(option.BlockingPoolSize, dead, wireFn)
-	m.spool = newPool(option.BlockingPoolSize, dead, wireNoBgFn)
+
+	m.dpool = newPool(option.BlockingPoolSize, dead, option.BlockingPoolCleanup, option.BlockingPoolMinSize, wireFn)
+	m.spool = newPool(option.BlockingPoolSize, dead, option.BlockingPoolCleanup, option.BlockingPoolMinSize, wireNoBgFn)
 	return m
 }
 
@@ -204,6 +191,10 @@ func (m *mux) Version() int {
 	return m.pipe(0).Version()
 }
 
+func (m *mux) AZ() string {
+	return m.pipe(0).AZ()
+}
+
 func (m *mux) Error() error {
 	return m.pipe(0).Error()
 }
@@ -219,8 +210,10 @@ func (m *mux) DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisR
 }
 
 func (m *mux) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
-	if cmd.IsBlock() {
-		resp = m.blocking(ctx, cmd)
+	if m.usePool && !cmd.NoReply() {
+		resp = m.blocking(m.spool, ctx, cmd)
+	} else if cmd.IsBlock() {
+		resp = m.blocking(m.dpool, ctx, cmd)
 	} else {
 		resp = m.pipeline(ctx, cmd)
 	}
@@ -229,28 +222,37 @@ func (m *mux) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 
 func (m *mux) DoMulti(ctx context.Context, multi ...Completed) (resp *redisresults) {
 	for _, cmd := range multi {
+		if cmd.NoReply() {
+			return m.pipelineMulti(ctx, multi)
+		}
 		if cmd.IsBlock() {
+			cmds.ToBlock(&multi[0]) // mark the first cmd as block if one of them is block to shortcut later check.
 			goto block
 		}
 	}
+	if m.usePool || (len(multi) >= m.maxm && m.maxm > 0) {
+		goto block // use a dedicated connection if the pipeline is too large
+	}
 	return m.pipelineMulti(ctx, multi)
 block:
-	cmds.ToBlock(&multi[0]) // mark the first cmd as block if one of them is block to shortcut later check.
-	return m.blockingMulti(ctx, multi)
+	if m.usePool {
+		return m.blockingMulti(m.spool, ctx, multi)
+	}
+	return m.blockingMulti(m.dpool, ctx, multi)
 }
 
-func (m *mux) blocking(ctx context.Context, cmd Completed) (resp RedisResult) {
-	wire := m.dpool.Acquire()
+func (m *mux) blocking(pool *pool, ctx context.Context, cmd Completed) (resp RedisResult) {
+	wire := pool.Acquire()
 	resp = wire.Do(ctx, cmd)
 	if resp.NonRedisError() != nil { // abort the wire if blocking command return early (ex. context.DeadlineExceeded)
 		wire.Close()
 	}
-	m.dpool.Store(wire)
+	pool.Store(wire)
 	return resp
 }
 
-func (m *mux) blockingMulti(ctx context.Context, cmd []Completed) (resp *redisresults) {
-	wire := m.dpool.Acquire()
+func (m *mux) blockingMulti(pool *pool, ctx context.Context, cmd []Completed) (resp *redisresults) {
+	wire := pool.Acquire()
 	resp = wire.DoMulti(ctx, cmd...)
 	for _, res := range resp.s {
 		if res.NonRedisError() != nil { // abort the wire if blocking command return early (ex. context.DeadlineExceeded)
@@ -258,7 +260,7 @@ func (m *mux) blockingMulti(ctx context.Context, cmd []Completed) (resp *redisre
 			break
 		}
 	}
-	m.dpool.Store(wire)
+	pool.Store(wire)
 	return resp
 }
 
@@ -399,53 +401,3 @@ func slotfn(n int, ks uint16, noreply bool) uint16 {
 	}
 	return uint16(util.FastRand(n))
 }
-
-type muxslots struct {
-	s []int
-}
-
-func (r *muxslots) Capacity() int {
-	return cap(r.s)
-}
-
-func (r *muxslots) ResetLen(n int) {
-	r.s = r.s[:n]
-	for i := 0; i < n; i++ {
-		r.s[i] = 0
-	}
-}
-
-func (r *muxslots) LessThen(n int) bool {
-	count := 0
-	for _, value := range r.s {
-		if value > 0 {
-			if count++; count == n {
-				return false
-			}
-		}
-	}
-	return true
-}
-
-var muxslotsp = util.NewPool(func(capacity int) *muxslots {
-	return &muxslots{s: make([]int, 0, capacity)}
-})
-
-type batchcachemap struct {
-	m map[uint16]*batchcache
-	n int
-}
-
-func (r *batchcachemap) Capacity() int {
-	return r.n
-}
-
-func (r *batchcachemap) ResetLen(n int) {
-	for k := range r.m {
-		delete(r.m, k)
-	}
-}
-
-var batchcachemaps = util.NewPool(func(capacity int) *batchcachemap {
-	return &batchcachemap{m: make(map[uint16]*batchcache, capacity), n: capacity}
-})

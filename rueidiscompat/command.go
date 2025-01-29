@@ -32,15 +32,23 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/internal/util"
 )
 
+type Cmder interface {
+	SetErr(error)
+	Err() error
+	from(result rueidis.RedisResult)
+}
+
 type baseCmd[T any] struct {
-	err error
-	val T
+	err    error
+	val    T
+	rawVal any
 }
 
 func (cmd *baseCmd[T]) SetVal(val T) {
@@ -49,6 +57,14 @@ func (cmd *baseCmd[T]) SetVal(val T) {
 
 func (cmd *baseCmd[T]) Val() T {
 	return cmd.val
+}
+
+func (cmd *baseCmd[T]) SetRawVal(rawVal any) {
+	cmd.rawVal = rawVal
+}
+
+func (cmd *baseCmd[T]) RawVal() any {
+	return cmd.rawVal
 }
 
 func (cmd *baseCmd[T]) SetErr(err error) {
@@ -63,18 +79,26 @@ func (cmd *baseCmd[T]) Result() (T, error) {
 	return cmd.Val(), cmd.Err()
 }
 
+func (cmd *baseCmd[T]) RawResult() (any, error) {
+	return cmd.RawVal(), cmd.Err()
+}
+
 type Cmd struct {
 	baseCmd[any]
 }
 
-func newCmd(res rueidis.RedisResult) *Cmd {
-	cmd := &Cmd{}
+func (cmd *Cmd) from(res rueidis.RedisResult) {
 	val, err := res.ToAny()
 	if err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	cmd.SetVal(val)
+}
+
+func newCmd(res rueidis.RedisResult) *Cmd {
+	cmd := &Cmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -327,11 +351,15 @@ type StringCmd struct {
 	baseCmd[string]
 }
 
-func newStringCmd(res rueidis.RedisResult) *StringCmd {
-	cmd := &StringCmd{}
+func (cmd *StringCmd) from(res rueidis.RedisResult) {
 	val, err := res.ToString()
 	cmd.SetErr(err)
 	cmd.SetVal(val)
+}
+
+func newStringCmd(res rueidis.RedisResult) *StringCmd {
+	cmd := &StringCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -397,8 +425,7 @@ type BoolCmd struct {
 	baseCmd[bool]
 }
 
-func newBoolCmd(res rueidis.RedisResult) *BoolCmd {
-	cmd := &BoolCmd{}
+func (cmd *BoolCmd) from(res rueidis.RedisResult) {
 	val, err := res.AsBool()
 	if rueidis.IsRedisNil(err) {
 		val = false
@@ -406,6 +433,11 @@ func newBoolCmd(res rueidis.RedisResult) *BoolCmd {
 	}
 	cmd.SetVal(val)
 	cmd.SetErr(err)
+}
+
+func newBoolCmd(res rueidis.RedisResult) *BoolCmd {
+	cmd := &BoolCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -413,11 +445,15 @@ type IntCmd struct {
 	baseCmd[int64]
 }
 
-func newIntCmd(res rueidis.RedisResult) *IntCmd {
-	cmd := &IntCmd{}
+func (cmd *IntCmd) from(res rueidis.RedisResult) {
 	val, err := res.AsInt64()
 	cmd.SetErr(err)
 	cmd.SetVal(val)
+}
+
+func newIntCmd(res rueidis.RedisResult) *IntCmd {
+	cmd := &IntCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -427,17 +463,22 @@ func (cmd *IntCmd) Uint64() (uint64, error) {
 
 type DurationCmd struct {
 	baseCmd[time.Duration]
+	precision time.Duration
 }
 
-func newDurationCmd(res rueidis.RedisResult, precision time.Duration) *DurationCmd {
-	cmd := &DurationCmd{}
+func (cmd *DurationCmd) from(res rueidis.RedisResult) {
 	val, err := res.AsInt64()
 	cmd.SetErr(err)
 	if val > 0 {
-		cmd.SetVal(time.Duration(val) * precision)
-		return cmd
+		cmd.SetVal(time.Duration(val) * cmd.precision)
+		return
 	}
 	cmd.SetVal(time.Duration(val))
+}
+
+func newDurationCmd(res rueidis.RedisResult, precision time.Duration) *DurationCmd {
+	cmd := &DurationCmd{precision: precision}
+	cmd.from(res)
 	return cmd
 }
 
@@ -454,19 +495,17 @@ func newStatusCmd(res rueidis.RedisResult) *StatusCmd {
 type SliceCmd struct {
 	baseCmd[[]any]
 	keys []string
+	json bool
 }
 
-// newSliceCmd returns SliceCmd according to input arguments, if the caller is JSONObjKeys,
-// set isJSONObjKeys to true.
-func newSliceCmd(res rueidis.RedisResult, isJSONObjKeys bool, keys ...string) *SliceCmd {
-	cmd := &SliceCmd{keys: keys}
+func (cmd *SliceCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	vals := make([]any, len(arr))
-	if isJSONObjKeys {
+	if cmd.json {
 		for i, v := range arr {
 			// for JSON.OBJKEYS
 			if v.IsNil() {
@@ -476,12 +515,12 @@ func newSliceCmd(res rueidis.RedisResult, isJSONObjKeys bool, keys ...string) *S
 			arr, err := v.ToAny()
 			if err != nil {
 				cmd.SetErr(err)
-				return cmd
+				return
 			}
 			vals[i] = arr
 		}
 		cmd.SetVal(vals)
-		return cmd
+		return
 	}
 	for i, v := range arr {
 		// keep the old behavior the same as before (don't handle error while parsing v as string)
@@ -490,6 +529,13 @@ func newSliceCmd(res rueidis.RedisResult, isJSONObjKeys bool, keys ...string) *S
 		}
 	}
 	cmd.SetVal(vals)
+}
+
+// newSliceCmd returns SliceCmd according to input arguments, if the caller is JSONObjKeys,
+// set isJSONObjKeys to true.
+func newSliceCmd(res rueidis.RedisResult, isJSONObjKeys bool, keys ...string) *SliceCmd {
+	cmd := &SliceCmd{keys: keys, json: isJSONObjKeys}
+	cmd.from(res)
 	return cmd
 }
 
@@ -507,11 +553,15 @@ type StringSliceCmd struct {
 	baseCmd[[]string]
 }
 
-func newStringSliceCmd(res rueidis.RedisResult) *StringSliceCmd {
-	cmd := &StringSliceCmd{}
+func (cmd *StringSliceCmd) from(res rueidis.RedisResult) {
 	val, err := res.AsStrSlice()
 	cmd.SetVal(val)
 	cmd.SetErr(err)
+}
+
+func newStringSliceCmd(res rueidis.RedisResult) *StringSliceCmd {
+	cmd := &StringSliceCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -520,9 +570,15 @@ type IntSliceCmd struct {
 	val []int64
 }
 
+func (cmd *IntSliceCmd) from(res rueidis.RedisResult) {
+	cmd.val, cmd.err = res.AsIntSlice()
+
+}
+
 func newIntSliceCmd(res rueidis.RedisResult) *IntSliceCmd {
-	val, err := res.AsIntSlice()
-	return &IntSliceCmd{val: val, err: err}
+	cmd := &IntSliceCmd{}
+	cmd.from(res)
+	return cmd
 }
 
 func (cmd *IntSliceCmd) SetVal(val []int64) {
@@ -549,18 +605,22 @@ type BoolSliceCmd struct {
 	baseCmd[[]bool]
 }
 
-func newBoolSliceCmd(res rueidis.RedisResult) *BoolSliceCmd {
-	cmd := &BoolSliceCmd{}
+func (cmd *BoolSliceCmd) from(res rueidis.RedisResult) {
 	ints, err := res.AsIntSlice()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	val := make([]bool, 0, len(ints))
 	for _, i := range ints {
 		val = append(val, i == 1)
 	}
 	cmd.SetVal(val)
+}
+
+func newBoolSliceCmd(res rueidis.RedisResult) *BoolSliceCmd {
+	cmd := &BoolSliceCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -568,41 +628,54 @@ type FloatSliceCmd struct {
 	baseCmd[[]float64]
 }
 
-func newFloatSliceCmd(res rueidis.RedisResult) *FloatSliceCmd {
-	cmd := &FloatSliceCmd{}
+func (cmd *FloatSliceCmd) from(res rueidis.RedisResult) {
 	val, err := res.AsFloatSlice()
 	cmd.SetErr(err)
 	cmd.SetVal(val)
+}
+
+func newFloatSliceCmd(res rueidis.RedisResult) *FloatSliceCmd {
+	cmd := &FloatSliceCmd{}
+	cmd.from(res)
 	return cmd
 }
 
 type ZSliceCmd struct {
 	baseCmd[[]Z]
+	single bool
+}
+
+func (cmd *ZSliceCmd) from(res rueidis.RedisResult) {
+	if cmd.single {
+		s, err := res.AsZScore()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		cmd.SetVal([]Z{{Member: s.Member, Score: s.Score}})
+	} else {
+		scores, err := res.AsZScores()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		val := make([]Z, 0, len(scores))
+		for _, s := range scores {
+			val = append(val, Z{Member: s.Member, Score: s.Score})
+		}
+		cmd.SetVal(val)
+	}
 }
 
 func newZSliceCmd(res rueidis.RedisResult) *ZSliceCmd {
 	cmd := &ZSliceCmd{}
-	scores, err := res.AsZScores()
-	if err != nil {
-		cmd.SetErr(err)
-		return cmd
-	}
-	val := make([]Z, 0, len(scores))
-	for _, s := range scores {
-		val = append(val, Z{Member: s.Member, Score: s.Score})
-	}
-	cmd.SetVal(val)
+	cmd.from(res)
 	return cmd
 }
 
 func newZSliceSingleCmd(res rueidis.RedisResult) *ZSliceCmd {
-	cmd := &ZSliceCmd{}
-	s, err := res.AsZScore()
-	if err != nil {
-		cmd.SetErr(err)
-		return cmd
-	}
-	cmd.SetVal([]Z{{Member: s.Member, Score: s.Score}})
+	cmd := &ZSliceCmd{single: true}
+	cmd.from(res)
 	return cmd
 }
 
@@ -610,11 +683,15 @@ type FloatCmd struct {
 	baseCmd[float64]
 }
 
-func newFloatCmd(res rueidis.RedisResult) *FloatCmd {
-	cmd := &FloatCmd{}
+func (cmd *FloatCmd) from(res rueidis.RedisResult) {
 	val, err := res.AsFloat64()
 	cmd.SetErr(err)
 	cmd.SetVal(val)
+}
+
+func newFloatCmd(res rueidis.RedisResult) *FloatCmd {
+	cmd := &FloatCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -624,9 +701,19 @@ type ScanCmd struct {
 	cursor uint64
 }
 
-func newScanCmd(res rueidis.RedisResult) *ScanCmd {
+func (cmd *ScanCmd) from(res rueidis.RedisResult) {
 	e, err := res.AsScanEntry()
-	return &ScanCmd{cursor: e.Cursor, keys: e.Elements, err: err}
+	if err != nil {
+		cmd.err = err
+		return
+	}
+	cmd.cursor, cmd.keys = e.Cursor, e.Elements
+}
+
+func newScanCmd(res rueidis.RedisResult) *ScanCmd {
+	cmd := &ScanCmd{}
+	cmd.from(res)
+	return cmd
 }
 
 func (cmd *ScanCmd) SetVal(keys []string, cursor uint64) {
@@ -636,6 +723,10 @@ func (cmd *ScanCmd) SetVal(keys []string, cursor uint64) {
 
 func (cmd *ScanCmd) Val() (keys []string, cursor uint64) {
 	return cmd.keys, cmd.cursor
+}
+
+func (cmd *ScanCmd) SetErr(err error) {
+	cmd.err = err
 }
 
 func (cmd *ScanCmd) Err() error {
@@ -655,8 +746,7 @@ type KeyValueSliceCmd struct {
 	baseCmd[[]KeyValue]
 }
 
-func newKeyValueSliceCmd(res rueidis.RedisResult) *KeyValueSliceCmd {
-	cmd := &KeyValueSliceCmd{}
+func (cmd *KeyValueSliceCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
 	for _, a := range arr {
 		kv, _ := a.AsStrSlice()
@@ -665,6 +755,11 @@ func newKeyValueSliceCmd(res rueidis.RedisResult) *KeyValueSliceCmd {
 		}
 	}
 	cmd.SetErr(err)
+}
+
+func newKeyValueSliceCmd(res rueidis.RedisResult) *KeyValueSliceCmd {
+	cmd := &KeyValueSliceCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -673,10 +768,14 @@ type KeyValuesCmd struct {
 	val rueidis.KeyValues
 }
 
+func (cmd *KeyValuesCmd) from(res rueidis.RedisResult) {
+	cmd.val, cmd.err = res.AsLMPop()
+}
+
 func newKeyValuesCmd(res rueidis.RedisResult) *KeyValuesCmd {
-	ret := &KeyValuesCmd{}
-	ret.val, ret.err = res.AsLMPop()
-	return ret
+	cmd := &KeyValuesCmd{}
+	cmd.from(res)
+	return cmd
 }
 
 func (cmd *KeyValuesCmd) SetVal(key string, val []string) {
@@ -709,19 +808,23 @@ type KeyFlagsCmd struct {
 	baseCmd[[]KeyFlags]
 }
 
-func newKeyFlagsCmd(res rueidis.RedisResult) *KeyFlagsCmd {
-	ret := &KeyFlagsCmd{}
-	if ret.err = res.Error(); ret.err == nil {
+func (cmd *KeyFlagsCmd) from(res rueidis.RedisResult) {
+	if cmd.err = res.Error(); cmd.err == nil {
 		kfs, _ := res.ToArray()
-		ret.val = make([]KeyFlags, len(kfs))
+		cmd.val = make([]KeyFlags, len(kfs))
 		for i := 0; i < len(kfs); i++ {
 			if kf, _ := kfs[i].ToArray(); len(kf) >= 2 {
-				ret.val[i].Key, _ = kf[0].ToString()
-				ret.val[i].Flags, _ = kf[1].AsStrSlice()
+				cmd.val[i].Key, _ = kf[0].ToString()
+				cmd.val[i].Flags, _ = kf[1].AsStrSlice()
 			}
 		}
 	}
-	return ret
+}
+
+func newKeyFlagsCmd(res rueidis.RedisResult) *KeyFlagsCmd {
+	cmd := &KeyFlagsCmd{}
+	cmd.from(res)
+	return cmd
 }
 
 type ZSliceWithKeyCmd struct {
@@ -730,16 +833,23 @@ type ZSliceWithKeyCmd struct {
 	val []Z
 }
 
-func newZSliceWithKeyCmd(res rueidis.RedisResult) *ZSliceWithKeyCmd {
+func (cmd *ZSliceWithKeyCmd) from(res rueidis.RedisResult) {
 	v, err := res.AsZMPop()
 	if err != nil {
-		return &ZSliceWithKeyCmd{err: err}
+		cmd.err = err
+		return
 	}
 	val := make([]Z, 0, len(v.Values))
 	for _, s := range v.Values {
 		val = append(val, Z{Member: s.Member, Score: s.Score})
 	}
-	return &ZSliceWithKeyCmd{key: v.Key, val: val}
+	cmd.key, cmd.val = v.Key, val
+}
+
+func newZSliceWithKeyCmd(res rueidis.RedisResult) *ZSliceWithKeyCmd {
+	cmd := &ZSliceWithKeyCmd{}
+	cmd.from(res)
+	return cmd
 }
 
 func (cmd *ZSliceWithKeyCmd) SetVal(key string, val []Z) {
@@ -767,11 +877,15 @@ type StringStringMapCmd struct {
 	baseCmd[map[string]string]
 }
 
-func newStringStringMapCmd(res rueidis.RedisResult) *StringStringMapCmd {
-	cmd := &StringStringMapCmd{}
+func (cmd *StringStringMapCmd) from(res rueidis.RedisResult) {
 	val, err := res.AsStrMap()
 	cmd.SetErr(err)
 	cmd.SetVal(val)
+}
+
+func newStringStringMapCmd(res rueidis.RedisResult) *StringStringMapCmd {
+	cmd := &StringStringMapCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -800,11 +914,15 @@ type StringIntMapCmd struct {
 	baseCmd[map[string]int64]
 }
 
-func newStringIntMapCmd(res rueidis.RedisResult) *StringIntMapCmd {
-	cmd := &StringIntMapCmd{}
+func (cmd *StringIntMapCmd) from(res rueidis.RedisResult) {
 	val, err := res.AsIntMap()
 	cmd.SetErr(err)
 	cmd.SetVal(val)
+}
+
+func newStringIntMapCmd(res rueidis.RedisResult) *StringIntMapCmd {
+	cmd := &StringIntMapCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -812,18 +930,22 @@ type StringStructMapCmd struct {
 	baseCmd[map[string]struct{}]
 }
 
-func newStringStructMapCmd(res rueidis.RedisResult) *StringStructMapCmd {
-	cmd := &StringStructMapCmd{}
+func (cmd *StringStructMapCmd) from(res rueidis.RedisResult) {
 	strSlice, err := res.AsStrSlice()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	val := make(map[string]struct{}, len(strSlice))
 	for _, v := range strSlice {
 		val[v] = struct{}{}
 	}
 	cmd.SetVal(val)
+}
+
+func newStringStructMapCmd(res rueidis.RedisResult) *StringStructMapCmd {
+	cmd := &StringStructMapCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -831,14 +953,18 @@ type XMessageSliceCmd struct {
 	baseCmd[[]XMessage]
 }
 
-func newXMessageSliceCmd(res rueidis.RedisResult) *XMessageSliceCmd {
-	cmd := &XMessageSliceCmd{}
+func (cmd *XMessageSliceCmd) from(res rueidis.RedisResult) {
 	val, err := res.AsXRange()
 	cmd.SetErr(err)
 	cmd.val = make([]XMessage, len(val))
 	for i, r := range val {
 		cmd.val[i] = newXMessage(r)
 	}
+}
+
+func newXMessageSliceCmd(res rueidis.RedisResult) *XMessageSliceCmd {
+	cmd := &XMessageSliceCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -862,12 +988,11 @@ type XStreamSliceCmd struct {
 	baseCmd[[]XStream]
 }
 
-func newXStreamSliceCmd(res rueidis.RedisResult) *XStreamSliceCmd {
-	cmd := &XStreamSliceCmd{}
+func (cmd *XStreamSliceCmd) from(res rueidis.RedisResult) {
 	streams, err := res.AsXRead()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	val := make([]XStream, 0, len(streams))
 	for name, messages := range streams {
@@ -878,6 +1003,11 @@ func newXStreamSliceCmd(res rueidis.RedisResult) *XStreamSliceCmd {
 		val = append(val, XStream{Stream: name, Messages: msgs})
 	}
 	cmd.SetVal(val)
+}
+
+func newXStreamSliceCmd(res rueidis.RedisResult) *XStreamSliceCmd {
+	cmd := &XStreamSliceCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -892,31 +1022,30 @@ type XPendingCmd struct {
 	baseCmd[XPending]
 }
 
-func newXPendingCmd(res rueidis.RedisResult) *XPendingCmd {
-	cmd := &XPendingCmd{}
+func (cmd *XPendingCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	if len(arr) < 4 {
 		cmd.SetErr(fmt.Errorf("got %d, wanted 4", len(arr)))
-		return cmd
+		return
 	}
 	count, err := arr[0].AsInt64()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	lower, err := arr[1].ToString()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	higher, err := arr[2].ToString()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	val := XPending{
 		Count:  count,
@@ -926,27 +1055,27 @@ func newXPendingCmd(res rueidis.RedisResult) *XPendingCmd {
 	consumerArr, err := arr[3].ToArray()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	for _, v := range consumerArr {
 		consumer, err := v.ToArray()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		if len(consumer) < 2 {
 			cmd.SetErr(fmt.Errorf("got %d, wanted 2", len(arr)))
-			return cmd
+			return
 		}
 		consumerName, err := consumer[0].ToString()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		consumerPending, err := consumer[1].AsInt64()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		if val.Consumers == nil {
 			val.Consumers = make(map[string]int64)
@@ -954,6 +1083,11 @@ func newXPendingCmd(res rueidis.RedisResult) *XPendingCmd {
 		val.Consumers[consumerName] = consumerPending
 	}
 	cmd.SetVal(val)
+}
+
+func newXPendingCmd(res rueidis.RedisResult) *XPendingCmd {
+	cmd := &XPendingCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -968,43 +1102,42 @@ type XPendingExtCmd struct {
 	baseCmd[[]XPendingExt]
 }
 
-func newXPendingExtCmd(res rueidis.RedisResult) *XPendingExtCmd {
-	cmd := &XPendingExtCmd{}
+func (cmd *XPendingExtCmd) from(res rueidis.RedisResult) {
 	arrs, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	val := make([]XPendingExt, 0, len(arrs))
 	for _, v := range arrs {
 		arr, err := v.ToArray()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		if len(arr) < 4 {
 			cmd.SetErr(fmt.Errorf("got %d, wanted 4", len(arr)))
-			return cmd
+			return
 		}
 		id, err := arr[0].ToString()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		consumer, err := arr[1].ToString()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		idle, err := arr[2].AsInt64()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		retryCount, err := arr[3].AsInt64()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		val = append(val, XPendingExt{
 			ID:         id,
@@ -1014,6 +1147,11 @@ func newXPendingExtCmd(res rueidis.RedisResult) *XPendingExtCmd {
 		})
 	}
 	cmd.SetVal(val)
+}
+
+func newXPendingExtCmd(res rueidis.RedisResult) *XPendingExtCmd {
+	cmd := &XPendingExtCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -1023,27 +1161,37 @@ type XAutoClaimCmd struct {
 	val   []XMessage
 }
 
-func newXAutoClaimCmd(res rueidis.RedisResult) *XAutoClaimCmd {
+func (cmd *XAutoClaimCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
 	if err != nil {
-		return &XAutoClaimCmd{err: err}
+		cmd.SetErr(err)
+		return
 	}
 	if len(arr) < 2 {
-		return &XAutoClaimCmd{err: fmt.Errorf("got %d, wanted 2", len(arr))}
+		cmd.SetErr(fmt.Errorf("got %d, wanted 2", len(arr)))
+		return
 	}
 	start, err := arr[0].ToString()
 	if err != nil {
-		return &XAutoClaimCmd{err: err}
+		cmd.SetErr(err)
+		return
 	}
 	ranges, err := arr[1].AsXRange()
 	if err != nil {
-		return &XAutoClaimCmd{err: err}
+		cmd.SetErr(err)
+		return
 	}
 	val := make([]XMessage, 0, len(ranges))
 	for _, r := range ranges {
 		val = append(val, newXMessage(r))
 	}
-	return &XAutoClaimCmd{val: val, start: start, err: err}
+	cmd.val, cmd.start = val, start
+}
+
+func newXAutoClaimCmd(res rueidis.RedisResult) *XAutoClaimCmd {
+	cmd := &XAutoClaimCmd{}
+	cmd.from(res)
+	return cmd
 }
 
 func (cmd *XAutoClaimCmd) SetVal(val []XMessage, start string) {
@@ -1073,23 +1221,34 @@ type XAutoClaimJustIDCmd struct {
 	val   []string
 }
 
-func newXAutoClaimJustIDCmd(res rueidis.RedisResult) *XAutoClaimJustIDCmd {
+func (cmd *XAutoClaimJustIDCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
 	if err != nil {
-		return &XAutoClaimJustIDCmd{err: err}
+		cmd.SetErr(err)
+		return
 	}
 	if len(arr) < 2 {
-		return &XAutoClaimJustIDCmd{err: fmt.Errorf("got %d, wanted 2", len(arr))}
+		cmd.SetErr(fmt.Errorf("got %d, wanted 2", len(arr)))
+		return
 	}
 	start, err := arr[0].ToString()
 	if err != nil {
-		return &XAutoClaimJustIDCmd{err: err}
+		cmd.SetErr(err)
+		return
 	}
 	val, err := arr[1].AsStrSlice()
 	if err != nil {
-		return &XAutoClaimJustIDCmd{err: err}
+		cmd.SetErr(err)
+		return
 	}
-	return &XAutoClaimJustIDCmd{val: val, start: start, err: err}
+	cmd.val, cmd.start = val, start
+}
+
+func newXAutoClaimJustIDCmd(res rueidis.RedisResult) *XAutoClaimJustIDCmd {
+	cmd := &XAutoClaimJustIDCmd{}
+	cmd.from(res)
+	return cmd
+
 }
 
 func (cmd *XAutoClaimJustIDCmd) SetVal(val []string, start string) {
@@ -1126,19 +1285,18 @@ type XInfoGroupsCmd struct {
 	baseCmd[[]XInfoGroup]
 }
 
-func newXInfoGroupsCmd(res rueidis.RedisResult) *XInfoGroupsCmd {
-	cmd := &XInfoGroupsCmd{}
+func (cmd *XInfoGroupsCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	groupInfos := make([]XInfoGroup, 0, len(arr))
 	for _, v := range arr {
 		info, err := v.AsMap()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		var group XInfoGroup
 		if attr, ok := info["name"]; ok {
@@ -1162,6 +1320,11 @@ func newXInfoGroupsCmd(res rueidis.RedisResult) *XInfoGroupsCmd {
 		groupInfos = append(groupInfos, group)
 	}
 	cmd.SetVal(groupInfos)
+}
+
+func newXInfoGroupsCmd(res rueidis.RedisResult) *XInfoGroupsCmd {
+	cmd := &XInfoGroupsCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -1181,12 +1344,11 @@ type XInfoStreamCmd struct {
 	baseCmd[XInfoStream]
 }
 
-func newXInfoStreamCmd(res rueidis.RedisResult) *XInfoStreamCmd {
-	cmd := &XInfoStreamCmd{}
+func (cmd *XInfoStreamCmd) from(res rueidis.RedisResult) {
 	kv, err := res.AsMap()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	var val XInfoStream
 	if v, ok := kv["length"]; ok {
@@ -1224,6 +1386,11 @@ func newXInfoStreamCmd(res rueidis.RedisResult) *XInfoStreamCmd {
 		}
 	}
 	cmd.SetVal(val)
+}
+
+func newXInfoStreamCmd(res rueidis.RedisResult) *XInfoStreamCmd {
+	cmd := &XInfoStreamCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -1273,12 +1440,11 @@ type XInfoStreamFullCmd struct {
 	baseCmd[XInfoStreamFull]
 }
 
-func newXInfoStreamFullCmd(res rueidis.RedisResult) *XInfoStreamFullCmd {
-	cmd := &XInfoStreamFullCmd{}
+func (cmd *XInfoStreamFullCmd) from(res rueidis.RedisResult) {
 	kv, err := res.AsMap()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	var val XInfoStreamFull
 	if v, ok := kv["length"]; ok {
@@ -1306,14 +1472,14 @@ func newXInfoStreamFullCmd(res rueidis.RedisResult) *XInfoStreamFullCmd {
 		val.Groups, err = readStreamGroups(v)
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 	}
 	if v, ok := kv["entries"]; ok {
 		ranges, err := v.AsXRange()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		val.Entries = make([]XMessage, 0, len(ranges))
 		for _, r := range ranges {
@@ -1321,6 +1487,11 @@ func newXInfoStreamFullCmd(res rueidis.RedisResult) *XInfoStreamFullCmd {
 		}
 	}
 	cmd.SetVal(val)
+}
+
+func newXInfoStreamFullCmd(res rueidis.RedisResult) *XInfoStreamFullCmd {
+	cmd := &XInfoStreamFullCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -1472,19 +1643,18 @@ type XInfoConsumersCmd struct {
 	baseCmd[[]XInfoConsumer]
 }
 
-func newXInfoConsumersCmd(res rueidis.RedisResult) *XInfoConsumersCmd {
-	cmd := &XInfoConsumersCmd{}
+func (cmd *XInfoConsumersCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	val := make([]XInfoConsumer, 0, len(arr))
 	for _, v := range arr {
 		info, err := v.AsMap()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		var consumer XInfoConsumer
 		if attr, ok := info["name"]; ok {
@@ -1500,6 +1670,11 @@ func newXInfoConsumersCmd(res rueidis.RedisResult) *XInfoConsumersCmd {
 		val = append(val, consumer)
 	}
 	cmd.SetVal(val)
+}
+
+func newXInfoConsumersCmd(res rueidis.RedisResult) *XInfoConsumersCmd {
+	cmd := &XInfoConsumersCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -1526,34 +1701,38 @@ type ZWithKeyCmd struct {
 	baseCmd[ZWithKey]
 }
 
-func newZWithKeyCmd(res rueidis.RedisResult) *ZWithKeyCmd {
-	cmd := &ZWithKeyCmd{}
+func (cmd *ZWithKeyCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	if len(arr) < 3 {
 		cmd.SetErr(fmt.Errorf("got %d, wanted 3", len(arr)))
-		return cmd
+		return
 	}
 	val := ZWithKey{}
 	val.Key, err = arr[0].ToString()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	val.Member, err = arr[1].ToString()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	val.Score, err = arr[2].AsFloat64()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	cmd.SetVal(val)
+}
+
+func newZWithKeyCmd(res rueidis.RedisResult) *ZWithKeyCmd {
+	cmd := &ZWithKeyCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -1566,44 +1745,52 @@ type RankWithScoreCmd struct {
 	baseCmd[RankScore]
 }
 
-func newRankWithScoreCmd(res rueidis.RedisResult) *RankWithScoreCmd {
-	ret := &RankWithScoreCmd{}
-	if ret.err = res.Error(); ret.err == nil {
+func (cmd *RankWithScoreCmd) from(res rueidis.RedisResult) {
+	if cmd.err = res.Error(); cmd.err == nil {
 		vs, _ := res.ToArray()
 		if len(vs) >= 2 {
-			ret.val.Rank, _ = vs[0].AsInt64()
-			ret.val.Score, _ = vs[1].AsFloat64()
+			cmd.val.Rank, _ = vs[0].AsInt64()
+			cmd.val.Score, _ = vs[1].AsFloat64()
 		}
 	}
-	return ret
+}
+
+func newRankWithScoreCmd(res rueidis.RedisResult) *RankWithScoreCmd {
+	cmd := &RankWithScoreCmd{}
+	cmd.from(res)
+	return cmd
 }
 
 type TimeCmd struct {
 	baseCmd[time.Time]
 }
 
-func newTimeCmd(res rueidis.RedisResult) *TimeCmd {
-	cmd := &TimeCmd{}
+func (cmd *TimeCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	if len(arr) < 2 {
 		cmd.SetErr(fmt.Errorf("got %d, wanted 2", len(arr)))
-		return cmd
+		return
 	}
 	sec, err := arr[0].AsInt64()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	microSec, err := arr[1].AsInt64()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	cmd.SetVal(time.Unix(sec, microSec*1000))
+}
+
+func newTimeCmd(res rueidis.RedisResult) *TimeCmd {
+	cmd := &TimeCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -1622,61 +1809,60 @@ type ClusterSlotsCmd struct {
 	baseCmd[[]ClusterSlot]
 }
 
-func newClusterSlotsCmd(res rueidis.RedisResult) *ClusterSlotsCmd {
-	cmd := &ClusterSlotsCmd{}
+func (cmd *ClusterSlotsCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	val := make([]ClusterSlot, 0, len(arr))
 	for _, v := range arr {
 		slot, err := v.ToArray()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		if len(slot) < 2 {
 			cmd.SetErr(fmt.Errorf("got %d, excpected atleast 2", len(slot)))
-			return cmd
+			return
 		}
 		start, err := slot[0].AsInt64()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		end, err := slot[1].AsInt64()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		nodes := make([]ClusterNode, len(slot)-2)
 		for i, j := 2, 0; i < len(slot); i, j = i+1, j+1 {
 			node, err := slot[i].ToArray()
 			if err != nil {
 				cmd.SetErr(err)
-				return cmd
+				return
 			}
 			if len(node) < 2 {
 				cmd.SetErr(fmt.Errorf("got %d, expected 2 or 3", len(node)))
-				return cmd
+				return
 			}
 			ip, err := node[0].ToString()
 			if err != nil {
 				cmd.SetErr(err)
-				return cmd
+				return
 			}
 			port, err := node[1].AsInt64()
 			if err != nil {
 				cmd.SetErr(err)
-				return cmd
+				return
 			}
 			nodes[j].Addr = net.JoinHostPort(ip, strconv.FormatInt(port, 10))
 			if len(node) > 2 {
 				id, err := node[2].ToString()
 				if err != nil {
 					cmd.SetErr(err)
-					return cmd
+					return
 				}
 				nodes[j].ID = id
 			}
@@ -1688,22 +1874,26 @@ func newClusterSlotsCmd(res rueidis.RedisResult) *ClusterSlotsCmd {
 		})
 	}
 	cmd.SetVal(val)
+}
+
+func newClusterSlotsCmd(res rueidis.RedisResult) *ClusterSlotsCmd {
+	cmd := &ClusterSlotsCmd{}
+	cmd.from(res)
 	return cmd
 }
 
-func newClusterShardsCmd(res rueidis.RedisResult) *ClusterShardsCmd {
-	cmd := &ClusterShardsCmd{}
+func (cmd *ClusterShardsCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	val := make([]ClusterShard, 0, len(arr))
 	for _, v := range arr {
 		dict, err := v.ToMap()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		shard := ClusterShard{}
 		{
@@ -1719,19 +1909,19 @@ func newClusterShardsCmd(res rueidis.RedisResult) *ClusterShardsCmd {
 			nodes, ok := dict["nodes"]
 			if !ok {
 				cmd.SetErr(errors.New("nodes not found"))
-				return cmd
+				return
 			}
 			arr, err := nodes.ToArray()
 			if err != nil {
 				cmd.SetErr(err)
-				return cmd
+				return
 			}
 			shard.Nodes = make([]Node, len(arr))
 			for i := 0; i < len(arr); i++ {
 				nodeMap, err := arr[i].ToMap()
 				if err != nil {
 					cmd.SetErr(err)
-					return cmd
+					return
 				}
 				for k, v := range nodeMap {
 					switch k {
@@ -1760,6 +1950,11 @@ func newClusterShardsCmd(res rueidis.RedisResult) *ClusterShardsCmd {
 		val = append(val, shard)
 	}
 	cmd.SetVal(val)
+}
+
+func newClusterShardsCmd(res rueidis.RedisResult) *ClusterShardsCmd {
+	cmd := &ClusterShardsCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -1795,12 +1990,11 @@ type GeoPosCmd struct {
 	baseCmd[[]*GeoPos]
 }
 
-func newGeoPosCmd(res rueidis.RedisResult) *GeoPosCmd {
-	cmd := &GeoPosCmd{}
+func (cmd *GeoPosCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	val := make([]*GeoPos, 0, len(arr))
 	for _, v := range arr {
@@ -1811,21 +2005,21 @@ func newGeoPosCmd(res rueidis.RedisResult) *GeoPosCmd {
 				continue
 			}
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		if len(loc) != 2 {
 			cmd.SetErr(fmt.Errorf("got %d, expected 2", len(loc)))
-			return cmd
+			return
 		}
 		long, err := loc[0].AsFloat64()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		lat, err := loc[1].AsFloat64()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		val = append(val, &GeoPos{
 			Longitude: long,
@@ -1833,6 +2027,11 @@ func newGeoPosCmd(res rueidis.RedisResult) *GeoPosCmd {
 		})
 	}
 	cmd.SetVal(val)
+}
+
+func newGeoPosCmd(res rueidis.RedisResult) *GeoPosCmd {
+	cmd := &GeoPosCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -1840,10 +2039,14 @@ type GeoLocationCmd struct {
 	baseCmd[[]rueidis.GeoLocation]
 }
 
+func (cmd *GeoLocationCmd) from(res rueidis.RedisResult) {
+	cmd.val, cmd.err = res.AsGeosearch()
+}
+
 func newGeoLocationCmd(res rueidis.RedisResult) *GeoLocationCmd {
-	ret := &GeoLocationCmd{}
-	ret.val, ret.err = res.AsGeosearch()
-	return ret
+	cmd := &GeoLocationCmd{}
+	cmd.from(res)
+	return cmd
 }
 
 type CommandInfo struct {
@@ -1861,34 +2064,33 @@ type CommandsInfoCmd struct {
 	baseCmd[map[string]CommandInfo]
 }
 
-func newCommandsInfoCmd(res rueidis.RedisResult) *CommandsInfoCmd {
-	cmd := &CommandsInfoCmd{}
+func (cmd *CommandsInfoCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	val := make(map[string]CommandInfo, len(arr))
 	for _, v := range arr {
 		info, err := v.ToArray()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		if len(info) < 6 {
 			cmd.SetErr(fmt.Errorf("got %d, wanted at least 6", len(info)))
-			return cmd
+			return
 		}
 		var _cmd CommandInfo
 		_cmd.Name, err = info[0].ToString()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		_cmd.Arity, err = info[1].AsInt64()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		_cmd.Flags, err = info[2].AsStrSlice()
 		if err != nil {
@@ -1896,23 +2098,23 @@ func newCommandsInfoCmd(res rueidis.RedisResult) *CommandsInfoCmd {
 				_cmd.Flags = []string{}
 			} else {
 				cmd.SetErr(err)
-				return cmd
+				return
 			}
 		}
 		_cmd.FirstKeyPos, err = info[3].AsInt64()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		_cmd.LastKeyPos, err = info[4].AsInt64()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		_cmd.StepCount, err = info[5].AsInt64()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		for _, flag := range _cmd.Flags {
 			if flag == "readonly" {
@@ -1930,13 +2132,25 @@ func newCommandsInfoCmd(res rueidis.RedisResult) *CommandsInfoCmd {
 				_cmd.ACLFlags = []string{}
 			} else {
 				cmd.SetErr(err)
-				return cmd
+				return
 			}
 		}
 		val[_cmd.Name] = _cmd
 	}
 	cmd.SetVal(val)
+}
+
+func newCommandsInfoCmd(res rueidis.RedisResult) *CommandsInfoCmd {
+	cmd := &CommandsInfoCmd{}
+	cmd.from(res)
 	return cmd
+}
+
+type HExpireArgs struct {
+	NX bool
+	XX bool
+	GT bool
+	LT bool
 }
 
 type Sort struct {
@@ -2228,12 +2442,11 @@ type FunctionListCmd struct {
 	baseCmd[[]Library]
 }
 
-func newFunctionListCmd(res rueidis.RedisResult) *FunctionListCmd {
-	cmd := &FunctionListCmd{}
+func (cmd *FunctionListCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	val := make([]Library, len(arr))
 	for i := 0; i < len(arr); i++ {
@@ -2266,6 +2479,11 @@ func newFunctionListCmd(res rueidis.RedisResult) *FunctionListCmd {
 		}
 	}
 	cmd.SetVal(val)
+}
+
+func newFunctionListCmd(res rueidis.RedisResult) *FunctionListCmd {
+	cmd := &FunctionListCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -2320,12 +2538,11 @@ type MapStringInterfaceSliceCmd struct {
 	baseCmd[[]map[string]any]
 }
 
-func newMapStringInterfaceSliceCmd(res rueidis.RedisResult) *MapStringInterfaceSliceCmd {
-	cmd := &MapStringInterfaceSliceCmd{}
+func (cmd *MapStringInterfaceSliceCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	cmd.val = make([]map[string]any, 0, len(arr))
 	for _, ele := range arr {
@@ -2333,7 +2550,7 @@ func newMapStringInterfaceSliceCmd(res rueidis.RedisResult) *MapStringInterfaceS
 		eleMap := make(map[string]any, len(m))
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		for k, v := range m {
 			var val any
@@ -2342,13 +2559,18 @@ func newMapStringInterfaceSliceCmd(res rueidis.RedisResult) *MapStringInterfaceS
 				val, err = v.ToAny()
 				if err != nil {
 					cmd.SetErr(err)
-					return cmd
+					return
 				}
 			}
 			eleMap[k] = val
 		}
 		cmd.val = append(cmd.val, eleMap)
 	}
+}
+
+func newMapStringInterfaceSliceCmd(res rueidis.RedisResult) *MapStringInterfaceSliceCmd {
+	cmd := &MapStringInterfaceSliceCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -2391,17 +2613,16 @@ type BFInfoCmd struct {
 	baseCmd[BFInfo]
 }
 
-func newBFInfoCmd(res rueidis.RedisResult) *BFInfoCmd {
-	cmd := &BFInfoCmd{}
+func (cmd *BFInfoCmd) from(res rueidis.RedisResult) {
 	info := BFInfo{}
 	if err := res.Error(); err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	m, err := res.AsIntMap()
 	if err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	keys := make([]string, 0, len(m))
 	values := make([]any, 0, len(m))
@@ -2411,9 +2632,14 @@ func newBFInfoCmd(res rueidis.RedisResult) *BFInfoCmd {
 	}
 	if err := Scan(&info, keys, values); err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	cmd.SetVal(info)
+}
+
+func newBFInfoCmd(res rueidis.RedisResult) *BFInfoCmd {
+	cmd := &BFInfoCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -2426,17 +2652,16 @@ type ScanDumpCmd struct {
 	baseCmd[ScanDump]
 }
 
-func newScanDumpCmd(res rueidis.RedisResult) *ScanDumpCmd {
-	cmd := &ScanDumpCmd{}
+func (cmd *ScanDumpCmd) from(res rueidis.RedisResult) {
 	scanDump := ScanDump{}
 	if err := res.Error(); err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	arr, err := res.ToArray()
 	if err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	if len(arr) != 2 {
 		panic(fmt.Sprintf("wrong length of redis message, got %v, want %v", len(arr), 2))
@@ -2444,16 +2669,21 @@ func newScanDumpCmd(res rueidis.RedisResult) *ScanDumpCmd {
 	iter, err := arr[0].AsInt64()
 	if err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	data, err := arr[1].ToString()
 	if err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	scanDump.Iter = iter
 	scanDump.Data = data
 	cmd.SetVal(scanDump)
+}
+
+func newScanDumpCmd(res rueidis.RedisResult) *ScanDumpCmd {
+	cmd := &ScanDumpCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -2472,13 +2702,12 @@ type CFInfoCmd struct {
 	baseCmd[CFInfo]
 }
 
-func newCFInfoCmd(res rueidis.RedisResult) *CFInfoCmd {
-	cmd := &CFInfoCmd{}
+func (cmd *CFInfoCmd) from(res rueidis.RedisResult) {
 	info := CFInfo{}
 	m, err := res.AsMap()
 	if err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	keys := make([]string, 0, len(m))
 	values := make([]any, 0, len(m))
@@ -2487,15 +2716,20 @@ func newCFInfoCmd(res rueidis.RedisResult) *CFInfoCmd {
 		val, err := v.AsInt64()
 		if err != nil {
 			cmd.err = err
-			return cmd
+			return
 		}
 		values = append(values, strconv.FormatInt(val, 10))
 	}
 	if err := Scan(&info, keys, values); err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	cmd.SetVal(info)
+}
+
+func newCFInfoCmd(res rueidis.RedisResult) *CFInfoCmd {
+	cmd := &CFInfoCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -2509,13 +2743,12 @@ type CMSInfoCmd struct {
 	baseCmd[CMSInfo]
 }
 
-func newCMSInfoCmd(res rueidis.RedisResult) *CMSInfoCmd {
-	cmd := &CMSInfoCmd{}
+func (cmd *CMSInfoCmd) from(res rueidis.RedisResult) {
 	info := CMSInfo{}
 	m, err := res.AsIntMap()
 	if err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	keys := make([]string, 0, len(m))
 	values := make([]any, 0, len(m))
@@ -2525,9 +2758,14 @@ func newCMSInfoCmd(res rueidis.RedisResult) *CMSInfoCmd {
 	}
 	if err := Scan(&info, keys, values); err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	cmd.SetVal(info)
+}
+
+func newCMSInfoCmd(res rueidis.RedisResult) *CMSInfoCmd {
+	cmd := &CMSInfoCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -2542,13 +2780,12 @@ type TopKInfoCmd struct {
 	baseCmd[TopKInfo]
 }
 
-func newTopKInfoCmd(res rueidis.RedisResult) *TopKInfoCmd {
-	cmd := &TopKInfoCmd{}
+func (cmd *TopKInfoCmd) from(res rueidis.RedisResult) {
 	info := TopKInfo{}
 	m, err := res.ToMap()
 	if err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	keys := make([]string, 0, len(m))
 	values := make([]any, 0, len(m))
@@ -2559,14 +2796,14 @@ func newTopKInfoCmd(res rueidis.RedisResult) *TopKInfoCmd {
 			intVal, err := v.AsInt64()
 			if err != nil {
 				cmd.err = err
-				return cmd
+				return
 			}
 			values = append(values, strconv.FormatInt(intVal, 10))
 		case "decay":
 			decay, err := v.AsFloat64()
 			if err != nil {
 				cmd.err = err
-				return cmd
+				return
 			}
 			// args of strconv.FormatFloat is copied from cmds.TopkReserveParamsDepth.Decay
 			values = append(values, strconv.FormatFloat(decay, 'f', -1, 64))
@@ -2576,9 +2813,14 @@ func newTopKInfoCmd(res rueidis.RedisResult) *TopKInfoCmd {
 	}
 	if err := Scan(&info, keys, values); err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	cmd.SetVal(info)
+}
+
+func newTopKInfoCmd(res rueidis.RedisResult) *TopKInfoCmd {
+	cmd := &TopKInfoCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -2586,14 +2828,18 @@ type MapStringIntCmd struct {
 	baseCmd[map[string]int64]
 }
 
-func newMapStringIntCmd(res rueidis.RedisResult) *MapStringIntCmd {
-	cmd := &MapStringIntCmd{}
+func (cmd *MapStringIntCmd) from(res rueidis.RedisResult) {
 	m, err := res.AsIntMap()
 	if err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	cmd.SetVal(m)
+}
+
+func newMapStringIntCmd(res rueidis.RedisResult) *MapStringIntCmd {
+	cmd := &MapStringIntCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -2614,13 +2860,12 @@ type TDigestInfoCmd struct {
 	baseCmd[TDigestInfo]
 }
 
-func newTDigestInfoCmd(res rueidis.RedisResult) *TDigestInfoCmd {
-	cmd := &TDigestInfoCmd{}
+func (cmd *TDigestInfoCmd) from(res rueidis.RedisResult) {
 	info := TDigestInfo{}
 	m, err := res.AsIntMap()
 	if err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	keys := make([]string, 0, len(m))
 	values := make([]any, 0, len(m))
@@ -2630,9 +2875,14 @@ func newTDigestInfoCmd(res rueidis.RedisResult) *TDigestInfoCmd {
 	}
 	if err := Scan(&info, keys, values); err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	cmd.SetVal(info)
+}
+
+func newTDigestInfoCmd(res rueidis.RedisResult) *TDigestInfoCmd {
+	cmd := &TDigestInfoCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -2664,7 +2914,7 @@ type TSAlterOptions struct {
 }
 
 type TSCreateRuleOptions struct {
-	alignTimestamp int64
+	AlignTimestamp int64
 }
 
 type TSGetOptions struct {
@@ -2736,17 +2986,16 @@ type TSTimestampValueCmd struct {
 	baseCmd[TSTimestampValue]
 }
 
-func newTSTimestampValueCmd(res rueidis.RedisResult) *TSTimestampValueCmd {
-	cmd := &TSTimestampValueCmd{}
+func (cmd *TSTimestampValueCmd) from(res rueidis.RedisResult) {
 	val := TSTimestampValue{}
 	if err := res.Error(); err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	arr, err := res.ToArray()
 	if err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	if len(arr) != 2 {
 		panic(fmt.Sprintf("wrong len of array reply, should be 2, got %v", len(arr)))
@@ -2754,14 +3003,19 @@ func newTSTimestampValueCmd(res rueidis.RedisResult) *TSTimestampValueCmd {
 	val.Timestamp, err = arr[0].AsInt64()
 	if err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	val.Value, err = arr[1].AsFloat64()
 	if err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	cmd.SetVal(val)
+}
+
+func newTSTimestampValueCmd(res rueidis.RedisResult) *TSTimestampValueCmd {
+	cmd := &TSTimestampValueCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -2769,12 +3023,11 @@ type MapStringInterfaceCmd struct {
 	baseCmd[map[string]any]
 }
 
-func newMapStringInterfaceCmd(res rueidis.RedisResult) *MapStringInterfaceCmd {
-	cmd := &MapStringInterfaceCmd{}
+func (cmd *MapStringInterfaceCmd) from(res rueidis.RedisResult) {
 	m, err := res.AsMap()
 	if err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	strIntMap := make(map[string]any, len(m))
 	for k, ele := range m {
@@ -2784,12 +3037,17 @@ func newMapStringInterfaceCmd(res rueidis.RedisResult) *MapStringInterfaceCmd {
 			v, err = ele.ToAny()
 			if err != nil {
 				cmd.err = err
-				return cmd
+				return
 			}
 		}
 		strIntMap[k] = v
 	}
 	cmd.SetVal(strIntMap)
+}
+
+func newMapStringInterfaceCmd(res rueidis.RedisResult) *MapStringInterfaceCmd {
+	cmd := &MapStringInterfaceCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -2797,33 +3055,37 @@ type TSTimestampValueSliceCmd struct {
 	baseCmd[[]TSTimestampValue]
 }
 
-func newTSTimestampValueSliceCmd(res rueidis.RedisResult) *TSTimestampValueSliceCmd {
-	cmd := &TSTimestampValueSliceCmd{}
+func (cmd *TSTimestampValueSliceCmd) from(res rueidis.RedisResult) {
 	msgSlice, err := res.ToArray()
 	if err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	tsValSlice := make([]TSTimestampValue, 0, len(msgSlice))
 	for i := 0; i < len(msgSlice); i++ {
 		msgArray, err := msgSlice[i].ToArray()
 		if err != nil {
 			cmd.err = err
-			return cmd
+			return
 		}
 		tstmp, err := msgArray[0].AsInt64()
 		if err != nil {
 			cmd.err = err
-			return cmd
+			return
 		}
 		val, err := msgArray[1].AsFloat64()
 		if err != nil {
 			cmd.err = err
-			return cmd
+			return
 		}
 		tsValSlice = append(tsValSlice, TSTimestampValue{Timestamp: tstmp, Value: val})
 	}
 	cmd.SetVal(tsValSlice)
+}
+
+func newTSTimestampValueSliceCmd(res rueidis.RedisResult) *TSTimestampValueSliceCmd {
+	cmd := &TSTimestampValueSliceCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -2831,19 +3093,18 @@ type MapStringSliceInterfaceCmd struct {
 	baseCmd[map[string][]any]
 }
 
-func newMapStringSliceInterfaceCmd(res rueidis.RedisResult) *MapStringSliceInterfaceCmd {
-	cmd := &MapStringSliceInterfaceCmd{}
+func (cmd *MapStringSliceInterfaceCmd) from(res rueidis.RedisResult) {
 	m, err := res.ToMap()
 	if err != nil {
 		cmd.err = err
-		return cmd
+		return
 	}
 	mapStrSliceInt := make(map[string][]any, len(m))
 	for k, entry := range m {
 		vals, err := entry.ToArray()
 		if err != nil {
 			cmd.err = err
-			return cmd
+			return
 		}
 		anySlice := make([]any, 0, len(vals))
 		for _, v := range vals {
@@ -2851,13 +3112,18 @@ func newMapStringSliceInterfaceCmd(res rueidis.RedisResult) *MapStringSliceInter
 			ele, err := v.ToAny()
 			if err != nil {
 				cmd.err = err
-				return cmd
+				return
 			}
 			anySlice = append(anySlice, ele)
 		}
 		mapStrSliceInt[k] = anySlice
 	}
 	cmd.SetVal(mapStrSliceInt)
+}
+
+func newMapStringSliceInterfaceCmd(res rueidis.RedisResult) *MapStringSliceInterfaceCmd {
+	cmd := &MapStringSliceInterfaceCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -2970,12 +3236,11 @@ func (cmd *JSONCmd) Result() (string, error) {
 	return cmd.Val(), nil
 }
 
-func newJSONCmd(res rueidis.RedisResult) *JSONCmd {
-	cmd := &JSONCmd{}
+func (cmd *JSONCmd) from(res rueidis.RedisResult) {
 	msg, err := res.ToMessage()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	switch {
 	// JSON.GET
@@ -2984,7 +3249,7 @@ func newJSONCmd(res rueidis.RedisResult) *JSONCmd {
 		str, err := res.ToString()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		cmd.SetVal(str)
 	// JSON.NUMINCRBY
@@ -2997,7 +3262,7 @@ func newJSONCmd(res rueidis.RedisResult) *JSONCmd {
 		arr, err := res.ToArray()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		expanded := make([]any, len(arr))
 		for i, e := range arr {
@@ -3007,7 +3272,7 @@ func newJSONCmd(res rueidis.RedisResult) *JSONCmd {
 					continue
 				}
 				cmd.SetErr(err)
-				return cmd
+				return
 			}
 			expanded[i] = anyE
 		}
@@ -3015,12 +3280,17 @@ func newJSONCmd(res rueidis.RedisResult) *JSONCmd {
 		val, err := json.Marshal(cmd.expanded)
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		cmd.SetVal(string(val))
 	default:
 		panic("invalid type, expect array or string")
 	}
+}
+
+func newJSONCmd(res rueidis.RedisResult) *JSONCmd {
+	cmd := &JSONCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -3034,27 +3304,31 @@ type IntPointerSliceCmd struct {
 	baseCmd[[]*int64]
 }
 
-// newIntPointerSliceCmd initialises an IntPointerSliceCmd
-func newIntPointerSliceCmd(res rueidis.RedisResult) *IntPointerSliceCmd {
-	cmd := &IntPointerSliceCmd{}
+func (cmd *IntPointerSliceCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	intPtrSlice := make([]*int64, len(arr))
 	for i, e := range arr {
 		if e.IsNil() {
 			continue
 		}
-		len, err := e.ToInt64()
+		length, err := e.ToInt64()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
-		intPtrSlice[i] = &len
+		intPtrSlice[i] = &length
 	}
 	cmd.SetVal(intPtrSlice)
+}
+
+// newIntPointerSliceCmd initialises an IntPointerSliceCmd
+func newIntPointerSliceCmd(res rueidis.RedisResult) *IntPointerSliceCmd {
+	cmd := &IntPointerSliceCmd{}
+	cmd.from(res)
 	return cmd
 }
 
@@ -3062,12 +3336,11 @@ type JSONSliceCmd struct {
 	baseCmd[[]any]
 }
 
-func newJSONSliceCmd(res rueidis.RedisResult) *JSONSliceCmd {
-	cmd := &JSONSliceCmd{}
+func (cmd *JSONSliceCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
 	if err != nil {
 		cmd.SetErr(err)
-		return cmd
+		return
 	}
 	anySlice := make([]any, len(arr))
 	for i, e := range arr {
@@ -3077,10 +3350,1494 @@ func newJSONSliceCmd(res rueidis.RedisResult) *JSONSliceCmd {
 		anyE, err := e.ToAny()
 		if err != nil {
 			cmd.SetErr(err)
-			return cmd
+			return
 		}
 		anySlice[i] = anyE
 	}
 	cmd.SetVal(anySlice)
+}
+
+func newJSONSliceCmd(res rueidis.RedisResult) *JSONSliceCmd {
+	cmd := &JSONSliceCmd{}
+	cmd.from(res)
 	return cmd
+}
+
+type MapMapStringInterfaceCmd struct {
+	baseCmd[map[string]any]
+}
+
+func (cmd *MapMapStringInterfaceCmd) from(res rueidis.RedisResult) {
+	arr, err := res.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	data := make(map[string]any, len(arr)/2)
+	for i := 0; i < len(arr); i++ {
+		arr1, err := arr[i].ToArray()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		for _i := 0; _i < len(arr1); _i += 2 {
+			key, err := arr1[_i].ToString()
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+			if !arr1[_i+1].IsNil() {
+				value, err := arr1[_i+1].ToAny()
+				if err != nil {
+					cmd.SetErr(err)
+					return
+				}
+				data[key] = value
+			} else {
+				data[key] = nil
+			}
+		}
+	}
+	cmd.SetVal(data)
+}
+
+func newMapMapStringInterfaceCmd(res rueidis.RedisResult) *MapMapStringInterfaceCmd {
+	cmd := &MapMapStringInterfaceCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+type FTAggregateResult struct {
+	Total int
+	Rows  []AggregateRow
+}
+
+type AggregateRow struct {
+	Fields map[string]any
+}
+
+// Each AggregateReducer have different args.
+// Please follow https://redis.io/docs/interact/search-and-query/search/aggregations/#supported-groupby-reducers for more information.
+type FTAggregateReducer struct {
+	Reducer SearchAggregator
+	Args    []interface{}
+	As      string
+}
+
+type FTAggregateGroupBy struct {
+	Fields []interface{}
+	Reduce []FTAggregateReducer
+}
+
+type FTAggregateSortBy struct {
+	FieldName string
+	Asc       bool
+	Desc      bool
+}
+
+type FTAggregateApply struct {
+	Field string
+	As    string
+}
+
+type FTAggregateLoad struct {
+	Field string
+	As    string
+}
+
+type FTAggregateWithCursor struct {
+	Count   int
+	MaxIdle int
+}
+
+type FTAggregateOptions struct {
+	Verbatim          bool
+	LoadAll           bool
+	Load              []FTAggregateLoad
+	Timeout           int
+	GroupBy           []FTAggregateGroupBy
+	SortBy            []FTAggregateSortBy
+	SortByMax         int
+	Apply             []FTAggregateApply
+	LimitOffset       int
+	Limit             int
+	Filter            string
+	WithCursor        bool
+	WithCursorOptions *FTAggregateWithCursor
+	Params            map[string]interface{}
+	DialectVersion    int
+}
+
+type AggregateCmd struct {
+	baseCmd[*FTAggregateResult]
+}
+
+func (cmd *AggregateCmd) from(res rueidis.RedisResult) {
+	if err := res.Error(); err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	anyRes, err := res.ToAny()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetRawVal(anyRes)
+	msg, err := res.ToMessage()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	if !(msg.IsMap() || msg.IsArray()) {
+		panic("res should be either map(RESP3) or array(RESP2)")
+	}
+	if msg.IsMap() {
+		total, docs, err := msg.AsFtAggregate()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		aggResult := &FTAggregateResult{Total: int(total)}
+		for _, doc := range docs {
+			anyMap := make(map[string]any, len(doc))
+			for k, v := range doc {
+				anyMap[k] = v
+			}
+			aggResult.Rows = append(aggResult.Rows, AggregateRow{anyMap})
+		}
+		cmd.SetVal(aggResult)
+		return
+	}
+	// is RESP2 array
+	rows, err := msg.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	anyArr := make([]any, 0, len(rows))
+	for _, e := range rows {
+		anyE, err := e.ToAny()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		anyArr = append(anyArr, anyE)
+	}
+	result, err := processAggregateResult(anyArr)
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetVal(result)
+}
+
+// Ref: https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L584
+func processAggregateResult(data []interface{}) (*FTAggregateResult, error) {
+	if len(data) == 0 {
+		return nil, fmt.Errorf("no data returned")
+	}
+
+	total, ok := data[0].(int64)
+	if !ok {
+		return nil, fmt.Errorf("invalid total format")
+	}
+
+	rows := make([]AggregateRow, 0, len(data)-1)
+	for _, row := range data[1:] {
+		fields, ok := row.([]interface{})
+		if !ok {
+			return nil, fmt.Errorf("invalid row format")
+		}
+
+		rowMap := make(map[string]interface{})
+		for i := 0; i < len(fields); i += 2 {
+			key, ok := fields[i].(string)
+			if !ok {
+				return nil, fmt.Errorf("invalid field key format")
+			}
+			value := fields[i+1]
+			rowMap[key] = value
+		}
+		rows = append(rows, AggregateRow{Fields: rowMap})
+	}
+
+	result := &FTAggregateResult{
+		Total: int(total),
+		Rows:  rows,
+	}
+	return result, nil
+}
+
+func newAggregateCmd(res rueidis.RedisResult) *AggregateCmd {
+	cmd := &AggregateCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+type FTCreateOptions struct {
+	OnHash          bool
+	OnJSON          bool
+	Prefix          []any
+	Filter          string
+	DefaultLanguage string
+	LanguageField   string
+	Score           float64
+	ScoreField      string
+	PayloadField    string
+	MaxTextFields   int
+	NoOffsets       bool
+	Temporary       int
+	NoHL            bool
+	NoFields        bool
+	NoFreqs         bool
+	StopWords       []any
+	SkipInitialScan bool
+}
+
+type SearchAggregator int
+
+const (
+	SearchInvalid = SearchAggregator(iota)
+	SearchAvg
+	SearchSum
+	SearchMin
+	SearchMax
+	SearchCount
+	SearchCountDistinct
+	SearchCountDistinctish
+	SearchStdDev
+	SearchQuantile
+	SearchToList
+	SearchFirstValue
+	SearchRandomSample
+)
+
+func (a SearchAggregator) String() string {
+	switch a {
+	case SearchInvalid:
+		return ""
+	case SearchAvg:
+		return "AVG"
+	case SearchSum:
+		return "SUM"
+	case SearchMin:
+		return "MIN"
+	case SearchMax:
+		return "MAX"
+	case SearchCount:
+		return "COUNT"
+	case SearchCountDistinct:
+		return "COUNT_DISTINCT"
+	case SearchCountDistinctish:
+		return "COUNT_DISTINCTISH"
+	case SearchStdDev:
+		return "STDDEV"
+	case SearchQuantile:
+		return "QUANTILE"
+	case SearchToList:
+		return "TOLIST"
+	case SearchFirstValue:
+		return "FIRST_VALUE"
+	case SearchRandomSample:
+		return "RANDOM_SAMPLE"
+	default:
+		return ""
+	}
+}
+
+type SearchFieldType int
+
+const (
+	SearchFieldTypeInvalid = SearchFieldType(iota)
+	SearchFieldTypeNumeric
+	SearchFieldTypeTag
+	SearchFieldTypeText
+	SearchFieldTypeGeo
+	SearchFieldTypeVector
+	SearchFieldTypeGeoShape
+)
+
+func (t SearchFieldType) String() string {
+	switch t {
+	case SearchFieldTypeInvalid:
+		return ""
+	case SearchFieldTypeNumeric:
+		return "NUMERIC"
+	case SearchFieldTypeTag:
+		return "TAG"
+	case SearchFieldTypeText:
+		return "TEXT"
+	case SearchFieldTypeGeo:
+		return "GEO"
+	case SearchFieldTypeVector:
+		return "VECTOR"
+	case SearchFieldTypeGeoShape:
+		return "GEOSHAPE"
+	default:
+		return "TEXT"
+	}
+}
+
+type FieldSchema struct {
+	FieldName         string
+	As                string
+	FieldType         SearchFieldType
+	Sortable          bool
+	UNF               bool
+	NoStem            bool
+	NoIndex           bool
+	PhoneticMatcher   string
+	Weight            float64
+	Separator         string
+	CaseSensitive     bool
+	WithSuffixtrie    bool
+	VectorArgs        *FTVectorArgs
+	GeoShapeFieldType string
+	IndexEmpty        bool
+	IndexMissing      bool
+}
+
+type FTVectorArgs struct {
+	FlatOptions *FTFlatOptions
+	HNSWOptions *FTHNSWOptions
+}
+
+type FTFlatOptions struct {
+	Type            string
+	Dim             int
+	DistanceMetric  string
+	InitialCapacity int
+	BlockSize       int
+}
+
+type FTHNSWOptions struct {
+	Type                   string
+	Dim                    int
+	DistanceMetric         string
+	InitialCapacity        int
+	MaxEdgesPerNode        int
+	MaxAllowedEdgesPerNode int
+	EFRunTime              int
+	Epsilon                float64
+}
+
+type SpellCheckTerms struct {
+	Include    bool
+	Exclude    bool
+	Dictionary string
+}
+
+type FTSearchFilter struct {
+	FieldName any
+	Min       any
+	Max       any
+}
+
+type FTSearchGeoFilter struct {
+	FieldName string
+	Longitude float64
+	Latitude  float64
+	Radius    float64
+	Unit      string
+}
+
+type FTSearchReturn struct {
+	FieldName string
+	As        string
+}
+
+type FTSearchSortBy struct {
+	FieldName string
+	Asc       bool
+	Desc      bool
+}
+
+type FTDropIndexOptions struct {
+	DeleteDocs bool
+}
+
+type FTExplainOptions struct {
+	Dialect string
+}
+
+type IndexErrors struct {
+	IndexingFailures     int `redis:"indexing failures"`
+	LastIndexingError    string
+	LastIndexingErrorKey string
+}
+
+type FTAttribute struct {
+	Identifier      string
+	Attribute       string
+	Type            string
+	Weight          float64
+	Sortable        bool
+	NoStem          bool
+	NoIndex         bool
+	UNF             bool
+	PhoneticMatcher string
+	CaseSensitive   bool
+	WithSuffixtrie  bool
+}
+
+type CursorStats struct {
+	GlobalIdle    int
+	GlobalTotal   int
+	IndexCapacity int
+	IndexTotal    int
+}
+
+type FieldStatistic struct {
+	Identifier  string
+	Attribute   string
+	IndexErrors IndexErrors
+}
+
+type GCStats struct {
+	BytesCollected       int    `redis:"bytes_collected"`
+	TotalMsRun           int    `redis:"total_ms_run"`
+	TotalCycles          int    `redis:"total_cycles"`
+	AverageCycleTimeMs   string `redis:"average_cycle_time_ms"`
+	LastRunTimeMs        int    `redis:"last_run_time_ms"`
+	GCNumericTreesMissed int    `redis:"gc_numeric_trees_missed"`
+	GCBlocksDenied       int    `redis:"gc_blocks_denied"`
+}
+
+type IndexDefinition struct {
+	KeyType      string
+	Prefixes     []string
+	DefaultScore float64
+}
+
+type FTInfoResult struct {
+	IndexErrors              IndexErrors      `redis:"Index Errors"`
+	Attributes               []FTAttribute    `redis:"attributes"`
+	BytesPerRecordAvg        string           `redis:"bytes_per_record_avg"`
+	Cleaning                 int              `redis:"cleaning"`
+	CursorStats              CursorStats      `redis:"cursor_stats"`
+	DialectStats             map[string]int   `redis:"dialect_stats"`
+	DocTableSizeMB           float64          `redis:"doc_table_size_mb"`
+	FieldStatistics          []FieldStatistic `redis:"field statistics"`
+	GCStats                  GCStats          `redis:"gc_stats"`
+	GeoshapesSzMB            float64          `redis:"geoshapes_sz_mb"`
+	HashIndexingFailures     int              `redis:"hash_indexing_failures"`
+	IndexDefinition          IndexDefinition  `redis:"index_definition"`
+	IndexName                string           `redis:"index_name"`
+	IndexOptions             []string         `redis:"index_options"`
+	Indexing                 int              `redis:"indexing"`
+	InvertedSzMB             float64          `redis:"inverted_sz_mb"`
+	KeyTableSizeMB           float64          `redis:"key_table_size_mb"`
+	MaxDocID                 int              `redis:"max_doc_id"`
+	NumDocs                  int              `redis:"num_docs"`
+	NumRecords               int              `redis:"num_records"`
+	NumTerms                 int              `redis:"num_terms"`
+	NumberOfUses             int              `redis:"number_of_uses"`
+	OffsetBitsPerRecordAvg   string           `redis:"offset_bits_per_record_avg"`
+	OffsetVectorsSzMB        float64          `redis:"offset_vectors_sz_mb"`
+	OffsetsPerTermAvg        string           `redis:"offsets_per_term_avg"`
+	PercentIndexed           float64          `redis:"percent_indexed"`
+	RecordsPerDocAvg         string           `redis:"records_per_doc_avg"`
+	SortableValuesSizeMB     float64          `redis:"sortable_values_size_mb"`
+	TagOverheadSzMB          float64          `redis:"tag_overhead_sz_mb"`
+	TextOverheadSzMB         float64          `redis:"text_overhead_sz_mb"`
+	TotalIndexMemorySzMB     float64          `redis:"total_index_memory_sz_mb"`
+	TotalIndexingTime        int              `redis:"total_indexing_time"`
+	TotalInvertedIndexBlocks int              `redis:"total_inverted_index_blocks"`
+	VectorIndexSzMB          float64          `redis:"vector_index_sz_mb"`
+}
+
+type FTInfoCmd struct {
+	baseCmd[FTInfoResult]
+}
+
+// Ref: https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1143
+func parseFTInfo(data map[string]interface{}) (FTInfoResult, error) {
+	var ftInfo FTInfoResult
+	// Manually parse each field from the map
+	if indexErrors, ok := data["Index Errors"].([]interface{}); ok {
+		ftInfo.IndexErrors = IndexErrors{
+			IndexingFailures:     ToInteger(indexErrors[1]),
+			LastIndexingError:    ToString(indexErrors[3]),
+			LastIndexingErrorKey: ToString(indexErrors[5]),
+		}
+	}
+
+	if attributes, ok := data["attributes"].([]interface{}); ok {
+		for _, attr := range attributes {
+			if attrMap, ok := attr.([]interface{}); ok {
+				att := FTAttribute{}
+				for i := 0; i < len(attrMap); i++ {
+					if ToLower(ToString(attrMap[i])) == "attribute" {
+						att.Attribute = ToString(attrMap[i+1])
+						continue
+					}
+					if ToLower(ToString(attrMap[i])) == "identifier" {
+						att.Identifier = ToString(attrMap[i+1])
+						continue
+					}
+					if ToLower(ToString(attrMap[i])) == "type" {
+						att.Type = ToString(attrMap[i+1])
+						continue
+					}
+					if ToLower(ToString(attrMap[i])) == "weight" {
+						att.Weight = ToFloat(attrMap[i+1])
+						continue
+					}
+					if ToLower(ToString(attrMap[i])) == "nostem" {
+						att.NoStem = true
+						continue
+					}
+					if ToLower(ToString(attrMap[i])) == "sortable" {
+						att.Sortable = true
+						continue
+					}
+					if ToLower(ToString(attrMap[i])) == "noindex" {
+						att.NoIndex = true
+						continue
+					}
+					if ToLower(ToString(attrMap[i])) == "unf" {
+						att.UNF = true
+						continue
+					}
+					if ToLower(ToString(attrMap[i])) == "phonetic" {
+						att.PhoneticMatcher = ToString(attrMap[i+1])
+						continue
+					}
+					if ToLower(ToString(attrMap[i])) == "case_sensitive" {
+						att.CaseSensitive = true
+						continue
+					}
+					if ToLower(ToString(attrMap[i])) == "withsuffixtrie" {
+						att.WithSuffixtrie = true
+						continue
+					}
+
+				}
+				ftInfo.Attributes = append(ftInfo.Attributes, att)
+			}
+		}
+	}
+
+	ftInfo.BytesPerRecordAvg = ToString(data["bytes_per_record_avg"])
+	ftInfo.Cleaning = ToInteger(data["cleaning"])
+
+	if cursorStats, ok := data["cursor_stats"].([]interface{}); ok {
+		ftInfo.CursorStats = CursorStats{
+			GlobalIdle:    ToInteger(cursorStats[1]),
+			GlobalTotal:   ToInteger(cursorStats[3]),
+			IndexCapacity: ToInteger(cursorStats[5]),
+			IndexTotal:    ToInteger(cursorStats[7]),
+		}
+	}
+
+	if dialectStats, ok := data["dialect_stats"].([]interface{}); ok {
+		ftInfo.DialectStats = make(map[string]int)
+		for i := 0; i < len(dialectStats); i += 2 {
+			ftInfo.DialectStats[ToString(dialectStats[i])] = ToInteger(dialectStats[i+1])
+		}
+	}
+
+	ftInfo.DocTableSizeMB = ToFloat(data["doc_table_size_mb"])
+
+	if fieldStats, ok := data["field statistics"].([]interface{}); ok {
+		for _, stat := range fieldStats {
+			if statMap, ok := stat.([]interface{}); ok {
+				ftInfo.FieldStatistics = append(ftInfo.FieldStatistics, FieldStatistic{
+					Identifier: ToString(statMap[1]),
+					Attribute:  ToString(statMap[3]),
+					IndexErrors: IndexErrors{
+						IndexingFailures:     ToInteger(statMap[5].([]interface{})[1]),
+						LastIndexingError:    ToString(statMap[5].([]interface{})[3]),
+						LastIndexingErrorKey: ToString(statMap[5].([]interface{})[5]),
+					},
+				})
+			}
+		}
+	}
+
+	if gcStats, ok := data["gc_stats"].([]interface{}); ok {
+		ftInfo.GCStats = GCStats{}
+		for i := 0; i < len(gcStats); i += 2 {
+			if ToLower(ToString(gcStats[i])) == "bytes_collected" {
+				ftInfo.GCStats.BytesCollected = ToInteger(gcStats[i+1])
+				continue
+			}
+			if ToLower(ToString(gcStats[i])) == "total_ms_run" {
+				ftInfo.GCStats.TotalMsRun = ToInteger(gcStats[i+1])
+				continue
+			}
+			if ToLower(ToString(gcStats[i])) == "total_cycles" {
+				ftInfo.GCStats.TotalCycles = ToInteger(gcStats[i+1])
+				continue
+			}
+			if ToLower(ToString(gcStats[i])) == "average_cycle_time_ms" {
+				ftInfo.GCStats.AverageCycleTimeMs = ToString(gcStats[i+1])
+				continue
+			}
+			if ToLower(ToString(gcStats[i])) == "last_run_time_ms" {
+				ftInfo.GCStats.LastRunTimeMs = ToInteger(gcStats[i+1])
+				continue
+			}
+			if ToLower(ToString(gcStats[i])) == "gc_numeric_trees_missed" {
+				ftInfo.GCStats.GCNumericTreesMissed = ToInteger(gcStats[i+1])
+				continue
+			}
+			if ToLower(ToString(gcStats[i])) == "gc_blocks_denied" {
+				ftInfo.GCStats.GCBlocksDenied = ToInteger(gcStats[i+1])
+				continue
+			}
+		}
+	}
+
+	ftInfo.GeoshapesSzMB = ToFloat(data["geoshapes_sz_mb"])
+	ftInfo.HashIndexingFailures = ToInteger(data["hash_indexing_failures"])
+
+	if indexDef, ok := data["index_definition"].([]interface{}); ok {
+		ftInfo.IndexDefinition = IndexDefinition{
+			KeyType:      ToString(indexDef[1]),
+			Prefixes:     ToStringSlice(indexDef[3]),
+			DefaultScore: ToFloat(indexDef[5]),
+		}
+	}
+
+	ftInfo.IndexName = ToString(data["index_name"])
+	ftInfo.IndexOptions = ToStringSlice(data["index_options"].([]interface{}))
+	ftInfo.Indexing = ToInteger(data["indexing"])
+	ftInfo.InvertedSzMB = ToFloat(data["inverted_sz_mb"])
+	ftInfo.KeyTableSizeMB = ToFloat(data["key_table_size_mb"])
+	ftInfo.MaxDocID = ToInteger(data["max_doc_id"])
+	ftInfo.NumDocs = ToInteger(data["num_docs"])
+	ftInfo.NumRecords = ToInteger(data["num_records"])
+	ftInfo.NumTerms = ToInteger(data["num_terms"])
+	ftInfo.NumberOfUses = ToInteger(data["number_of_uses"])
+	ftInfo.OffsetBitsPerRecordAvg = ToString(data["offset_bits_per_record_avg"])
+	ftInfo.OffsetVectorsSzMB = ToFloat(data["offset_vectors_sz_mb"])
+	ftInfo.OffsetsPerTermAvg = ToString(data["offsets_per_term_avg"])
+	ftInfo.PercentIndexed = ToFloat(data["percent_indexed"])
+	ftInfo.RecordsPerDocAvg = ToString(data["records_per_doc_avg"])
+	ftInfo.SortableValuesSizeMB = ToFloat(data["sortable_values_size_mb"])
+	ftInfo.TagOverheadSzMB = ToFloat(data["tag_overhead_sz_mb"])
+	ftInfo.TextOverheadSzMB = ToFloat(data["text_overhead_sz_mb"])
+	ftInfo.TotalIndexMemorySzMB = ToFloat(data["total_index_memory_sz_mb"])
+	ftInfo.TotalIndexingTime = ToInteger(data["total_indexing_time"])
+	ftInfo.TotalInvertedIndexBlocks = ToInteger(data["total_inverted_index_blocks"])
+	ftInfo.VectorIndexSzMB = ToFloat(data["vector_index_sz_mb"])
+
+	return ftInfo, nil
+}
+
+func (cmd *FTInfoCmd) from(res rueidis.RedisResult) {
+	if err := res.Error(); err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	m, err := res.AsMap()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	anyM, err := res.ToAny()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetRawVal(anyM)
+	anyMap := make(map[string]any, len(m))
+	for k, v := range m {
+		anyMap[k], err = v.ToAny()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+	}
+	ftInfoResult, err := parseFTInfo(anyMap)
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetVal(ftInfoResult)
+}
+
+func newFTInfoCmd(res rueidis.RedisResult) *FTInfoCmd {
+	cmd := &FTInfoCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+type FTSpellCheckOptions struct {
+	Distance int
+	Terms    *FTSpellCheckTerms
+	Dialect  int
+}
+
+type FTSpellCheckTerms struct {
+	Inclusion  string // Either "INCLUDE" or "EXCLUDE"
+	Dictionary string
+	Terms      []interface{}
+}
+
+type SpellCheckResult struct {
+	Term        string
+	Suggestions []SpellCheckSuggestion
+}
+
+type SpellCheckSuggestion struct {
+	Score      float64
+	Suggestion string
+}
+
+type FTSpellCheckCmd struct{ baseCmd[[]SpellCheckResult] }
+
+func (cmd *FTSpellCheckCmd) Val() []SpellCheckResult {
+	return cmd.val
+}
+
+func (cmd *FTSpellCheckCmd) Result() ([]SpellCheckResult, error) {
+	return cmd.Val(), cmd.Err()
+}
+
+func (cmd *FTSpellCheckCmd) from(res rueidis.RedisResult) {
+	if err := res.Error(); err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	msg, err := res.ToMessage()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	if !(msg.IsMap() || msg.IsArray()) {
+		panic("res should be either map(RESP3) or array(RESP2)")
+	}
+	if msg.IsMap() {
+		// is RESP3 map
+		m, err := msg.ToMap()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		anyM, err := msg.ToAny()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		cmd.SetRawVal(anyM)
+		spellCheckResults := []SpellCheckResult{}
+		result := m["results"]
+		resultMap, err := result.ToMap()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		for k, v := range resultMap {
+			result := SpellCheckResult{}
+			result.Term = k
+			suggestions, err := v.ToArray()
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+			for _, suggestion := range suggestions {
+				// map key: suggestion, score
+				sugMap, err := suggestion.ToMap()
+				if err != nil {
+					cmd.SetErr(err)
+					return
+				}
+				for _k, _v := range sugMap {
+					score, err := _v.ToFloat64()
+					if err != nil {
+						cmd.SetErr(err)
+						return
+					}
+					result.Suggestions = append(result.Suggestions, SpellCheckSuggestion{Suggestion: _k, Score: score})
+				}
+			}
+			spellCheckResults = append(spellCheckResults, result)
+		}
+		cmd.SetVal(spellCheckResults)
+		return
+	}
+	// is RESP2 array
+	arr, err := msg.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	anyRes, err := msg.ToAny()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetRawVal(anyRes)
+	AnyArr := make([]any, 0, len(arr))
+	for _, e := range arr {
+		anyE, err := e.ToAny()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		AnyArr = append(AnyArr, anyE)
+	}
+	result, err := parseFTSpellCheck(AnyArr)
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetVal(result)
+}
+
+func newFTSpellCheckCmd(res rueidis.RedisResult) *FTSpellCheckCmd {
+	cmd := &FTSpellCheckCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+func parseFTSpellCheck(data []interface{}) ([]SpellCheckResult, error) {
+	results := make([]SpellCheckResult, 0, len(data))
+
+	for _, termData := range data {
+		termInfo, ok := termData.([]interface{})
+		if !ok || len(termInfo) != 3 {
+			return nil, fmt.Errorf("invalid term format")
+		}
+
+		term, ok := termInfo[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("invalid term format")
+		}
+
+		suggestionsData, ok := termInfo[2].([]interface{})
+		if !ok {
+			return nil, fmt.Errorf("invalid suggestions format")
+		}
+
+		suggestions := make([]SpellCheckSuggestion, 0, len(suggestionsData))
+		for _, suggestionData := range suggestionsData {
+			suggestionInfo, ok := suggestionData.([]interface{})
+			if !ok || len(suggestionInfo) != 2 {
+				return nil, fmt.Errorf("invalid suggestion format")
+			}
+
+			scoreStr, ok := suggestionInfo[0].(string)
+			if !ok {
+				return nil, fmt.Errorf("invalid suggestion score format")
+			}
+			score, err := strconv.ParseFloat(scoreStr, 64)
+			if err != nil {
+				return nil, fmt.Errorf("invalid suggestion score value")
+			}
+
+			suggestion, ok := suggestionInfo[1].(string)
+			if !ok {
+				return nil, fmt.Errorf("invalid suggestion format")
+			}
+
+			suggestions = append(suggestions, SpellCheckSuggestion{
+				Score:      score,
+				Suggestion: suggestion,
+			})
+		}
+
+		results = append(results, SpellCheckResult{
+			Term:        term,
+			Suggestions: suggestions,
+		})
+	}
+
+	return results, nil
+}
+
+type Document struct {
+	ID      string
+	Score   *float64
+	Payload *string
+	SortKey *string
+	Fields  map[string]string
+}
+
+type FTSearchResult struct {
+	Total int64
+	Docs  []Document
+}
+
+type FTSearchOptions struct {
+	NoContent       bool
+	Verbatim        bool
+	NoStopWords     bool
+	WithScores      bool
+	WithPayloads    bool
+	WithSortKeys    bool
+	Filters         []FTSearchFilter
+	GeoFilter       []FTSearchGeoFilter
+	InKeys          []interface{}
+	InFields        []interface{}
+	Return          []FTSearchReturn
+	Slop            int
+	Timeout         int
+	InOrder         bool
+	Language        string
+	Expander        string
+	Scorer          string
+	ExplainScore    bool
+	Payload         string
+	SortBy          []FTSearchSortBy
+	SortByWithCount bool
+	LimitOffset     int
+	Limit           int
+	Params          map[string]interface{}
+	DialectVersion  int
+}
+
+type FTSearchCmd struct {
+	baseCmd[FTSearchResult]
+	options *FTSearchOptions
+}
+
+// Ref: https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1541
+func (cmd *FTSearchCmd) from(res rueidis.RedisResult) {
+	if err := res.Error(); err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	anyRes, err := res.ToAny()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetRawVal(anyRes)
+	msg, err := res.ToMessage()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	if !(msg.IsMap() || msg.IsArray()) {
+		panic("res should be either map(RESP3) or array(RESP2)")
+	}
+	if msg.IsMap() {
+		// is RESP3 map
+		m, err := msg.ToMap()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		totalResultsMsg, ok := m["total_results"]
+		if !ok {
+			cmd.SetErr(fmt.Errorf(`result map should contain key "total_results"`))
+		}
+		totalResults, err := totalResultsMsg.AsInt64()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		resultsMsg, ok := m["results"]
+		if !ok {
+			cmd.SetErr(fmt.Errorf(`result map should contain key "results"`))
+		}
+		resultsArr, err := resultsMsg.ToArray()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		ftSearchResult := FTSearchResult{Total: totalResults, Docs: make([]Document, 0, len(resultsArr))}
+		for _, result := range resultsArr {
+			resultMap, err := result.ToMap()
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+			doc := Document{}
+			for k, v := range resultMap {
+				switch k {
+				case "id":
+					idStr, err := v.ToString()
+					if err != nil {
+						cmd.SetErr(err)
+						return
+					}
+					doc.ID = idStr
+				case "extra_attributes":
+					// doc.ID = resultArr[i+1].String()
+					strMap, err := v.AsStrMap()
+					if err != nil {
+						cmd.SetErr(err)
+						return
+					}
+					doc.Fields = strMap
+				case "score":
+					score, err := v.AsFloat64()
+					if err != nil {
+						cmd.SetErr(err)
+						return
+					}
+					doc.Score = &score
+				case "payload":
+					if !v.IsNil() {
+						payload, err := v.ToString()
+						if err != nil {
+							cmd.SetErr(err)
+							return
+						}
+						doc.Payload = &payload
+					}
+				case "sortkey":
+					if !v.IsNil() {
+						sortKey, err := v.ToString()
+						if err != nil {
+							cmd.SetErr(err)
+							return
+						}
+						doc.SortKey = &sortKey
+					}
+				}
+			}
+
+			ftSearchResult.Docs = append(ftSearchResult.Docs, doc)
+		}
+		cmd.SetVal(ftSearchResult)
+		return
+	}
+	// is RESP2 array
+	data, err := msg.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	if len(data) < 1 {
+		cmd.SetErr(fmt.Errorf("unexpected search result format"))
+		return
+	}
+	total, err := data[0].AsInt64()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	var results []Document
+	for i := 1; i < len(data); {
+		docID, err := data[i].ToString()
+		if err != nil {
+			cmd.SetErr(fmt.Errorf("invalid total results format: %w", err))
+			return
+		}
+		doc := Document{
+			ID:     docID,
+			Fields: make(map[string]string),
+		}
+		i++
+		if cmd.options != nil {
+			if cmd.options.NoContent {
+				results = append(results, doc)
+				continue
+			}
+			if cmd.options.WithScores && i < len(data) {
+				scoreStr, err := data[i].ToString()
+				if err != nil {
+					cmd.SetErr(fmt.Errorf("invalid score format: %w", err))
+					return
+				}
+				score, err := strconv.ParseFloat(scoreStr, 64)
+				if err != nil {
+					cmd.SetErr(fmt.Errorf("invalid score format: %w", err))
+					return
+				}
+				doc.Score = &score
+				i++
+			}
+			if cmd.options.WithPayloads && i < len(data) {
+				payload, err := data[i].ToString()
+				if err != nil {
+					cmd.SetErr(fmt.Errorf("invalid payload format: %w", err))
+					return
+				}
+				doc.Payload = &payload
+				i++
+			}
+			if cmd.options.WithSortKeys && i < len(data) {
+				sortKey, err := data[i].ToString()
+				if err != nil {
+					cmd.SetErr(fmt.Errorf("invalid payload format: %w", err))
+					return
+				}
+				doc.SortKey = &sortKey
+				i++
+			}
+		}
+		if i < len(data) {
+			fields, err := data[i].ToArray()
+			if err != nil {
+				cmd.SetErr(fmt.Errorf("invalid document fields format: %w", err))
+				return
+			}
+			for j := 0; j < len(fields); j += 2 {
+				key, err := fields[j].ToString()
+				if err != nil {
+					cmd.SetErr(fmt.Errorf("invalid field key format: %w", err))
+					return
+				}
+				value, err := fields[j+1].ToString()
+				if err != nil {
+					cmd.SetErr(fmt.Errorf("invalid field value format: %w", err))
+					return
+				}
+				doc.Fields[key] = value
+			}
+			i++
+		}
+		results = append(results, doc)
+	}
+	cmd.SetVal(FTSearchResult{
+		Total: total,
+		Docs:  results,
+	})
+}
+
+func newFTSearchCmd(res rueidis.RedisResult, options *FTSearchOptions) *FTSearchCmd {
+	cmd := &FTSearchCmd{options: options}
+	cmd.from(res)
+	return cmd
+}
+
+type FTSynUpdateOptions struct {
+	SkipInitialScan bool
+}
+
+type FTSynDumpCmd struct {
+	baseCmd[[]FTSynDumpResult]
+}
+
+func (cmd *FTSynDumpCmd) from(res rueidis.RedisResult) {
+	if err := res.Error(); err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	anyRes, err := res.ToAny()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetRawVal(anyRes)
+	msg, err := res.ToMessage()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	if !(msg.IsMap() || msg.IsArray()) {
+		panic("res should be either map(RESP3) or array(RESP2)")
+	}
+	if msg.IsMap() {
+		// is RESP3 map
+		m, err := msg.ToMap()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		results := make([]FTSynDumpResult, 0, len(m))
+		for term, synMsg := range m {
+			synonyms, err := synMsg.AsStrSlice()
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+			results = append(results, FTSynDumpResult{Term: term, Synonyms: synonyms})
+		}
+		cmd.SetVal(results)
+		return
+	}
+	// is RESP2 array
+	arr, err := msg.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	results := make([]FTSynDumpResult, 0, len(arr)/2)
+	for i := 0; i < len(arr); i += 2 {
+		term, err := arr[i].ToString()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		synonyms, err := arr[i+1].AsStrSlice()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		results = append(results, FTSynDumpResult{
+			Term:     term,
+			Synonyms: synonyms,
+		})
+	}
+	cmd.SetVal(results)
+}
+
+func newFTSynDumpCmd(res rueidis.RedisResult) *FTSynDumpCmd {
+	cmd := &FTSynDumpCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+type FTSynDumpResult struct {
+	Term     string
+	Synonyms []string
+}
+
+// ClientFlags is redis-server client flags, copy from redis/src/server.h (redis 7.0)
+type ClientFlags uint64
+
+const (
+	ClientSlave            ClientFlags = 1 << 0  /* This client is a replica */
+	ClientMaster           ClientFlags = 1 << 1  /* This client is a master */
+	ClientMonitor          ClientFlags = 1 << 2  /* This client is a slave monitor, see MONITOR */
+	ClientMulti            ClientFlags = 1 << 3  /* This client is in a MULTI context */
+	ClientBlocked          ClientFlags = 1 << 4  /* The client is waiting in a blocking operation */
+	ClientDirtyCAS         ClientFlags = 1 << 5  /* Watched keys modified. EXEC will fail. */
+	ClientCloseAfterReply  ClientFlags = 1 << 6  /* Close after writing entire reply. */
+	ClientUnBlocked        ClientFlags = 1 << 7  /* This client was unblocked and is stored in server.unblocked_clients */
+	ClientScript           ClientFlags = 1 << 8  /* This is a non-connected client used by Lua */
+	ClientAsking           ClientFlags = 1 << 9  /* Client issued the ASKING command */
+	ClientCloseASAP        ClientFlags = 1 << 10 /* Close this client ASAP */
+	ClientUnixSocket       ClientFlags = 1 << 11 /* Client connected via Unix domain socket */
+	ClientDirtyExec        ClientFlags = 1 << 12 /* EXEC will fail for errors while queueing */
+	ClientMasterForceReply ClientFlags = 1 << 13 /* Queue replies even if is master */
+	ClientForceAOF         ClientFlags = 1 << 14 /* Force AOF propagation of current cmd. */
+	ClientForceRepl        ClientFlags = 1 << 15 /* Force replication of current cmd. */
+	ClientPrePSync         ClientFlags = 1 << 16 /* Instance don't understand PSYNC. */
+	ClientReadOnly         ClientFlags = 1 << 17 /* Cluster client is in read-only state. */
+	ClientPubSub           ClientFlags = 1 << 18 /* Client is in Pub/Sub mode. */
+	ClientPreventAOFProp   ClientFlags = 1 << 19 /* Don't propagate to AOF. */
+	ClientPreventReplProp  ClientFlags = 1 << 20 /* Don't propagate to slaves. */
+	ClientPreventProp      ClientFlags = ClientPreventAOFProp | ClientPreventReplProp
+	ClientPendingWrite     ClientFlags = 1 << 21 /* Client has output to send but a-write handler is yet not installed. */
+	ClientReplyOff         ClientFlags = 1 << 22 /* Don't send replies to client. */
+	ClientReplySkipNext    ClientFlags = 1 << 23 /* Set ClientREPLY_SKIP for next cmd */
+	ClientReplySkip        ClientFlags = 1 << 24 /* Don't send just this reply. */
+	ClientLuaDebug         ClientFlags = 1 << 25 /* Run EVAL in debug mode. */
+	ClientLuaDebugSync     ClientFlags = 1 << 26 /* EVAL debugging without fork() */
+	ClientModule           ClientFlags = 1 << 27 /* Non connected client used by some module. */
+	ClientProtected        ClientFlags = 1 << 28 /* Client should not be freed for now. */
+	ClientExecutingCommand ClientFlags = 1 << 29 /* Indicates that the client is currently in the process of handling
+	   a command. usually this will be marked only during call()
+	   however, blocked clients might have this flag kept until they
+	   will try to reprocess the command. */
+	ClientPendingCommand      ClientFlags = 1 << 30 /* Indicates the client has a fully * parsed command ready for execution. */
+	ClientTracking            ClientFlags = 1 << 31 /* Client enabled keys tracking in order to perform client side caching. */
+	ClientTrackingBrokenRedir ClientFlags = 1 << 32 /* Target client is invalid. */
+	ClientTrackingBCAST       ClientFlags = 1 << 33 /* Tracking in BCAST mode. */
+	ClientTrackingOptIn       ClientFlags = 1 << 34 /* Tracking in opt-in mode. */
+	ClientTrackingOptOut      ClientFlags = 1 << 35 /* Tracking in opt-out mode. */
+	ClientTrackingCaching     ClientFlags = 1 << 36 /* CACHING yes/no was given, depending on optin/optout mode. */
+	ClientTrackingNoLoop      ClientFlags = 1 << 37 /* Don't send invalidation messages about writes performed by myself.*/
+	ClientInTimeoutTable      ClientFlags = 1 << 38 /* This client is in the timeout table. */
+	ClientProtocolError       ClientFlags = 1 << 39 /* Protocol error chatting with it. */
+	ClientCloseAfterCommand   ClientFlags = 1 << 40 /* Close after executing commands * and writing entire reply. */
+	ClientDenyBlocking        ClientFlags = 1 << 41 /* Indicate that the client should not be blocked. currently, turned on inside MULTI, Lua, RM_Call, and AOF client */
+	ClientReplRDBOnly         ClientFlags = 1 << 42 /* This client is a replica that only wants RDB without replication buffer. */
+	ClientNoEvict             ClientFlags = 1 << 43 /* This client is protected against client memory eviction. */
+	ClientAllowOOM            ClientFlags = 1 << 44 /* Client used by RM_Call is allowed to fully execute scripts even when in OOM */
+	ClientNoTouch             ClientFlags = 1 << 45 /* This client will not touch LFU/LRU stats. */
+	ClientPushing             ClientFlags = 1 << 46 /* This client is pushing notifications. */
+)
+
+// ClientInfo is redis-server ClientInfo
+type ClientInfo struct {
+	ID                 int64         // redis version 2.8.12, a unique 64-bit client ID
+	Addr               string        // address/port of the client
+	LAddr              string        // address/port of local address client connected to (bind address)
+	FD                 int64         // file descriptor corresponding to the socket
+	Name               string        // the name set by the client with CLIENT SETNAME
+	Age                time.Duration // total duration of the connection in seconds
+	Idle               time.Duration // idle time of the connection in seconds
+	Flags              ClientFlags   // client flags (see below)
+	DB                 int           // current database ID
+	Sub                int           // number of channel subscriptions
+	PSub               int           // number of pattern matching subscriptions
+	SSub               int           // redis version 7.0.3, number of shard channel subscriptions
+	Multi              int           // number of commands in a MULTI/EXEC context
+	Watch              int           // redis version 7.4 RC1, number of keys this client is currently watching.
+	QueryBuf           int           // qbuf, query buffer length (0 means no query pending)
+	QueryBufFree       int           // qbuf-free, free space of the query buffer (0 means the buffer is full)
+	ArgvMem            int           // incomplete arguments for the next command (already extracted from query buffer)
+	MultiMem           int           // redis version 7.0, memory is used up by buffered multi commands
+	BufferSize         int           // rbs, usable size of buffer
+	BufferPeak         int           // rbp, peak used size of buffer in last 5 sec interval
+	OutputBufferLength int           // obl, output buffer length
+	OutputListLength   int           // oll, output list length (replies are queued in this list when the buffer is full)
+	OutputMemory       int           // omem, output buffer memory usage
+	TotalMemory        int           // tot-mem, total memory consumed by this client in its various buffers
+	Events             string        // file descriptor events (see below)
+	LastCmd            string        // cmd, last command played
+	User               string        // the authenticated username of the client
+	Redir              int64         // client id of current client tracking redirection
+	Resp               int           // redis version 7.0, client RESP protocol version
+	LibName            string        // redis version 7.2, client library name
+	LibVer             string        // redis version 7.2, client library version
+}
+
+type ClientInfoCmd struct {
+	baseCmd[*ClientInfo]
+}
+
+func newClientInfoCmd(res rueidis.RedisResult) *ClientInfoCmd {
+	cmd := &ClientInfoCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+func (cmd *ClientInfoCmd) SetVal(val *ClientInfo) {
+	cmd.val = val
+}
+
+func (cmd *ClientInfoCmd) Val() *ClientInfo {
+	return cmd.val
+}
+
+func (cmd *ClientInfoCmd) Result() (*ClientInfo, error) {
+	return cmd.val, cmd.err
+}
+
+// fmt.Sscanf() cannot handle null values
+func (cmd *ClientInfoCmd) from(res rueidis.RedisResult) {
+	txt, err := res.ToString()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	info := &ClientInfo{}
+	for _, s := range strings.Split(strings.TrimPrefix(strings.TrimSpace(txt), "txt:"), " ") {
+		kv := strings.Split(s, "=")
+		if len(kv) != 2 {
+			cmd.SetErr(fmt.Errorf("redis: unexpected client info data (%s)", s))
+			return
+		}
+		key, val := kv[0], kv[1]
+
+		switch key {
+		case "id":
+			info.ID, err = strconv.ParseInt(val, 10, 64)
+		case "addr":
+			info.Addr = val
+		case "laddr":
+			info.LAddr = val
+		case "fd":
+			info.FD, err = strconv.ParseInt(val, 10, 64)
+		case "name":
+			info.Name = val
+		case "age":
+			var age int
+			if age, err = strconv.Atoi(val); err == nil {
+				info.Age = time.Duration(age) * time.Second
+			}
+		case "idle":
+			var idle int
+			if idle, err = strconv.Atoi(val); err == nil {
+				info.Idle = time.Duration(idle) * time.Second
+			}
+		case "flags":
+			if val == "N" {
+				break
+			}
+
+			for i := 0; i < len(val); i++ {
+				switch val[i] {
+				case 'S':
+					info.Flags |= ClientSlave
+				case 'O':
+					info.Flags |= ClientSlave | ClientMonitor
+				case 'M':
+					info.Flags |= ClientMaster
+				case 'P':
+					info.Flags |= ClientPubSub
+				case 'x':
+					info.Flags |= ClientMulti
+				case 'b':
+					info.Flags |= ClientBlocked
+				case 't':
+					info.Flags |= ClientTracking
+				case 'R':
+					info.Flags |= ClientTrackingBrokenRedir
+				case 'B':
+					info.Flags |= ClientTrackingBCAST
+				case 'd':
+					info.Flags |= ClientDirtyCAS
+				case 'c':
+					info.Flags |= ClientCloseAfterCommand
+				case 'u':
+					info.Flags |= ClientUnBlocked
+				case 'A':
+					info.Flags |= ClientCloseASAP
+				case 'U':
+					info.Flags |= ClientUnixSocket
+				case 'r':
+					info.Flags |= ClientReadOnly
+				case 'e':
+					info.Flags |= ClientNoEvict
+				case 'T':
+					info.Flags |= ClientNoTouch
+				default:
+					cmd.SetErr(fmt.Errorf("redis: unexpected client info flags(%s)", string(val[i])))
+					return
+				}
+			}
+		case "db":
+			info.DB, err = strconv.Atoi(val)
+		case "sub":
+			info.Sub, err = strconv.Atoi(val)
+		case "psub":
+			info.PSub, err = strconv.Atoi(val)
+		case "ssub":
+			info.SSub, err = strconv.Atoi(val)
+		case "multi":
+			info.Multi, err = strconv.Atoi(val)
+		case "watch":
+			info.Watch, err = strconv.Atoi(val)
+		case "qbuf":
+			info.QueryBuf, err = strconv.Atoi(val)
+		case "qbuf-free":
+			info.QueryBufFree, err = strconv.Atoi(val)
+		case "argv-mem":
+			info.ArgvMem, err = strconv.Atoi(val)
+		case "multi-mem":
+			info.MultiMem, err = strconv.Atoi(val)
+		case "rbs":
+			info.BufferSize, err = strconv.Atoi(val)
+		case "rbp":
+			info.BufferPeak, err = strconv.Atoi(val)
+		case "obl":
+			info.OutputBufferLength, err = strconv.Atoi(val)
+		case "oll":
+			info.OutputListLength, err = strconv.Atoi(val)
+		case "omem":
+			info.OutputMemory, err = strconv.Atoi(val)
+		case "tot-mem":
+			info.TotalMemory, err = strconv.Atoi(val)
+		case "events":
+			info.Events = val
+		case "cmd":
+			info.LastCmd = val
+		case "user":
+			info.User = val
+		case "redir":
+			info.Redir, err = strconv.ParseInt(val, 10, 64)
+		case "resp":
+			info.Resp, err = strconv.Atoi(val)
+		case "lib-name":
+			info.LibName = val
+		case "lib-ver":
+			info.LibVer = val
+		}
+
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+	}
+
+	cmd.SetVal(info)
+}
+
+// ModuleLoadexConfig struct is used to specify the arguments for the MODULE LOADEX command of redis.
+// `MODULE LOADEX path [CONFIG name value [CONFIG name value ...]] [ARGS args [args ...]]`
+type ModuleLoadexConfig struct {
+	Path string
+	Conf map[string]interface{}
+	Args []interface{}
 }

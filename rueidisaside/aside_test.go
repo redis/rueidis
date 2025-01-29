@@ -16,7 +16,7 @@ var addr = []string{"127.0.0.1:6379"}
 
 func makeClient(t *testing.T, addr []string) CacheAsideClient {
 	client, err := NewClient(ClientOption{
-		ClientOption: rueidis.ClientOption{InitAddress: addr},
+		ClientOption: rueidis.ClientOption{InitAddress: addr, PipelineMultiplex: -1},
 		ClientTTL:    time.Second,
 	})
 	if err != nil {

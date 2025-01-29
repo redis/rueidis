@@ -69,7 +69,8 @@ type otelclient struct {
 	meter           metric.Meter
 	cscMiss         metric.Int64Counter
 	cscHits         metric.Int64Counter
-	mAttrs          metric.MeasurementOption
+	addOpts         []metric.AddOption
+	recordOpts      []metric.RecordOption
 	tAttrs          trace.SpanStartEventOption
 	histogramOption HistogramOption
 	dbStmtFunc      StatementFunc
@@ -80,7 +81,7 @@ func (o *otelclient) B() rueidis.Builder {
 }
 
 func (o *otelclient) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult) {
-	ctx, span := o.start(ctx, first(cmd.Commands()), sum(cmd.Commands()), o.tAttrs)
+	ctx, span := o.start(ctx, first(cmd.Commands()), sum(cmd.Commands()))
 	if o.dbStmtFunc != nil {
 		span.SetAttributes(dbstmt.String(o.dbStmtFunc(cmd.Commands())))
 	}
@@ -91,14 +92,14 @@ func (o *otelclient) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidi
 }
 
 func (o *otelclient) DoMulti(ctx context.Context, multi ...rueidis.Completed) (resp []rueidis.RedisResult) {
-	ctx, span := o.start(ctx, multiFirst(multi), multiSum(multi), o.tAttrs)
+	ctx, span := o.start(ctx, multiFirst(multi), multiSum(multi))
 	resp = o.client.DoMulti(ctx, multi...)
 	o.end(span, firstError(resp))
 	return
 }
 
 func (o *otelclient) DoStream(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResultStream) {
-	ctx, span := o.start(ctx, first(cmd.Commands()), sum(cmd.Commands()), o.tAttrs)
+	ctx, span := o.start(ctx, first(cmd.Commands()), sum(cmd.Commands()))
 	if o.dbStmtFunc != nil {
 		span.SetAttributes(dbstmt.String(o.dbStmtFunc(cmd.Commands())))
 	}
@@ -109,14 +110,14 @@ func (o *otelclient) DoStream(ctx context.Context, cmd rueidis.Completed) (resp 
 }
 
 func (o *otelclient) DoMultiStream(ctx context.Context, multi ...rueidis.Completed) (resp rueidis.MultiRedisResultStream) {
-	ctx, span := o.start(ctx, multiFirst(multi), multiSum(multi), o.tAttrs)
+	ctx, span := o.start(ctx, multiFirst(multi), multiSum(multi))
 	resp = o.client.DoMultiStream(ctx, multi...)
 	o.end(span, resp.Error())
 	return
 }
 
 func (o *otelclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
-	ctx, span := o.start(ctx, first(cmd.Commands()), sum(cmd.Commands()), o.tAttrs)
+	ctx, span := o.start(ctx, first(cmd.Commands()), sum(cmd.Commands()))
 	if o.dbStmtFunc != nil {
 		span.SetAttributes(dbstmt.String(o.dbStmtFunc(cmd.Commands())))
 	}
@@ -124,9 +125,9 @@ func (o *otelclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl tim
 	resp = o.client.DoCache(ctx, cmd, ttl)
 	if resp.NonRedisError() == nil {
 		if resp.IsCacheHit() {
-			o.cscHits.Add(ctx, 1, o.mAttrs)
+			o.cscHits.Add(ctx, 1, o.addOpts...)
 		} else {
-			o.cscMiss.Add(ctx, 1, o.mAttrs)
+			o.cscMiss.Add(ctx, 1, o.addOpts...)
 		}
 	}
 	o.end(span, resp.Error())
@@ -134,14 +135,14 @@ func (o *otelclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl tim
 }
 
 func (o *otelclient) DoMultiCache(ctx context.Context, multi ...rueidis.CacheableTTL) (resps []rueidis.RedisResult) {
-	ctx, span := o.start(ctx, multiCacheableFirst(multi), multiCacheableSum(multi), o.tAttrs)
+	ctx, span := o.start(ctx, multiCacheableFirst(multi), multiCacheableSum(multi))
 	resps = o.client.DoMultiCache(ctx, multi...)
 	for _, resp := range resps {
 		if resp.NonRedisError() == nil {
 			if resp.IsCacheHit() {
-				o.cscHits.Add(ctx, 1, o.mAttrs)
+				o.cscHits.Add(ctx, 1, o.addOpts...)
 			} else {
-				o.cscMiss.Add(ctx, 1, o.mAttrs)
+				o.cscMiss.Add(ctx, 1, o.addOpts...)
 			}
 		}
 	}
@@ -171,7 +172,7 @@ func (o *otelclient) Dedicate() (rueidis.DedicatedClient, func()) {
 }
 
 func (o *otelclient) Receive(ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
-	ctx, span := o.start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()), o.tAttrs)
+	ctx, span := o.start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()))
 	if o.dbStmtFunc != nil {
 		span.SetAttributes(dbstmt.String(o.dbStmtFunc(subscribe.Commands())))
 	}
@@ -186,14 +187,15 @@ func (o *otelclient) Nodes() map[string]rueidis.Client {
 	for addr, client := range nodes {
 		nodes[addr] = &otelclient{
 			client:          client,
-			mAttrs:          o.mAttrs,
-			tAttrs:          o.tAttrs,
 			meterProvider:   o.meterProvider,
 			tracerProvider:  o.tracerProvider,
 			tracer:          o.tracer,
 			meter:           o.meter,
 			cscMiss:         o.cscMiss,
 			cscHits:         o.cscHits,
+			addOpts:         o.addOpts,
+			recordOpts:      o.recordOpts,
+			tAttrs:          o.tAttrs,
 			histogramOption: o.histogramOption,
 			dbStmtFunc:      o.dbStmtFunc,
 		}
@@ -219,7 +221,7 @@ func (d *dedicated) B() rueidis.Builder {
 }
 
 func (d *dedicated) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult) {
-	ctx, span := d.start(ctx, first(cmd.Commands()), sum(cmd.Commands()), d.tAttrs)
+	ctx, span := d.start(ctx, first(cmd.Commands()), sum(cmd.Commands()))
 	if d.dbStmtFunc != nil {
 		span.SetAttributes(dbstmt.String(d.dbStmtFunc(cmd.Commands())))
 	}
@@ -230,14 +232,14 @@ func (d *dedicated) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis
 }
 
 func (d *dedicated) DoMulti(ctx context.Context, multi ...rueidis.Completed) (resp []rueidis.RedisResult) {
-	ctx, span := d.start(ctx, multiFirst(multi), multiSum(multi), d.tAttrs)
+	ctx, span := d.start(ctx, multiFirst(multi), multiSum(multi))
 	resp = d.client.DoMulti(ctx, multi...)
 	d.end(span, firstError(resp))
 	return
 }
 
 func (d *dedicated) Receive(ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
-	ctx, span := d.start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()), d.tAttrs)
+	ctx, span := d.start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()))
 	if d.dbStmtFunc != nil {
 		span.SetAttributes(dbstmt.String(d.dbStmtFunc(subscribe.Commands())))
 	}
@@ -340,16 +342,16 @@ func multiCacheableFirst(multi []rueidis.CacheableTTL) string {
 	return sb.String()
 }
 
-func (o *otelclient) start(ctx context.Context, op string, size int, attrs trace.SpanStartEventOption) (context.Context, trace.Span) {
-	return startSpan(o.tracer, ctx, op, size, attrs)
+func (o *otelclient) start(ctx context.Context, op string, size int) (context.Context, trace.Span) {
+	return startSpan(o.tracer, ctx, op, size, o.tAttrs)
 }
 
 func (o *otelclient) end(span trace.Span, err error) {
 	endSpan(span, err)
 }
 
-func (d *dedicated) start(ctx context.Context, op string, size int, attrs trace.SpanStartEventOption) (context.Context, trace.Span) {
-	return startSpan(d.tracer, ctx, op, size, attrs)
+func (d *dedicated) start(ctx context.Context, op string, size int) (context.Context, trace.Span) {
+	return startSpan(d.tracer, ctx, op, size, d.tAttrs)
 }
 
 func (d *dedicated) end(span trace.Span, err error) {

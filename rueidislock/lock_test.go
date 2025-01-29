@@ -346,6 +346,55 @@ func TestLocker_WithContext_ExtendByClientSideCaching(t *testing.T) {
 	})
 }
 
+func TestLocker_WithContext_AutoExtendConcurrent(t *testing.T) {
+	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
+		locker := newLocker(t, noLoop, setpx, nocsc)
+		locker.validity = time.Second
+		locker.interval = time.Second / 2
+		defer locker.Close()
+
+		key := strconv.Itoa(rand.Int())
+
+		ctx1, cancel1, err1 := locker.WithContext(context.Background(), key)
+		if err1 != nil {
+			t.Fatal(err1)
+		}
+		go func() {
+			for i := 0; i < 4; i++ {
+				select {
+				case <-ctx1.Done():
+					t.Errorf("unexpected context canceled %v", ctx1.Err())
+				default:
+					time.Sleep(locker.validity)
+				}
+			}
+			cancel1()
+		}()
+		ctx2, cancel2, err2 := locker.WithContext(context.Background(), key)
+		if err2 != nil {
+			t.Fatal(err2)
+		}
+		if !errors.Is(ctx1.Err(), context.Canceled) {
+			t.Fatalf("unexpected context canceled %v", ctx1.Err())
+		}
+		if ctx2.Err() != nil {
+			t.Fatalf("unexpected context canceled %v", ctx2.Err())
+		}
+		cancel2()
+	}
+	for _, nocsc := range []bool{false, true} {
+		t.Run("Tracking Loop", func(t *testing.T) {
+			test(t, false, false, nocsc)
+		})
+		t.Run("Tracking NoLoop", func(t *testing.T) {
+			test(t, true, false, nocsc)
+		})
+		t.Run("SET PX", func(t *testing.T) {
+			test(t, true, true, nocsc)
+		})
+	}
+}
+
 func TestLocker_WithContext_AutoExtend(t *testing.T) {
 	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
 		locker := newLocker(t, noLoop, setpx, nocsc)
@@ -446,6 +495,39 @@ func TestLocker_WithContext_CancelContext(t *testing.T) {
 	}
 }
 
+func TestLocker_WithContext_ShorterTimeoutContext(t *testing.T) {
+	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
+		locker := newLocker(t, noLoop, setpx, nocsc)
+		locker.validity = time.Second * 5
+		locker.interval = time.Second * 3
+		defer locker.Close()
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
+		ctx, cancel, err := locker.WithContext(ctx, strconv.Itoa(rand.Int()))
+		if err != nil {
+			t.Fatal(err)
+		}
+		time.Sleep(time.Second * 2)
+		if !errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			t.Fatalf("unexpected context canceled %v", ctx.Err())
+		}
+		cancel()
+	}
+	for _, nocsc := range []bool{false, true} {
+		t.Run("Tracking Loop", func(t *testing.T) {
+			test(t, false, false, nocsc)
+		})
+		t.Run("Tracking NoLoop", func(t *testing.T) {
+			test(t, true, false, nocsc)
+		})
+		t.Run("SET PX", func(t *testing.T) {
+			test(t, true, true, nocsc)
+		})
+	}
+}
+
 func TestLocker_TryWithContext(t *testing.T) {
 	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
 		locker := newLocker(t, noLoop, setpx, nocsc)
@@ -457,7 +539,7 @@ func TestLocker_TryWithContext(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, _, err := locker.TryWithContext(ctx, lck); err != ErrNotLocked {
+		if _, _, err := locker.TryWithContext(ctx, lck); !errors.Is(err, ErrNotLocked) {
 			t.Fatal(err)
 		}
 		cancel()
@@ -486,7 +568,7 @@ func TestLocker_ForceWithContextThenTryWithContext(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if _, _, err := locker.TryWithContext(ctx, lck); err != ErrNotLocked {
+		if _, _, err := locker.TryWithContext(ctx, lck); !errors.Is(err, ErrNotLocked) {
 			t.Fatal(err)
 		}
 		cancel()
@@ -528,7 +610,7 @@ func TestLocker_TryWithContext_MultipleLocker(t *testing.T) {
 				for j := 0; j < cnt; j++ {
 					for {
 						_, cancel, err := l.TryWithContext(ctx, lck)
-						if err != nil && err != ErrNotLocked {
+						if err != nil && !errors.Is(err, ErrNotLocked) {
 							t.Error(err)
 							return
 						}
@@ -663,7 +745,7 @@ func TestLocker_Close(t *testing.T) {
 		wg.Add(10)
 		for i := 0; i < 10; i++ {
 			go func() {
-				if _, _, err := locker.WithContext(context.Background(), lck); err != ErrLockerClosed {
+				if _, _, err := locker.WithContext(context.Background(), lck); !errors.Is(err, ErrLockerClosed) {
 					t.Error(err)
 				}
 				wg.Done()
@@ -676,8 +758,8 @@ func TestLocker_Close(t *testing.T) {
 		if err := ctx.Err(); !errors.Is(err, context.Canceled) {
 			t.Fatal(err)
 		}
-		if _, _, err := locker.WithContext(context.Background(), lck); err != ErrLockerClosed {
-			t.Error(err)
+		if _, _, err := locker.WithContext(context.Background(), lck); !errors.Is(err, ErrLockerClosed) {
+			t.Fatal(err)
 		}
 	}
 	for _, nocsc := range []bool{false, true} {

@@ -15,8 +15,8 @@ go install honnef.co/go/tools/cmd/staticcheck@latest
 #  -U1000 unused check in mock package
 staticcheck -checks "all,-ST1000,-ST1003,-ST1012,-ST1016,-ST1020,-ST1021,-U1000"  ./... | (grep -v "_test.go:" && exit 1 || exit 0)
 
-trap "docker-compose down -v" EXIT
-docker-compose up -d
+trap "docker compose down -v" EXIT
+docker compose up -d
 sleep 5
 go install gotest.tools/gotestsum@v1.10.0
 gotestsum --format standard-verbose --junitfile unit-tests.xml -- -coverprofile=coverage.out -race -timeout 30m "$@"

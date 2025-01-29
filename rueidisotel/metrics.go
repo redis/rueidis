@@ -23,7 +23,10 @@ var (
 // MetricAttrs set additional attributes to append to each metric.
 func MetricAttrs(attrs ...attribute.KeyValue) Option {
 	return func(o *otelclient) {
-		o.mAttrs = metric.WithAttributes(attrs...)
+		mAttrs := metric.WithAttributeSet(attribute.NewSet(attrs...))
+		// Allocate slices once and use many times
+		o.addOpts = []metric.AddOption{mAttrs}
+		o.recordOpts = []metric.RecordOption{mAttrs}
 	}
 }
 
@@ -39,11 +42,12 @@ type HistogramOption struct {
 }
 
 type dialMetrics struct {
-	mAttrs  metric.MeasurementOption
-	attempt metric.Int64Counter
-	success metric.Int64Counter
-	counts  metric.Int64UpDownCounter
-	latency metric.Float64Histogram
+	addOpts    []metric.AddOption
+	recordOpts []metric.RecordOption
+	attempt    metric.Int64Counter
+	success    metric.Int64Counter
+	counts     metric.Int64UpDownCounter
+	latency    metric.Float64Histogram
 }
 
 // WithHistogramOption sets the HistogramOption.
@@ -70,7 +74,10 @@ func NewClient(clientOption rueidis.ClientOption, opts ...Option) (rueidis.Clien
 		clientOption.DialFn = defaultDialFn
 	}
 
-	metrics := dialMetrics{mAttrs: oclient.mAttrs}
+	metrics := dialMetrics{
+		addOpts:    oclient.addOpts,
+		recordOpts: oclient.recordOpts,
+	}
 
 	metrics.attempt, err = oclient.meter.Int64Counter("rueidis_dial_attempt")
 	if err != nil {
@@ -108,7 +115,6 @@ func NewClient(clientOption rueidis.ClientOption, opts ...Option) (rueidis.Clien
 
 func newClient(opts ...Option) (*otelclient, error) {
 	cli := &otelclient{
-		mAttrs: metric.WithAttributes(),
 		tAttrs: trace.WithAttributes(),
 	}
 	for _, opt := range opts {
@@ -143,7 +149,7 @@ func newClient(opts ...Option) (*otelclient, error) {
 func trackDialing(m dialMetrics, dialFn func(string, *net.Dialer, *tls.Config) (conn net.Conn, err error)) func(string, *net.Dialer, *tls.Config) (conn net.Conn, err error) {
 	return func(network string, dialer *net.Dialer, tlsConfig *tls.Config) (conn net.Conn, err error) {
 		ctx := context.Background()
-		m.attempt.Add(ctx, 1, m.mAttrs)
+		m.attempt.Add(ctx, 1, m.addOpts...)
 
 		start := time.Now()
 
@@ -153,29 +159,29 @@ func trackDialing(m dialMetrics, dialFn func(string, *net.Dialer, *tls.Config) (
 		}
 
 		// Use floating point division for higher precision (instead of Seconds method).
-		m.latency.Record(ctx, float64(time.Since(start))/float64(time.Second), m.mAttrs)
-		m.success.Add(ctx, 1, m.mAttrs)
-		m.counts.Add(ctx, 1, m.mAttrs)
+		m.latency.Record(ctx, float64(time.Since(start))/float64(time.Second), m.recordOpts...)
+		m.success.Add(ctx, 1, m.addOpts...)
+		m.counts.Add(ctx, 1, m.addOpts...)
 
 		return &connTracker{
-			Conn:   conn,
-			counts: m.counts,
-			mAttrs: m.mAttrs,
-			once:   0,
+			Conn:    conn,
+			counts:  m.counts,
+			addOpts: m.addOpts,
+			once:    0,
 		}, nil
 	}
 }
 
 type connTracker struct {
 	net.Conn
-	counts metric.Int64UpDownCounter
-	mAttrs metric.MeasurementOption
-	once   int32
+	counts  metric.Int64UpDownCounter
+	addOpts []metric.AddOption
+	once    int32
 }
 
 func (t *connTracker) Close() error {
 	if atomic.CompareAndSwapInt32(&t.once, 0, 1) {
-		t.counts.Add(context.Background(), -1, t.mAttrs)
+		t.counts.Add(context.Background(), -1, t.addOpts...)
 	}
 
 	return t.Conn.Close()

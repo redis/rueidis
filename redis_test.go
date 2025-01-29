@@ -3,8 +3,10 @@ package rueidis
 import (
 	"bytes"
 	"context"
+	"errors"
 	"math/rand"
 	"net"
+	"os"
 	"reflect"
 	"strconv"
 	"sync"
@@ -166,7 +168,7 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
 			defer cancel()
 			val, err := client.Do(ctx, client.B().Get().Key(key).Build()).ToString()
-			if err != context.DeadlineExceeded {
+			if !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, os.ErrDeadlineExceeded) {
 				if v, ok := kvs[key]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
 					t.Errorf("unexpected get response %v %v %v", val, err, ok)
 				}
@@ -317,7 +319,7 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 			defer cancel()
 			for j, resp := range client.DoMulti(ctx, commands...) {
 				val, err := resp.ToString()
-				if err != context.DeadlineExceeded {
+				if !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, os.ErrDeadlineExceeded) {
 					if v, ok := kvs[cmdkeys[j]]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
 						t.Fatalf("unexpected get response %v %v %v", val, err, ok)
 					}
@@ -419,7 +421,7 @@ func testMultiSETGETHelpers(t *testing.T, client Client, csc bool) {
 	t.Logf("testing Multi SET with %d keys\n", keys)
 	for _, err := range MSet(client, ctx, kvs) {
 		if err != nil {
-			t.Fatalf("unexpecetd err %v\n", err)
+			t.Fatalf("unexpected err %v\n", err)
 		}
 	}
 
@@ -432,29 +434,29 @@ func testMultiSETGETHelpers(t *testing.T, client Client, csc bool) {
 		for _, key := range cmdKeys {
 			ret, ok := resp[key]
 			if !ok {
-				t.Fatalf("unexpecetd result %v not found\n", key)
+				t.Fatalf("unexpected result %v not found\n", key)
 			}
 			if exp, ok := kvs[key]; ok {
 				if exp != ret.string {
-					t.Fatalf("unexpecetd result %v wrong value %v\n", key, exp)
+					t.Fatalf("unexpected result %v wrong value %v\n", key, exp)
 				}
 			} else {
 				if !ret.IsNil() {
-					t.Fatalf("unexpecetd result %v wrong value %v\n", key, "nil")
+					t.Fatalf("unexpected result %v wrong value %v\n", key, "nil")
 				}
 			}
 		}
 	}
 	resp, err := MGet(client, ctx, cmdKeys)
 	if err != nil {
-		t.Fatalf("unexpecetd err %v\n", err)
+		t.Fatalf("unexpected err %v\n", err)
 	}
 	validate(resp)
 
 	t.Logf("testing client side caching with %d keys\n", keys*2)
 	resp, err = MGetCache(client, ctx, time.Minute, cmdKeys)
 	if err != nil {
-		t.Fatalf("unexpecetd err %v\n", err)
+		t.Fatalf("unexpected err %v\n", err)
 	}
 	validate(resp)
 	for _, ret := range resp {
@@ -464,7 +466,7 @@ func testMultiSETGETHelpers(t *testing.T, client Client, csc bool) {
 	}
 	resp, err = MGetCache(client, ctx, time.Minute, cmdKeys)
 	if err != nil {
-		t.Fatalf("unexpecetd err %v\n", err)
+		t.Fatalf("unexpected err %v\n", err)
 	}
 	validate(resp)
 	for _, ret := range resp {
@@ -476,7 +478,7 @@ func testMultiSETGETHelpers(t *testing.T, client Client, csc bool) {
 	t.Logf("testing DEL with %d keys\n", keys*2)
 	for _, err := range MDel(client, ctx, cmdKeys) {
 		if err != nil {
-			t.Fatalf("unexpecetd err %v\n", err)
+			t.Fatalf("unexpected err %v\n", err)
 		}
 	}
 
@@ -485,7 +487,7 @@ func testMultiSETGETHelpers(t *testing.T, client Client, csc bool) {
 	t.Logf("testing client side caching after delete\n")
 	resp, err = MGetCache(client, ctx, time.Minute, cmdKeys)
 	if err != nil {
-		t.Fatalf("unexpecetd err %v\n", err)
+		t.Fatalf("unexpected err %v\n", err)
 	}
 	for _, ret := range resp {
 		if !ret.IsNil() {
@@ -805,10 +807,13 @@ func TestSingleClientIntegration(t *testing.T) {
 		t.Skip()
 	}
 	defer ShouldNotLeaked(SetupLeakDetection())
+
 	client, err := NewClient(ClientOption{
 		InitAddress:       []string{"127.0.0.1:6379"},
 		ConnWriteTimeout:  180 * time.Second,
 		PipelineMultiplex: 1,
+
+		DisableAutoPipelining: os.Getenv("DisableAutoPipelining") == "true",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -820,11 +825,18 @@ func TestSingleClientIntegration(t *testing.T) {
 	client.Close()
 }
 
+func TestSingleClientIntegrationWithPool(t *testing.T) {
+	os.Setenv("DisableAutoPipelining", "true")
+	defer os.Unsetenv("DisableAutoPipelining")
+	TestSingleClientIntegration(t)
+}
+
 func TestSentinelClientIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
 	defer ShouldNotLeaked(SetupLeakDetection())
+
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:26379"},
 		ConnWriteTimeout: 180 * time.Second,
@@ -833,6 +845,8 @@ func TestSentinelClientIntegration(t *testing.T) {
 		},
 		SelectDB:          2, // https://github.com/redis/rueidis/issues/138
 		PipelineMultiplex: 1,
+
+		DisableAutoPipelining: os.Getenv("DisableAutoPipelining") == "true",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -844,17 +858,26 @@ func TestSentinelClientIntegration(t *testing.T) {
 	client.Close()
 }
 
+func TestSentinelClientIntegrationWithPool(t *testing.T) {
+	os.Setenv("DisableAutoPipelining", "true")
+	defer os.Unsetenv("DisableAutoPipelining")
+	TestSentinelClientIntegration(t)
+}
+
 func TestClusterClientIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
 	defer ShouldNotLeaked(SetupLeakDetection())
+
 	client, err := NewClient(ClientOption{
 		InitAddress:       []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"},
 		ConnWriteTimeout:  180 * time.Second,
 		ShuffleInit:       true,
 		Dialer:            net.Dialer{KeepAlive: -1},
 		PipelineMultiplex: 1,
+
+		DisableAutoPipelining: os.Getenv("DisableAutoPipelining") == "true",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -862,6 +885,12 @@ func TestClusterClientIntegration(t *testing.T) {
 	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiSETGETCSCHelpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testPubSubSharded, testLua)
 
 	client.Close()
+}
+
+func TestClusterClientIntegrationWithPool(t *testing.T) {
+	os.Setenv("DisableAutoPipelining", "true")
+	defer os.Unsetenv("DisableAutoPipelining")
+	TestClusterClientIntegration(t)
 }
 
 func TestSingleClient5Integration(t *testing.T) {
@@ -956,13 +985,13 @@ func TestDragonflyDBSingleClientIntegration(t *testing.T) {
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:6333"},
 		ConnWriteTimeout: 180 * time.Second,
-		DisableCache:     true,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testMultiSETGETRESP2Helpers, testPubSub, testLua)
+	run(t, client, testSETGETCSC, testMultiSETGETCSC, testMultiSETGETCSCHelpers, testMultiExec, testBlockingZPOP, testBlockingXREAD, testPubSub, testLua)
+	run(t, client, testFlush)
 
 	client.Close()
 }
@@ -984,5 +1013,42 @@ func TestKvrocksSingleClientIntegration(t *testing.T) {
 	run(t, client, testSETGETRESP2, testMultiSETGETRESP2, testMultiSETGETRESP2Helpers, testPubSub, testLua)
 	run(t, client, testFlush)
 
+	client.Close()
+}
+
+func TestNegativeConnWriteTimeout(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	client, err := NewClient(ClientOption{
+		InitAddress:      []string{"127.0.0.1:6379"},
+		ConnWriteTimeout: -1,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.Close()
+}
+
+func TestNegativeKeepalive(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	client, err := NewClient(ClientOption{
+		InitAddress: []string{"127.0.0.1:6379"},
+		Dialer:      net.Dialer{KeepAlive: -1},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	client.Close()
+}
+
+func TestNegativeConnWriteTimeoutKeepalive(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	client, err := NewClient(ClientOption{
+		InitAddress:      []string{"127.0.0.1:6379"},
+		Dialer:           net.Dialer{KeepAlive: -1},
+		ConnWriteTimeout: -1,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
 	client.Close()
 }

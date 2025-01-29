@@ -21,21 +21,12 @@ local numElements = tonumber(#ARGV) - 1
 local filterKey = KEYS[1]
 local counterKey = KEYS[2]
 
-local bitfieldArgs = { filterKey }
-for i=2, numElements+1 do
-    table.insert(bitfieldArgs, 'SET')
-    table.insert(bitfieldArgs, 'u1')
-    table.insert(bitfieldArgs, ARGV[i])
-    table.insert(bitfieldArgs, '1')
-end
-
-local bitset = redis.call('BITFIELD', unpack(bitfieldArgs))
-
 local counter = 0
 local oneBits = 0
-for i=1, #bitset do
-	oneBits = oneBits + bitset[i]
+for i=1, numElements do
+	local bitset = redis.call('BITFIELD', filterKey, 'SET', 'u1', ARGV[i+1], '1')
 
+	oneBits = oneBits + bitset[1]
 	if i % hashIterations == 0 then
 		if oneBits ~= hashIterations then
 			counter = counter + 1
@@ -53,22 +44,35 @@ local hashIterations = tonumber(ARGV[1])
 local numElements = tonumber(#ARGV) - 1
 local filterKey = KEYS[1]
 
-local bitfieldArgs = { filterKey }
-for i=2, numElements+1 do
-	local index = tonumber(ARGV[i])
+local result = {}
+local oneBits = 0
+for i=1, numElements do
+	local index = tonumber(ARGV[i+1])
+	local bitset = redis.call('BITFIELD', filterKey, 'GET', 'u1', index)
 
-	table.insert(bitfieldArgs, 'GET')
-	table.insert(bitfieldArgs, 'u1')
-	table.insert(bitfieldArgs, index)
+	oneBits = oneBits + bitset[1]
+	if i % hashIterations == 0 then
+		table.insert(result, oneBits == hashIterations)
+
+		oneBits = 0
+	end
 end
 
-local bitset = redis.call('BITFIELD', unpack(bitfieldArgs))
+return result
+`
+
+	bloomFilterExistsMultiReadOnlyScript = `
+local hashIterations = tonumber(ARGV[1])
+local numElements = tonumber(#ARGV) - 1
+local filterKey = KEYS[1]
 
 local result = {}
 local oneBits = 0
-for i=1, #bitset do
-	oneBits = oneBits + bitset[i]
+for i=1, numElements do
+	local index = tonumber(ARGV[i+1])
+	local bitset = redis.call('BITFIELD_RO', filterKey, 'GET', 'u1', index)
 
+	oneBits = oneBits + bitset[1]
 	if i % hashIterations == 0 then
 		table.insert(result, oneBits == hashIterations)
 
@@ -107,6 +111,23 @@ var (
 	ErrBitsSizeZero                       = errors.New("bits size cannot be zero")
 	ErrBitsSizeTooLarge                   = errors.New("bits size is too large")
 )
+
+// BloomFilterOptions is used to configure BloomFilter.
+type BloomFilterOptions struct {
+	enableReadOperation bool
+}
+
+// BloomFilterOptionFunc is used to configure BloomFilter.
+type BloomFilterOptionFunc func(*BloomFilterOptions)
+
+// WithEnableReadOperation enables read operation.
+// If enabled, Exists and ExistsMulti methods will be available as read-only operations.
+// NOTE: If enabled, minimum redis version should be 7.0.0.
+func WithEnableReadOperation(enableReadOperations bool) BloomFilterOptionFunc {
+	return func(o *BloomFilterOptions) {
+		o.enableReadOperation = enableReadOperations
+	}
+}
 
 // BloomFilter based on Redis Bitmaps.
 // BloomFilter uses 128-bit murmur3 hash function.
@@ -167,6 +188,7 @@ func NewBloomFilter(
 	name string,
 	expectedNumberOfItems uint,
 	falsePositiveRate float64,
+	opts ...BloomFilterOptionFunc,
 ) (BloomFilter, error) {
 	if len(name) == 0 {
 		return nil, ErrEmptyName
@@ -188,6 +210,18 @@ func NewBloomFilter(
 	}
 	hashIterations := numberOfBloomFilterHashFunctions(size, expectedNumberOfItems)
 
+	options := &BloomFilterOptions{}
+	for _, opt := range opts {
+		opt(options)
+	}
+
+	var existsMultiScript *rueidis.Lua
+	if options.enableReadOperation {
+		existsMultiScript = rueidis.NewLuaScriptReadOnly(bloomFilterExistsMultiReadOnlyScript)
+	} else {
+		existsMultiScript = rueidis.NewLuaScript(bloomFilterExistsMultiScript)
+	}
+
 	// NOTE: https://redis.io/docs/reference/cluster-spec/#hash-tags
 	bfName := "{" + name + "}"
 	counterName := bfName + ":c"
@@ -200,7 +234,7 @@ func NewBloomFilter(
 		size:                size,
 		addMultiScript:      rueidis.NewLuaScript(bloomFilterAddMultiScript),
 		addMultiKeys:        []string{bfName, counterName},
-		existsMultiScript:   rueidis.NewLuaScript(bloomFilterExistsMultiScript),
+		existsMultiScript:   existsMultiScript,
 		existsMultiKeys:     []string{bfName},
 	}, nil
 }
@@ -222,7 +256,10 @@ func (c *bloomFilter) AddMulti(ctx context.Context, keys []string) error {
 		return nil
 	}
 
-	indexes := c.indexes(keys)
+	buf := bytesPool.Get(0, len(keys)*int(c.hashIterations)*8)
+	defer bytesPool.Put(buf)
+
+	indexes := c.indexes(keys, &buf.s)
 
 	args := make([]string, 0, len(indexes)+1)
 	args = append(args, c.hashIterationString)
@@ -232,13 +269,15 @@ func (c *bloomFilter) AddMulti(ctx context.Context, keys []string) error {
 	return resp.Error()
 }
 
-func (c *bloomFilter) indexes(keys []string) []string {
+func (c *bloomFilter) indexes(keys []string, buf *[]byte) []string {
 	allIndexes := make([]string, 0, len(keys)*int(c.hashIterations))
 	size := uint64(c.size)
 	for _, key := range keys {
 		h1, h2 := hash([]byte(key))
 		for i := uint(0); i < c.hashIterations; i++ {
-			allIndexes = append(allIndexes, strconv.FormatUint(index(h1, h2, i, size), 10))
+			offset := len(*buf)
+			*buf = strconv.AppendUint(*buf, index(h1, h2, i, size), 10)
+			allIndexes = append(allIndexes, rueidis.BinaryString((*buf)[offset:]))
 		}
 	}
 	return allIndexes
@@ -258,7 +297,10 @@ func (c *bloomFilter) ExistsMulti(ctx context.Context, keys []string) ([]bool, e
 		return nil, nil
 	}
 
-	indexes := c.indexes(keys)
+	buf := bytesPool.Get(0, len(keys)*int(c.hashIterations)*8)
+	defer bytesPool.Put(buf)
+
+	indexes := c.indexes(keys, &buf.s)
 
 	args := make([]string, 0, len(indexes)+1)
 	args = append(args, c.hashIterationString)

@@ -41,11 +41,11 @@ func ParseURL(str string) (opt ClientOption, err error) {
 			return dialer.Dial("unix", s)
 		}
 		opt.InitAddress = []string{strings.TrimSpace(u.Path)}
-	case "rediss":
+	case "rediss", "valkeys":
 		opt.TLSConfig = &tls.Config{
 			MinVersion: tls.VersionTLS12,
 		}
-	case "redis":
+	case "redis", "valkey":
 	default:
 		return opt, fmt.Errorf("redis: invalid URL scheme: %s", u.Scheme)
 	}
@@ -88,6 +88,18 @@ func ParseURL(str string) (opt ClientOption, err error) {
 	for _, addr := range q["addr"] {
 		_, addr = parseAddr(addr)
 		opt.InitAddress = append(opt.InitAddress, addr)
+	}
+	if opt.TLSConfig != nil && q.Has("skip_verify") {
+		skipVerifyParam := q.Get("skip_verify")
+		if skipVerifyParam == "" {
+			opt.TLSConfig.InsecureSkipVerify = true
+		} else {
+			skipVerify, err := strconv.ParseBool(skipVerifyParam)
+			if err != nil {
+				return opt, fmt.Errorf("valkey: invalid skip verify: %q", skipVerifyParam)
+			}
+			opt.TLSConfig.InsecureSkipVerify = skipVerify
+		}
 	}
 	opt.AlwaysRESP2 = q.Get("protocol") == "2"
 	opt.DisableCache = q.Get("client_cache") == "0"

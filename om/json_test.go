@@ -2,6 +2,7 @@ package om
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -202,6 +203,65 @@ func TestNewJSONRepository(t *testing.T) {
 			_, err = repo.FetchCache(ctx, e.Key, time.Minute)
 			if !IsRecordNotFound(err) {
 				t.Fatalf("should not be found, but got %v", e)
+			}
+		})
+
+		t.Run("Alter Index", func(t *testing.T) {
+			err := repo.CreateIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
+				return schema.FieldName("$.Val").Text().Build()
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			time.Sleep(time.Second)
+			var entities []*JSONTestStruct
+			for i := 3; i >= 1; i-- {
+				e := repo.NewEntity()
+				e.Val = []byte("any")
+				e.Nested = struct {
+					F1 string
+				}{
+					F1: fmt.Sprintf("%d", i),
+				}
+				err = repo.Save(ctx, e)
+				if err != nil {
+					t.Fatal(err)
+				}
+				entities = append(entities, e)
+			}
+			time.Sleep(time.Second)
+			n, records, err := repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
+				return search.Query("*").Sortby("$.Nested.F1").Build()
+			})
+			if err == nil {
+				t.Fatalf("search by property not loaded nor in schema")
+			}
+			err = repo.AlterIndex(ctx, func(alter FtAlterIndex) rueidis.Completed {
+				return alter.
+					Schema().Add().Field("$.Nested.F1").Options("TEXT", "SORTABLE").
+					Build()
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			time.Sleep(time.Second)
+			n, records, err = repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
+				return search.Query("*").Sortby("$.Nested.F1").Build()
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n != 3 {
+				t.Fatalf("unexpected total count %v", n)
+			}
+			if len(records) != 3 {
+				t.Fatalf("unexpected return count %v", n)
+			}
+			if !reflect.DeepEqual(entities[2], records[0]) {
+				t.Fatalf("entities[0] should be the same as records[2]")
+			}
+			if err = repo.DropIndex(ctx); err != nil {
+				t.Fatal(err)
 			}
 		})
 	})

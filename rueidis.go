@@ -22,7 +22,9 @@ const (
 	// DefaultRingScale is the default value of ClientOption.RingScaleEachConn, which results into having a ring of size 2^10 for each connection
 	DefaultRingScale = 10
 	// DefaultPoolSize is the default value of ClientOption.BlockingPoolSize
-	DefaultPoolSize = 1000
+	DefaultPoolSize = 1024
+	// DefaultBlockingPipeline is the default value of ClientOption.BlockingPipeline
+	DefaultBlockingPipeline = 2000
 	// DefaultDialTimeout is the default value of ClientOption.Dialer.Timeout
 	DefaultDialTimeout = 5 * time.Second
 	// DefaultTCPKeepAlive is the default value of ClientOption.Dialer.KeepAlive
@@ -44,6 +46,8 @@ var (
 	ErrNoCache = errors.New("ClientOption.DisableCache must be true for redis not supporting client-side caching or not supporting RESP3")
 	// ErrRESP2PubSubMixed means your redis does not support RESP3 and rueidis can't handle SUBSCRIBE/PSUBSCRIBE/SSUBSCRIBE in mixed case
 	ErrRESP2PubSubMixed = errors.New("rueidis does not support SUBSCRIBE/PSUBSCRIBE/SSUBSCRIBE mixed with other commands in RESP2")
+	// ErrBlockingPubSubMixed rueidis can't handle SUBSCRIBE/PSUBSCRIBE/SSUBSCRIBE mixed with other blocking commands
+	ErrBlockingPubSubMixed = errors.New("rueidis does not support SUBSCRIBE/PSUBSCRIBE/SSUBSCRIBE mixed with other blocking commands")
 	// ErrDoCacheAborted means redis abort EXEC request or connection closed
 	ErrDoCacheAborted = errors.New("failed to fetch the cache because EXEC was aborted by redis or connection closed")
 	// ErrReplicaOnlyNotSupported means ReplicaOnly flag is not supported by
@@ -51,6 +55,10 @@ var (
 	ErrReplicaOnlyNotSupported = errors.New("ReplicaOnly is not supported for single client")
 	// ErrWrongPipelineMultiplex means wrong value for ClientOption.PipelineMultiplex
 	ErrWrongPipelineMultiplex = errors.New("ClientOption.PipelineMultiplex must not be bigger than MaxPipelineMultiplex")
+	// ErrDedicatedClientRecycled means the caller attempted to use the dedicated client which has been already recycled (after canceled/closed).
+	ErrDedicatedClientRecycled = errors.New("dedicated client should not be used after recycled")
+	// DisableClientSetInfo is the value that can be used for ClientOption.ClientSetInfo to disable making the CLIENT SETINFO command
+	DisableClientSetInfo = make([]string, 0)
 )
 
 // ClientOption should be passed to NewClient to construct a Client
@@ -125,9 +133,20 @@ type ClientOption struct {
 	// WriteBufferEachConn is the size of the bufio.NewWriterSize for each connection, default to DefaultWriteBuffer (0.5 MiB).
 	WriteBufferEachConn int
 
+	// BlockingPoolCleanup is the duration for cleaning up idle connections.
+	// If BlockingPoolCleanup is 0, then idle connections will not be cleaned up.
+	BlockingPoolCleanup time.Duration
+	// BlockingPoolMinSize is the minimum size of the connection pool
+	// shared by blocking commands (ex BLPOP, XREAD with BLOCK).
+	// Only relevant if BlockingPoolCleanup is not 0. This parameter limits
+	// the number of idle connections that can be removed by BlockingPoolCleanup.
+	BlockingPoolMinSize int
+
 	// BlockingPoolSize is the size of the connection pool shared by blocking commands (ex BLPOP, XREAD with BLOCK).
 	// The default is DefaultPoolSize.
 	BlockingPoolSize int
+	// BlockingPipeline is the threshold of a pipeline that will be treated as blocking commands when exceeding it.
+	BlockingPipeline int
 
 	// PipelineMultiplex determines how many tcp connections used to pipeline commands to one redis instance.
 	// The default for single and sentinel clients is 2, which means 4 connections (2^2).
@@ -151,14 +170,25 @@ type ClientOption struct {
 	// produce notable CPU usage reduction under load. Ref: https://github.com/redis/rueidis/issues/156
 	MaxFlushDelay time.Duration
 
+	// DisableTCPNoDelay turns on Nagle's algorithm in pipelining mode by using conn.SetNoDelay(false).
+	// Turning this on can result in lower p99 latencies and lower CPU usages if all your requests are small.
+	// But if you have large requests or fast network, this might degrade the performance. Ref: https://github.com/redis/rueidis/pull/650
+	DisableTCPNoDelay bool
+
 	// ShuffleInit is a handy flag that shuffles the InitAddress after passing to the NewClient() if it is true
 	ShuffleInit bool
 	// ClientNoTouch controls whether commands alter LRU/LFU stats
 	ClientNoTouch bool
 	// DisableRetry disables retrying read-only commands under network errors
 	DisableRetry bool
+	// RetryDelay is the function that returns the delay that should be used before retrying the attempt.
+	// The default is an exponential backoff with a maximum delay of 1 second.
+	// Only used when DisableRetry is false.
+	RetryDelay RetryDelayFn
 	// DisableCache falls back Client.DoCache/Client.DoMultiCache to Client.Do/Client.DoMulti
 	DisableCache bool
+	// DisableAutoPipelining makes rueidis.Client always pick a connection from the BlockingPool to serve each request.
+	DisableAutoPipelining bool
 	// AlwaysPipelining makes rueidis.Client always pipeline redis commands even if they are not issued concurrently.
 	AlwaysPipelining bool
 	// AlwaysRESP2 makes rueidis.Client always uses RESP2, otherwise it will try using RESP3 first.
@@ -175,6 +205,25 @@ type ClientOption struct {
 	// the current connection will be excluded from the client eviction process
 	// even if we're above the configured client eviction threshold.
 	ClientNoEvict bool
+
+	// ClusterOption is the options for the redis cluster client.
+	ClusterOption ClusterOption
+
+	// ReplicaSelector selects a replica node when `SendToReplicas` returns true.
+	// If the function is set, the client will send selected command to the replica node.
+	// Returned value is the index of the replica node in the replicas slice.
+	// If the returned value is out of range, the primary node will be selected.
+	// If primary node does not have any replica, the primary node will be selected
+	// and function will not be called.
+	// Currently only used for cluster client.
+	// Each ReplicaInfo must not be modified.
+	// NOTE: This function can't be used with ReplicaOnly option.
+	// NOTE: This function must be used with SendToReplicas function.
+	ReplicaSelector func(slot uint16, replicas []ReplicaInfo) int
+
+	// EnableReplicaAZInfo enables the client to load the replica node's availability zone.
+	// If true, the client will set the `AZ` field in `ReplicaInfo`.
+	EnableReplicaAZInfo bool
 }
 
 // SentinelOption contains MasterSet,
@@ -191,6 +240,20 @@ type SentinelOption struct {
 	Username   string
 	Password   string
 	ClientName string
+}
+
+// ClusterOption is the options for the redis cluster client.
+type ClusterOption struct {
+	// ShardsRefreshInterval is the interval to scan the cluster topology.
+	// If the value is zero, refreshment will be disabled.
+	// Cluster topology cache refresh happens always in the background after successful scan.
+	ShardsRefreshInterval time.Duration
+}
+
+// ReplicaInfo is the information of a replica node in a redis cluster.
+type ReplicaInfo struct {
+	Addr string
+	AZ   string
 }
 
 // Client is the redis client interface for both single redis instance and redis cluster. It should be created from the NewClient()
@@ -330,7 +393,13 @@ func NewClient(option ClientOption) (client Client, err error) {
 		option.Dialer.KeepAlive = DefaultTCPKeepAlive
 	}
 	if option.ConnWriteTimeout == 0 {
-		option.ConnWriteTimeout = option.Dialer.KeepAlive * 10
+		option.ConnWriteTimeout = max(DefaultTCPKeepAlive, option.Dialer.KeepAlive) * 10
+	}
+	if option.BlockingPipeline == 0 {
+		option.BlockingPipeline = DefaultBlockingPipeline
+	}
+	if option.DisableAutoPipelining {
+		option.AlwaysPipelining = false
 	}
 	if option.ShuffleInit {
 		util.Shuffle(len(option.InitAddress), func(i, j int) {
@@ -340,21 +409,24 @@ func NewClient(option ClientOption) (client Client, err error) {
 	if option.PipelineMultiplex > MaxPipelineMultiplex {
 		return nil, ErrWrongPipelineMultiplex
 	}
+	if option.RetryDelay == nil {
+		option.RetryDelay = defaultRetryDelayFn
+	}
 	if option.Sentinel.MasterSet != "" {
 		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
-		return newSentinelClient(&option, makeConn)
+		return newSentinelClient(&option, makeConn, newRetryer(option.RetryDelay))
 	}
 	if option.ForceSingleClient {
 		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
-		return newSingleClient(&option, nil, makeConn)
+		return newSingleClient(&option, nil, makeConn, newRetryer(option.RetryDelay))
 	}
-	if client, err = newClusterClient(&option, makeConn); err != nil {
+	if client, err = newClusterClient(&option, makeConn, newRetryer(option.RetryDelay)); err != nil {
 		if client == (*clusterClient)(nil) {
 			return nil, err
 		}
 		if len(option.InitAddress) == 1 && (err.Error() == redisErrMsgCommandNotAllow || strings.Contains(strings.ToUpper(err.Error()), "CLUSTER")) {
 			option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
-			client, err = newSingleClient(&option, client.(*clusterClient).single(), makeConn)
+			client, err = newSingleClient(&option, client.(*clusterClient).single(), makeConn, newRetryer(option.RetryDelay))
 		} else {
 			client.Close()
 			return nil, err
@@ -392,4 +464,3 @@ func dial(dst string, opt *ClientOption) (conn net.Conn, err error) {
 }
 
 const redisErrMsgCommandNotAllow = "command is not allowed"
-const dedicatedClientUsedAfterReleased = "DedicatedClient should not be used after recycled"

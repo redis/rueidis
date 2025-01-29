@@ -29,6 +29,9 @@ func setupMuxWithOption(wires []*mockWire, option *ClientOption) (conn *mux, che
 		count++
 		return wires[count]
 	}
+	if option.BlockingPipeline == 0 {
+		option.BlockingPipeline = DefaultBlockingPipeline
+	}
 	return newMux("", option, (*mockWire)(nil), (*mockWire)(nil), wfn, wfn), func(t *testing.T) {
 		if count != len(wires)-1 {
 			t.Fatalf("there is %d remaining unused wires", len(wires)-count-1)
@@ -174,7 +177,7 @@ func TestMuxReuseWire(t *testing.T) {
 		m.Close()
 	})
 
-	t.Run("reuse blocking pool", func(t *testing.T) {
+	t.Run("reuse blocking (dpool) pool", func(t *testing.T) {
 		blocking := make(chan struct{})
 		response := make(chan RedisResult)
 		m, checkClean := setupMux([]*mockWire{
@@ -199,7 +202,7 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 
-		wire1 := m.Acquire()
+		wire1 := m.dpool.Acquire()
 
 		go func() {
 			// this should use the second wire
@@ -212,9 +215,161 @@ func TestMuxReuseWire(t *testing.T) {
 		}()
 		<-blocking
 
-		m.Store(wire1)
+		m.dpool.Store(wire1)
 		// this should use the first wire
 		if val, err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"PING"})).ToString(); err != nil {
+			t.Fatalf("unexpected error %v", err)
+		} else if val != "ACQUIRED" {
+			t.Fatalf("unexpected response %v", val)
+		}
+
+		response <- newResult(RedisMessage{typ: '+', string: "BLOCK_RESPONSE"}, nil)
+		<-blocking
+	})
+
+	t.Run("reuse blocking (spool) pool", func(t *testing.T) {
+		blocking := make(chan struct{})
+		response := make(chan RedisResult)
+		m, checkClean := setupMux([]*mockWire{
+			{
+				// leave first wire for pipeline calls
+			},
+			{
+				DoFn: func(cmd Completed) RedisResult {
+					return newResult(RedisMessage{typ: '+', string: "ACQUIRED"}, nil)
+				},
+			},
+			{
+				DoFn: func(cmd Completed) RedisResult {
+					blocking <- struct{}{}
+					return <-response
+				},
+			},
+		})
+		m.usePool = true // switch to spool
+		defer checkClean(t)
+		defer m.Close()
+		if err := m.Dial(); err != nil {
+			t.Fatalf("unexpected dial error %v", err)
+		}
+
+		wire1 := m.spool.Acquire()
+
+		go func() {
+			// this should use the second wire
+			if val, err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"PING"})).ToString(); err != nil {
+				t.Errorf("unexpected error %v", err)
+			} else if val != "BLOCK_RESPONSE" {
+				t.Errorf("unexpected response %v", val)
+			}
+			close(blocking)
+		}()
+		<-blocking
+
+		m.spool.Store(wire1)
+		// this should use the first wire
+		if val, err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"PING"})).ToString(); err != nil {
+			t.Fatalf("unexpected error %v", err)
+		} else if val != "ACQUIRED" {
+			t.Fatalf("unexpected response %v", val)
+		}
+
+		response <- newResult(RedisMessage{typ: '+', string: "BLOCK_RESPONSE"}, nil)
+		<-blocking
+	})
+
+	t.Run("reuse blocking (dpool) pool DoMulti", func(t *testing.T) {
+		blocking := make(chan struct{})
+		response := make(chan RedisResult)
+		m, checkClean := setupMux([]*mockWire{
+			{
+				// leave first wire for pipeline calls
+			},
+			{
+				DoMultiFn: func(cmd ...Completed) *redisresults {
+					return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "ACQUIRED"}, nil)}}
+				},
+			},
+			{
+				DoMultiFn: func(cmd ...Completed) *redisresults {
+					blocking <- struct{}{}
+					return &redisresults{s: []RedisResult{<-response}}
+				},
+			},
+		})
+		m.usePool = true // switch to spool
+		defer checkClean(t)
+		defer m.Close()
+		if err := m.Dial(); err != nil {
+			t.Fatalf("unexpected dial error %v", err)
+		}
+
+		wire1 := m.spool.Acquire()
+
+		go func() {
+			// this should use the second wire
+			if val, err := m.DoMulti(context.Background(), cmds.NewBlockingCompleted([]string{"PING"})).s[0].ToString(); err != nil {
+				t.Errorf("unexpected error %v", err)
+			} else if val != "BLOCK_RESPONSE" {
+				t.Errorf("unexpected response %v", val)
+			}
+			close(blocking)
+		}()
+		<-blocking
+
+		m.spool.Store(wire1)
+		// this should use the first wire
+		if val, err := m.DoMulti(context.Background(), cmds.NewBlockingCompleted([]string{"PING"})).s[0].ToString(); err != nil {
+			t.Fatalf("unexpected error %v", err)
+		} else if val != "ACQUIRED" {
+			t.Fatalf("unexpected response %v", val)
+		}
+
+		response <- newResult(RedisMessage{typ: '+', string: "BLOCK_RESPONSE"}, nil)
+		<-blocking
+	})
+
+	t.Run("reuse blocking (spool) pool DoMulti", func(t *testing.T) {
+		blocking := make(chan struct{})
+		response := make(chan RedisResult)
+		m, checkClean := setupMux([]*mockWire{
+			{
+				// leave first wire for pipeline calls
+			},
+			{
+				DoMultiFn: func(cmd ...Completed) *redisresults {
+					return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "ACQUIRED"}, nil)}}
+				},
+			},
+			{
+				DoMultiFn: func(cmd ...Completed) *redisresults {
+					blocking <- struct{}{}
+					return &redisresults{s: []RedisResult{<-response}}
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+		if err := m.Dial(); err != nil {
+			t.Fatalf("unexpected dial error %v", err)
+		}
+
+		wire1 := m.dpool.Acquire()
+
+		go func() {
+			// this should use the second wire
+			if val, err := m.DoMulti(context.Background(), cmds.NewBlockingCompleted([]string{"PING"})).s[0].ToString(); err != nil {
+				t.Errorf("unexpected error %v", err)
+			} else if val != "BLOCK_RESPONSE" {
+				t.Errorf("unexpected response %v", val)
+			}
+			close(blocking)
+		}()
+		<-blocking
+
+		m.dpool.Store(wire1)
+		// this should use the first wire
+		if val, err := m.DoMulti(context.Background(), cmds.NewBlockingCompleted([]string{"PING"})).s[0].ToString(); err != nil {
 			t.Fatalf("unexpected error %v", err)
 		} else if val != "ACQUIRED" {
 			t.Fatalf("unexpected response %v", val)
@@ -282,6 +437,21 @@ func TestMuxDelegation(t *testing.T) {
 		defer m.Close()
 		if version := m.Version(); version != 7 {
 			t.Fatalf("unexpected version %v", version)
+		}
+	})
+
+	t.Run("wire az", func(t *testing.T) {
+		m, checkClean := setupMux([]*mockWire{
+			{
+				AZFn: func() string {
+					return "az"
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+		if az := m.AZ(); az != "az" {
+			t.Fatalf("unexpected az %v", az)
 		}
 	})
 
@@ -695,6 +865,59 @@ func TestMuxDelegation(t *testing.T) {
 		wg.Wait()
 	})
 
+	t.Run("multiple long pipeline", func(t *testing.T) {
+		blocked := make(chan struct{})
+		responses := make(chan RedisResult)
+
+		m, checkClean := setupMux([]*mockWire{
+			{
+				// leave first wire for pipeline calls
+			},
+			{
+				DoMultiFn: func(cmd ...Completed) *redisresults {
+					blocked <- struct{}{}
+					return &redisresults{s: []RedisResult{<-responses}}
+				},
+			},
+			{
+				DoMultiFn: func(cmd ...Completed) *redisresults {
+					blocked <- struct{}{}
+					return &redisresults{s: []RedisResult{<-responses}}
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+		if err := m.Dial(); err != nil {
+			t.Fatalf("unexpected dial error %v", err)
+		}
+
+		wg := sync.WaitGroup{}
+		wg.Add(2)
+		for i := 0; i < 2; i++ {
+			go func() {
+				pipeline := make(Commands, DefaultBlockingPipeline)
+				for i := 0; i < len(pipeline); i++ {
+					pipeline[i] = cmds.NewCompleted([]string{"SET"})
+				}
+				if val, err := m.DoMulti(context.Background(), pipeline...).s[0].ToString(); err != nil {
+					t.Errorf("unexpected error %v", err)
+				} else if val != "BLOCK_COMMANDS_RESPONSE" {
+					t.Errorf("unexpected response %v", val)
+				} else {
+					wg.Done()
+				}
+			}()
+		}
+		for i := 0; i < 2; i++ {
+			<-blocked
+		}
+		for i := 0; i < 2; i++ {
+			responses <- newResult(RedisMessage{typ: '+', string: "BLOCK_COMMANDS_RESPONSE"}, nil)
+		}
+		wg.Wait()
+	})
+
 	t.Run("multi blocking no recycle the wire if err", func(t *testing.T) {
 		closed := false
 		m, checkClean := setupMux([]*mockWire{
@@ -834,6 +1057,7 @@ type mockWire struct {
 	DoStreamFn      func(pool *pool, cmd Completed) RedisResultStream
 	DoMultiStreamFn func(pool *pool, cmd ...Completed) MultiRedisResultStream
 	InfoFn          func() map[string]RedisMessage
+	AZFn            func() string
 	VersionFn       func() int
 	ErrorFn         func() error
 	CloseFn         func()
@@ -923,6 +1147,13 @@ func (m *mockWire) Version() int {
 		return m.VersionFn()
 	}
 	return 0
+}
+
+func (m *mockWire) AZ() string {
+	if m.AZFn != nil {
+		return m.AZFn()
+	}
+	return ""
 }
 
 func (m *mockWire) Error() error {

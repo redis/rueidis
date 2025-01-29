@@ -15,7 +15,13 @@ func TestParseURL(t *testing.T) {
 	if opt, err := ParseURL("rediss://"); err != nil || opt.TLSConfig == nil {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}
+	if opt, err := ParseURL("valkeys://"); err != nil || opt.TLSConfig == nil {
+		t.Fatalf("unexpected %v %v", opt, err)
+	}
 	if opt, err := ParseURL("unix://"); err != nil || opt.DialFn == nil {
+		t.Fatalf("unexpected %v %v", opt, err)
+	}
+	if opt, err := ParseURL("valkey://"); err != nil {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}
 	if opt, err := ParseURL("redis://"); err != nil || opt.InitAddress[0] != "localhost:6379" {
@@ -49,6 +55,15 @@ func TestParseURL(t *testing.T) {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}
 	if opt, err := ParseURL("redis://?write_timeout=a"); !strings.HasPrefix(err.Error(), "redis: invalid write timeout") {
+		t.Fatalf("unexpected %v %v", opt, err)
+	}
+	if opt, err := ParseURL("rediss://?skip_verify"); err != nil || opt.TLSConfig == nil || !opt.TLSConfig.InsecureSkipVerify {
+		t.Fatalf("unexpected %v %v", opt, err)
+	}
+	if opt, err := ParseURL("rediss://?skip_verify=true"); err != nil || opt.TLSConfig == nil || !opt.TLSConfig.InsecureSkipVerify {
+		t.Fatalf("unexpected %v %v", opt, err)
+	}
+	if opt, err := ParseURL("rediss://?skip_verify=a"); !strings.HasPrefix(err.Error(), "valkey: invalid skip verify") {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}
 	if opt, err := ParseURL("redis://?protocol=2"); !opt.AlwaysRESP2 {

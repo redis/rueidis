@@ -16,27 +16,37 @@ import (
 func TestSentinelClientInit(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("Init no nodes", func(t *testing.T) {
-		if _, err := newSentinelClient(&ClientOption{InitAddress: []string{}}, func(dst string, opt *ClientOption) conn { return nil }); err != ErrNoAddr {
+		if _, err := newSentinelClient(
+			&ClientOption{InitAddress: []string{}},
+			func(dst string, opt *ClientOption) conn { return nil },
+			newRetryer(defaultRetryDelayFn),
+		); err != ErrNoAddr {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
 
 	t.Run("Init no dialable", func(t *testing.T) {
 		v := errors.New("dial err")
-		if _, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
-			return &mockConn{DialFn: func() error { return v }}
-		}); err != v {
+		if _, err := newSentinelClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn { return &mockConn{DialFn: func() error { return v }} },
+			newRetryer(defaultRetryDelayFn),
+		); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
 
 	t.Run("Refresh err", func(t *testing.T) {
 		v := errors.New("refresh err")
-		if _, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
-			return &mockConn{
-				DoMultiFn: func(cmd ...Completed) *redisresults { return &redisresults{s: []RedisResult{newErrResult(v)}} },
-			}
-		}); err != v {
+		if _, err := newSentinelClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					DoMultiFn: func(cmd ...Completed) *redisresults { return &redisresults{s: []RedisResult{newErrResult(v)}} },
+				}
+			},
+			newRetryer(defaultRetryDelayFn),
+		); err != v {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
@@ -114,43 +124,47 @@ func TestSentinelClientInit(t *testing.T) {
 				}}
 			},
 		}
-		client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0", ":1", ":2"}}, func(dst string, opt *ClientOption) conn {
-			if dst == ":0" {
-				return s0
-			}
-			if dst == ":1" {
-				return s1
-			}
-			if dst == ":2" {
-				return s2
-			}
-			if dst == ":3" {
-				return s3
-			}
-			if dst == ":4" {
-				return s4
-			}
-			if dst == ":5" {
-				return &mockConn{
-					DialFn: func() error { return v },
+		client, err := newSentinelClient(
+			&ClientOption{InitAddress: []string{":0", ":1", ":2"}},
+			func(dst string, opt *ClientOption) conn {
+				if dst == ":0" {
+					return s0
 				}
-			}
-			if dst == ":6" {
-				return &mockConn{
-					DoFn: func(cmd Completed) RedisResult {
-						return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "slave"}}}}
-					},
+				if dst == ":1" {
+					return s1
 				}
-			}
-			if dst == ":7" {
-				return &mockConn{
-					DoFn: func(cmd Completed) RedisResult {
-						return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
-					},
+				if dst == ":2" {
+					return s2
 				}
-			}
-			return nil
-		})
+				if dst == ":3" {
+					return s3
+				}
+				if dst == ":4" {
+					return s4
+				}
+				if dst == ":5" {
+					return &mockConn{
+						DialFn: func() error { return v },
+					}
+				}
+				if dst == ":6" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "slave"}}}}
+						},
+					}
+				}
+				if dst == ":7" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
+						},
+					}
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -318,54 +332,58 @@ func TestSentinelClientInit(t *testing.T) {
 			},
 		}
 
-		client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0", ":1", ":2"}, ReplicaOnly: true}, func(dst string, opt *ClientOption) conn {
-			if dst == ":0" {
-				return slaveWithMultiError
-			}
-			if dst == ":1" {
-				return slaveWithReplicaResponseErr
-			}
-			if dst == ":2" {
-				return sentinelWithFaultiSlave
-			}
-			if dst == ":3" {
-				return sentinelWithHealthySlaveInSDown
-			}
-			if dst == ":31" {
-				return sentinelWithoutEligibleSlave
-			}
+		client, err := newSentinelClient(
+			&ClientOption{InitAddress: []string{":0", ":1", ":2"}, ReplicaOnly: true},
+			func(dst string, opt *ClientOption) conn {
+				if dst == ":0" {
+					return slaveWithMultiError
+				}
+				if dst == ":1" {
+					return slaveWithReplicaResponseErr
+				}
+				if dst == ":2" {
+					return sentinelWithFaultiSlave
+				}
+				if dst == ":3" {
+					return sentinelWithHealthySlaveInSDown
+				}
+				if dst == ":31" {
+					return sentinelWithoutEligibleSlave
+				}
 
-			if dst == ":32" {
-				return sentinelWithInvalidMapResponse
-			}
+				if dst == ":32" {
+					return sentinelWithInvalidMapResponse
+				}
 
-			if dst == ":4" {
-				return sentinelWithMasterRoleAsSlave
-			}
-			if dst == ":5" {
-				return sentinelWithOKResponse
-			}
-			if dst == ":6" {
-				return &mockConn{
-					DialFn: func() error { return v },
+				if dst == ":4" {
+					return sentinelWithMasterRoleAsSlave
 				}
-			}
-			if dst == ":7" {
-				return &mockConn{
-					DoFn: func(cmd Completed) RedisResult {
-						return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
-					},
+				if dst == ":5" {
+					return sentinelWithOKResponse
 				}
-			}
-			if dst == ":8" {
-				return &mockConn{
-					DoFn: func(cmd Completed) RedisResult {
-						return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "slave"}}}}
-					},
+				if dst == ":6" {
+					return &mockConn{
+						DialFn: func() error { return v },
+					}
 				}
-			}
-			return nil
-		})
+				if dst == ":7" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
+						},
+					}
+				}
+				if dst == ":8" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "slave"}}}}
+						},
+					}
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
 		if client.sAddr != ":5" && err == nil {
 			t.Fatalf("expected error but got nil with sentinel %s", client.sAddr)
 		}
@@ -416,27 +434,31 @@ func TestSentinelClientInit(t *testing.T) {
 				}}
 			},
 		}
-		client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
-			if dst == ":0" {
-				return s0
-			}
-			if dst == ":1" {
-				return s1
-			}
-			if dst == ":2" {
-				return &mockConn{
-					DoFn: func(cmd Completed) RedisResult { return newErrResult(v) },
+		client, err := newSentinelClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn {
+				if dst == ":0" {
+					return s0
 				}
-			}
-			if dst == ":3" {
-				return &mockConn{
-					DoFn: func(cmd Completed) RedisResult {
-						return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
-					},
+				if dst == ":1" {
+					return s1
 				}
-			}
-			return nil
-		})
+				if dst == ":2" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult { return newErrResult(v) },
+					}
+				}
+				if dst == ":3" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
+						},
+					}
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -538,24 +560,28 @@ func TestSentinelClientInit(t *testing.T) {
 				return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
 			},
 		}
-		client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
-			if dst == ":0" {
-				return s0
-			}
-			if dst == ":1" {
-				return s1
-			}
-			if dst == ":2" {
-				return s2
-			}
-			if dst == ":3" {
-				return r3
-			}
-			if dst == ":4" {
-				return r4
-			}
-			return nil
-		})
+		client, err := newSentinelClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn {
+				if dst == ":0" {
+					return s0
+				}
+				if dst == ":1" {
+					return s1
+				}
+				if dst == ":2" {
+					return s2
+				}
+				if dst == ":3" {
+					return r3
+				}
+				if dst == ":4" {
+					return r4
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -601,15 +627,19 @@ func TestSentinelRefreshAfterClose(t *testing.T) {
 			return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
 		},
 	}
-	client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
-		if dst == ":0" {
-			return s0
-		}
-		if dst == ":1" {
-			return m
-		}
-		return nil
-	})
+	client, err := newSentinelClient(
+		&ClientOption{InitAddress: []string{":0"}},
+		func(dst string, opt *ClientOption) conn {
+			if dst == ":0" {
+				return s0
+			}
+			if dst == ":1" {
+				return m
+			}
+			return nil
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
 	}
@@ -642,15 +672,19 @@ func TestSentinelSwitchAfterClose(t *testing.T) {
 			return newErrResult(ErrClosing)
 		},
 	}
-	client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
-		if dst == ":0" {
-			return s0
-		}
-		if dst == ":1" {
-			return m
-		}
-		return nil
-	})
+	client, err := newSentinelClient(
+		&ClientOption{InitAddress: []string{":0"}},
+		func(dst string, opt *ClientOption) conn {
+			if dst == ":0" {
+				return s0
+			}
+			if dst == ":1" {
+				return m
+			}
+			return nil
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
 	}
@@ -680,29 +714,37 @@ func TestSentinelClientDelegate(t *testing.T) {
 		},
 		AddrFn: func() string { return ":1" },
 	}
-	client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
-		if dst == ":0" {
-			return s0
-		}
-		if dst == ":1" {
-			return m
-		}
-		return nil
-	})
+	client, err := newSentinelClient(
+		&ClientOption{InitAddress: []string{":0"}},
+		func(dst string, opt *ClientOption) conn {
+			if dst == ":0" {
+				return s0
+			}
+			if dst == ":1" {
+				return m
+			}
+			return nil
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
 	}
 	defer client.Close()
 
-	disabledCacheClient, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}, DisableCache: true}, func(dst string, opt *ClientOption) conn {
-		if dst == ":0" {
-			return s0
-		}
-		if dst == ":1" {
-			return m
-		}
-		return nil
-	})
+	disabledCacheClient, err := newSentinelClient(
+		&ClientOption{InitAddress: []string{":0"}, DisableCache: true},
+		func(dst string, opt *ClientOption) conn {
+			if dst == ":0" {
+				return s0
+			}
+			if dst == ":1" {
+				return m
+			}
+			return nil
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
 	}
@@ -1032,18 +1074,22 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 				return nil
 			},
 		}
-		client, err := newSentinelClient(&ClientOption{InitAddress: []string{":0"}}, func(dst string, opt *ClientOption) conn {
-			if dst == ":0" {
-				return s0
-			}
-			if dst == ":1" {
-				return m1
-			}
-			if dst == ":2" {
-				return m2
-			}
-			return nil
-		})
+		client, err := newSentinelClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn {
+				if dst == ":0" {
+					return s0
+				}
+				if dst == ":1" {
+					return m1
+				}
+				if dst == ":2" {
+					return m2
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
@@ -1183,29 +1229,33 @@ func TestSentinelClientPubSub(t *testing.T) {
 		CloseFn: func() { atomic.AddInt32(&m4close, 1) },
 	}
 
-	client, err := newSentinelClient(&ClientOption{
-		InitAddress: []string{":0"},
-		Sentinel: SentinelOption{
-			MasterSet: "test",
+	client, err := newSentinelClient(
+		&ClientOption{
+			InitAddress: []string{":0"},
+			Sentinel: SentinelOption{
+				MasterSet: "test",
+			},
 		},
-	}, func(dst string, opt *ClientOption) conn {
-		if dst == ":0" {
-			return s0
-		}
-		if dst == ":1" {
-			return m1
-		}
-		if dst == ":2" {
-			return m2
-		}
-		if dst == ":3" {
-			return s3
-		}
-		if dst == ":4" {
-			return m4
-		}
-		return nil
-	})
+		func(dst string, opt *ClientOption) conn {
+			if dst == ":0" {
+				return s0
+			}
+			if dst == ":1" {
+				return m1
+			}
+			if dst == ":2" {
+				return m2
+			}
+			if dst == ":3" {
+				return s3
+			}
+			if dst == ":4" {
+				return m4
+			}
+			return nil
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
 	}
@@ -1347,30 +1397,34 @@ func TestSentinelReplicaOnlyClientPubSub(t *testing.T) {
 		CloseFn: func() { atomic.AddInt32(&slave4close, 1) },
 	}
 
-	client, err := newSentinelClient(&ClientOption{
-		InitAddress: []string{":0"},
-		Sentinel: SentinelOption{
-			MasterSet: "replicaonly",
+	client, err := newSentinelClient(
+		&ClientOption{
+			InitAddress: []string{":0"},
+			Sentinel: SentinelOption{
+				MasterSet: "replicaonly",
+			},
+			ReplicaOnly: true,
 		},
-		ReplicaOnly: true,
-	}, func(dst string, opt *ClientOption) conn {
-		if dst == ":0" {
-			return s0
-		}
-		if dst == ":1" {
-			return slave1
-		}
-		if dst == ":2" {
-			return slave2
-		}
-		if dst == ":3" {
-			return s3
-		}
-		if dst == ":4" {
-			return slave4
-		}
-		return nil
-	})
+		func(dst string, opt *ClientOption) conn {
+			if dst == ":0" {
+				return s0
+			}
+			if dst == ":1" {
+				return slave1
+			}
+			if dst == ":2" {
+				return slave2
+			}
+			if dst == ":3" {
+				return s3
+			}
+			if dst == ":4" {
+				return slave4
+			}
+			return nil
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
 	if err != nil {
 		t.Fatalf("unexpected err %v", err)
 	}
@@ -1474,15 +1528,218 @@ func TestSentinelClientRetry(t *testing.T) {
 				return nil
 			},
 		}
-		c, err := newSentinelClient(&ClientOption{
-			InitAddress: []string{":0"},
-			Sentinel:    SentinelOption{MasterSet: "masters"},
-		}, func(dst string, opt *ClientOption) conn {
-			return m
-		})
+		c, err := newSentinelClient(
+			&ClientOption{
+				InitAddress: []string{":0"},
+				Sentinel:    SentinelOption{MasterSet: "masters"},
+			},
+			func(dst string, opt *ClientOption) conn {
+				return m
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
 		if err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
 		return c
+	})
+}
+
+func TestSentinelClientLoadingRetry(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+
+	setup := func() (*sentinelClient, *mockConn, *mockConn) {
+		s0 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
+					{val: RedisMessage{typ: '*', values: []RedisMessage{}}},
+					{val: RedisMessage{typ: '*', values: []RedisMessage{
+						{typ: '+', string: ""}, {typ: '+', string: "1"},
+					}}},
+				}}
+			},
+		}
+		m1 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				if cmd == cmds.RoleCmd {
+					return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
+				}
+				return RedisResult{}
+			},
+		}
+		client, err := newSentinelClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn {
+				if dst == ":0" {
+					return s0
+				}
+				if dst == ":1" {
+					return m1
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		return client, s0, m1
+	}
+
+	t.Run("Do Retry on Loading", func(t *testing.T) {
+		client, _, m1 := setup()
+		attempts := 0
+		m1.DoFn = func(cmd Completed) RedisResult {
+			if cmd == cmds.RoleCmd {
+				return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
+			}
+			attempts++
+			if attempts == 1 {
+				return newResult(RedisMessage{typ: '-', string: "LOADING Redis is loading the dataset in memory"}, nil)
+			}
+			return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+		}
+
+		if v, err := client.Do(context.Background(), client.B().Get().Key("test").Build()).ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if attempts != 2 {
+			t.Fatalf("expected 2 attempts, got %v", attempts)
+		}
+	})
+
+	t.Run("Do not retry on non-loading errors", func(t *testing.T) {
+		client, _, m1 := setup()
+		attempts := 0
+		m1.DoFn = func(cmd Completed) RedisResult {
+			if cmd == cmds.RoleCmd {
+				return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
+			}
+			attempts++
+			if attempts == 1 {
+				return newResult(RedisMessage{typ: '-', string: "ERR some other error"}, nil)
+			}
+			return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+		}
+
+		if err := client.Do(context.Background(), client.B().Get().Key("test").Build()).Error(); err == nil {
+			t.Fatal("expected error but got nil")
+		}
+		if attempts != 1 {
+			t.Fatalf("unexpected attempts %v, expected no retry", attempts)
+		}
+	})
+
+	t.Run("DoMulti Retry on Loading", func(t *testing.T) {
+		client, _, m1 := setup()
+		attempts := 0
+		m1.DoMultiFn = func(multi ...Completed) *redisresults {
+			attempts++
+			if attempts == 1 {
+				return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '-', string: "LOADING Redis is loading the dataset in memory"}, nil)}}
+			}
+			return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "OK"}, nil)}}
+		}
+
+		cmd := client.B().Get().Key("test").Build()
+		resps := client.DoMulti(context.Background(), cmd)
+		if len(resps) != 1 {
+			t.Fatalf("unexpected response length %v", len(resps))
+		}
+		if v, err := resps[0].ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoCache Retry on Loading", func(t *testing.T) {
+		client, _, m1 := setup()
+		attempts := 0
+		m1.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
+			attempts++
+			if attempts == 1 {
+				return newResult(RedisMessage{typ: '-', string: "LOADING Redis is loading the dataset in memory"}, nil)
+			}
+			return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+		}
+
+		cmd := client.B().Get().Key("test").Cache()
+		if v, err := client.DoCache(context.Background(), cmd, time.Minute).ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMultiCache Retry on Loading", func(t *testing.T) {
+		client, _, m1 := setup()
+		attempts := 0
+		m1.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
+			attempts++
+			if attempts == 1 {
+				return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '-', string: "LOADING Redis is loading the dataset in memory"}, nil)}}
+			}
+			return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "OK"}, nil)}}
+		}
+
+		cmd := client.B().Get().Key("test").Cache()
+		resps := client.DoMultiCache(context.Background(), CT(cmd, time.Minute))
+		if len(resps) != 1 {
+			t.Fatalf("unexpected response length %v", len(resps))
+		}
+		if v, err := resps[0].ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Dedicated Do Retry on Loading", func(t *testing.T) {
+		client, _, m1 := setup()
+		attempts := 0
+		m1.DoFn = func(cmd Completed) RedisResult {
+			if cmd == cmds.RoleCmd {
+				return RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "master"}}}}
+			}
+			attempts++
+			if attempts == 1 {
+				return newResult(RedisMessage{typ: '-', string: "LOADING Redis is loading the dataset in memory"}, nil)
+			}
+			return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+		}
+		m1.AcquireFn = func() wire { return &mockWire{DoFn: m1.DoFn} }
+
+		err := client.Dedicated(func(c DedicatedClient) error {
+			if v, err := c.Do(context.Background(), c.B().Get().Key("test").Build()).ToString(); err != nil || v != "OK" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+	})
+
+	t.Run("Dedicated DoMulti Retry on Loading", func(t *testing.T) {
+		client, _, m1 := setup()
+		attempts := 0
+		m1.DoMultiFn = func(multi ...Completed) *redisresults {
+			attempts++
+			if attempts == 1 {
+				return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '-', string: "LOADING Redis is loading the dataset in memory"}, nil)}}
+			}
+			return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "OK"}, nil)}}
+		}
+		m1.AcquireFn = func() wire { return &mockWire{DoMultiFn: m1.DoMultiFn} }
+
+		err := client.Dedicated(func(c DedicatedClient) error {
+			resps := c.DoMulti(context.Background(), c.B().Get().Key("test").Build())
+			if len(resps) != 1 {
+				t.Fatalf("unexpected response length %v", len(resps))
+			}
+			if v, err := resps[0].ToString(); err != nil || v != "OK" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
 	})
 }
