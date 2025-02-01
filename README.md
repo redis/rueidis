@@ -595,6 +595,12 @@ if err := rueidis.DecodeSliceOfJSON(client.Do(ctx, client.B().Mget().Key("user1"
 Contributions are welcome, including [issues](https://github.com/redis/rueidis/issues), [pull requests](https://github.com/redis/rueidis/pulls), and [discussions](https://github.com/redis/rueidis/discussions).
 Contributions mean a lot to us and help us improve this library and the community!
 
+Thanks to all the people who already contributed!
+
+<a href="https://github.com/redis/rueidis/graphs/contributors">
+  <img src="https://contributors-img.web.app/image?repo=redis/rueidis" />
+</a>
+
 ### Generate Command Builders
 
 Command builders are generated based on the definitions in [./hack/cmds](./hack/cmds) by running:
