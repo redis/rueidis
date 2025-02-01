@@ -19,6 +19,7 @@ type ClientOption struct {
 	ClientBuilder func(option rueidis.ClientOption) (rueidis.Client, error)
 	ClientOption  rueidis.ClientOption
 	ClientTTL     time.Duration // TTL for the client marker, refreshed every 1/2 TTL. Defaults to 10s. The marker allows other client to know if this client is still alive.
+	UseLuaLock    bool
 }
 
 type CacheAsideClient interface {
@@ -33,8 +34,9 @@ func NewClient(option ClientOption) (cc CacheAsideClient, err error) {
 		option.ClientTTL = 10 * time.Second
 	}
 	ca := &Client{
-		waits: make(map[string]chan struct{}),
-		ttl:   option.ClientTTL,
+		waits:      make(map[string]chan struct{}),
+		ttl:        option.ClientTTL,
+		useLuaLock: option.UseLuaLock,
 	}
 	option.ClientOption.OnInvalidations = ca.onInvalidation
 	if option.ClientBuilder != nil {
@@ -50,13 +52,14 @@ func NewClient(option ClientOption) (cc CacheAsideClient, err error) {
 }
 
 type Client struct {
-	client rueidis.Client
-	ctx    context.Context
-	waits  map[string]chan struct{}
-	cancel context.CancelFunc
-	id     string
-	ttl    time.Duration
-	mu     sync.Mutex
+	client     rueidis.Client
+	ctx        context.Context
+	waits      map[string]chan struct{}
+	cancel     context.CancelFunc
+	id         string
+	ttl        time.Duration
+	mu         sync.Mutex
+	useLuaLock bool
 }
 
 func (c *Client) onInvalidation(messages []rueidis.RedisMessage) {
@@ -145,7 +148,6 @@ func (c *Client) Get(ctx context.Context, ttl time.Duration, key string, fn func
 	ctx, cancel := context.WithTimeout(ctx, ttl)
 	defer cancel()
 
-	useLuaScript := false // @rueian how do we configure this?
 retry:
 	wait := c.register(key)
 	resp := c.client.DoCache(ctx, c.client.B().Get().Key(key).Cache(), ttl)
@@ -154,7 +156,7 @@ retry:
 	if rueidis.IsRedisNil(err) && fn != nil { // cache miss, prepare to populate the value by fn()
 		var id string
 		if id, err = c.keepalive(); err == nil { // acquire client id
-			if useLuaScript {
+			if c.useLuaLock {
 				val, err = acquireLock.Exec(ctx, c.client, []string{key}, []string{id, strconv.FormatInt(ttl.Milliseconds(), 10)}).ToString()
 			} else {
 				val, err = c.client.Do(ctx, c.client.B().Set().Key(key).Value(id).Nx().Get().Px(ttl).Build()).ToString()
