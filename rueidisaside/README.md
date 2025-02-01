@@ -111,7 +111,7 @@ func main() {
 ## Limitation
 
 Currently, requires Redis >= 7.0.
-However, an option is available to use a Lua script for Redis versions < 7.0. This allows you to use the `rueidisaside` cache aside pattern with older Redis versions as well. You can enable this option by setting the `UseLuaForLock` field in the `ClientOption`.
+However, an option is available to use a Lua script for Redis versions < 7.0. This allows you to use the `rueidisaside` cache aside pattern with older Redis versions as well. You can enable this option by setting the `UseLuaLock` field in the `ClientOption`.
 
 To configure the Lua fallback option:
 
