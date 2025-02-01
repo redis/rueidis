@@ -223,5 +223,5 @@ const PlaceholderPrefix = "rueidisid:"
 var (
 	delkey      = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("DEL",KEYS[1]) else return 0 end`)
 	setkey      = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("SET",KEYS[1],ARGV[2],"PX",ARGV[3]) else return 0 end`)
-	acquireLock = rueidis.NewLuaScript(`if redis.call("SETNX", KEYS[1], ARGV[1]) == 1 then redis.call("PEXPIRE", KEYS[1], ARGV[2]) return nil else return redis.call("GET", KEYS[1]) end`)
+	acquireLock = rueidis.NewLuaScript(`if redis.call("SET", KEYS[1], ARGV[1], "NX", "PX", ARGV[2]) then return nil else return redis.call("GET", KEYS[1]) end`)
 )
