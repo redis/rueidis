@@ -111,3 +111,18 @@ func main() {
 ## Limitation
 
 Currently, requires Redis >= 7.0.
+However, an option is available to use a Lua script for Redis versions < 7.0. This allows you to use the `rueidisaside` cache aside pattern with older Redis versions as well. You can enable this option by setting the `UseLuaForLock` field in the `ClientOption`.
+
+To configure the Lua fallback option:
+
+```go
+client, err := rueidisaside.NewClient(rueidisaside.ClientOption{
+    ClientOption: rueidis.ClientOption{
+        InitAddress: []string{"127.0.0.1:6379"},
+    },
+    UseLuaLock: true, // Enable Lua script for older Redis versions
+})
+if err != nil {
+    panic(err)
+}
+```
