@@ -42,12 +42,12 @@ type HistogramOption struct {
 }
 
 type dialMetrics struct {
-	addOpts    []metric.AddOption
-	recordOpts []metric.RecordOption
 	attempt    metric.Int64Counter
 	success    metric.Int64Counter
 	counts     metric.Int64UpDownCounter
 	latency    metric.Float64Histogram
+	addOpts    []metric.AddOption
+	recordOpts []metric.RecordOption
 }
 
 // WithHistogramOption sets the HistogramOption.

@@ -69,11 +69,11 @@ type otelclient struct {
 	meter           metric.Meter
 	cscMiss         metric.Int64Counter
 	cscHits         metric.Int64Counter
+	tAttrs          trace.SpanStartEventOption
+	dbStmtFunc      StatementFunc
 	addOpts         []metric.AddOption
 	recordOpts      []metric.RecordOption
-	tAttrs          trace.SpanStartEventOption
 	histogramOption HistogramOption
-	dbStmtFunc      StatementFunc
 }
 
 func (o *otelclient) B() rueidis.Builder {
