@@ -23,17 +23,17 @@ var ErrSendToReplicasNotSet = errors.New("SendToReplicas must be set when Replic
 
 type clusterClient struct {
 	pslots       [16384]conn
-	rslots       []conn
-	sc           call
+	retryHandler retryHandler
+	opt          *ClientOption
 	rOpt         *ClientOption
 	conns        map[string]connrole
 	connFn       connFn
-	opt          *ClientOption
-	retryHandler retryHandler
 	stopCh       chan struct{}
-	cmd          Builder
+	sc           call
+	rslots       []conn
 	mu           sync.RWMutex
 	stop         uint32
+	cmd          Builder
 	retry        bool
 }
 
@@ -1236,15 +1236,15 @@ func (c *clusterClient) shouldRefreshRetry(err error, ctx context.Context) (addr
 }
 
 type dedicatedClusterClient struct {
-	client       *clusterClient
 	conn         conn
 	wire         wire
+	retryHandler retryHandler
+	client       *clusterClient
 	pshks        *pshks
 	mu           sync.Mutex
 	cmd          Builder
-	retryHandler retryHandler
-	retry        bool
 	slot         uint16
+	retry        bool
 	mark         bool
 }
 

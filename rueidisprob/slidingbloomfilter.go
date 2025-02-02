@@ -187,8 +187,9 @@ func WithReadOnlyExists(enableReadOperations bool) SlidingBloomFilterOptionFunc 
 type slidingBloomFilter struct {
 	client rueidis.Client
 
-	// window is the duration of the sliding window.
-	window time.Duration
+	addMultiScript *rueidis.Lua
+
+	existsMultiScript *rueidis.Lua
 
 	// Pre-calculated window half in milliseconds
 	windowHalfMs string
@@ -200,18 +201,20 @@ type slidingBloomFilter struct {
 	// counter is the name of the counter.
 	counter string
 
-	// hashIterations is the number of hash functions to use.
-	hashIterations      uint
 	hashIterationString string
+
+	addMultiKeys []string
+
+	existsMultiKeys []string
+
+	// window is the duration of the sliding window.
+	window time.Duration
+
+	// hashIterations is the number of hash functions to use.
+	hashIterations uint
 
 	// size is the number of bits to use.
 	size uint
-
-	addMultiScript *rueidis.Lua
-	addMultiKeys   []string
-
-	existsMultiScript *rueidis.Lua
-	existsMultiKeys   []string
 }
 
 // NewSlidingBloomFilter creates a new sliding window Bloom filter.
