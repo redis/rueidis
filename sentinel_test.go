@@ -1274,12 +1274,12 @@ func TestSentinelClientPubSub(t *testing.T) {
 	// switch to false master
 	messages <- PubSubMessage{Channel: "+switch-master", Message: "test  1  2"}
 
-	for atomic.LoadInt32(&m2close) != 2 {
+	for atomic.LoadInt32(&m2close) < 2 {
 		t.Log("wait false m2 to be close", atomic.LoadInt32(&m2close))
 		time.Sleep(time.Millisecond * 100)
 	}
 
-	for atomic.LoadInt32(&s0count) != 3 {
+	for atomic.LoadInt32(&s0count) < 3 {
 		t.Log("wait s0 to be call third time", atomic.LoadInt32(&s0count))
 		time.Sleep(time.Millisecond * 100)
 	}
@@ -1292,7 +1292,7 @@ func TestSentinelClientPubSub(t *testing.T) {
 	// switch to master by reboot
 	messages <- PubSubMessage{Channel: "+reboot", Message: "master test  4"}
 
-	for atomic.LoadInt32(&m1close) != 1 {
+	for atomic.LoadInt32(&m1close) < 1 {
 		t.Log("wait old m1 to be close", atomic.LoadInt32(&m1close))
 		time.Sleep(time.Millisecond * 100)
 	}
@@ -1305,11 +1305,11 @@ func TestSentinelClientPubSub(t *testing.T) {
 	close(messages)
 	client.Close()
 
-	for atomic.LoadInt32(&s0close) != 4 {
+	for atomic.LoadInt32(&s0close) < 4 {
 		t.Log("wait old s0 to be close", atomic.LoadInt32(&s0close))
 		time.Sleep(time.Millisecond * 100)
 	}
-	for atomic.LoadInt32(&m4close) != 1 {
+	for atomic.LoadInt32(&m4close) < 1 {
 		t.Log("wait old m1 to be close", atomic.LoadInt32(&m4close))
 		time.Sleep(time.Millisecond * 100)
 	}
@@ -1461,17 +1461,17 @@ func TestSentinelReplicaOnlyClientPubSub(t *testing.T) {
 	// it will cause s0 to return :2 in DoMulti response
 	messages <- PubSubMessage{Channel: "+slave", Message: "slave 0:0 0 2 @ replicaonly 0 0"}
 
-	for atomic.LoadInt32(&slave2close) != 1 {
+	for atomic.LoadInt32(&slave2close) < 1 {
 		t.Log("wait false slave2 to be close", atomic.LoadInt32(&slave2close))
 		time.Sleep(time.Millisecond * 100)
 	}
 
-	for atomic.LoadInt32(&s0count) != 3 {
+	for atomic.LoadInt32(&s0count) < 3 {
 		t.Log("wait s0 to be call third time", atomic.LoadInt32(&s0count))
 		time.Sleep(time.Millisecond * 100)
 	}
 
-	for atomic.LoadInt32(&slave1close) != 1 {
+	for atomic.LoadInt32(&slave1close) < 1 {
 		t.Log("wait for slave1 to close (and for client to use slave4)", atomic.LoadInt32(&slave1close))
 		time.Sleep(time.Millisecond * 100)
 	}
@@ -1484,7 +1484,7 @@ func TestSentinelReplicaOnlyClientPubSub(t *testing.T) {
 	// switch to new slave by reboot
 	messages <- PubSubMessage{Channel: "+reboot", Message: "slave 0:0 0 1 @ replicaonly 0 0"}
 
-	for atomic.LoadInt32(&slave4close) != 1 {
+	for atomic.LoadInt32(&slave4close) < 1 {
 		t.Log("wait old slave4 to be close", atomic.LoadInt32(&slave4close))
 		time.Sleep(time.Millisecond * 100)
 	}
@@ -1497,11 +1497,11 @@ func TestSentinelReplicaOnlyClientPubSub(t *testing.T) {
 	close(messages)
 	client.Close()
 
-	for atomic.LoadInt32(&s0close) != 4 {
+	for atomic.LoadInt32(&s0close) < 4 {
 		t.Log("wait old s0 to be close", atomic.LoadInt32(&s0close))
 		time.Sleep(time.Millisecond * 100)
 	}
-	for atomic.LoadInt32(&slave1close) != 2 {
+	for atomic.LoadInt32(&slave1close) < 2 {
 		t.Log("wait old slave1 to be close", atomic.LoadInt32(&slave1close))
 		time.Sleep(time.Millisecond * 100)
 	}

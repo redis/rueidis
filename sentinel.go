@@ -42,18 +42,18 @@ func newSentinelClient(opt *ClientOption, connFn connFn, retryer retryHandler) (
 
 type sentinelClient struct {
 	mConn        atomic.Value
-	mAddr        string
-	sAddr        string
+	sConn        conn
+	retryHandler retryHandler
 	connFn       connFn
 	mOpt         *ClientOption
 	sOpt         *ClientOption
-	sConn        conn
 	sentinels    *list.List
+	mAddr        string
+	sAddr        string
 	sc           call
-	retryHandler retryHandler
-	cmd          Builder
 	mu           sync.Mutex
 	stop         uint32
+	cmd          Builder
 	retry        bool
 	replica      bool
 }
