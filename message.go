@@ -487,6 +487,15 @@ func (r RedisResult) AsClientInfo() (v *ClientInfo, err error) {
 	return
 }
 
+func (r RedisResult) AsACLLogEntry() (v []*ACLLogEntry, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsACLLogEntry()
+	}
+	return
+}
+
 // IsCacheHit delegates to RedisMessage.IsCacheHit
 func (r RedisResult) IsCacheHit() bool {
 	return r.val.IsCacheHit()
@@ -1555,6 +1564,73 @@ func (m *RedisMessage) AsClientInfo() (*ClientInfo, error) {
 	}
 
 	return info, nil
+}
+
+type ACLLogEntry struct {
+	Count                int64
+	Reason               string
+	Context              string
+	Object               string
+	Username             string
+	AgeSeconds           float64
+	ClientInfo           *ClientInfo
+	EntryID              int64
+	TimestampCreated     int64
+	TimestampLastUpdated int64
+}
+
+func (m *RedisMessage) AsACLLogEntry() ([]*ACLLogEntry, error) {
+	arr, err := m.ToArray()
+	if err != nil {
+		return nil, err
+
+	}
+	logEntries := make([]*ACLLogEntry, 0, len(arr))
+
+	for _, msg := range arr {
+		log, err := msg.AsMap()
+		if err != nil {
+			return nil, err
+		}
+		entry := ACLLogEntry{}
+
+		if attr, ok := log["count"]; ok {
+			entry.Count, err = attr.AsInt64()
+		}
+		if attr, ok := log["reason"]; ok {
+			entry.Reason, err = attr.ToString()
+		}
+		if attr, ok := log["context"]; ok {
+			entry.Context, err = attr.ToString()
+		}
+		if attr, ok := log["object"]; ok {
+			entry.Object, err = attr.ToString()
+		}
+		if attr, ok := log["username"]; ok {
+			entry.Username, err = attr.ToString()
+		}
+		if attr, ok := log["age-seconds"]; ok {
+			entry.AgeSeconds, err = attr.AsFloat64()
+		}
+		if attr, ok := log["client-info"]; ok {
+			entry.ClientInfo, err = attr.AsClientInfo()
+		}
+		if attr, ok := log["entry-id"]; ok {
+			entry.EntryID, err = attr.AsInt64()
+		}
+		if attr, ok := log["timestamp-created"]; ok {
+			entry.TimestampCreated, err = attr.AsInt64()
+		}
+		if attr, ok := log["timestamp-last-updated"]; ok {
+			entry.TimestampLastUpdated, err = attr.AsInt64()
+		}
+
+		if err != nil {
+			return nil, err
+		}
+		logEntries = append(logEntries, &entry)
+	}
+	return logEntries, nil
 }
 
 // ToMap check if message is a redis RESP3 map response, and return it

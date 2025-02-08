@@ -4611,6 +4611,25 @@ func (cmd *ClientInfoCmd) from(res rueidis.RedisResult) {
 	cmd.SetVal(info)
 }
 
+type ACLLogCmd struct {
+	baseCmd[[]*rueidis.ACLLogEntry]
+}
+
+func (cmd *ACLLogCmd) from(res rueidis.RedisResult) {
+	log, err := res.AsACLLogEntry()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	cmd.SetVal(log)
+}
+
+func newACLLogCmd(res rueidis.RedisResult) *ACLLogCmd {
+	cmd := &ACLLogCmd{}
+	cmd.from(res)
+	return cmd
+}
+
 // ModuleLoadexConfig struct is used to specify the arguments for the MODULE LOADEX command of redis.
 // `MODULE LOADEX path [CONFIG name value [CONFIG name value ...]] [ARGS args [args ...]]`
 type ModuleLoadexConfig struct {
