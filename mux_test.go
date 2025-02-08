@@ -1135,9 +1135,9 @@ func (m *mockWire) SetOnCloseHook(fn func(error)) {
 	}
 }
 
-func (m *mockWire) StopTimer() {}
+func (m *mockWire) StopTimer() bool { return true }
 
-func (m *mockWire) ResetTimer() {}
+func (m *mockWire) ResetTimer() bool { return true }
 
 func (m *mockWire) Info() map[string]RedisMessage {
 	if m.InfoFn != nil {
