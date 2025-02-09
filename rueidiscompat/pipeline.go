@@ -2089,6 +2089,12 @@ func (c *Pipeline) ACLDryRun(ctx context.Context, username string, command ...an
 	return ret
 }
 
+func (c *Pipeline) ACLLog(ctx context.Context, count int64) *ACLLogCmd {
+	ret := c.comp.ACLLog(ctx, count)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) TFunctionLoad(ctx context.Context, lib string) *StatusCmd {
 	ret := c.comp.TFunctionLoad(ctx, lib)
 	c.rets = append(c.rets, ret)

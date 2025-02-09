@@ -415,7 +415,7 @@ type CoreCmdable interface {
 	GeoHash(ctx context.Context, key string, members ...string) *StringSliceCmd
 
 	ACLDryRun(ctx context.Context, username string, command ...any) *StringCmd
-	// TODO ACLLog(ctx context.Context, count int64) *ACLLogCmd
+	ACLLog(ctx context.Context, count int64) *ACLLogCmd
 	// TODO ACLLogReset(ctx context.Context) *StatusCmd
 
 	ModuleLoadex(ctx context.Context, conf *ModuleLoadexConfig) *StringCmd
@@ -3200,6 +3200,12 @@ func (c *Compat) ACLDryRun(ctx context.Context, username string, command ...any)
 	cmd := c.client.B().AclDryrun().Username(username).Command(command[0].(string)).Arg(argsToSlice(command[1:])...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringCmd(resp)
+}
+
+func (c *Compat) ACLLog(ctx context.Context, count int64) *ACLLogCmd {
+	cmd := c.client.B().AclLog().Count(count).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newACLLogCmd(resp)
 }
 
 func (c *Compat) doPrimaries(ctx context.Context, fn func(c rueidis.Client) error) error {
