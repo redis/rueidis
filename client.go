@@ -15,6 +15,7 @@ type singleClient struct {
 	retryHandler retryHandler
 	stop         uint32
 	retry        bool
+	hasConnLftm  bool
 	DisableCache bool
 }
 
@@ -32,11 +33,11 @@ func newSingleClient(opt *ClientOption, prev conn, connFn connFn, retryer retryH
 	if err := conn.Dial(); err != nil {
 		return nil, err
 	}
-	return newSingleClientWithConn(conn, cmds.NewBuilder(cmds.NoSlot), !opt.DisableRetry, opt.DisableCache, retryer), nil
+	return newSingleClientWithConn(conn, cmds.NewBuilder(cmds.NoSlot), !opt.DisableRetry, opt.DisableCache, opt.ConnLifetime > 0, retryer), nil
 }
 
-func newSingleClientWithConn(conn conn, builder Builder, retry, disableCache bool, retryer retryHandler) *singleClient {
-	return &singleClient{cmd: builder, conn: conn, retry: retry, retryHandler: retryer, DisableCache: disableCache}
+func newSingleClientWithConn(conn conn, builder Builder, retry, disableCache, hasConnLftm bool, retryer retryHandler) *singleClient {
+	return &singleClient{cmd: builder, conn: conn, retry: retry, retryHandler: retryer, hasConnLftm: hasConnLftm, DisableCache: disableCache}
 }
 
 func (c *singleClient) B() Builder {
@@ -47,6 +48,9 @@ func (c *singleClient) Do(ctx context.Context, cmd Completed) (resp RedisResult)
 	attempts := 1
 retry:
 	resp = c.conn.Do(ctx, cmd)
+	if c.hasConnLftm && resp.Error() == errConnExpired {
+		goto retry
+	}
 	if c.retry && cmd.IsReadOnly() && c.isRetryable(resp.Error(), ctx) {
 		shouldRetry := c.retryHandler.WaitOrSkipRetry(
 			ctx, attempts, cmd, resp.Error(),
@@ -86,6 +90,13 @@ func (c *singleClient) DoMulti(ctx context.Context, multi ...Completed) (resps [
 	attempts := 1
 retry:
 	resps = c.conn.DoMulti(ctx, multi...).s
+	if c.hasConnLftm {
+		for _, resp := range resps {
+			if resp.Error() == errConnExpired {
+				goto retry
+			}
+		}
+	}
 	if c.retry && allReadOnly(multi) {
 		for i, resp := range resps {
 			if c.isRetryable(resp.Error(), ctx) {
@@ -114,6 +125,13 @@ func (c *singleClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL) 
 	attempts := 1
 retry:
 	resps = c.conn.DoMultiCache(ctx, multi...).s
+	if c.hasConnLftm {
+		for _, resp := range resps {
+			if resp.Error() == errConnExpired {
+				goto retry
+			}
+		}
+	}
 	if c.retry {
 		for i, resp := range resps {
 			if c.isRetryable(resp.Error(), ctx) {
@@ -139,6 +157,9 @@ func (c *singleClient) DoCache(ctx context.Context, cmd Cacheable, ttl time.Dura
 	attempts := 1
 retry:
 	resp = c.conn.DoCache(ctx, cmd, ttl)
+	if c.hasConnLftm && resp.Error() == errConnExpired {
+		goto retry
+	}
 	if c.retry && c.isRetryable(resp.Error(), ctx) {
 		shouldRetry := c.retryHandler.WaitOrSkipRetry(ctx, attempts, Completed(cmd), resp.Error())
 		if shouldRetry {
@@ -156,6 +177,9 @@ func (c *singleClient) Receive(ctx context.Context, subscribe Completed, fn func
 	attempts := 1
 retry:
 	err = c.conn.Receive(ctx, subscribe, fn)
+	if c.hasConnLftm && err == errConnExpired {
+		goto retry
+	}
 	if c.retry {
 		if _, ok := err.(*RedisError); !ok && c.isRetryable(err, ctx) {
 			shouldRetry := c.retryHandler.WaitOrSkipRetry(ctx, attempts, subscribe, err)

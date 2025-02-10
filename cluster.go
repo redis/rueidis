@@ -1196,7 +1196,7 @@ func (c *clusterClient) Nodes() map[string]Client {
 	disableCache := c.opt != nil && c.opt.DisableCache
 	for addr, cc := range c.conns {
 		if !cc.hidden {
-			_nodes[addr] = newSingleClientWithConn(cc.conn, c.cmd, c.retry, disableCache, c.retryHandler)
+			_nodes[addr] = newSingleClientWithConn(cc.conn, c.cmd, c.retry, disableCache, false, c.retryHandler)
 		}
 	}
 	c.mu.RUnlock()
