@@ -417,7 +417,8 @@ type CoreCmdable interface {
 	ACLDryRun(ctx context.Context, username string, command ...any) *StringCmd
 	ACLLog(ctx context.Context, count int64) *ACLLogCmd
 	ACLSetUser(ctx context.Context, username string, rules ...string) *StatusCmd
-	// TODO ACLLogReset(ctx context.Context) *StatusCmd
+	ACLLogReset(ctx context.Context) *StatusCmd
+
 
 	ModuleLoadex(ctx context.Context, conf *ModuleLoadexConfig) *StringCmd
 	GearsCmdable
@@ -3211,6 +3212,11 @@ func (c *Compat) ACLLog(ctx context.Context, count int64) *ACLLogCmd {
 
 func (c *Compat) ACLSetUser(ctx context.Context, username string, rules ...string) *StatusCmd {
 	cmd := c.client.B().AclSetuser().Username(username).Rule(rules...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+func (c *Compat) ACLLogReset(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().AclLog().Reset().Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStatusCmd(resp)
 }

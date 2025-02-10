@@ -2101,6 +2101,12 @@ func (c *Pipeline) ACLSetUser(ctx context.Context, username string, rules ...str
 	return ret
 }
 
+func (c *Pipeline) ACLLogReset(ctx context.Context) *StatusCmd {
+	ret := c.comp.ACLLogReset(ctx)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) TFunctionLoad(ctx context.Context, lib string) *StatusCmd {
 	ret := c.comp.TFunctionLoad(ctx, lib)
 	c.rets = append(c.rets, ret)
