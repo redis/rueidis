@@ -1585,7 +1585,6 @@ func (p *pipe) Close() {
 	}
 	atomic.AddInt32(&p.waits, -1)
 	atomic.AddInt32(&p.blcksig, -1)
-	p.StopTimer()
 	if p.conn != nil {
 		p.conn.Close()
 	}
