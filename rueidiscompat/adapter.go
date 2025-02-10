@@ -418,6 +418,7 @@ type CoreCmdable interface {
 	ACLLog(ctx context.Context, count int64) *ACLLogCmd
 	ACLSetUser(ctx context.Context, username string, rules ...string) *StatusCmd
 	ACLLogReset(ctx context.Context) *StatusCmd
+	ACLCat(ctx context.Context) *StringSliceCmd
 
 	ModuleLoadex(ctx context.Context, conf *ModuleLoadexConfig) *StringCmd
 	GearsCmdable
