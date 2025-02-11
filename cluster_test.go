@@ -6843,9 +6843,8 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 				return e
 			},
 		}
-		primaryNodeConn.AcquireFn = func() wire {
-			return w
-		}
+		primaryNodeConn.AcquireFn = func() wire { return w }
+		replicaNodeConn.AcquireFn = func() wire { return w } // Subscribe can work on replicas
 		if err := client.Dedicated(func(c DedicatedClient) error {
 			return c.Receive(context.Background(), c.B().Subscribe().Channel("a").Build(), func(msg PubSubMessage) {})
 		}); err != e {
