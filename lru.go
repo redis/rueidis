@@ -218,7 +218,7 @@ func (c *lru) Flights(now time.Time, multi []CacheableTTL, results []RedisResult
 	return missed[:j]
 }
 
-func (c *lru) Update(key, cmd string, value RedisMessage) (pxat int64) {
+func (c *lru) Update(key, cmd string, value RedisMessage, _ time.Time) (pxat int64) {
 	var ch chan struct{}
 	c.mu.Lock()
 	if kc, ok := c.store[key]; ok {

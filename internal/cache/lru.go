@@ -107,7 +107,7 @@ func (m *LRUDoubleMap[V]) move(h *linked[V]) {
 	}
 }
 
-func (m *LRUDoubleMap[V]) Insert(key1, key2 string, size, ts int64, v V) {
+func (m *LRUDoubleMap[V]) Insert(key1, key2 string, size, ts, now int64, v V) {
 	// TODO: a RLock fast path?
 	m.mu.Lock()
 	if m.ma == nil {
@@ -117,7 +117,7 @@ func (m *LRUDoubleMap[V]) Insert(key1, key2 string, size, ts int64, v V) {
 	m.total += size
 	for m.head != nil {
 		h := (*linked[V])(m.head)
-		if m.total <= m.limit && h.ts != 0 { // TODO: clear expired entries?
+		if m.total <= m.limit && h.ts != 0 && h.ts > now {
 			break
 		}
 		m.remove(h)
@@ -127,6 +127,10 @@ func (m *LRUDoubleMap[V]) Insert(key1, key2 string, size, ts int64, v V) {
 	if h == nil {
 		h = &linked[V]{key: key1, ts: ts, mark: m.mark}
 		m.ma[key1] = h
+	} else if h.ts <= now {
+		m.total -= h.size
+		h.size = 0
+		h.head = chain[V]{}
 	}
 	h.ts = ts
 	h.size += size

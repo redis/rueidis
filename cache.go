@@ -30,7 +30,7 @@ type CacheStore interface {
 	// Update is called when receiving the response of the request sent by the above Flight Case 1 from redis.
 	// It should not only update the store but also deliver the response to all CacheEntry.Wait and return a desired client side PXAT of the response.
 	// Note that the server side expire time can be retrieved from RedisMessage.CachePXAT.
-	Update(key, cmd string, val RedisMessage) (pxat int64)
+	Update(key, cmd string, val RedisMessage, now time.Time) (pxat int64)
 	// Cancel is called when the request sent by the above Flight Case 1 failed.
 	// It should not only deliver the error to all CacheEntry.Wait but also remove the CacheEntry from the store.
 	Cancel(key, cmd string, err error)
@@ -91,7 +91,7 @@ func (a *adapter) Flight(key, cmd string, ttl time.Duration, now time.Time) (Red
 	return RedisMessage{}, flight
 }
 
-func (a *adapter) Update(key, cmd string, val RedisMessage) (sxat int64) {
+func (a *adapter) Update(key, cmd string, val RedisMessage, _ time.Time) (sxat int64) {
 	a.mu.Lock()
 	entries := a.flights[key]
 	if flight, ok := entries[cmd].(*adapterEntry); ok {
@@ -219,7 +219,7 @@ func (f *flatten) Flight(key, cmd string, ttl time.Duration, now time.Time) (Red
 	return RedisMessage{}, nil
 }
 
-func (f *flatten) Update(key, cmd string, val RedisMessage) (sxat int64) {
+func (f *flatten) Update(key, cmd string, val RedisMessage, now time.Time) (sxat int64) {
 	if af, ok := f.flights.Find(key, cmd); ok {
 		sxat = val.getExpireAt()
 		if af.xat < sxat || sxat == 0 {
@@ -227,7 +227,7 @@ func (f *flatten) Update(key, cmd string, val RedisMessage) (sxat int64) {
 			val.setExpireAt(sxat)
 		}
 		bs := val.CacheMarshal(nil)
-		f.cache.Insert(key, cmd, int64(len(bs)+len(key)+len(cmd))+int64(cache.LRUEntrySize)+64, sxat, bs)
+		f.cache.Insert(key, cmd, int64(len(bs)+len(key)+len(cmd))+int64(cache.LRUEntrySize)+64, sxat, now.UnixMilli(), bs)
 		f.flights.Delete(key, cmd)
 		af.setVal(val)
 	}
