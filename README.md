@@ -21,6 +21,7 @@ A fast Golang Redis client that does auto pipelining and supports server-assiste
 * Pub/Sub, Sharded Pub/Sub, Streams
 * Redis Cluster, Sentinel, RedisJSON, RedisBloom, RediSearch, RedisTimeseries, etc.
 * [Probabilistic Data Structures without Redis Stack](./rueidisprob)
+* [Availability zone affinity routing](#availability-zone-affinity-routing)
 
 ---
 
@@ -103,7 +104,7 @@ A benchmark result performed on two GCP n2-highcpu-2 machines also shows that ru
 
 While auto pipelining maximizes throughput, it relys on additional goroutines to process requests and responses and may add some latencies due to goroutine scheduling and head of line blocking.
 
-You can avoid this by setting `DisableAutoPipelining` to ture, then it will switch to connection pooling approach and serve each request with dedicated connection on the same goroutine.
+You can avoid this by setting `DisableAutoPipelining` to true, then it will switch to connection pooling approach and serve each request with dedicated connection on the same goroutine.
 
 ### Manual Pipelining
 
@@ -411,6 +412,26 @@ client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:6379/0")
 client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:26379/0?master_set=my_master"))
 ```
 
+### Availability Zone Affinity Routing
+
+Starting from Valkey 8.1, Valkey server provides the `availability-zone` information for clients to know where the server is located.
+For using this information to route requests to the replica located in the same availability zone,
+set the `EnableReplicaAZInfo` option and your `ReplicaSelector` function. For example:
+
+```go
+client, err := rueidis.NewClient(rueidis.ClientOption{
+	InitAddress:         []string{"address.example.com:6379"},
+	EnableReplicaAZInfo: true,
+	ReplicaSelector: func(slot uint16, replicas []rueidis.ReplicaInfo) int {
+		for i, replica := range replicas {
+			if replica.AZ == "us-east-1a" {
+				return i // return the index of the replica.
+			}
+		}
+		return -1 // send to the primary.
+	},
+})
+```
 
 ## Arbitrary Command
 
@@ -573,6 +594,12 @@ if err := rueidis.DecodeSliceOfJSON(client.Do(ctx, client.B().Mget().Key("user1"
 
 Contributions are welcome, including [issues](https://github.com/redis/rueidis/issues), [pull requests](https://github.com/redis/rueidis/pulls), and [discussions](https://github.com/redis/rueidis/discussions).
 Contributions mean a lot to us and help us improve this library and the community!
+
+Thanks to all the people who already contributed!
+
+<a href="https://github.com/redis/rueidis/graphs/contributors">
+  <img src="https://contributors-img.web.app/image?repo=redis/rueidis" />
+</a>
 
 ### Generate Command Builders
 

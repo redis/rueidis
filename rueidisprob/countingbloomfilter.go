@@ -153,6 +153,10 @@ type CountingBloomFilter interface {
 type countingBloomFilter struct {
 	client rueidis.Client
 
+	addMultiScript *rueidis.Lua
+
+	removeMultiScript *rueidis.Lua
+
 	// name is the name of the Counting Bloom Filter.
 	// It is used as a key in the Redis.
 	name string
@@ -160,18 +164,17 @@ type countingBloomFilter struct {
 	// counter is the name of the counter.
 	counter string
 
-	// hashIterations is the number of hash functions to use.
-	hashIterations      uint
 	hashIterationString string
+
+	addMultiKeys []string
+
+	removeMultiKeys []string
+
+	// hashIterations is the number of hash functions to use.
+	hashIterations uint
 
 	// size is the number of bits to use.
 	size uint
-
-	addMultiScript *rueidis.Lua
-	addMultiKeys   []string
-
-	removeMultiScript *rueidis.Lua
-	removeMultiKeys   []string
 }
 
 // NewCountingBloomFilter creates a new Counting Bloom Filter.
@@ -228,7 +231,10 @@ func (f *countingBloomFilter) AddMulti(ctx context.Context, keys []string) error
 		return nil
 	}
 
-	indexes := f.indexes(keys)
+	buf := bytesPool.Get(0, len(keys)*int(f.hashIterations)*8)
+	defer bytesPool.Put(buf)
+
+	indexes := f.indexes(keys, &buf.s)
 
 	args := make([]string, 0, len(indexes)+1)
 	args = append(args, strconv.Itoa(len(keys)))
@@ -238,13 +244,15 @@ func (f *countingBloomFilter) AddMulti(ctx context.Context, keys []string) error
 	return resp.Error()
 }
 
-func (f *countingBloomFilter) indexes(keys []string) []string {
+func (f *countingBloomFilter) indexes(keys []string, buf *[]byte) []string {
 	allIndexes := make([]string, 0, len(keys)*int(f.hashIterations))
 	size := uint64(f.size)
 	for _, key := range keys {
 		h1, h2 := hash([]byte(key))
 		for i := uint(0); i < f.hashIterations; i++ {
-			allIndexes = append(allIndexes, strconv.FormatUint(index(h1, h2, i, size), 10))
+			offset := len(*buf)
+			*buf = strconv.AppendUint(*buf, index(h1, h2, i, size), 10)
+			allIndexes = append(allIndexes, rueidis.BinaryString((*buf)[offset:]))
 		}
 	}
 	return allIndexes
@@ -264,7 +272,10 @@ func (f *countingBloomFilter) ExistsMulti(ctx context.Context, keys []string) ([
 		return nil, nil
 	}
 
-	indexes := f.indexes(keys)
+	buf := bytesPool.Get(0, len(keys)*int(f.hashIterations)*8)
+	defer bytesPool.Put(buf)
+
+	indexes := f.indexes(keys, &buf.s)
 
 	resp := f.client.Do(
 		ctx,
@@ -317,7 +328,11 @@ func (f *countingBloomFilter) RemoveMulti(ctx context.Context, keys []string) er
 		return nil
 	}
 
-	indexes := f.indexes(keys)
+	buf := bytesPool.Get(0, len(keys)*int(f.hashIterations)*8)
+	defer bytesPool.Put(buf)
+
+	indexes := f.indexes(keys, &buf.s)
+
 	args := make([]string, 0, len(indexes)+1)
 	args = append(args, indexes...)
 	args = append(args, f.hashIterationString)
@@ -353,7 +368,10 @@ func (f *countingBloomFilter) ItemMinCountMulti(ctx context.Context, keys []stri
 		return nil, nil
 	}
 
-	indexes := f.indexes(keys)
+	buf := bytesPool.Get(0, len(keys)*int(f.hashIterations)*8)
+	defer bytesPool.Put(buf)
+
+	indexes := f.indexes(keys, &buf.s)
 
 	resp := f.client.Do(
 		ctx,

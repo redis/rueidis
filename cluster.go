@@ -23,17 +23,17 @@ var ErrSendToReplicasNotSet = errors.New("SendToReplicas must be set when Replic
 
 type clusterClient struct {
 	pslots       [16384]conn
-	rslots       []conn
-	sc           call
+	retryHandler retryHandler
+	opt          *ClientOption
 	rOpt         *ClientOption
 	conns        map[string]connrole
 	connFn       connFn
-	opt          *ClientOption
-	retryHandler retryHandler
 	stopCh       chan struct{}
-	cmd          Builder
+	sc           call
+	rslots       []conn
 	mu           sync.RWMutex
 	stop         uint32
+	cmd          Builder
 	retry        bool
 }
 
@@ -259,6 +259,21 @@ func (c *clusterClient) _refresh() (err error) {
 			}
 			if len(g.nodes) > 1 {
 				n := len(g.nodes) - 1
+
+				if c.opt.EnableReplicaAZInfo {
+					var wg sync.WaitGroup
+					for i := 1; i <= n; i += 4 { // batch AZ() for every 4 connections
+						for j := i; j <= i+4 && j <= n; j++ {
+							wg.Add(1)
+							go func(wg *sync.WaitGroup, conn conn, info *ReplicaInfo) {
+								info.AZ = conn.AZ()
+								wg.Done()
+							}(&wg, conns[g.nodes[j].Addr].conn, &g.nodes[j])
+						}
+						wg.Wait()
+					}
+				}
+
 				for _, slot := range g.slots {
 					for i := slot[0]; i <= slot[1] && i >= 0 && i < 16384; i++ {
 						pslots[i] = conns[master].conn
@@ -1221,15 +1236,15 @@ func (c *clusterClient) shouldRefreshRetry(err error, ctx context.Context) (addr
 }
 
 type dedicatedClusterClient struct {
-	client       *clusterClient
 	conn         conn
 	wire         wire
+	retryHandler retryHandler
+	client       *clusterClient
 	pshks        *pshks
 	mu           sync.Mutex
 	cmd          Builder
-	retryHandler retryHandler
-	retry        bool
 	slot         uint16
+	retry        bool
 	mark         bool
 }
 

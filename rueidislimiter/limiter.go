@@ -37,8 +37,8 @@ type rateLimiter struct {
 
 type RateLimiterOption struct {
 	ClientBuilder func(option rueidis.ClientOption) (rueidis.Client, error)
-	ClientOption  rueidis.ClientOption
 	KeyPrefix     string
+	ClientOption  rueidis.ClientOption
 	Limit         int
 	Window        time.Duration
 }

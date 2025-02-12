@@ -1686,8 +1686,8 @@ type Z struct {
 
 // ZWithKey represents sorted set member including the name of the key where it was popped.
 type ZWithKey struct {
-	Z
 	Key string
+	Z
 }
 
 // ZStore is used as an arg to ZInter/ZInterStore and ZUnion/ZUnionStore.
@@ -2172,8 +2172,8 @@ type SetArgs struct {
 }
 
 type BitCount struct {
-	Start, End int64
 	Unit       string // Stores BIT or BYTE
+	Start, End int64
 }
 
 //type BitPos struct {
@@ -2892,25 +2892,25 @@ type TDigestMergeOptions struct {
 }
 
 type TSOptions struct {
-	Retention       int
-	ChunkSize       int
+	Labels          map[string]string
 	Encoding        string
 	DuplicatePolicy string
-	Labels          map[string]string
+	Retention       int
+	ChunkSize       int
 }
 type TSIncrDecrOptions struct {
+	Labels       map[string]string
 	Timestamp    int64
 	Retention    int
 	ChunkSize    int
 	Uncompressed bool
-	Labels       map[string]string
 }
 
 type TSAlterOptions struct {
+	Labels          map[string]string
+	DuplicatePolicy string
 	Retention       int
 	ChunkSize       int
-	DuplicatePolicy string
-	Labels          map[string]string
 }
 
 type TSCreateRuleOptions struct {
@@ -3128,81 +3128,81 @@ func newMapStringSliceInterfaceCmd(res rueidis.RedisResult) *MapStringSliceInter
 }
 
 type TSRangeOptions struct {
-	Latest          bool
+	Align           interface{}
+	BucketTimestamp interface{}
 	FilterByTS      []int
 	FilterByValue   []int
 	Count           int
-	Align           interface{}
 	Aggregator      Aggregator
 	BucketDuration  int
-	BucketTimestamp interface{}
+	Latest          bool
 	Empty           bool
 }
 
 type TSRevRangeOptions struct {
-	Latest          bool
+	Align           interface{}
+	BucketTimestamp interface{}
 	FilterByTS      []int
 	FilterByValue   []int
 	Count           int
-	Align           interface{}
 	Aggregator      Aggregator
 	BucketDuration  int
-	BucketTimestamp interface{}
+	Latest          bool
 	Empty           bool
 }
 
 type TSMRangeOptions struct {
-	Latest          bool
-	FilterByTS      []int
-	FilterByValue   []int
-	WithLabels      bool
-	SelectedLabels  []interface{}
-	Count           int
 	Align           interface{}
-	Aggregator      Aggregator
-	BucketDuration  int
 	BucketTimestamp interface{}
-	Empty           bool
 	GroupByLabel    interface{}
 	Reducer         interface{}
+	FilterByTS      []int
+	FilterByValue   []int
+	SelectedLabels  []interface{}
+	Count           int
+	Aggregator      Aggregator
+	BucketDuration  int
+	Latest          bool
+	WithLabels      bool
+	Empty           bool
 }
 
 type TSMRevRangeOptions struct {
-	Latest          bool
-	FilterByTS      []int
-	FilterByValue   []int
-	WithLabels      bool
-	SelectedLabels  []interface{}
-	Count           int
 	Align           interface{}
-	Aggregator      Aggregator
-	BucketDuration  int
 	BucketTimestamp interface{}
-	Empty           bool
 	GroupByLabel    interface{}
 	Reducer         interface{}
+	FilterByTS      []int
+	FilterByValue   []int
+	SelectedLabels  []interface{}
+	Count           int
+	Aggregator      Aggregator
+	BucketDuration  int
+	Latest          bool
+	WithLabels      bool
+	Empty           bool
 }
 
 type TSMGetOptions struct {
+	SelectedLabels []interface{}
 	Latest         bool
 	WithLabels     bool
-	SelectedLabels []interface{}
 }
 
 type JSONSetArgs struct {
+	Value interface{}
 	Key   string
 	Path  string
-	Value interface{}
 }
 
 type JSONArrIndexArgs struct {
-	Start int
 	Stop  *int
+	Start int
 }
 
 type JSONArrTrimArgs struct {
-	Start int
 	Stop  *int
+	Start int
 }
 
 type JSONCmd struct {
@@ -3408,8 +3408,8 @@ func newMapMapStringInterfaceCmd(res rueidis.RedisResult) *MapMapStringInterface
 }
 
 type FTAggregateResult struct {
-	Total int
 	Rows  []AggregateRow
+	Total int
 }
 
 type AggregateRow struct {
@@ -3419,9 +3419,9 @@ type AggregateRow struct {
 // Each AggregateReducer have different args.
 // Please follow https://redis.io/docs/interact/search-and-query/search/aggregations/#supported-groupby-reducers for more information.
 type FTAggregateReducer struct {
-	Reducer SearchAggregator
-	Args    []interface{}
 	As      string
+	Args    []interface{}
+	Reducer SearchAggregator
 }
 
 type FTAggregateGroupBy struct {
@@ -3451,21 +3451,21 @@ type FTAggregateWithCursor struct {
 }
 
 type FTAggregateOptions struct {
-	Verbatim          bool
-	LoadAll           bool
-	Load              []FTAggregateLoad
-	Timeout           int
-	GroupBy           []FTAggregateGroupBy
-	SortBy            []FTAggregateSortBy
-	SortByMax         int
-	Apply             []FTAggregateApply
-	LimitOffset       int
-	Limit             int
-	Filter            string
-	WithCursor        bool
 	WithCursorOptions *FTAggregateWithCursor
 	Params            map[string]interface{}
+	Filter            string
+	Load              []FTAggregateLoad
+	GroupBy           []FTAggregateGroupBy
+	SortBy            []FTAggregateSortBy
+	Apply             []FTAggregateApply
+	Timeout           int
+	SortByMax         int
+	LimitOffset       int
+	Limit             int
 	DialectVersion    int
+	Verbatim          bool
+	LoadAll           bool
+	WithCursor        bool
 }
 
 type AggregateCmd struct {
@@ -3575,22 +3575,22 @@ func newAggregateCmd(res rueidis.RedisResult) *AggregateCmd {
 }
 
 type FTCreateOptions struct {
-	OnHash          bool
-	OnJSON          bool
-	Prefix          []any
 	Filter          string
 	DefaultLanguage string
 	LanguageField   string
-	Score           float64
 	ScoreField      string
 	PayloadField    string
+	Prefix          []any
+	StopWords       []any
+	Score           float64
 	MaxTextFields   int
-	NoOffsets       bool
 	Temporary       int
+	OnHash          bool
+	OnJSON          bool
+	NoOffsets       bool
 	NoHL            bool
 	NoFields        bool
 	NoFreqs         bool
-	StopWords       []any
 	SkipInitialScan bool
 }
 
@@ -3679,20 +3679,20 @@ func (t SearchFieldType) String() string {
 }
 
 type FieldSchema struct {
+	VectorArgs        *FTVectorArgs
 	FieldName         string
 	As                string
+	PhoneticMatcher   string
+	Separator         string
+	GeoShapeFieldType string
 	FieldType         SearchFieldType
+	Weight            float64
 	Sortable          bool
 	UNF               bool
 	NoStem            bool
 	NoIndex           bool
-	PhoneticMatcher   string
-	Weight            float64
-	Separator         string
 	CaseSensitive     bool
 	WithSuffixtrie    bool
-	VectorArgs        *FTVectorArgs
-	GeoShapeFieldType string
 	IndexEmpty        bool
 	IndexMissing      bool
 }
@@ -3704,16 +3704,16 @@ type FTVectorArgs struct {
 
 type FTFlatOptions struct {
 	Type            string
-	Dim             int
 	DistanceMetric  string
+	Dim             int
 	InitialCapacity int
 	BlockSize       int
 }
 
 type FTHNSWOptions struct {
 	Type                   string
-	Dim                    int
 	DistanceMetric         string
+	Dim                    int
 	InitialCapacity        int
 	MaxEdgesPerNode        int
 	MaxAllowedEdgesPerNode int
@@ -3722,9 +3722,9 @@ type FTHNSWOptions struct {
 }
 
 type SpellCheckTerms struct {
+	Dictionary string
 	Include    bool
 	Exclude    bool
-	Dictionary string
 }
 
 type FTSearchFilter struct {
@@ -3735,10 +3735,10 @@ type FTSearchFilter struct {
 
 type FTSearchGeoFilter struct {
 	FieldName string
+	Unit      string
 	Longitude float64
 	Latitude  float64
 	Radius    float64
-	Unit      string
 }
 
 type FTSearchReturn struct {
@@ -3761,21 +3761,21 @@ type FTExplainOptions struct {
 }
 
 type IndexErrors struct {
-	IndexingFailures     int `redis:"indexing failures"`
 	LastIndexingError    string
 	LastIndexingErrorKey string
+	IndexingFailures     int `redis:"indexing failures"`
 }
 
 type FTAttribute struct {
 	Identifier      string
 	Attribute       string
 	Type            string
+	PhoneticMatcher string
 	Weight          float64
 	Sortable        bool
 	NoStem          bool
 	NoIndex         bool
 	UNF             bool
-	PhoneticMatcher string
 	CaseSensitive   bool
 	WithSuffixtrie  bool
 }
@@ -3794,10 +3794,10 @@ type FieldStatistic struct {
 }
 
 type GCStats struct {
+	AverageCycleTimeMs   string `redis:"average_cycle_time_ms"`
 	BytesCollected       int    `redis:"bytes_collected"`
 	TotalMsRun           int    `redis:"total_ms_run"`
 	TotalCycles          int    `redis:"total_cycles"`
-	AverageCycleTimeMs   string `redis:"average_cycle_time_ms"`
 	LastRunTimeMs        int    `redis:"last_run_time_ms"`
 	GCNumericTreesMissed int    `redis:"gc_numeric_trees_missed"`
 	GCBlocksDenied       int    `redis:"gc_blocks_denied"`
@@ -3810,20 +3810,23 @@ type IndexDefinition struct {
 }
 
 type FTInfoResult struct {
-	IndexErrors              IndexErrors      `redis:"Index Errors"`
-	Attributes               []FTAttribute    `redis:"attributes"`
-	BytesPerRecordAvg        string           `redis:"bytes_per_record_avg"`
-	Cleaning                 int              `redis:"cleaning"`
-	CursorStats              CursorStats      `redis:"cursor_stats"`
 	DialectStats             map[string]int   `redis:"dialect_stats"`
-	DocTableSizeMB           float64          `redis:"doc_table_size_mb"`
+	IndexErrors              IndexErrors      `redis:"Index Errors"`
+	BytesPerRecordAvg        string           `redis:"bytes_per_record_avg"`
+	IndexName                string           `redis:"index_name"`
+	OffsetBitsPerRecordAvg   string           `redis:"offset_bits_per_record_avg"`
+	OffsetsPerTermAvg        string           `redis:"offsets_per_term_avg"`
+	RecordsPerDocAvg         string           `redis:"records_per_doc_avg"`
+	Attributes               []FTAttribute    `redis:"attributes"`
 	FieldStatistics          []FieldStatistic `redis:"field statistics"`
+	IndexOptions             []string         `redis:"index_options"`
+	IndexDefinition          IndexDefinition  `redis:"index_definition"`
 	GCStats                  GCStats          `redis:"gc_stats"`
+	CursorStats              CursorStats      `redis:"cursor_stats"`
+	Cleaning                 int              `redis:"cleaning"`
+	DocTableSizeMB           float64          `redis:"doc_table_size_mb"`
 	GeoshapesSzMB            float64          `redis:"geoshapes_sz_mb"`
 	HashIndexingFailures     int              `redis:"hash_indexing_failures"`
-	IndexDefinition          IndexDefinition  `redis:"index_definition"`
-	IndexName                string           `redis:"index_name"`
-	IndexOptions             []string         `redis:"index_options"`
 	Indexing                 int              `redis:"indexing"`
 	InvertedSzMB             float64          `redis:"inverted_sz_mb"`
 	KeyTableSizeMB           float64          `redis:"key_table_size_mb"`
@@ -3832,11 +3835,8 @@ type FTInfoResult struct {
 	NumRecords               int              `redis:"num_records"`
 	NumTerms                 int              `redis:"num_terms"`
 	NumberOfUses             int              `redis:"number_of_uses"`
-	OffsetBitsPerRecordAvg   string           `redis:"offset_bits_per_record_avg"`
 	OffsetVectorsSzMB        float64          `redis:"offset_vectors_sz_mb"`
-	OffsetsPerTermAvg        string           `redis:"offsets_per_term_avg"`
 	PercentIndexed           float64          `redis:"percent_indexed"`
-	RecordsPerDocAvg         string           `redis:"records_per_doc_avg"`
 	SortableValuesSizeMB     float64          `redis:"sortable_values_size_mb"`
 	TagOverheadSzMB          float64          `redis:"tag_overhead_sz_mb"`
 	TextOverheadSzMB         float64          `redis:"text_overhead_sz_mb"`
@@ -4065,8 +4065,8 @@ func newFTInfoCmd(res rueidis.RedisResult) *FTInfoCmd {
 }
 
 type FTSpellCheckOptions struct {
-	Distance int
 	Terms    *FTSpellCheckTerms
+	Distance int
 	Dialect  int
 }
 
@@ -4082,8 +4082,8 @@ type SpellCheckResult struct {
 }
 
 type SpellCheckSuggestion struct {
-	Score      float64
 	Suggestion string
+	Score      float64
 }
 
 type FTSpellCheckCmd struct{ baseCmd[[]SpellCheckResult] }
@@ -4249,44 +4249,44 @@ func parseFTSpellCheck(data []interface{}) ([]SpellCheckResult, error) {
 }
 
 type Document struct {
-	ID      string
 	Score   *float64
 	Payload *string
 	SortKey *string
 	Fields  map[string]string
+	ID      string
 }
 
 type FTSearchResult struct {
-	Total int64
 	Docs  []Document
+	Total int64
 }
 
 type FTSearchOptions struct {
+	Params          map[string]interface{}
+	Language        string
+	Expander        string
+	Scorer          string
+	Payload         string
+	Filters         []FTSearchFilter
+	GeoFilter       []FTSearchGeoFilter
+	InKeys          []interface{}
+	InFields        []interface{}
+	Return          []FTSearchReturn
+	SortBy          []FTSearchSortBy
+	Slop            int
+	Timeout         int
+	LimitOffset     int
+	Limit           int
+	DialectVersion  int
 	NoContent       bool
 	Verbatim        bool
 	NoStopWords     bool
 	WithScores      bool
 	WithPayloads    bool
 	WithSortKeys    bool
-	Filters         []FTSearchFilter
-	GeoFilter       []FTSearchGeoFilter
-	InKeys          []interface{}
-	InFields        []interface{}
-	Return          []FTSearchReturn
-	Slop            int
-	Timeout         int
 	InOrder         bool
-	Language        string
-	Expander        string
-	Scorer          string
 	ExplainScore    bool
-	Payload         string
-	SortBy          []FTSearchSortBy
 	SortByWithCount bool
-	LimitOffset     int
-	Limit           int
-	Params          map[string]interface{}
-	DialectVersion  int
 }
 
 type FTSearchCmd struct {
@@ -4639,11 +4639,16 @@ const (
 
 // ClientInfo is redis-server ClientInfo
 type ClientInfo struct {
-	ID                 int64         // redis version 2.8.12, a unique 64-bit client ID
 	Addr               string        // address/port of the client
 	LAddr              string        // address/port of local address client connected to (bind address)
-	FD                 int64         // file descriptor corresponding to the socket
 	Name               string        // the name set by the client with CLIENT SETNAME
+	Events             string        // file descriptor events (see below)
+	LastCmd            string        // cmd, last command played
+	User               string        // the authenticated username of the client
+	LibName            string        // redis version 7.2, client library name
+	LibVer             string        // redis version 7.2, client library version
+	ID                 int64         // redis version 2.8.12, a unique 64-bit client ID
+	FD                 int64         // file descriptor corresponding to the socket
 	Age                time.Duration // total duration of the connection in seconds
 	Idle               time.Duration // idle time of the connection in seconds
 	Flags              ClientFlags   // client flags (see below)
@@ -4663,13 +4668,8 @@ type ClientInfo struct {
 	OutputListLength   int           // oll, output list length (replies are queued in this list when the buffer is full)
 	OutputMemory       int           // omem, output buffer memory usage
 	TotalMemory        int           // tot-mem, total memory consumed by this client in its various buffers
-	Events             string        // file descriptor events (see below)
-	LastCmd            string        // cmd, last command played
-	User               string        // the authenticated username of the client
 	Redir              int64         // client id of current client tracking redirection
 	Resp               int           // redis version 7.0, client RESP protocol version
-	LibName            string        // redis version 7.2, client library name
-	LibVer             string        // redis version 7.2, client library version
 }
 
 type ClientInfoCmd struct {
@@ -4694,19 +4694,13 @@ func (cmd *ClientInfoCmd) Result() (*ClientInfo, error) {
 	return cmd.val, cmd.err
 }
 
-// fmt.Sscanf() cannot handle null values
-func (cmd *ClientInfoCmd) from(res rueidis.RedisResult) {
-	txt, err := res.ToString()
-	if err != nil {
-		cmd.SetErr(err)
-		return
-	}
+func stringToClientInfo(txt string) (*ClientInfo, error) {
 	info := &ClientInfo{}
+	var err error
 	for _, s := range strings.Split(strings.TrimPrefix(strings.TrimSpace(txt), "txt:"), " ") {
 		kv := strings.Split(s, "=")
 		if len(kv) != 2 {
-			cmd.SetErr(fmt.Errorf("redis: unexpected client info data (%s)", s))
-			return
+			return nil, fmt.Errorf("redis: unexpected client info data (%s)", s)
 		}
 		key, val := kv[0], kv[1]
 
@@ -4773,8 +4767,7 @@ func (cmd *ClientInfoCmd) from(res rueidis.RedisResult) {
 				case 'T':
 					info.Flags |= ClientNoTouch
 				default:
-					cmd.SetErr(fmt.Errorf("redis: unexpected client info flags(%s)", string(val[i])))
-					return
+					return nil, fmt.Errorf("redis: unexpected client info flags(%s)", string(val[i]))
 				}
 			}
 		case "db":
@@ -4826,12 +4819,104 @@ func (cmd *ClientInfoCmd) from(res rueidis.RedisResult) {
 		}
 
 		if err != nil {
-			cmd.SetErr(err)
-			return
+			return nil, err
 		}
+	}
+	return info, nil
+}
+
+// fmt.Sscanf() cannot handle null values
+func (cmd *ClientInfoCmd) from(res rueidis.RedisResult) {
+	txt, err := res.ToString()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	info, err := stringToClientInfo(txt)
+	if err != nil {
+		cmd.SetErr(err)
+		return
 	}
 
 	cmd.SetVal(info)
+}
+
+type ACLLogEntry struct {
+	Count                int64
+	Reason               string
+	Context              string
+	Object               string
+	Username             string
+	AgeSeconds           float64
+	ClientInfo           *ClientInfo
+	EntryID              int64
+	TimestampCreated     int64
+	TimestampLastUpdated int64
+}
+
+type ACLLogCmd struct {
+	baseCmd[[]*ACLLogEntry]
+}
+
+func (cmd *ACLLogCmd) from(res rueidis.RedisResult) {
+	arr, err := res.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+
+	logEntries := make([]*ACLLogEntry, 0, len(arr))
+	for _, msg := range arr {
+		log, err := msg.AsMap()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		entry := ACLLogEntry{}
+
+		for key, attr := range log {
+			switch key {
+			case "count":
+				entry.Count, err = attr.AsInt64()
+			case "reason":
+				entry.Reason, err = attr.ToString()
+			case "context":
+				entry.Context, err = attr.ToString()
+			case "object":
+				entry.Object, err = attr.ToString()
+			case "username":
+				entry.Username, err = attr.ToString()
+			case "age-seconds":
+				entry.AgeSeconds, err = attr.AsFloat64()
+			case "client-info":
+				txt, txtErr := attr.ToString()
+				if txtErr == nil {
+					entry.ClientInfo, err = stringToClientInfo(txt)
+				} else {
+					err = txtErr
+				}
+			case "entry-id":
+				entry.EntryID, err = attr.AsInt64()
+			case "timestamp-created":
+				entry.TimestampCreated, err = attr.AsInt64()
+			case "timestamp-last-updated":
+				entry.TimestampLastUpdated, err = attr.AsInt64()
+			}
+		}
+
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		logEntries = append(logEntries, &entry)
+	}
+	cmd.SetVal(logEntries)
+}
+
+func newACLLogCmd(res rueidis.RedisResult) *ACLLogCmd {
+	cmd := &ACLLogCmd{}
+	cmd.from(res)
+	return cmd
 }
 
 // ModuleLoadexConfig struct is used to specify the arguments for the MODULE LOADEX command of redis.

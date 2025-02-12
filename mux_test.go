@@ -440,6 +440,21 @@ func TestMuxDelegation(t *testing.T) {
 		}
 	})
 
+	t.Run("wire az", func(t *testing.T) {
+		m, checkClean := setupMux([]*mockWire{
+			{
+				AZFn: func() string {
+					return "az"
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+		if az := m.AZ(); az != "az" {
+			t.Fatalf("unexpected az %v", az)
+		}
+	})
+
 	t.Run("wire err", func(t *testing.T) {
 		e := errors.New("err")
 		m, checkClean := setupMux([]*mockWire{
@@ -1042,6 +1057,7 @@ type mockWire struct {
 	DoStreamFn      func(pool *pool, cmd Completed) RedisResultStream
 	DoMultiStreamFn func(pool *pool, cmd ...Completed) MultiRedisResultStream
 	InfoFn          func() map[string]RedisMessage
+	AZFn            func() string
 	VersionFn       func() int
 	ErrorFn         func() error
 	CloseFn         func()
@@ -1131,6 +1147,13 @@ func (m *mockWire) Version() int {
 		return m.VersionFn()
 	}
 	return 0
+}
+
+func (m *mockWire) AZ() string {
+	if m.AZFn != nil {
+		return m.AZFn()
+	}
+	return ""
 }
 
 func (m *mockWire) Error() error {

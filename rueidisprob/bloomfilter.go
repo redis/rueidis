@@ -159,6 +159,10 @@ type BloomFilter interface {
 type bloomFilter struct {
 	client rueidis.Client
 
+	addMultiScript *rueidis.Lua
+
+	existsMultiScript *rueidis.Lua
+
 	// name is the name of the Bloom filter.
 	// It is used as a key in the Redis.
 	name string
@@ -166,18 +170,17 @@ type bloomFilter struct {
 	// counter is the name of the counter.
 	counter string
 
-	// hashIterations is the number of hash functions to use.
-	hashIterations      uint
 	hashIterationString string
+
+	addMultiKeys []string
+
+	existsMultiKeys []string
+
+	// hashIterations is the number of hash functions to use.
+	hashIterations uint
 
 	// size is the number of bits to use.
 	size uint
-
-	addMultiScript *rueidis.Lua
-	addMultiKeys   []string
-
-	existsMultiScript *rueidis.Lua
-	existsMultiKeys   []string
 }
 
 // NewBloomFilter creates a new Bloom filter.
@@ -256,7 +259,10 @@ func (c *bloomFilter) AddMulti(ctx context.Context, keys []string) error {
 		return nil
 	}
 
-	indexes := c.indexes(keys)
+	buf := bytesPool.Get(0, len(keys)*int(c.hashIterations)*8)
+	defer bytesPool.Put(buf)
+
+	indexes := c.indexes(keys, &buf.s)
 
 	args := make([]string, 0, len(indexes)+1)
 	args = append(args, c.hashIterationString)
@@ -266,13 +272,15 @@ func (c *bloomFilter) AddMulti(ctx context.Context, keys []string) error {
 	return resp.Error()
 }
 
-func (c *bloomFilter) indexes(keys []string) []string {
+func (c *bloomFilter) indexes(keys []string, buf *[]byte) []string {
 	allIndexes := make([]string, 0, len(keys)*int(c.hashIterations))
 	size := uint64(c.size)
 	for _, key := range keys {
 		h1, h2 := hash([]byte(key))
 		for i := uint(0); i < c.hashIterations; i++ {
-			allIndexes = append(allIndexes, strconv.FormatUint(index(h1, h2, i, size), 10))
+			offset := len(*buf)
+			*buf = strconv.AppendUint(*buf, index(h1, h2, i, size), 10)
+			allIndexes = append(allIndexes, rueidis.BinaryString((*buf)[offset:]))
 		}
 	}
 	return allIndexes
@@ -292,7 +300,10 @@ func (c *bloomFilter) ExistsMulti(ctx context.Context, keys []string) ([]bool, e
 		return nil, nil
 	}
 
-	indexes := c.indexes(keys)
+	buf := bytesPool.Get(0, len(keys)*int(c.hashIterations)*8)
+	defer bytesPool.Put(buf)
+
+	indexes := c.indexes(keys, &buf.s)
 
 	args := make([]string, 0, len(indexes)+1)
 	args = append(args, c.hashIterationString)

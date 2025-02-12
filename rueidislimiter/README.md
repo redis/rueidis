@@ -37,13 +37,6 @@ import (
 )
 
 func main() {
-	client, err := rueidis.NewClient(rueidis.ClientOption{
-		InitAddress: []string{"localhost:6379"},
-	})
-	if err != nil {
-		panic(err)
-	}
-
 	// Initialize a new rate limiter with a limit of 5 requests per minute
 	limiter, err := rueidislimiter.NewRateLimiter(rueidislimiter.RateLimiterOption{
 		ClientOption: rueidis.ClientOption{InitAddress: []string{"localhost:6379"}},

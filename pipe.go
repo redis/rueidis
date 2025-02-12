@@ -21,14 +21,16 @@ import (
 )
 
 const LibName = "rueidis"
-const LibVer = "1.0.52"
+const LibVer = "1.0.54"
 
 var noHello = regexp.MustCompile("unknown command .?(HELLO|hello).?")
 
 // See https://github.com/redis/rueidis/pull/691
 func isUnsubReply(msg *RedisMessage) bool {
 	// ex. NOPERM User limiteduser has no permissions to run the 'ping' command
-	if msg.typ == '-' && strings.Contains(msg.string, "'ping'") {
+	// ex. LOADING server is loading the dataset in memory
+	// ex. BUSY
+	if msg.typ == '-' && (strings.HasPrefix(msg.string, "LOADING") || strings.HasPrefix(msg.string, "BUSY") || strings.Contains(msg.string, "'ping'")) {
 		msg.typ = '+'
 		msg.string = "PONG"
 		return true
@@ -46,6 +48,7 @@ type wire interface {
 	DoMultiStream(ctx context.Context, pool *pool, multi ...Completed) MultiRedisResultStream
 	Info() map[string]RedisMessage
 	Version() int
+	AZ() string
 	Error() error
 	Close()
 
@@ -255,6 +258,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 			return nil, ErrNoCache
 		}
 		init = init[:0]
+		init = append(init, []string{"HELLO", "2"})
 		if password != "" && username == "" {
 			init = append(init, []string{"AUTH", password})
 		} else if username != "" {
@@ -302,8 +306,14 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 					continue
 				}
 				if err = r.Error(); err != nil {
+					if re, ok := err.(*RedisError); ok && noHello.MatchString(re.string) {
+						continue
+					}
 					p.Close()
 					return nil, err
+				}
+				if i == 0 {
+					p.info, err = r.AsMap()
 				}
 			}
 		}
@@ -838,6 +848,10 @@ func (p *pipe) Info() map[string]RedisMessage {
 
 func (p *pipe) Version() int {
 	return int(p.version)
+}
+
+func (p *pipe) AZ() string {
+	return p.info["availability_zone"].string
 }
 
 func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
