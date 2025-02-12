@@ -4694,19 +4694,13 @@ func (cmd *ClientInfoCmd) Result() (*ClientInfo, error) {
 	return cmd.val, cmd.err
 }
 
-// fmt.Sscanf() cannot handle null values
-func (cmd *ClientInfoCmd) from(res rueidis.RedisResult) {
-	txt, err := res.ToString()
-	if err != nil {
-		cmd.SetErr(err)
-		return
-	}
+func stringToClientInfo(txt string) (*ClientInfo, error) {
 	info := &ClientInfo{}
+	var err error
 	for _, s := range strings.Split(strings.TrimPrefix(strings.TrimSpace(txt), "txt:"), " ") {
 		kv := strings.Split(s, "=")
 		if len(kv) != 2 {
-			cmd.SetErr(fmt.Errorf("redis: unexpected client info data (%s)", s))
-			return
+			return nil, fmt.Errorf("redis: unexpected client info data (%s)", s)
 		}
 		key, val := kv[0], kv[1]
 
@@ -4773,8 +4767,7 @@ func (cmd *ClientInfoCmd) from(res rueidis.RedisResult) {
 				case 'T':
 					info.Flags |= ClientNoTouch
 				default:
-					cmd.SetErr(fmt.Errorf("redis: unexpected client info flags(%s)", string(val[i])))
-					return
+					return nil, fmt.Errorf("redis: unexpected client info flags(%s)", string(val[i]))
 				}
 			}
 		case "db":
@@ -4826,12 +4819,104 @@ func (cmd *ClientInfoCmd) from(res rueidis.RedisResult) {
 		}
 
 		if err != nil {
-			cmd.SetErr(err)
-			return
+			return nil, err
 		}
+	}
+	return info, nil
+}
+
+// fmt.Sscanf() cannot handle null values
+func (cmd *ClientInfoCmd) from(res rueidis.RedisResult) {
+	txt, err := res.ToString()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	info, err := stringToClientInfo(txt)
+	if err != nil {
+		cmd.SetErr(err)
+		return
 	}
 
 	cmd.SetVal(info)
+}
+
+type ACLLogEntry struct {
+	Count                int64
+	Reason               string
+	Context              string
+	Object               string
+	Username             string
+	AgeSeconds           float64
+	ClientInfo           *ClientInfo
+	EntryID              int64
+	TimestampCreated     int64
+	TimestampLastUpdated int64
+}
+
+type ACLLogCmd struct {
+	baseCmd[[]*ACLLogEntry]
+}
+
+func (cmd *ACLLogCmd) from(res rueidis.RedisResult) {
+	arr, err := res.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+
+	logEntries := make([]*ACLLogEntry, 0, len(arr))
+	for _, msg := range arr {
+		log, err := msg.AsMap()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		entry := ACLLogEntry{}
+
+		for key, attr := range log {
+			switch key {
+			case "count":
+				entry.Count, err = attr.AsInt64()
+			case "reason":
+				entry.Reason, err = attr.ToString()
+			case "context":
+				entry.Context, err = attr.ToString()
+			case "object":
+				entry.Object, err = attr.ToString()
+			case "username":
+				entry.Username, err = attr.ToString()
+			case "age-seconds":
+				entry.AgeSeconds, err = attr.AsFloat64()
+			case "client-info":
+				txt, txtErr := attr.ToString()
+				if txtErr == nil {
+					entry.ClientInfo, err = stringToClientInfo(txt)
+				} else {
+					err = txtErr
+				}
+			case "entry-id":
+				entry.EntryID, err = attr.AsInt64()
+			case "timestamp-created":
+				entry.TimestampCreated, err = attr.AsInt64()
+			case "timestamp-last-updated":
+				entry.TimestampLastUpdated, err = attr.AsInt64()
+			}
+		}
+
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		logEntries = append(logEntries, &entry)
+	}
+	cmd.SetVal(logEntries)
+}
+
+func newACLLogCmd(res rueidis.RedisResult) *ACLLogCmd {
+	cmd := &ACLLogCmd{}
+	cmd.from(res)
+	return cmd
 }
 
 // ModuleLoadexConfig struct is used to specify the arguments for the MODULE LOADEX command of redis.
