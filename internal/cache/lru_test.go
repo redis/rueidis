@@ -109,8 +109,10 @@ func TestLRUCache_LRU_2(t *testing.T) {
 		t.Fatal("should have bpsize*2 heads", heads)
 	}
 	for i := 0; i < bpsize; i++ {
-		if v, ok := m.Find(strconv.Itoa(i), "a", 1); !ok || v != i {
-			t.Fatal("not find")
+		for j := 0; j < 4; j++ {
+			if v, ok := m.Find(strconv.Itoa(i), "a", 1); !ok || v != i {
+				t.Fatal("not find")
+			}
 		}
 	}
 	runtime.GC()
@@ -120,7 +122,7 @@ func TestLRUCache_LRU_2(t *testing.T) {
 	}
 	for i := 0; i < bpsize; i++ {
 		if v, ok := m.Find(strconv.Itoa(i), "a", 1); !ok || v != i {
-			t.Fatal("not find")
+			t.Fatal("not find", v, ok)
 		}
 	}
 	for i := bpsize * 1; i < bpsize*2; i++ {
@@ -130,7 +132,7 @@ func TestLRUCache_LRU_2(t *testing.T) {
 	}
 	for i := bpsize * 2; i < bpsize*3; i++ {
 		if v, ok := m.Find(strconv.Itoa(i), "a", 1); !ok || v != i {
-			t.Fatal("not find")
+			t.Fatal("not find", v, ok)
 		}
 	}
 }
@@ -140,8 +142,10 @@ func TestLRUCache_LRU_GC(t *testing.T) {
 	for i := 0; i < bpsize; i++ {
 		m.Insert(strconv.Itoa(i), "a", 1, 2, 1, i)
 	}
-	if v, ok := m.Find(strconv.Itoa(bpsize/2), "a", 1); !ok || v != bpsize/2 {
-		t.Fatal("not find")
+	for j := 0; j < 4; j++ {
+		if v, ok := m.Find(strconv.Itoa(bpsize/2), "a", 1); !ok || v != bpsize/2 {
+			t.Fatal("not find")
+		}
 	}
 	runtime.GC()
 	runtime.GC()
@@ -174,8 +178,10 @@ func TestLRUCache_LRU_GC_2(t *testing.T) {
 	for i := 0; i < bpsize; i++ {
 		m.Insert(strconv.Itoa(i), "a", 1, 2, 1, i)
 	}
-	if v, ok := m.Find(strconv.Itoa(bpsize/2), "a", 1); !ok || v != bpsize/2 {
-		t.Fatal("not find")
+	for j := 0; j < 4; j++ {
+		if v, ok := m.Find(strconv.Itoa(bpsize/2), "a", 1); !ok || v != bpsize/2 {
+			t.Fatal("not find")
+		}
 	}
 	m.Reset()
 	runtime.GC()

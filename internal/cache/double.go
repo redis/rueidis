@@ -78,13 +78,16 @@ func (m *DoubleMap[V]) Delete(key1, key2 string) {
 	if empty {
 		e := m.bp.Get().(*empties)
 		e.s = append(e.s, key1)
-		if len(e.s) >= bpsize {
+		if len(e.s) < bpsize {
+			m.bp.Put(e)
+			return
+		}
+		go func(m *DoubleMap[V], e *empties) {
 			m.delete(e.s)
 			clear(e.s)
 			e.s = e.s[:0]
-		}
-		m.bp.Put(e)
-		return
+			m.bp.Put(e)
+		}(m, e)
 	}
 }
 
@@ -125,7 +128,6 @@ func NewDoubleMap[V any](hint int) *DoubleMap[V] {
 		runtime.SetFinalizer(e, func(e *empties) {
 			if len(e.s) >= 0 {
 				m.delete(e.s)
-				clear(e.s)
 			}
 		})
 		return e

@@ -3,6 +3,7 @@ package cache
 import (
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"unsafe"
 )
 
@@ -15,8 +16,9 @@ type linked[V any] struct {
 	prev unsafe.Pointer
 	size int64
 	ts   int64
-	mark int64
 	mu   sync.RWMutex
+	cnt  uint32
+	mark int32
 }
 
 func (h *linked[V]) find(key string, ts int64) (v V, ok bool) {
@@ -43,7 +45,7 @@ type LRUDoubleMap[V any] struct {
 	tail  unsafe.Pointer
 	total int64
 	limit int64
-	mark  int64
+	mark  int32
 }
 
 func (m *LRUDoubleMap[V]) Find(key1, key2 string, ts int64) (val V, ok bool) {
@@ -53,14 +55,19 @@ func (m *LRUDoubleMap[V]) Find(key1, key2 string, ts int64) (val V, ok bool) {
 		val, ok = h.find(key2, ts)
 	}
 	m.mu.RUnlock()
-	if ok {
+	if ok && atomic.AddUint32(&h.cnt, 1)&3 == 0 {
 		b := m.bp.Get().(*ruBatch[V])
-		b.m[h] = struct{}{}
-		if len(b.m) >= bpsize {
-			m.moveToTail(b.m)
-			clear(b.m)
+		b.s = append(b.s, h)
+		if len(b.s) < bpsize {
+			m.bp.Put(b)
+			return
 		}
-		m.bp.Put(b)
+		go func(m *LRUDoubleMap[V], b *ruBatch[V]) {
+			m.moveToTail(b.s)
+			clear(b.s)
+			b.s = b.s[:0]
+			m.bp.Put(b)
+		}(m, b)
 	}
 	return
 }
@@ -83,7 +90,7 @@ func (m *LRUDoubleMap[V]) remove(h *linked[V]) {
 	if m.tail == unsafe.Pointer(h) {
 		m.tail = prev
 	}
-	m.total -= h.size
+	atomic.AddInt64(&m.total, -h.size)
 	delete(m.ma, h.key)
 }
 
@@ -108,37 +115,44 @@ func (m *LRUDoubleMap[V]) move(h *linked[V]) {
 }
 
 func (m *LRUDoubleMap[V]) Insert(key1, key2 string, size, ts, now int64, v V) {
-	// TODO: a RLock fast path?
+	m.mu.RLock()
+	if h := m.ma[key1]; h != nil {
+		atomic.AddInt64(&m.total, size)
+		h.mu.Lock()
+		if h.ts <= now {
+			atomic.AddInt64(&m.total, -h.size)
+			h.size = 0
+			h.head = chain[V]{}
+		}
+		h.ts = ts
+		h.size += size
+		h.head.insert(key2, v)
+		h.mu.Unlock()
+		m.mu.RUnlock()
+		return
+	}
+	m.mu.RUnlock()
 	m.mu.Lock()
 	if m.ma == nil {
 		m.mu.Unlock()
 		return
 	}
-	m.total += size
+	atomic.AddInt64(&m.total, size)
 	for m.head != nil {
 		h := (*linked[V])(m.head)
-		if m.total <= m.limit && h.ts != 0 && h.ts > now {
+		if h.ts != 0 && h.ts > now && atomic.LoadInt64(&m.total) <= m.limit {
 			break
 		}
 		m.remove(h)
 	}
 
-	h := m.ma[key1]
-	if h == nil {
-		h = &linked[V]{key: key1, ts: ts, mark: m.mark}
-		m.ma[key1] = h
-	} else if h.ts <= now {
-		m.total -= h.size
-		h.size = 0
-		h.head = chain[V]{}
-	}
-	h.ts = ts
-	h.size += size
+	h := &linked[V]{key: key1, ts: ts, size: size, mark: m.mark}
+	h.head.insert(key2, v)
+	m.ma[key1] = h // h must not exist in the map because this Insert is called sequentially.
 	m.move(h)
 	if m.head == nil {
 		m.head = unsafe.Pointer(h)
 	}
-	h.head.insert(key2, v)
 	m.mu.Unlock()
 }
 
@@ -155,7 +169,7 @@ func (m *LRUDoubleMap[V]) DeleteAll() {
 	m.ma = nil
 	m.head = nil
 	m.tail = nil
-	m.total = 0
+	atomic.StoreInt64(&m.total, 0)
 	m.mark++
 	m.mu.Unlock()
 }
@@ -165,23 +179,30 @@ func (m *LRUDoubleMap[V]) Reset() {
 	m.ma = make(map[string]*linked[V], len(m.ma))
 	m.head = nil
 	m.tail = nil
-	m.total = 0
+	atomic.StoreInt64(&m.total, 0)
 	m.mark++
 	m.mu.Unlock()
 }
 
-func (m *LRUDoubleMap[V]) moveToTail(b map[*linked[V]]struct{}) {
+func (m *LRUDoubleMap[V]) moveToTail(s []*linked[V]) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	for h := range b {
+	for _, h := range s {
 		if h.mark == m.mark {
 			m.move(h)
 		}
 	}
+	for m.head != nil {
+		h := (*linked[V])(m.head)
+		if atomic.LoadInt64(&m.total) <= m.limit && h.ts != 0 {
+			break
+		}
+		m.remove(h)
+	}
 }
 
 type ruBatch[V any] struct {
-	m map[*linked[V]]struct{}
+	s []*linked[V]
 }
 
 func NewLRUDoubleMap[V any](hint, limit int64) *LRUDoubleMap[V] {
@@ -190,11 +211,10 @@ func NewLRUDoubleMap[V any](hint, limit int64) *LRUDoubleMap[V] {
 		limit: limit,
 	}
 	m.bp.New = func() interface{} {
-		b := &ruBatch[V]{m: make(map[*linked[V]]struct{}, bpsize)}
+		b := &ruBatch[V]{s: make([]*linked[V], 0, bpsize)}
 		runtime.SetFinalizer(b, func(b *ruBatch[V]) {
-			if len(b.m) > 0 {
-				m.moveToTail(b.m)
-				clear(b.m)
+			if len(b.s) > 0 {
+				m.moveToTail(b.s)
 			}
 		})
 		return b
