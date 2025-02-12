@@ -417,6 +417,7 @@ type CoreCmdable interface {
 	ACLDryRun(ctx context.Context, username string, command ...any) *StringCmd
 	ACLLog(ctx context.Context, count int64) *ACLLogCmd
 	ACLSetUser(ctx context.Context, username string, rules ...string) *StatusCmd
+	ACLDelUser(ctx context.Context, username string) *IntCmd
 	ACLLogReset(ctx context.Context) *StatusCmd
 	ACLCat(ctx context.Context) *StringSliceCmd
 
@@ -3226,6 +3227,12 @@ func (c *Compat) ACLCat(ctx context.Context) *StringSliceCmd {
 	cmd := c.client.B().AclCat().Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) ACLDelUser(ctx context.Context, username string) *IntCmd {
+	cmd := c.client.B().AclDeluser().Username(username).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
 }
 
 func (c *Compat) doPrimaries(ctx context.Context, fn func(c rueidis.Client) error) error {
