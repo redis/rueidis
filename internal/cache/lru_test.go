@@ -177,7 +177,7 @@ func TestLRUCache_LRU_GC_2(t *testing.T) {
 	if v, ok := m.Find(strconv.Itoa(bpsize/2), "a", 1); !ok || v != bpsize/2 {
 		t.Fatal("not find")
 	}
-	m.DeleteAll()
+	m.Reset()
 	runtime.GC()
 	runtime.GC()
 	m.Insert("a", "a", bpsize-1, 2, 0)

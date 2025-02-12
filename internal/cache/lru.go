@@ -65,43 +65,72 @@ func (m *LRUDoubleMap[V]) Find(key1, key2 string, ts int64) (val V, ok bool) {
 	return
 }
 
-func (m *LRUDoubleMap[V]) Insert(key1, key2 string, size, ts int64, v V) {
-	// TODO: a RLock fast path?
-	m.mu.Lock()
-	m.total += size
-	for m.head != nil {
-		h := (*linked[V])(m.head)
-		if m.total <= m.limit && h.ts != 0 { // TODO: clear expired entries?
-			break
-		}
-		m.total -= h.size
-		delete(m.ma, h.key)
-		h.mark -= 1
-		m.head = h.next
-		if m.head != nil {
-			(*linked[V])(m.head).prev = nil
-		} else {
-			m.tail = nil
-			break
-		}
+func (m *LRUDoubleMap[V]) remove(h *linked[V]) {
+	h.mark -= 1
+	next := h.next
+	prev := h.prev
+	h.next = nil
+	h.prev = nil
+	if next != nil {
+		(*linked[V])(next).prev = prev
 	}
+	if prev != nil {
+		(*linked[V])(prev).next = next
+	}
+	if m.head == unsafe.Pointer(h) {
+		m.head = next
+	}
+	if m.tail == unsafe.Pointer(h) {
+		m.tail = prev
+	}
+	m.total -= h.size
+	delete(m.ma, h.key)
+}
 
-	h := m.ma[key1]
-	if h == nil {
-		h = &linked[V]{key: key1, ts: ts, mark: m.mark}
-		m.ma[key1] = h
-	} else if h.ts <= ts {
-		m.total -= h.size
-		h.size = 0
+func (m *LRUDoubleMap[V]) move(h *linked[V]) {
+	prev := h.prev
+	next := h.next
+	if prev != nil {
+		(*linked[V])(prev).next = next
 	}
-	h.ts = ts
-	h.size += size
+	if next != nil {
+		(*linked[V])(next).prev = prev
+	}
 	h.next = nil
 	if m.tail != nil && m.tail != unsafe.Pointer(h) {
 		h.prev = m.tail
 		(*linked[V])(m.tail).next = unsafe.Pointer(h)
 	}
 	m.tail = unsafe.Pointer(h)
+	if m.head == unsafe.Pointer(h) && next != nil {
+		m.head = next
+	}
+}
+
+func (m *LRUDoubleMap[V]) Insert(key1, key2 string, size, ts int64, v V) {
+	// TODO: a RLock fast path?
+	m.mu.Lock()
+	if m.ma == nil {
+		m.mu.Unlock()
+		return
+	}
+	m.total += size
+	for m.head != nil {
+		h := (*linked[V])(m.head)
+		if m.total <= m.limit && h.ts != 0 { // TODO: clear expired entries?
+			break
+		}
+		m.remove(h)
+	}
+
+	h := m.ma[key1]
+	if h == nil {
+		h = &linked[V]{key: key1, ts: ts, mark: m.mark}
+		m.ma[key1] = h
+	}
+	h.ts = ts
+	h.size += size
+	m.move(h)
 	if m.head == nil {
 		m.head = unsafe.Pointer(h)
 	}
@@ -119,6 +148,16 @@ func (m *LRUDoubleMap[V]) Delete(key1 string) {
 
 func (m *LRUDoubleMap[V]) DeleteAll() {
 	m.mu.Lock()
+	m.ma = nil
+	m.head = nil
+	m.tail = nil
+	m.total = 0
+	m.mark++
+	m.mu.Unlock()
+}
+
+func (m *LRUDoubleMap[V]) Reset() {
+	m.mu.Lock()
 	m.ma = make(map[string]*linked[V], len(m.ma))
 	m.head = nil
 	m.tail = nil
@@ -131,25 +170,8 @@ func (m *LRUDoubleMap[V]) moveToTail(b map[*linked[V]]struct{}) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	for h := range b {
-		if h.mark != m.mark {
-			continue
-		}
-		prev := h.prev
-		next := h.next
-		if prev != nil {
-			(*linked[V])(prev).next = next
-		}
-		if next != nil {
-			(*linked[V])(next).prev = prev
-		}
-		h.next = nil
-		if m.tail != nil && m.tail != unsafe.Pointer(h) {
-			h.prev = m.tail
-			(*linked[V])(m.tail).next = unsafe.Pointer(h)
-		}
-		m.tail = unsafe.Pointer(h)
-		if m.head == unsafe.Pointer(h) && next != nil {
-			m.head = next
+		if h.mark == m.mark {
+			m.move(h)
 		}
 	}
 }

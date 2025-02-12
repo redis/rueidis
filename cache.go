@@ -3,7 +3,6 @@ package rueidis
 import (
 	"context"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/redis/rueidis/internal/cache"
@@ -202,13 +201,9 @@ func NewFlattenCache(limit int) CacheStore {
 type flatten struct {
 	flights *cache.DoubleMap[*adapterEntry]
 	cache   *cache.LRUDoubleMap[[]byte]
-	close   int32
 }
 
 func (f *flatten) Flight(key, cmd string, ttl time.Duration, now time.Time) (RedisMessage, CacheEntry) {
-	if atomic.LoadInt32(&f.close) == 1 {
-		return RedisMessage{}, nil
-	}
 	ts := now.UnixMilli()
 	if e, ok := f.cache.Find(key, cmd, ts); ok {
 		var ret RedisMessage
@@ -248,7 +243,7 @@ func (f *flatten) Cancel(key, cmd string, err error) {
 
 func (f *flatten) Delete(keys []RedisMessage) {
 	if keys == nil {
-		f.cache.DeleteAll()
+		f.cache.Reset()
 	} else {
 		for _, k := range keys {
 			f.cache.Delete(k.string)
@@ -257,8 +252,8 @@ func (f *flatten) Delete(keys []RedisMessage) {
 }
 
 func (f *flatten) Close(err error) {
-	atomic.StoreInt32(&f.close, 1)
-	f.flights.Iterate(func(entry *adapterEntry) {
+	f.cache.DeleteAll()
+	f.flights.Close(func(entry *adapterEntry) {
 		entry.setErr(err)
 	})
 }

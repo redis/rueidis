@@ -41,7 +41,7 @@ func TestDoubleMap(t *testing.T) {
 		t.Fatalf("should insert 1 but not found")
 	}
 	c := 0
-	m.Iterate(func(i int) {
+	m.Close(func(i int) {
 		if i != 2 {
 			t.Fatalf("should iterate 2")
 		}

@@ -41,6 +41,10 @@ func (m *DoubleMap[V]) FindOrInsert(key1, key2 string, fn func() V) (val V, ok b
 		m.mu.RUnlock()
 		return
 	}
+	if m.ma == nil {
+		m.mu.RUnlock()
+		return
+	}
 	m.mu.RUnlock()
 	m.mu.Lock()
 	h := m.ma[key1]
@@ -49,6 +53,9 @@ func (m *DoubleMap[V]) FindOrInsert(key1, key2 string, fn func() V) (val V, ok b
 			m.mu.Unlock()
 			return
 		}
+	} else if m.ma == nil {
+		m.mu.Unlock()
+		return
 	} else {
 		h = &head[V]{}
 		m.ma[key1] = h
@@ -93,19 +100,18 @@ func (m *DoubleMap[V]) delete(keys []string) {
 	m.mu.Unlock()
 }
 
-func (m *DoubleMap[V]) Iterate(cb func(V)) {
-	m.mu.RLock()
+func (m *DoubleMap[V]) Close(cb func(V)) {
+	m.mu.Lock()
 	for _, h := range m.ma {
-		h.mu.RLock()
 		if h.node.key != "" {
 			cb(h.node.val)
 		}
 		for curr := h.node.next; curr != nil; curr = curr.next {
 			cb(curr.val)
 		}
-		h.mu.RUnlock()
 	}
-	m.mu.RUnlock()
+	m.ma = nil
+	m.mu.Unlock()
 }
 
 type empties struct {
