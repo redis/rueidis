@@ -4959,7 +4959,7 @@ func (cmd *ClusterLinksCmd) from(res rueidis.RedisResult) {
 
 	val := make([]ClusterLink, 0, len(arr))
 	for _, v := range arr {
-		dict, err := v.ToMap()
+		dict, err := v.AsMap()
 		if err != nil {
 			cmd.SetErr(err)
 			return
