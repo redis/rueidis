@@ -420,6 +420,7 @@ type CoreCmdable interface {
 	ACLDelUser(ctx context.Context, username string) *IntCmd
 	ACLLogReset(ctx context.Context) *StatusCmd
 	ACLCat(ctx context.Context) *StringSliceCmd
+	ACLCatArgs(ctx context.Context, options *ACLCatArgs) *StringSliceCmd
 
 	ModuleLoadex(ctx context.Context, conf *ModuleLoadexConfig) *StringCmd
 	GearsCmdable
@@ -3209,6 +3210,20 @@ func (c *Compat) ACLDryRun(ctx context.Context, username string, command ...any)
 	cmd := c.client.B().AclDryrun().Username(username).Command(command[0].(string)).Arg(argsToSlice(command[1:])...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringCmd(resp)
+}
+
+type ACLCatArgs struct {
+	Category string
+}
+
+func (c *Compat) ACLCatArgs(ctx context.Context, options *ACLCatArgs) *StringSliceCmd {
+	// if there is a category passed, build new cmd, if there isn't - use the ACLCat method
+	if options != nil && options.Category != "" {
+		cmd := c.client.B().AclCat().Categoryname(options.Category).Build()
+		resp := c.client.Do(ctx, cmd)
+		return newStringSliceCmd(resp)
+	}
+	return c.ACLCat(ctx)
 }
 
 func (c *Compat) ACLLog(ctx context.Context, count int64) *ACLLogCmd {
