@@ -4996,3 +4996,27 @@ func newClusterLinksCmd(resp rueidis.RedisResult) *ClusterLinksCmd {
 	cmd.from(resp)
 	return cmd
 }
+
+func (cmd *ClusterLinksCmd) SetVal(val []ClusterLink) {
+	cmd.val = val
+}
+
+func (cmd *ClusterLinksCmd) Val() []ClusterLink {
+	return cmd.val
+}
+
+//func (cmd *ClusterLinksCmd) SetRawVal(rawVal any) {
+//	cmd.rawVal = rawVal
+//}
+
+//func (cmd *baseCmd[T]) RawVal() any {
+//	return cmd.rawVal
+//}
+
+func (cmd *ClusterLinksCmd) Result() ([]ClusterLink, error) {
+	return cmd.Val(), cmd.Err()
+}
+
+//func (cmd *ClusterLinksCmd) RawResult() (any, error) {
+//	return cmd.RawVal(), cmd.Err()
+//}
