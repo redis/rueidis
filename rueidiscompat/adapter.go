@@ -382,7 +382,7 @@ type CoreCmdable interface {
 	ClusterMyShardID(ctx context.Context) *StringCmd
 	ClusterSlots(ctx context.Context) *ClusterSlotsCmd
 	ClusterShards(ctx context.Context) *ClusterShardsCmd
-	// TODO ClusterLinks(ctx context.Context) *ClusterLinksCmd
+	ClusterLinks(ctx context.Context) *ClusterLinksCmd
 	ClusterNodes(ctx context.Context) *StringCmd
 	ClusterMeet(ctx context.Context, host string, port int64) *StatusCmd
 	ClusterForget(ctx context.Context, nodeID string) *StatusCmd
@@ -2968,6 +2968,12 @@ func (c *Compat) ClusterNodes(ctx context.Context) *StringCmd {
 	cmd := c.client.B().ClusterNodes().Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringCmd(resp)
+}
+
+func (c *Compat) ClusterLinks(ctx context.Context) *ClusterLinksCmd {
+	cmd := c.client.B().ClusterLinks().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newClusterLinksCmd(resp)
 }
 
 func (c *Compat) ClusterMeet(ctx context.Context, host string, port int64) *StatusCmd {
