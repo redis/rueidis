@@ -4926,3 +4926,85 @@ type ModuleLoadexConfig struct {
 	Conf map[string]interface{}
 	Args []interface{}
 }
+
+type ClusterLink struct {
+	Direction           string
+	Node                string
+	CreateTime          int64
+	Events              string
+	SendBufferAllocated int64
+	SendBufferUsed      int64
+}
+
+// ClusterLinksCmd represents the response structure for ClusterLinks.
+type ClusterLinksCmd struct {
+	val []ClusterLink
+	err error
+}
+
+func (c *ClusterLinksCmd) SetErr(err error) {
+	c.err = err
+}
+
+func (c *ClusterLinksCmd) Err() error {
+	return c.err
+}
+
+func (cmd *ClusterLinksCmd) from(res rueidis.RedisResult) {
+	arr, err := res.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+
+	val := make([]ClusterLink, 0, len(arr))
+	for _, v := range arr {
+		dict, err := v.AsMap()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		link := ClusterLink{}
+
+		for k, v := range dict {
+			switch k {
+			case "direction":
+				link.Direction, _ = v.ToString()
+			case "node":
+				link.Node, _ = v.ToString()
+			case "create-time":
+				link.CreateTime, _ = v.ToInt64()
+			case "events":
+				link.Events, _ = v.ToString()
+			case "send-buffer-allocated":
+				link.SendBufferAllocated, _ = v.ToInt64()
+			case "send-buffer-used":
+				link.SendBufferUsed, _ = v.ToInt64()
+			default:
+				cmd.SetErr(fmt.Errorf("unexpected key %q in CLUSTER LINKS reply", k))
+				return
+			}
+		}
+		val = append(val, link)
+	}
+
+	cmd.val = val
+}
+
+func newClusterLinksCmd(resp rueidis.RedisResult) *ClusterLinksCmd {
+	cmd := &ClusterLinksCmd{}
+	cmd.from(resp)
+	return cmd
+}
+
+func (cmd *ClusterLinksCmd) SetVal(val []ClusterLink) {
+	cmd.val = val
+}
+
+func (cmd *ClusterLinksCmd) Val() []ClusterLink {
+	return cmd.val
+}
+
+func (cmd *ClusterLinksCmd) Result() ([]ClusterLink, error) {
+	return cmd.Val(), cmd.Err()
+}

@@ -1915,6 +1915,12 @@ func (c *Pipeline) ClusterNodes(ctx context.Context) *StringCmd {
 	return ret
 }
 
+func (c *Pipeline) ClusterLinks(ctx context.Context) *ClusterLinksCmd {
+	ret := c.comp.ClusterLinks(ctx)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) ClusterMeet(ctx context.Context, host string, port int64) *StatusCmd {
 	ret := c.comp.ClusterMeet(ctx, host, port)
 	c.rets = append(c.rets, ret)
