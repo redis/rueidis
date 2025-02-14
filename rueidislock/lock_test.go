@@ -12,11 +12,13 @@ import (
 	"github.com/redis/rueidis"
 )
 
+const testDB = 10
+
 var address = []string{"127.0.0.1:6379"}
 
 func newLocker(t *testing.T, noLoop, setpx, nocsc bool) *locker {
 	impl, err := NewLocker(LockerOption{
-		ClientOption:   rueidis.ClientOption{InitAddress: address, DisableCache: nocsc},
+		ClientOption:   rueidis.ClientOption{InitAddress: address, DisableCache: nocsc, SelectDB: testDB},
 		NoLoopTracking: noLoop,
 		FallbackSETPX:  setpx,
 	})
@@ -27,7 +29,7 @@ func newLocker(t *testing.T, noLoop, setpx, nocsc bool) *locker {
 }
 
 func newClient(t *testing.T) rueidis.Client {
-	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: address})
+	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: address, SelectDB: testDB})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -35,11 +37,11 @@ func newClient(t *testing.T) rueidis.Client {
 }
 
 func TestNewLocker(t *testing.T) {
-	_, err := NewLocker(LockerOption{ClientOption: rueidis.ClientOption{InitAddress: nil}})
+	_, err := NewLocker(LockerOption{ClientOption: rueidis.ClientOption{InitAddress: nil, SelectDB: testDB}})
 	if err == nil {
 		t.Fatal(err)
 	}
-	l, err := NewLocker(LockerOption{ClientOption: rueidis.ClientOption{InitAddress: address}})
+	l, err := NewLocker(LockerOption{ClientOption: rueidis.ClientOption{InitAddress: address, SelectDB: testDB}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -59,7 +61,7 @@ func TestNewLocker(t *testing.T) {
 func TestNewLocker_WithClientBuilder(t *testing.T) {
 	var client rueidis.Client
 	l, err := NewLocker(LockerOption{
-		ClientOption: rueidis.ClientOption{InitAddress: address},
+		ClientOption: rueidis.ClientOption{InitAddress: address, SelectDB: testDB},
 		ClientBuilder: func(option rueidis.ClientOption) (_ rueidis.Client, err error) {
 			client, err = rueidis.NewClient(option)
 			return client, err
@@ -822,7 +824,7 @@ func TestLocker_RetryErrLockerClosed(t *testing.T) {
 
 func TestLocker_Flush(t *testing.T) {
 	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
-		client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: address})
+		client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: address, SelectDB: testDB})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -836,7 +838,7 @@ func TestLocker_Flush(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if err := client.Do(context.Background(), client.B().Flushall().Build()).Error(); err != nil {
+		if err := client.Do(context.Background(), client.B().Flushdb().Build()).Error(); err != nil {
 			t.Fatal(err)
 		}
 

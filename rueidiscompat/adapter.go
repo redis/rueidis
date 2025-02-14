@@ -382,7 +382,7 @@ type CoreCmdable interface {
 	ClusterMyShardID(ctx context.Context) *StringCmd
 	ClusterSlots(ctx context.Context) *ClusterSlotsCmd
 	ClusterShards(ctx context.Context) *ClusterShardsCmd
-	// TODO ClusterLinks(ctx context.Context) *ClusterLinksCmd
+	ClusterLinks(ctx context.Context) *ClusterLinksCmd
 	ClusterNodes(ctx context.Context) *StringCmd
 	ClusterMeet(ctx context.Context, host string, port int64) *StatusCmd
 	ClusterForget(ctx context.Context, nodeID string) *StatusCmd
@@ -419,6 +419,8 @@ type CoreCmdable interface {
 	ACLSetUser(ctx context.Context, username string, rules ...string) *StatusCmd
 	ACLDelUser(ctx context.Context, username string) *IntCmd
 	ACLLogReset(ctx context.Context) *StatusCmd
+	ACLCat(ctx context.Context) *StringSliceCmd
+	ACLCatArgs(ctx context.Context, options *ACLCatArgs) *StringSliceCmd
 
 	ModuleLoadex(ctx context.Context, conf *ModuleLoadexConfig) *StringCmd
 	GearsCmdable
@@ -2970,6 +2972,12 @@ func (c *Compat) ClusterNodes(ctx context.Context) *StringCmd {
 	return newStringCmd(resp)
 }
 
+func (c *Compat) ClusterLinks(ctx context.Context) *ClusterLinksCmd {
+	cmd := c.client.B().ClusterLinks().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newClusterLinksCmd(resp)
+}
+
 func (c *Compat) ClusterMeet(ctx context.Context, host string, port int64) *StatusCmd {
 	cmd := c.client.B().ClusterMeet().Ip(host).Port(port).Build()
 	resp := c.client.Do(ctx, cmd)
@@ -3204,6 +3212,20 @@ func (c *Compat) ACLDryRun(ctx context.Context, username string, command ...any)
 	return newStringCmd(resp)
 }
 
+type ACLCatArgs struct {
+	Category string
+}
+
+func (c *Compat) ACLCatArgs(ctx context.Context, options *ACLCatArgs) *StringSliceCmd {
+	// if there is a category passed, build new cmd, if there isn't - use the ACLCat method
+	if options != nil && options.Category != "" {
+		cmd := c.client.B().AclCat().Categoryname(options.Category).Build()
+		resp := c.client.Do(ctx, cmd)
+		return newStringSliceCmd(resp)
+	}
+	return c.ACLCat(ctx)
+}
+
 func (c *Compat) ACLLog(ctx context.Context, count int64) *ACLLogCmd {
 	cmd := c.client.B().AclLog().Count(count).Build()
 	resp := c.client.Do(ctx, cmd)
@@ -3215,10 +3237,17 @@ func (c *Compat) ACLSetUser(ctx context.Context, username string, rules ...strin
 	resp := c.client.Do(ctx, cmd)
 	return newStatusCmd(resp)
 }
+
 func (c *Compat) ACLLogReset(ctx context.Context) *StatusCmd {
 	cmd := c.client.B().AclLog().Reset().Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStatusCmd(resp)
+}
+
+func (c *Compat) ACLCat(ctx context.Context) *StringSliceCmd {
+	cmd := c.client.B().AclCat().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
 }
 
 func (c *Compat) ACLDelUser(ctx context.Context, username string) *IntCmd {

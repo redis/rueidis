@@ -157,6 +157,22 @@ func testCluster(resp3 bool) {
 				}
 				Expect(m).To(HaveLen(16384))
 			})
+			It("ClusterLinks", func() {
+				links, err := adapter.ClusterLinks(ctx).Result()
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(links).NotTo(BeEmpty())
+
+				for _, link := range links {
+					Expect(link.Direction).NotTo(BeEmpty())
+					Expect(link.Node).NotTo(BeEmpty())
+					Expect(link.CreateTime).To(BeNumerically(">", 0))
+					Expect(link.Events).NotTo(BeEmpty())
+					Expect(link.SendBufferAllocated).To(BeNumerically(">=", 0))
+					Expect(link.SendBufferUsed).To(BeNumerically(">=", 0))
+				}
+			})
+
 		}
 		It("ClusterSlots", func() {
 			slots, err := adapter.ClusterSlots(ctx).Result()
