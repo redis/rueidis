@@ -419,6 +419,7 @@ type CoreCmdable interface {
 	ACLSetUser(ctx context.Context, username string, rules ...string) *StatusCmd
 	ACLDelUser(ctx context.Context, username string) *IntCmd
 	ACLLogReset(ctx context.Context) *StatusCmd
+	ACLList(ctx context.Context) *StringSliceCmd
 	ACLCat(ctx context.Context) *StringSliceCmd
 	ACLCatArgs(ctx context.Context, options *ACLCatArgs) *StringSliceCmd
 
@@ -3246,6 +3247,12 @@ func (c *Compat) ACLLogReset(ctx context.Context) *StatusCmd {
 
 func (c *Compat) ACLCat(ctx context.Context) *StringSliceCmd {
 	cmd := c.client.B().AclCat().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) ACLList(ctx context.Context) *StringSliceCmd {
+	cmd := c.client.B().AclList().Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringSliceCmd(resp)
 }
