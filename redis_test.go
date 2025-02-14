@@ -83,7 +83,7 @@ func testFlush(t *testing.T, client Client) {
 		return
 	}
 
-	if err := client.Do(ctx, client.B().Flushall().Build()).Error(); err != nil {
+	if err := client.Do(ctx, client.B().Flushdb().Build()).Error(); err != nil {
 		t.Fatalf("unexpected flush err %v", err)
 	}
 
