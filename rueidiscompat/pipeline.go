@@ -2125,6 +2125,12 @@ func (c *Pipeline) ACLCat(ctx context.Context) *StringSliceCmd {
 	return ret
 }
 
+func (c *Pipeline) ACLList(ctx context.Context) *StringSliceCmd {
+	ret := c.comp.ACLList(ctx)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) ACLCatArgs(ctx context.Context, options *ACLCatArgs) *StringSliceCmd {
 	ret := c.comp.ACLCatArgs(ctx, options)
 	c.rets = append(c.rets, ret)
