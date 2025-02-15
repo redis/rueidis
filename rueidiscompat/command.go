@@ -5008,3 +5008,102 @@ func (cmd *ClusterLinksCmd) Val() []ClusterLink {
 func (cmd *ClusterLinksCmd) Result() ([]ClusterLink, error) {
 	return cmd.Val(), cmd.Err()
 }
+
+type SlowLog struct {
+	ID         int64
+	Time       time.Time
+	Duration   time.Duration
+	Args       []string
+	ClientAddr string
+	ClientName string
+}
+
+type SlowLogCmd struct {
+	baseCmd[[]*SlowLog]
+}
+
+func (cmd *SlowLogCmd) from(res rueidis.RedisResult) {
+	arr, err := res.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+
+	logEntries := make([]*SlowLog, 0, len(arr))
+	for _, msg := range arr {
+		log, err := msg.ToArray()
+
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+
+		if len(log) < 4 {
+			cmd.SetErr(fmt.Errorf("redis: got %d elements in slowlog get, expected at least 4", len(log)))
+			return
+		}
+
+		entry := SlowLog{}
+
+		entry.ID, err = log[0].AsInt64()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+
+		createdAt, err := log[1].AsInt64()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		entry.Time = time.Unix(createdAt, 0)
+
+		duration, err := log[2].AsInt64()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		entry.Duration = time.Duration(duration) * time.Microsecond
+
+		argsArr, err := log[3].ToArray()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+
+		entry.Args = make([]string, len(argsArr))
+
+		for i, arg := range argsArr {
+			entry.Args[i], err = arg.ToString()
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+		}
+
+		if len(log) >= 5 {
+			entry.ClientAddr, err = log[4].ToString()
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+		}
+
+		if len(log) >= 6 {
+			entry.ClientName, err = log[5].ToString()
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+		}
+
+		logEntries = append(logEntries, &entry)
+	}
+	cmd.SetVal(logEntries)
+}
+
+func newSlowLogCmd(res rueidis.RedisResult) *SlowLogCmd {
+	cmd := &SlowLogCmd{}
+	cmd.from(res)
+	return cmd
+}

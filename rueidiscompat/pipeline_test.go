@@ -601,6 +601,7 @@ func TestPipeliner(t *testing.T) {
 		p.JSONToggle(ctx, "1", "1")
 		p.JSONType(ctx, "1", "1")
 		p.SlaveOf(ctx, "NO", "ONE")
+		p.SlowLogGet(ctx, 1)
 		p.ClusterMyShardID(ctx)
 		p.ModuleLoadex(ctx, &ModuleLoadexConfig{
 			Path: "/",

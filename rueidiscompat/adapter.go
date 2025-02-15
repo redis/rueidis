@@ -342,7 +342,7 @@ type CoreCmdable interface {
 	ShutdownSave(ctx context.Context) *StatusCmd
 	ShutdownNoSave(ctx context.Context) *StatusCmd
 	SlaveOf(ctx context.Context, host, port string) *StatusCmd
-	// TODO SlowLogGet(ctx context.Context, num int64) *SlowLogCmd
+	SlowLogGet(ctx context.Context, num int64) *SlowLogCmd
 	Time(ctx context.Context) *TimeCmd
 	DebugObject(ctx context.Context, key string) *StringCmd
 	ReadOnly(ctx context.Context) *StatusCmd
@@ -2740,6 +2740,12 @@ func (c *Compat) SlaveOf(ctx context.Context, host, port string) *StatusCmd {
 	cmd := c.client.B().Arbitrary("SLAVEOF").Args(host, port).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStatusCmd(resp)
+}
+
+func (c *Compat) SlowLogGet(ctx context.Context, num int64) *SlowLogCmd {
+	cmd := c.client.B().SlowlogGet().Count(num).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newSlowLogCmd(resp)
 }
 
 func (c *Compat) Time(ctx context.Context) *TimeCmd {
