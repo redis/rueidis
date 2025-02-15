@@ -44,19 +44,26 @@ retry:
 	}
 	if p.down {
 		v = p.dead
-	} else if len(p.list) == 0 {
+		p.cond.L.Unlock()
+		return v
+	}
+	if len(p.list) == 0 {
 		p.size++
+		// unlock before start to make a new wire
+		// allowing others to make wires concurrently instead of waiting in line
+		p.cond.L.Unlock()
 		v = p.make()
-	} else {
-		i := len(p.list) - 1
-		v = p.list[i]
-		p.list[i] = nil
-		p.list = p.list[:i]
-		if v.Error() != nil {
-			p.size--
-			v.Close()
-			goto retry
-		}
+		return v
+	}
+
+	i := len(p.list) - 1
+	v = p.list[i]
+	p.list[i] = nil
+	p.list = p.list[:i]
+	if v.Error() != nil {
+		p.size--
+		v.Close()
+		goto retry
 	}
 	p.cond.L.Unlock()
 	return v
