@@ -1705,6 +1705,12 @@ func (c *Pipeline) SlaveOf(ctx context.Context, host, port string) *StatusCmd {
 	return ret
 }
 
+func (c *Pipeline) SlowLogGet(ctx context.Context, num int64) *SlowLogCmd {
+	ret := c.comp.SlowLogGet(ctx, num)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) Time(ctx context.Context) *TimeCmd {
 	ret := c.comp.Time(ctx)
 	c.rets = append(c.rets, ret)
