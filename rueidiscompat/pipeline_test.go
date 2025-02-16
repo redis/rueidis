@@ -1127,6 +1127,7 @@ var golden = `[
     ["JSON.TOGGLE","1","1"],
     ["JSON.TYPE","1","1"],
     ["SLAVEOF","NO","ONE"],
+    ["SLOWLOG","GET","1"],
     ["CLUSTER","MYSHARDID"],
     ["MODULE","LOADEX","/","CONFIG","k","v","ARGS","1","2"]
 ]`
