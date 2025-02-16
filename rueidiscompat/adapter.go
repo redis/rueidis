@@ -5034,8 +5034,8 @@ func (c *Compat) FTAggregateWithArgs(ctx context.Context, index string, query st
 			}
 		}
 		// [ LIMIT offset num]
-		if options.LimitOffset > 0 {
-			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Limit().OffsetNum(int64(options.Limit), int64(options.LimitOffset)))
+		if options.LimitOffset >= 0 && options.Limit > 0 {
+			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Limit().OffsetNum(int64(options.LimitOffset), int64(options.Limit)))
 		}
 		// [FILTER filter]
 		if options.Filter != "" {

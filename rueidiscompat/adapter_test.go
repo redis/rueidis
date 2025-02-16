@@ -12345,7 +12345,7 @@ func testAdapterSearchRESP2() {
 
 		})
 
-		It("should FTAggregate sort and limit", Label("search", "ftaggregate"), func() {
+		FIt("should FTAggregate sort and limit", Label("search", "ftaggregate"), func() {
 			text1 := &FieldSchema{FieldName: "t1", FieldType: SearchFieldTypeText}
 			text2 := &FieldSchema{FieldName: "t2", FieldType: SearchFieldTypeText}
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{}, text1, text2).Result()
@@ -12379,6 +12379,12 @@ func testAdapterSearchRESP2() {
 			res, err = adapter.FTAggregateWithArgs(ctx, "idx1", "*", options).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.Rows[0].Fields["t1"]).To(BeEquivalentTo("b"))
+
+			options = &FTAggregateOptions{SortBy: []FTAggregateSortBy{{FieldName: "@t1"}}, Limit: 1, LimitOffset: 0}
+			res, err = adapter.FTAggregateWithArgs(ctx, "idx1", "*", options).Result()
+			Expect(err).NotTo(HaveOccurred())
+			fmt.Println(res)
+			Expect(res.Rows[0].Fields["t1"]).To(BeEquivalentTo("a"))
 		})
 
 		It("should FTAggregate load ", Label("search", "ftaggregate"), func() {
