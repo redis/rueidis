@@ -12379,6 +12379,12 @@ func testAdapterSearchRESP2() {
 			res, err = adapter.FTAggregateWithArgs(ctx, "idx1", "*", options).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.Rows[0].Fields["t1"]).To(BeEquivalentTo("b"))
+
+			options = &FTAggregateOptions{SortBy: []FTAggregateSortBy{{FieldName: "@t1"}}, Limit: 1, LimitOffset: 0}
+			res, err = adapter.FTAggregateWithArgs(ctx, "idx1", "*", options).Result()
+			Expect(err).NotTo(HaveOccurred())
+			fmt.Println(res)
+			Expect(res.Rows[0].Fields["t1"]).To(BeEquivalentTo("a"))
 		})
 
 		It("should FTAggregate load ", Label("search", "ftaggregate"), func() {
