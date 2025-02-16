@@ -5107,3 +5107,51 @@ func newSlowLogCmd(res rueidis.RedisResult) *SlowLogCmd {
 	cmd.from(res)
 	return cmd
 }
+
+type LCSQuery struct {
+	Key1         string
+	Key2         string
+	Len          bool
+	Idx          bool
+	MinMatchLen  int
+	WithMatchLen bool
+}
+
+type LCSCmd struct {
+	baseCmd[any]
+}
+
+func newLCSCmd(res rueidis.RedisResult) *LCSCmd {
+	cmd := &LCSCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+func (cmd *LCSCmd) from(res rueidis.RedisResult) {
+	if err := res.Error(); err != nil {
+		cmd.SetErr(err)
+		return
+	}
+
+	if val, err := res.AsInt64(); err == nil {
+		cmd.SetVal(val)
+		return
+	}
+
+	if val, err := res.ToString(); err == nil {
+		cmd.SetVal(val)
+		return
+	}
+
+	if val, err := res.AsStrMap(); err == nil {
+		cmd.SetVal(val)
+		return
+	}
+
+	if val, err := res.ToArray(); err == nil {
+		cmd.SetVal(val)
+		return
+	}
+
+	cmd.SetErr(errors.New("unexpected LCS response type"))
+}

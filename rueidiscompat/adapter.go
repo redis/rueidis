@@ -180,7 +180,7 @@ type CoreCmdable interface {
 	BLMPop(ctx context.Context, timeout time.Duration, direction string, count int64, keys ...string) *KeyValuesCmd
 	BRPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd
 	BRPopLPush(ctx context.Context, source, destination string, timeout time.Duration) *StringCmd
-	// TODO LCS(ctx context.Context, q *LCSQuery) *LCSCmd
+	LCS(ctx context.Context, q *LCSQuery) *LCSCmd
 	LIndex(ctx context.Context, key string, index int64) *StringCmd
 	LInsert(ctx context.Context, key, op string, pivot, value any) *IntCmd
 	LInsertBefore(ctx context.Context, key string, pivot, value any) *IntCmd
@@ -1579,6 +1579,28 @@ func (c *Compat) BRPopLPush(ctx context.Context, source, destination string, tim
 	cmd := c.client.B().Brpoplpush().Source(source).Destination(destination).Timeout(float64(formatSec(timeout))).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringCmd(resp)
+}
+
+func (c *Compat) LCS(ctx context.Context, q *LCSQuery) *LCSCmd {
+	var cmd cmds.Completed
+	_cmd := cmds.Incomplete(c.client.B().Lcs().Key1(q.Key1).Key2(q.Key2))
+
+	if q.Len {
+		cmd = cmds.LcsKey2(_cmd).Len().Build()
+		return newLCSCmd(c.client.Do(ctx, cmd))
+	}
+
+	if q.MinMatchLen > 0 && q.WithMatchLen {
+		cmd = cmds.LcsKey2(_cmd).Idx().Minmatchlen(int64(q.MinMatchLen)).Withmatchlen().Build()
+	} else if q.MinMatchLen > 0 {
+		cmd = cmds.LcsKey2(_cmd).Idx().Minmatchlen(int64(q.MinMatchLen)).Build()
+	} else if q.WithMatchLen {
+		cmd = cmds.LcsKey2(_cmd).Idx().Withmatchlen().Build()
+	} else {
+		cmd = cmds.LcsKey2(_cmd).Idx().Build()
+	}
+
+	return newLCSCmd(c.client.Do(ctx, cmd))
 }
 
 func (c *Compat) LIndex(ctx context.Context, key string, index int64) *StringCmd {
