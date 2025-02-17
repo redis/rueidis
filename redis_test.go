@@ -865,6 +865,7 @@ func TestSingleClientIntegration(t *testing.T) {
 		InitAddress:       []string{"127.0.0.1:6379"},
 		ConnWriteTimeout:  180 * time.Second,
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 
 		DisableAutoPipelining: os.Getenv("DisableAutoPipelining") == "true",
 	})
@@ -898,6 +899,7 @@ func TestSentinelClientIntegration(t *testing.T) {
 		},
 		SelectDB:          2, // https://github.com/redis/rueidis/issues/138
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 
 		DisableAutoPipelining: os.Getenv("DisableAutoPipelining") == "true",
 	})
@@ -929,6 +931,7 @@ func TestClusterClientIntegration(t *testing.T) {
 		ShuffleInit:       true,
 		Dialer:            net.Dialer{KeepAlive: -1},
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 
 		DisableAutoPipelining: os.Getenv("DisableAutoPipelining") == "true",
 	})
@@ -956,6 +959,7 @@ func TestSingleClient5Integration(t *testing.T) {
 		ConnWriteTimeout:  180 * time.Second,
 		DisableCache:      true,
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -978,6 +982,7 @@ func TestCluster5ClientIntegration(t *testing.T) {
 		DisableCache:      true,
 		Dialer:            net.Dialer{KeepAlive: -1},
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -1000,6 +1005,7 @@ func TestSentinel5ClientIntegration(t *testing.T) {
 			MasterSet: "test5",
 		},
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -1019,6 +1025,7 @@ func TestKeyDBSingleClientIntegration(t *testing.T) {
 		InitAddress:       []string{"127.0.0.1:6344"},
 		ConnWriteTimeout:  180 * time.Second,
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -1036,8 +1043,10 @@ func TestDragonflyDBSingleClientIntegration(t *testing.T) {
 	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
-		InitAddress:      []string{"127.0.0.1:6333"},
-		ConnWriteTimeout: 180 * time.Second,
+		InitAddress:       []string{"127.0.0.1:6333"},
+		ConnWriteTimeout:  180 * time.Second,
+		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -1055,9 +1064,11 @@ func TestKvrocksSingleClientIntegration(t *testing.T) {
 	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
-		InitAddress:      []string{"127.0.0.1:6666"},
-		ConnWriteTimeout: 180 * time.Second,
-		DisableCache:     true,
+		InitAddress:       []string{"127.0.0.1:6666"},
+		ConnWriteTimeout:  180 * time.Second,
+		DisableCache:      true,
+		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 	})
 	if err != nil {
 		t.Fatal(err)
