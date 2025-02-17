@@ -5182,15 +5182,20 @@ func (cmd *LCSCmd) from(res rueidis.RedisResult) {
 		// match string
 		if lcs.MatchString, err = res.ToString(); err != nil {
 			cmd.SetErr(err)
+			return
 		}
 	case 2:
 		// match len
 		if lcs.Len, err = res.AsInt64(); err != nil {
 			cmd.SetErr(err)
+			return
 		}
 	case 3:
 		// read LCSMatch
-		if msgMap, err := res.AsMap(); err == nil {
+		if msgMap, err := res.AsMap(); err != nil {
+			cmd.SetErr(err)
+			return
+		} else {
 			// Validate length (should have exactly 2 keys: "matches" and "len")
 			if len(msgMap) != 2 {
 				cmd.SetErr(fmt.Errorf("redis: got %d elements in the map, wanted %d", len(msgMap), 2))
