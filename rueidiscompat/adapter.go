@@ -1583,24 +1583,30 @@ func (c *Compat) BRPopLPush(ctx context.Context, source, destination string, tim
 
 func (c *Compat) LCS(ctx context.Context, q *LCSQuery) *LCSCmd {
 	var cmd cmds.Completed
+	var readType uint8
+
 	_cmd := cmds.Incomplete(c.client.B().Lcs().Key1(q.Key1).Key2(q.Key2))
 
 	if q.Len {
+		readType = uint8(2)
 		cmd = cmds.LcsKey2(_cmd).Len().Build()
-		return newLCSCmd(c.client.Do(ctx, cmd))
-	}
-
-	if q.MinMatchLen > 0 && q.WithMatchLen {
-		cmd = cmds.LcsKey2(_cmd).Idx().Minmatchlen(int64(q.MinMatchLen)).Withmatchlen().Build()
-	} else if q.MinMatchLen > 0 {
-		cmd = cmds.LcsKey2(_cmd).Idx().Minmatchlen(int64(q.MinMatchLen)).Build()
-	} else if q.WithMatchLen {
-		cmd = cmds.LcsKey2(_cmd).Idx().Withmatchlen().Build()
+	} else if q.Idx {
+		readType = uint8(3)
+		if q.MinMatchLen > 0 && q.WithMatchLen {
+			cmd = cmds.LcsKey2(_cmd).Idx().Minmatchlen(int64(q.MinMatchLen)).Withmatchlen().Build()
+		} else if q.MinMatchLen > 0 {
+			cmd = cmds.LcsKey2(_cmd).Idx().Minmatchlen(int64(q.MinMatchLen)).Build()
+		} else if q.WithMatchLen {
+			cmd = cmds.LcsKey2(_cmd).Idx().Withmatchlen().Build()
+		} else {
+			cmd = cmds.LcsKey2(_cmd).Idx().Build()
+		}
 	} else {
-		cmd = cmds.LcsKey2(_cmd).Idx().Build()
+		readType = uint8(1)
+		cmd = cmds.LcsKey2(_cmd).Build()
 	}
 
-	return newLCSCmd(c.client.Do(ctx, cmd))
+	return newLCSCmd(c.client.Do(ctx, cmd), readType)
 }
 
 func (c *Compat) LIndex(ctx context.Context, key string, index int64) *StringCmd {
