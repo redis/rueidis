@@ -5180,12 +5180,12 @@ func (cmd *LCSCmd) from(res rueidis.RedisResult) {
 	switch cmd.readType {
 	case 1:
 		// match string
-		if lcs.MatchString, err = res.ToString(); err == nil {
+		if lcs.MatchString, err = res.ToString(); err != nil {
 			cmd.SetErr(err)
 		}
 	case 2:
 		// match len
-		if lcs.Len, err = res.AsInt64(); err == nil {
+		if lcs.Len, err = res.AsInt64(); err != nil {
 			cmd.SetErr(err)
 		}
 	case 3:
