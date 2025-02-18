@@ -47,12 +47,13 @@ retry:
 	} else if len(p.list) == 0 {
 		p.size++
 		v = p.make()
+		v.StopTimer()
 	} else {
 		i := len(p.list) - 1
 		v = p.list[i]
 		p.list[i] = nil
 		p.list = p.list[:i]
-		if v.Error() != nil {
+		if !v.StopTimer() || v.Error() != nil {
 			p.size--
 			v.Close()
 			goto retry
@@ -67,6 +68,7 @@ func (p *pool) Store(v wire) {
 	if !p.down && v.Error() == nil {
 		p.list = append(p.list, v)
 		p.startTimerIfNeeded()
+		v.ResetTimer()
 	} else {
 		p.size--
 		v.Close()

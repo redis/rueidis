@@ -1061,6 +1061,8 @@ type mockWire struct {
 	VersionFn       func() int
 	ErrorFn         func() error
 	CloseFn         func()
+	StopTimerFn     func() bool
+	ResetTimerFn    func() bool
 
 	CleanSubscriptionsFn func()
 	SetPubSubHooksFn     func(hooks PubSubHooks) <-chan error
@@ -1133,6 +1135,20 @@ func (m *mockWire) SetOnCloseHook(fn func(error)) {
 	if m.SetOnCloseHookFn != nil {
 		m.SetOnCloseHookFn(fn)
 	}
+}
+
+func (m *mockWire) StopTimer() bool {
+	if m.StopTimerFn != nil {
+		return m.StopTimerFn()
+	}
+	return true
+}
+
+func (m *mockWire) ResetTimer() bool {
+	if m.ResetTimerFn != nil {
+		return m.ResetTimerFn()
+	}
+	return true
 }
 
 func (m *mockWire) Info() map[string]RedisMessage {
