@@ -5107,3 +5107,194 @@ func newSlowLogCmd(res rueidis.RedisResult) *SlowLogCmd {
 	cmd.from(res)
 	return cmd
 }
+
+// LCSQuery is a parameter used for the LCS command
+type LCSQuery struct {
+	Key1         string
+	Key2         string
+	Len          bool
+	Idx          bool
+	MinMatchLen  int
+	WithMatchLen bool
+}
+
+// LCSMatch is the result set of the LCS command
+type LCSMatch struct {
+	MatchString string
+	Matches     []LCSMatchedPosition
+	Len         int64
+}
+
+type LCSMatchedPosition struct {
+	Key1 LCSPosition
+	Key2 LCSPosition
+
+	// only for withMatchLen is true
+	MatchLen int64
+}
+
+type LCSPosition struct {
+	Start int64
+	End   int64
+}
+
+type LCSCmd struct {
+	baseCmd[*LCSMatch]
+
+	// 1: match string
+	// 2: match len
+	// 3: match idx LCSMatch
+	readType uint8
+}
+
+func newLCSCmd(res rueidis.RedisResult, readType uint8) *LCSCmd {
+	cmd := &LCSCmd{readType: readType}
+	cmd.from(res)
+	return cmd
+}
+
+func (cmd *LCSCmd) SetVal(val *LCSMatch) {
+	cmd.val = val
+}
+
+func (cmd *LCSCmd) SetErr(err error) {
+	cmd.err = err
+}
+
+func (cmd *LCSCmd) Val() *LCSMatch {
+	return cmd.val
+}
+
+func (cmd *LCSCmd) Err() error {
+	return cmd.err
+}
+
+func (cmd *LCSCmd) Result() (*LCSMatch, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *LCSCmd) from(res rueidis.RedisResult) {
+	lcs := &LCSMatch{}
+	var err error
+
+	switch cmd.readType {
+	case 1:
+		// match string
+		if lcs.MatchString, err = res.ToString(); err != nil {
+			cmd.SetErr(err)
+			return
+		}
+	case 2:
+		// match len
+		if lcs.Len, err = res.AsInt64(); err != nil {
+			cmd.SetErr(err)
+			return
+		}
+	case 3:
+		// read LCSMatch
+		if msgMap, err := res.AsMap(); err != nil {
+			cmd.SetErr(err)
+			return
+		} else {
+			// Validate length (should have exactly 2 keys: "matches" and "len")
+			if len(msgMap) != 2 {
+				cmd.SetErr(fmt.Errorf("redis: got %d elements in the map, wanted %d", len(msgMap), 2))
+				return
+			}
+
+			// read matches or len field
+			for key, value := range msgMap {
+				switch key {
+				case "matches":
+					// read array of matched positions
+					matches, err := cmd.readMatchedPositions(value)
+					if err != nil {
+						cmd.SetErr(err)
+						return
+					}
+					lcs.Matches = matches
+
+				case "len":
+					// read match length
+					matchLen, err := value.AsInt64()
+					if err != nil {
+						cmd.SetErr(err)
+						return
+					}
+					lcs.Len = matchLen
+				}
+			}
+		}
+	}
+
+	cmd.val = lcs
+}
+
+func (cmd *LCSCmd) readMatchedPositions(res rueidis.RedisMessage) ([]LCSMatchedPosition, error) {
+	val, err := res.ToArray()
+	if err != nil {
+		return nil, err
+	}
+
+	n := len(val)
+	positions := make([]LCSMatchedPosition, n)
+
+	for i := 0; i < n; i++ {
+		pn, err := val[i].ToArray()
+		if err != nil {
+			return nil, err
+		}
+
+		if len(pn) < 2 {
+			return nil, fmt.Errorf("invalid position format")
+		}
+
+		key1, err := cmd.readPosition(pn[0])
+		if err != nil {
+			return nil, err
+		}
+
+		key2, err := cmd.readPosition(pn[1])
+		if err != nil {
+			return nil, err
+		}
+
+		pos := LCSMatchedPosition{
+			Key1: key1,
+			Key2: key2,
+		}
+
+		// Read match length if WithMatchLen is true
+		if len(pn) > 2 {
+			if pos.MatchLen, err = pn[2].AsInt64(); err != nil {
+				return nil, err
+			}
+		}
+
+		positions[i] = pos
+	}
+
+	return positions, nil
+}
+
+func (cmd *LCSCmd) readPosition(res rueidis.RedisMessage) (LCSPosition, error) {
+	posArray, err := res.ToArray()
+	if err != nil {
+		return LCSPosition{}, err
+	}
+	if len(posArray) != 2 {
+		return LCSPosition{}, fmt.Errorf("redis: got %d elements in the array, wanted %d", len(posArray), 2)
+	}
+
+	start, err := posArray[0].AsInt64()
+	if err != nil {
+		return LCSPosition{}, err
+	}
+
+	end, err := posArray[1].AsInt64()
+	if err != nil {
+		return LCSPosition{}, err
+	}
+
+	return LCSPosition{Start: start, End: end}, nil
+}

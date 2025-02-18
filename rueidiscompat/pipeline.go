@@ -775,6 +775,12 @@ func (c *Pipeline) BRPopLPush(ctx context.Context, source, destination string, t
 	return ret
 }
 
+func (c *Pipeline) LCS(ctx context.Context, q *LCSQuery) *LCSCmd {
+	ret := c.comp.LCS(ctx, q)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) LIndex(ctx context.Context, key string, index int64) *StringCmd {
 	ret := c.comp.LIndex(ctx, key, index)
 	c.rets = append(c.rets, ret)
