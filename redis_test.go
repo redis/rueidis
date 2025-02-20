@@ -182,7 +182,7 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 	for i := 0; i < keys*100 && !t.Failed(); i++ {
 		key := prefix + strconv.Itoa(rand.Intn(keys))
 		jobs <- func() {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)
 			defer cancel()
 			val, err := client.Do(ctx, client.B().Get().Key(key).Build()).ToString()
 			if !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, os.ErrDeadlineExceeded) {
@@ -347,7 +347,7 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 			commands = append(commands, client.B().Get().Key(cmdkeys[len(cmdkeys)-1]).Build())
 		}
 		jobs <- func() {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)
 			defer cancel()
 			for j, resp := range client.DoMulti(ctx, commands...) {
 				val, err := resp.ToString()
