@@ -177,7 +177,27 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 		return
 	}
 
-	t.Logf("testing GET with %d keys and %d parallelism with timeout\n", keys*100, para)
+	t.Logf("testing GET with %d keys and %d parallelism with 1ms timeout\n", keys*2, para)
+	jobs, wait = parallel(para)
+	for i := 0; i < keys*2 && !t.Failed(); i++ {
+		key := prefix + strconv.Itoa(rand.Intn(keys))
+		jobs <- func() {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
+			defer cancel()
+			val, err := client.Do(ctx, client.B().Get().Key(key).Build()).ToString()
+			if !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, os.ErrDeadlineExceeded) {
+				if v, ok := kvs[key]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
+					t.Errorf("unexpected get response %v %v %v", val, err, ok)
+				}
+			}
+		}
+	}
+	wait()
+	if t.Failed() {
+		return
+	}
+
+	t.Logf("testing GET with %d keys and %d parallelism with 10ms timeout\n", keys*100, para)
 	jobs, wait = parallel(para)
 	for i := 0; i < keys*100 && !t.Failed(); i++ {
 		key := prefix + strconv.Itoa(rand.Intn(keys))
@@ -337,7 +357,34 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 		return
 	}
 
-	t.Logf("testing GET with %d keys and %d parallelism with timeout\n", keys*100, para)
+	t.Logf("testing GET with %d keys and %d parallelism with 1ms timeout\n", keys*2, para)
+	jobs, wait = parallel(para)
+	for i := 0; i < keys*2 && !t.Failed(); i += batch {
+		cmdkeys := make([]string, 0, batch)
+		commands := make(Commands, 0, batch)
+		for j := 0; j < batch; j++ {
+			cmdkeys = append(cmdkeys, "m"+strconv.Itoa(rand.Intn(keys)))
+			commands = append(commands, client.B().Get().Key(cmdkeys[len(cmdkeys)-1]).Build())
+		}
+		jobs <- func() {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
+			defer cancel()
+			for j, resp := range client.DoMulti(ctx, commands...) {
+				val, err := resp.ToString()
+				if !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, os.ErrDeadlineExceeded) {
+					if v, ok := kvs[cmdkeys[j]]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
+						t.Fatalf("unexpected get response %v %v %v", val, err, ok)
+					}
+				}
+			}
+		}
+	}
+	wait()
+	if t.Failed() {
+		return
+	}
+
+	t.Logf("testing GET with %d keys and %d parallelism with 10ms timeout\n", keys*100, para)
 	jobs, wait = parallel(para)
 	for i := 0; i < keys*100 && !t.Failed(); i += batch {
 		cmdkeys := make([]string, 0, batch)
