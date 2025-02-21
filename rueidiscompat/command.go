@@ -5317,7 +5317,7 @@ func newFunctionStatsCmd(res rueidis.RedisResult) *FunctionStatsCmd {
 }
 
 func (cmd *FunctionStatsCmd) from(res rueidis.RedisResult) {
-	fstats := new(FunctionStats)
+	var fstats FunctionStats
 	mp, err := res.AsMap()
 	if err != nil {
 		cmd.SetErr(err)
@@ -5326,14 +5326,27 @@ func (cmd *FunctionStatsCmd) from(res rueidis.RedisResult) {
 	for key, val := range mp {
 		switch key {
 		case "running_script":
-			cmd.parseRunningScript(fstats, val)
+			fstats.Rs, fstats.IsRunning, err = cmd.parseRunningScript(val)
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
 		case "engines":
-			cmd.parseEngines(fstats, val)
+			fstats.Engines, err = cmd.parseEngines(val)
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
 		case "all_running_scripts":
-			cmd.parseRunningScripts(fstats, val)
+			fstats.Allrs, err = cmd.parseRunningScripts(val)
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
 		}
+
 	}
-	cmd.SetVal(*fstats)
+	cmd.SetVal(fstats)
 }
 
 type RunningScript struct {
@@ -5342,18 +5355,17 @@ type RunningScript struct {
 	Duration time.Duration
 }
 
-func (cmd *FunctionStatsCmd) parseRunningScript(fstats *FunctionStats, msg rueidis.RedisMessage) {
+func (cmd *FunctionStatsCmd) parseRunningScript(msg rueidis.RedisMessage) (RunningScript, bool, error) {
 	rsMap, err := msg.AsMap()
 	if err != nil {
 		if rueidis.IsRedisNil(err) {
-			return
+			return RunningScript{}, false, nil
 		}
-		cmd.SetErr(err)
-		return
+		return RunningScript{}, false, err
 	}
 
 	if len(rsMap) == 0 {
-		return
+		return RunningScript{}, false, nil
 	}
 
 	val := RunningScript{}
@@ -5364,20 +5376,17 @@ func (cmd *FunctionStatsCmd) parseRunningScript(fstats *FunctionStats, msg rueid
 		case "command":
 			val.Command, err = attr.AsStrSlice()
 		case "duration_ms":
-			ms, err := attr.ToInt64()
+			ms, err := attr.AsInt64()
 			if err != nil {
-				cmd.SetErr(err)
-				return
+				return RunningScript{}, false, err
 			}
 			val.Duration = time.Duration(ms) * time.Millisecond
 		}
 		if err != nil {
-			cmd.SetErr(err)
-			return
+			return RunningScript{}, false, err
 		}
 	}
-	fstats.Rs = val
-	fstats.IsRunning = true
+	return val, true, nil
 }
 
 type Engine struct {
@@ -5386,15 +5395,14 @@ type Engine struct {
 	FunctionsCount int64
 }
 
-func (cmd *FunctionStatsCmd) parseEngines(fstats *FunctionStats, msg rueidis.RedisMessage) {
+func (cmd *FunctionStatsCmd) parseEngines(msg rueidis.RedisMessage) ([]Engine, error) {
 
 	engineMap, err := msg.AsMap()
 	if err != nil {
 		if rueidis.IsRedisNil(err) {
-			return
+			return []Engine{}, nil
 		}
-		cmd.SetErr(err)
-		return
+		return []Engine{}, err
 	}
 	vals := make([]Engine, 0, len(engineMap))
 	for key, attr := range engineMap {
@@ -5402,34 +5410,31 @@ func (cmd *FunctionStatsCmd) parseEngines(fstats *FunctionStats, msg rueidis.Red
 		engine.Language = key
 		emap, err := attr.AsMap()
 		if err != nil {
-			cmd.SetErr(err)
-			return
+			return []Engine{}, err
 		}
 		for k, v := range emap {
 			switch k {
 			case "libraries_count":
-				engine.LibrariesCount, err = v.ToInt64()
+				engine.LibrariesCount, err = v.AsInt64()
 			case "functions_count":
-				engine.FunctionsCount, err = v.ToInt64()
+				engine.FunctionsCount, err = v.AsInt64()
 			}
 			if err != nil {
-				cmd.SetErr(err)
-				return
+				return []Engine{}, err
 			}
 		}
 		vals = append(vals, engine)
 	}
-	fstats.Engines = vals
+	return vals, nil
 }
 
-func (cmd *FunctionStatsCmd) parseRunningScripts(fstats *FunctionStats, msg rueidis.RedisMessage) {
+func (cmd *FunctionStatsCmd) parseRunningScripts(msg rueidis.RedisMessage) ([]RunningScript, error) {
 	rScriptMap, err := msg.AsMap()
 	if err != nil {
 		if rueidis.IsRedisNil(err) {
-			return
+			return []RunningScript{}, nil
 		}
-		cmd.SetErr(err)
-		return
+		return []RunningScript{}, err
 	}
 	vals := make([]RunningScript, 0, len(rScriptMap))
 	for _, attr := range rScriptMap {
@@ -5440,22 +5445,20 @@ func (cmd *FunctionStatsCmd) parseRunningScripts(fstats *FunctionStats, msg ruei
 			case "name":
 				val.Name, err = v.ToString()
 			case "duration_ms":
-				ms, err := v.ToInt64()
+				ms, err := v.AsInt64()
 				if err != nil {
-					cmd.SetErr(err)
-					return
+					return []RunningScript{}, err
 				}
 				val.Duration = time.Duration(ms) * time.Millisecond
 			case "command":
 				val.Command, err = v.AsStrSlice()
 			}
 			if err != nil {
-				cmd.SetErr(err)
-				return
+				return []RunningScript{}, err
 			}
 		}
 		vals = append(vals, val)
 
 	}
-	fstats.Allrs = vals
+	return vals, err
 }
