@@ -204,7 +204,11 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 		jobs <- func() {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)
 			defer cancel()
-			val, err := client.Do(ctx, client.B().Get().Key(key).Build()).ToString()
+			cmd := client.B().Get().Key(key).Build()
+			if i%10 == 0 {
+				cmd = cmd.ToPipe()
+			}
+			val, err := client.Do(ctx, cmd).ToString()
 			if !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, os.ErrDeadlineExceeded) {
 				if v, ok := kvs[key]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
 					t.Errorf("unexpected get response %v %v %v", val, err, ok)
@@ -392,6 +396,9 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 		for j := 0; j < batch; j++ {
 			cmdkeys = append(cmdkeys, "m"+strconv.Itoa(rand.Intn(keys)))
 			commands = append(commands, client.B().Get().Key(cmdkeys[len(cmdkeys)-1]).Build())
+		}
+		if i%10 == 0 {
+			commands[0].ToPipe()
 		}
 		jobs <- func() {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)
