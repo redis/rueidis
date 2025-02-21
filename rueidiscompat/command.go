@@ -5298,3 +5298,164 @@ func (cmd *LCSCmd) readPosition(res rueidis.RedisMessage) (LCSPosition, error) {
 
 	return LCSPosition{Start: start, End: end}, nil
 }
+
+type FunctionStats struct {
+	Engines   []Engine
+	IsRunning bool
+	Rs        RunningScript
+	Allrs     []RunningScript
+}
+
+type FunctionStatsCmd struct {
+	baseCmd[FunctionStats]
+}
+
+func newFunctionStatsCmd(res rueidis.RedisResult) *FunctionStatsCmd {
+	cmd := &FunctionStatsCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+func (cmd *FunctionStatsCmd) from(res rueidis.RedisResult) {
+	fstats := new(FunctionStats)
+	mp, err := res.AsMap()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	for key, val := range mp {
+		switch key {
+		case "running_script":
+			cmd.parseRunningScript(fstats, val)
+		case "engines":
+			cmd.parseEngines(fstats, val)
+		case "all_running_scripts":
+			cmd.parseRunningScripts(fstats, val)
+		}
+	}
+	cmd.SetVal(*fstats)
+}
+
+type RunningScript struct {
+	Name     string
+	Command  []string
+	Duration time.Duration
+}
+
+func (cmd *FunctionStatsCmd) parseRunningScript(fstats *FunctionStats, msg rueidis.RedisMessage) {
+	rsMap, err := msg.AsMap()
+	if err != nil {
+		if rueidis.IsRedisNil(err) {
+			return
+		}
+		cmd.SetErr(err)
+		return
+	}
+
+	if len(rsMap) == 0 {
+		return
+	}
+
+	val := RunningScript{}
+	for key, attr := range rsMap {
+		switch key {
+		case "name":
+			val.Name, err = attr.ToString()
+		case "command":
+			val.Command, err = attr.AsStrSlice()
+		case "duration_ms":
+			ms, err := attr.ToInt64()
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+			val.Duration = time.Duration(ms) * time.Millisecond
+		}
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+	}
+	fstats.Rs = val
+	fstats.IsRunning = true
+}
+
+type Engine struct {
+	Language       string
+	LibrariesCount int64
+	FunctionsCount int64
+}
+
+func (cmd *FunctionStatsCmd) parseEngines(fstats *FunctionStats, msg rueidis.RedisMessage) {
+
+	engineMap, err := msg.AsMap()
+	if err != nil {
+		if rueidis.IsRedisNil(err) {
+			return
+		}
+		cmd.SetErr(err)
+		return
+	}
+	vals := make([]Engine, 0, len(engineMap))
+	for key, attr := range engineMap {
+		engine := Engine{}
+		engine.Language = key
+		emap, err := attr.AsMap()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		for k, v := range emap {
+			switch k {
+			case "libraries_count":
+				engine.LibrariesCount, err = v.ToInt64()
+			case "functions_count":
+				engine.FunctionsCount, err = v.ToInt64()
+			}
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+		}
+		vals = append(vals, engine)
+	}
+	fstats.Engines = vals
+}
+
+func (cmd *FunctionStatsCmd) parseRunningScripts(fstats *FunctionStats, msg rueidis.RedisMessage) {
+	rScriptMap, err := msg.AsMap()
+	if err != nil {
+		if rueidis.IsRedisNil(err) {
+			return
+		}
+		cmd.SetErr(err)
+		return
+	}
+	vals := make([]RunningScript, 0, len(rScriptMap))
+	for _, attr := range rScriptMap {
+		var val RunningScript
+		attrMap, err := attr.AsMap()
+		for k, v := range attrMap {
+			switch k {
+			case "name":
+				val.Name, err = v.ToString()
+			case "duration_ms":
+				ms, err := v.ToInt64()
+				if err != nil {
+					cmd.SetErr(err)
+					return
+				}
+				val.Duration = time.Duration(ms) * time.Millisecond
+			case "command":
+				val.Command, err = v.AsStrSlice()
+			}
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+		}
+		vals = append(vals, val)
+
+	}
+	fstats.Allrs = vals
+}

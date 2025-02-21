@@ -367,7 +367,7 @@ type CoreCmdable interface {
 	FunctionList(ctx context.Context, q FunctionListQuery) *FunctionListCmd
 	FunctionDump(ctx context.Context) *StringCmd
 	FunctionRestore(ctx context.Context, libDump string) *StringCmd
-	// TODO FunctionStats(ctx context.Context) *FunctionStatsCmd
+	FunctionStats(ctx context.Context) *FunctionStatsCmd
 	FCall(ctx context.Context, function string, keys []string, args ...any) *Cmd
 	FCallRO(ctx context.Context, function string, keys []string, args ...any) *Cmd
 
@@ -3239,6 +3239,12 @@ func (c *Compat) GeoHash(ctx context.Context, key string, members ...string) *St
 	cmd := c.client.B().Geohash().Key(key).Member(members...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) FunctionStats(ctx context.Context) *FunctionStatsCmd {
+	cmd := c.client.B().FunctionStats().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newFunctionStatsCmd(resp)
 }
 
 func (c *Compat) ACLDryRun(ctx context.Context, username string, command ...any) *StringCmd {
