@@ -2101,6 +2101,12 @@ func (c *Pipeline) GeoHash(ctx context.Context, key string, members ...string) *
 	return ret
 }
 
+func (c *Pipeline) FunctionStats(ctx context.Context) *FunctionStatsCmd {
+	ret := c.comp.FunctionStats(ctx)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) ACLDryRun(ctx context.Context, username string, command ...any) *StringCmd {
 	ret := c.comp.ACLDryRun(ctx, username, command...)
 	c.rets = append(c.rets, ret)
