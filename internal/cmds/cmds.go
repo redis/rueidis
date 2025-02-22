@@ -6,7 +6,7 @@ const (
 	optInTag = uint16(1 << 15)
 	blockTag = uint16(1 << 14)
 	readonly = uint16(1 << 13)
-	noRetTag = uint16(1<<12) | readonly // make noRetTag can also be retried
+	noRetTag = uint16(1<<12) | readonly | pipeTag // make noRetTag can also be retried and auto pipelining
 	mtGetTag = uint16(1<<11) | readonly // make mtGetTag can also be retried
 	scrRoTag = uint16(1<<10) | readonly // make scrRoTag can also be retried
 	unsubTag = uint16(1<<9) | noRetTag
@@ -152,7 +152,7 @@ func (c *Completed) IsWrite() bool {
 
 // IsPipe checks if it is set pipeTag which prefers auto pipelining
 func (c *Completed) IsPipe() bool {
-	return c.NoReply() || c.cf&pipeTag == pipeTag
+	return c.cf&pipeTag == pipeTag
 }
 
 // Commands returns the commands as []string.
