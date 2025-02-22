@@ -122,6 +122,25 @@ for _, resp := range client.DoMulti(ctx, cmds...) {
 }
 ```
 
+### Assign Commands to Auto Pipelining
+You can also assign commands to auto pipelining with `ToPipe()`
+
+For single command
+``` golang
+cmd := client.B().Get().Key("key").Build().ToPipe()
+client.Do(ctx, cmd)
+```
+
+For multiple commands
+``` golang
+cmds := make(rueidis.Commands, 0, 10)
+for i := 0; i < 10; i++ {
+    cmds = append(cmds, client.B().Set().Key("key").Value("value").Build())
+}
+cmds[0] = cmds[0].ToPipe() // All cmds will go to auto pipelining
+client.DoMulti(ctx, cmds...)
+```
+
 ## [Server-Assisted Client-Side Caching](https://redis.io/docs/manual/client-side-caching/)
 
 The opt-in mode of [server-assisted client-side caching](https://redis.io/docs/manual/client-side-caching/) is enabled by default and can be used by calling `DoCache()` or `DoMultiCache()` with client-side TTLs specified.
