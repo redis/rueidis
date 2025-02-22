@@ -102,9 +102,18 @@ A benchmark result performed on two GCP n2-highcpu-2 machines also shows that ru
 
 ### Disable Auto Pipelining
 
-While auto pipelining maximizes throughput, it relys on additional goroutines to process requests and responses and may add some latencies due to goroutine scheduling and head of line blocking.
+While auto pipelining maximizes throughput, it relies on additional goroutines to process requests and responses and may add some latencies due to goroutine scheduling and head of line blocking.
 
 You can avoid this by setting `DisableAutoPipelining` to true, then it will switch to connection pooling approach and serve each request with dedicated connection on the same goroutine.
+
+When `DisableAutoPipelining` is set to true, you can still send commands for auto pipelining with `ToPipe()`:
+
+``` golang
+cmd := client.B().Get().Key("key").Build().ToPipe()
+client.Do(ctx, cmd)
+```
+
+This allows you to use connection pooling approach by default but opt in auto pipelining for a subset of requests.
 
 ### Manual Pipelining
 
@@ -120,25 +129,6 @@ for _, resp := range client.DoMulti(ctx, cmds...) {
         panic(err)
     }
 }
-```
-
-### Assign Commands to Auto Pipelining
-You can also assign commands to auto pipelining with `ToPipe()`
-
-For single command
-``` golang
-cmd := client.B().Get().Key("key").Build().ToPipe()
-client.Do(ctx, cmd)
-```
-
-For multiple commands
-``` golang
-cmds := make(rueidis.Commands, 0, 10)
-for i := 0; i < 10; i++ {
-    cmds = append(cmds, client.B().Set().Key("key").Value("value").Build())
-}
-cmds[0] = cmds[0].ToPipe() // All cmds will go to auto pipelining
-client.DoMulti(ctx, cmds...)
 ```
 
 ## [Server-Assisted Client-Side Caching](https://redis.io/docs/manual/client-side-caching/)
