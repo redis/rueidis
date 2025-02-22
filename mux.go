@@ -210,7 +210,7 @@ func (m *mux) DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisR
 }
 
 func (m *mux) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
-	if m.usePool && !cmd.NoReply() && !cmd.IsPipe() {
+	if m.usePool && !cmd.IsPipe() {
 		resp = m.blocking(m.spool, ctx, cmd)
 	} else if cmd.IsBlock() {
 		resp = m.blocking(m.dpool, ctx, cmd)
@@ -222,7 +222,7 @@ func (m *mux) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 
 func (m *mux) DoMulti(ctx context.Context, multi ...Completed) (resp *redisresults) {
 	for _, cmd := range multi {
-		if cmd.NoReply() || cmd.IsPipe() {
+		if cmd.IsPipe() {
 			return m.pipelineMulti(ctx, multi)
 		}
 		if cmd.IsBlock() {

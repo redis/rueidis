@@ -398,7 +398,7 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 			commands = append(commands, client.B().Get().Key(cmdkeys[len(cmdkeys)-1]).Build())
 		}
 		if i%10 == 0 {
-			commands[0].ToPipe()
+			commands[0] = commands[0].ToPipe()
 		}
 		jobs <- func() {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)

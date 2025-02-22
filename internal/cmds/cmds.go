@@ -10,7 +10,7 @@ const (
 	mtGetTag = uint16(1<<11) | readonly // make mtGetTag can also be retried
 	scrRoTag = uint16(1<<10) | readonly // make scrRoTag can also be retried
 	unsubTag = uint16(1<<9) | noRetTag
-	pipeTag  = uint16(1 << 8) // make blocking mode request can use auto pipelining
+	pipeTag  = uint16(1<<8) // make blocking mode request can use auto pipelining
 	// InitSlot indicates that the command be sent to any redis node in cluster
 	InitSlot = uint16(1 << 14)
 	// NoSlot indicates that the command has no key slot specified
@@ -109,7 +109,7 @@ func (c Completed) Pin() Completed {
 	return c
 }
 
-// ToPipe marks the command with pipeTag
+// ToPipe returns a new command with pipeTag
 func (c Completed) ToPipe() Completed {
 	c.cf |= pipeTag
 	return c
@@ -152,7 +152,7 @@ func (c *Completed) IsWrite() bool {
 
 // IsPipe checks if it is set pipeTag which prefers auto pipelining
 func (c *Completed) IsPipe() bool {
-	return c.cf&pipeTag == pipeTag
+	return c.NoReply() || c.cf&pipeTag == pipeTag
 }
 
 // Commands returns the commands as []string.
