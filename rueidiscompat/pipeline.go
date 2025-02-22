@@ -1717,6 +1717,12 @@ func (c *Pipeline) SlowLogGet(ctx context.Context, num int64) *SlowLogCmd {
 	return ret
 }
 
+func (c *Pipeline) SlowLogReset(ctx context.Context) *StatusCmd {
+	ret := c.comp.SlowLogReset(ctx)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) Time(ctx context.Context) *TimeCmd {
 	ret := c.comp.Time(ctx)
 	c.rets = append(c.rets, ret)

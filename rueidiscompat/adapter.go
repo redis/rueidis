@@ -343,6 +343,7 @@ type CoreCmdable interface {
 	ShutdownNoSave(ctx context.Context) *StatusCmd
 	SlaveOf(ctx context.Context, host, port string) *StatusCmd
 	SlowLogGet(ctx context.Context, num int64) *SlowLogCmd
+	SlowLogReset(ctx context.Context) *StatusCmd
 	Time(ctx context.Context) *TimeCmd
 	DebugObject(ctx context.Context, key string) *StringCmd
 	ReadOnly(ctx context.Context) *StatusCmd
@@ -2776,6 +2777,12 @@ func (c *Compat) SlowLogGet(ctx context.Context, num int64) *SlowLogCmd {
 	return newSlowLogCmd(resp)
 }
 
+func (c *Compat) SlowLogReset(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().SlowlogReset().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
 func (c *Compat) Time(ctx context.Context) *TimeCmd {
 	cmd := c.client.B().Time().Build()
 	resp := c.client.Do(ctx, cmd)
@@ -2899,9 +2906,7 @@ func (c *Compat) FunctionFlush(ctx context.Context) *StringCmd {
 }
 
 func (c *Compat) FunctionKill(ctx context.Context) *StringCmd {
-	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
-		return c.B().FunctionKill().Build()
-	})
+	return newStringCmd(c.client.Do(ctx, c.client.B().FunctionKill().Build()))
 }
 
 func (c *Compat) FunctionFlushAsync(ctx context.Context) *StringCmd {

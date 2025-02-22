@@ -5301,9 +5301,21 @@ func (cmd *LCSCmd) readPosition(res rueidis.RedisMessage) (LCSPosition, error) {
 
 type FunctionStats struct {
 	Engines   []Engine
-	IsRunning bool
-	Rs        RunningScript
-	Allrs     []RunningScript
+	isRunning bool
+	rs        RunningScript
+	allrs     []RunningScript
+}
+
+func (fs *FunctionStats) Running() bool {
+	return fs.isRunning
+}
+
+func (fs *FunctionStats) RunningScript() (RunningScript, bool) {
+	return fs.rs, fs.isRunning
+}
+
+func (fs *FunctionStats) AllRunningScripts() []RunningScript {
+	return fs.allrs
 }
 
 type FunctionStatsCmd struct {
@@ -5326,7 +5338,7 @@ func (cmd *FunctionStatsCmd) from(res rueidis.RedisResult) {
 	for key, val := range mp {
 		switch key {
 		case "running_script":
-			fstats.Rs, fstats.IsRunning, err = cmd.parseRunningScript(val)
+			fstats.rs, fstats.isRunning, err = cmd.parseRunningScript(val)
 			if err != nil {
 				cmd.SetErr(err)
 				return
@@ -5338,7 +5350,7 @@ func (cmd *FunctionStatsCmd) from(res rueidis.RedisResult) {
 				return
 			}
 		case "all_running_scripts":
-			fstats.Allrs, err = cmd.parseRunningScripts(val)
+			fstats.allrs, err = cmd.parseRunningScripts(val)
 			if err != nil {
 				cmd.SetErr(err)
 				return
