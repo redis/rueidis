@@ -180,7 +180,7 @@ type CoreCmdable interface {
 	BLMPop(ctx context.Context, timeout time.Duration, direction string, count int64, keys ...string) *KeyValuesCmd
 	BRPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd
 	BRPopLPush(ctx context.Context, source, destination string, timeout time.Duration) *StringCmd
-	// TODO LCS(ctx context.Context, q *LCSQuery) *LCSCmd
+	LCS(ctx context.Context, q *LCSQuery) *LCSCmd
 	LIndex(ctx context.Context, key string, index int64) *StringCmd
 	LInsert(ctx context.Context, key, op string, pivot, value any) *IntCmd
 	LInsertBefore(ctx context.Context, key string, pivot, value any) *IntCmd
@@ -342,7 +342,8 @@ type CoreCmdable interface {
 	ShutdownSave(ctx context.Context) *StatusCmd
 	ShutdownNoSave(ctx context.Context) *StatusCmd
 	SlaveOf(ctx context.Context, host, port string) *StatusCmd
-	// TODO SlowLogGet(ctx context.Context, num int64) *SlowLogCmd
+	SlowLogGet(ctx context.Context, num int64) *SlowLogCmd
+	SlowLogReset(ctx context.Context) *StatusCmd
 	Time(ctx context.Context) *TimeCmd
 	DebugObject(ctx context.Context, key string) *StringCmd
 	ReadOnly(ctx context.Context) *StatusCmd
@@ -367,7 +368,7 @@ type CoreCmdable interface {
 	FunctionList(ctx context.Context, q FunctionListQuery) *FunctionListCmd
 	FunctionDump(ctx context.Context) *StringCmd
 	FunctionRestore(ctx context.Context, libDump string) *StringCmd
-	// TODO FunctionStats(ctx context.Context) *FunctionStatsCmd
+	FunctionStats(ctx context.Context) *FunctionStatsCmd
 	FCall(ctx context.Context, function string, keys []string, args ...any) *Cmd
 	FCallRO(ctx context.Context, function string, keys []string, args ...any) *Cmd
 
@@ -382,7 +383,7 @@ type CoreCmdable interface {
 	ClusterMyShardID(ctx context.Context) *StringCmd
 	ClusterSlots(ctx context.Context) *ClusterSlotsCmd
 	ClusterShards(ctx context.Context) *ClusterShardsCmd
-	// TODO ClusterLinks(ctx context.Context) *ClusterLinksCmd
+	ClusterLinks(ctx context.Context) *ClusterLinksCmd
 	ClusterNodes(ctx context.Context) *StringCmd
 	ClusterMeet(ctx context.Context, host string, port int64) *StatusCmd
 	ClusterForget(ctx context.Context, nodeID string) *StatusCmd
@@ -415,8 +416,13 @@ type CoreCmdable interface {
 	GeoHash(ctx context.Context, key string, members ...string) *StringSliceCmd
 
 	ACLDryRun(ctx context.Context, username string, command ...any) *StringCmd
-	// TODO ACLLog(ctx context.Context, count int64) *ACLLogCmd
-	// TODO ACLLogReset(ctx context.Context) *StatusCmd
+	ACLLog(ctx context.Context, count int64) *ACLLogCmd
+	ACLSetUser(ctx context.Context, username string, rules ...string) *StatusCmd
+	ACLDelUser(ctx context.Context, username string) *IntCmd
+	ACLLogReset(ctx context.Context) *StatusCmd
+	ACLList(ctx context.Context) *StringSliceCmd
+	ACLCat(ctx context.Context) *StringSliceCmd
+	ACLCatArgs(ctx context.Context, options *ACLCatArgs) *StringSliceCmd
 
 	ModuleLoadex(ctx context.Context, conf *ModuleLoadexConfig) *StringCmd
 	GearsCmdable
@@ -1574,6 +1580,34 @@ func (c *Compat) BRPopLPush(ctx context.Context, source, destination string, tim
 	cmd := c.client.B().Brpoplpush().Source(source).Destination(destination).Timeout(float64(formatSec(timeout))).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringCmd(resp)
+}
+
+func (c *Compat) LCS(ctx context.Context, q *LCSQuery) *LCSCmd {
+	var cmd cmds.Completed
+	var readType uint8
+
+	_cmd := cmds.Incomplete(c.client.B().Lcs().Key1(q.Key1).Key2(q.Key2))
+
+	if q.Len {
+		readType = uint8(2)
+		cmd = cmds.LcsKey2(_cmd).Len().Build()
+	} else if q.Idx {
+		readType = uint8(3)
+		if q.MinMatchLen > 0 && q.WithMatchLen {
+			cmd = cmds.LcsKey2(_cmd).Idx().Minmatchlen(int64(q.MinMatchLen)).Withmatchlen().Build()
+		} else if q.MinMatchLen > 0 {
+			cmd = cmds.LcsKey2(_cmd).Idx().Minmatchlen(int64(q.MinMatchLen)).Build()
+		} else if q.WithMatchLen {
+			cmd = cmds.LcsKey2(_cmd).Idx().Withmatchlen().Build()
+		} else {
+			cmd = cmds.LcsKey2(_cmd).Idx().Build()
+		}
+	} else {
+		readType = uint8(1)
+		cmd = cmds.LcsKey2(_cmd).Build()
+	}
+
+	return newLCSCmd(c.client.Do(ctx, cmd), readType)
 }
 
 func (c *Compat) LIndex(ctx context.Context, key string, index int64) *StringCmd {
@@ -2737,6 +2771,18 @@ func (c *Compat) SlaveOf(ctx context.Context, host, port string) *StatusCmd {
 	return newStatusCmd(resp)
 }
 
+func (c *Compat) SlowLogGet(ctx context.Context, num int64) *SlowLogCmd {
+	cmd := c.client.B().SlowlogGet().Count(num).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newSlowLogCmd(resp)
+}
+
+func (c *Compat) SlowLogReset(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().SlowlogReset().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
 func (c *Compat) Time(ctx context.Context) *TimeCmd {
 	cmd := c.client.B().Time().Build()
 	resp := c.client.Do(ctx, cmd)
@@ -2860,9 +2906,7 @@ func (c *Compat) FunctionFlush(ctx context.Context) *StringCmd {
 }
 
 func (c *Compat) FunctionKill(ctx context.Context) *StringCmd {
-	return c.doStringCmdPrimaries(ctx, func(c rueidis.Client) rueidis.Completed {
-		return c.B().FunctionKill().Build()
-	})
+	return newStringCmd(c.client.Do(ctx, c.client.B().FunctionKill().Build()))
 }
 
 func (c *Compat) FunctionFlushAsync(ctx context.Context) *StringCmd {
@@ -2966,6 +3010,12 @@ func (c *Compat) ClusterNodes(ctx context.Context) *StringCmd {
 	cmd := c.client.B().ClusterNodes().Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringCmd(resp)
+}
+
+func (c *Compat) ClusterLinks(ctx context.Context) *ClusterLinksCmd {
+	cmd := c.client.B().ClusterLinks().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newClusterLinksCmd(resp)
 }
 
 func (c *Compat) ClusterMeet(ctx context.Context, host string, port int64) *StatusCmd {
@@ -3196,10 +3246,66 @@ func (c *Compat) GeoHash(ctx context.Context, key string, members ...string) *St
 	return newStringSliceCmd(resp)
 }
 
+func (c *Compat) FunctionStats(ctx context.Context) *FunctionStatsCmd {
+	cmd := c.client.B().FunctionStats().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newFunctionStatsCmd(resp)
+}
+
 func (c *Compat) ACLDryRun(ctx context.Context, username string, command ...any) *StringCmd {
 	cmd := c.client.B().AclDryrun().Username(username).Command(command[0].(string)).Arg(argsToSlice(command[1:])...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringCmd(resp)
+}
+
+type ACLCatArgs struct {
+	Category string
+}
+
+func (c *Compat) ACLCatArgs(ctx context.Context, options *ACLCatArgs) *StringSliceCmd {
+	// if there is a category passed, build new cmd, if there isn't - use the ACLCat method
+	if options != nil && options.Category != "" {
+		cmd := c.client.B().AclCat().Categoryname(options.Category).Build()
+		resp := c.client.Do(ctx, cmd)
+		return newStringSliceCmd(resp)
+	}
+	return c.ACLCat(ctx)
+}
+
+func (c *Compat) ACLLog(ctx context.Context, count int64) *ACLLogCmd {
+	cmd := c.client.B().AclLog().Count(count).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newACLLogCmd(resp)
+}
+
+func (c *Compat) ACLSetUser(ctx context.Context, username string, rules ...string) *StatusCmd {
+	cmd := c.client.B().AclSetuser().Username(username).Rule(rules...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) ACLLogReset(ctx context.Context) *StatusCmd {
+	cmd := c.client.B().AclLog().Reset().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) ACLCat(ctx context.Context) *StringSliceCmd {
+	cmd := c.client.B().AclCat().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) ACLList(ctx context.Context) *StringSliceCmd {
+	cmd := c.client.B().AclList().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) ACLDelUser(ctx context.Context, username string) *IntCmd {
+	cmd := c.client.B().AclDeluser().Username(username).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
 }
 
 func (c *Compat) doPrimaries(ctx context.Context, fn func(c rueidis.Client) error) error {
@@ -4973,8 +5079,8 @@ func (c *Compat) FTAggregateWithArgs(ctx context.Context, index string, query st
 			}
 		}
 		// [ LIMIT offset num]
-		if options.LimitOffset > 0 {
-			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Limit().OffsetNum(int64(options.Limit), int64(options.LimitOffset)))
+		if options.LimitOffset >= 0 && options.Limit > 0 {
+			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Limit().OffsetNum(int64(options.LimitOffset), int64(options.Limit)))
 		}
 		// [FILTER filter]
 		if options.Filter != "" {
@@ -5586,7 +5692,7 @@ func (c *Compat) FTSearchWithArgs(ctx context.Context, index string, query strin
 		}
 		// [LIMIT offset num]
 		if options.LimitOffset >= 0 && options.Limit > 0 {
-			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Limit().OffsetNum(int64(options.Limit), int64(options.LimitOffset)))
+			_cmd = cmds.Incomplete(cmds.FtSearchQuery(_cmd).Limit().OffsetNum(int64(options.LimitOffset), int64(options.Limit)))
 		}
 		// [PARAMS nargs name value [ name value ...]]
 		if options.Params != nil {

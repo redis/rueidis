@@ -233,6 +233,9 @@ func TestMuxReuseWire(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
 				// leave first wire for pipeline calls
+				DoFn: func(cmd Completed) RedisResult {
+					return newResult(RedisMessage{typ: '+', string: "PIPELINED"}, nil)
+				},
 			},
 			{
 				DoFn: func(cmd Completed) RedisResult {
@@ -274,6 +277,13 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("unexpected response %v", val)
 		}
 
+		// this should use auto pipeline
+		if val, err := m.Do(context.Background(), cmds.NewCompleted([]string{"PING"}).ToPipe()).ToString(); err != nil {
+			t.Fatalf("unexpected error %v", err)
+		} else if val != "PIPELINED" {
+			t.Fatalf("unexpected response %v", val)
+		}
+
 		response <- newResult(RedisMessage{typ: '+', string: "BLOCK_RESPONSE"}, nil)
 		<-blocking
 	})
@@ -284,6 +294,9 @@ func TestMuxReuseWire(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
 				// leave first wire for pipeline calls
+				DoMultiFn: func(cmd ...Completed) *redisresults {
+					return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "PIPELINED"}, nil)}}
+				},
 			},
 			{
 				DoMultiFn: func(cmd ...Completed) *redisresults {
@@ -322,6 +335,13 @@ func TestMuxReuseWire(t *testing.T) {
 		if val, err := m.DoMulti(context.Background(), cmds.NewBlockingCompleted([]string{"PING"})).s[0].ToString(); err != nil {
 			t.Fatalf("unexpected error %v", err)
 		} else if val != "ACQUIRED" {
+			t.Fatalf("unexpected response %v", val)
+		}
+
+		// this should use auto pipeline
+		if val, err := m.DoMulti(context.Background(), cmds.NewCompleted([]string{"PING"}).ToPipe()).s[0].ToString(); err != nil {
+			t.Fatalf("unexpected error %v", err)
+		} else if val != "PIPELINED" {
 			t.Fatalf("unexpected response %v", val)
 		}
 

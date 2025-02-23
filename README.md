@@ -102,9 +102,18 @@ A benchmark result performed on two GCP n2-highcpu-2 machines also shows that ru
 
 ### Disable Auto Pipelining
 
-While auto pipelining maximizes throughput, it relys on additional goroutines to process requests and responses and may add some latencies due to goroutine scheduling and head of line blocking.
+While auto pipelining maximizes throughput, it relies on additional goroutines to process requests and responses and may add some latencies due to goroutine scheduling and head of line blocking.
 
 You can avoid this by setting `DisableAutoPipelining` to true, then it will switch to connection pooling approach and serve each request with dedicated connection on the same goroutine.
+
+When `DisableAutoPipelining` is set to true, you can still send commands for auto pipelining with `ToPipe()`:
+
+``` golang
+cmd := client.B().Get().Key("key").Build().ToPipe()
+client.Do(ctx, cmd)
+```
+
+This allows you to use connection pooling approach by default but opt in auto pipelining for a subset of requests.
 
 ### Manual Pipelining
 

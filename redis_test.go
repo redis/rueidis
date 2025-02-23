@@ -44,13 +44,13 @@ func testFlush(t *testing.T, client Client) {
 
 	kvs := make(map[string]string, keys)
 	for i := 0; i < keys; i++ {
-		kvs[strconv.Itoa(i)] = strconv.FormatInt(rand.Int63(), 10)
+		kvs["f"+strconv.Itoa(i)] = strconv.FormatInt(rand.Int63(), 10)
 	}
 
 	t.Logf("prepare %d keys for FLUSH\n", keys)
 	jobs, wait := parallel(para)
-	for i := 0; i < keys; i++ {
-		key := strconv.Itoa(i)
+	for i := 0; i < keys && !t.Failed(); i++ {
+		key := "f" + strconv.Itoa(i)
 		jobs <- func() {
 			val, err := client.Do(ctx, client.B().Set().Key(key).Value(kvs[key]).Build()).ToString()
 			if err != nil || val != "OK" {
@@ -59,11 +59,14 @@ func testFlush(t *testing.T, client Client) {
 		}
 	}
 	wait()
+	if t.Failed() {
+		return
+	}
 
 	t.Logf("testing client side caching before flush\n")
 	jobs, wait = parallel(para)
-	for i := 0; i < keys; i++ {
-		key := strconv.Itoa(i)
+	for i := 0; i < keys && !t.Failed(); i++ {
+		key := "f" + strconv.Itoa(i)
 		jobs <- func() {
 			resp := client.DoCache(ctx, client.B().Get().Key(key).Cache(), time.Minute)
 			val, err := resp.ToString()
@@ -76,8 +79,11 @@ func testFlush(t *testing.T, client Client) {
 		}
 	}
 	wait()
+	if t.Failed() {
+		return
+	}
 
-	if err := client.Do(ctx, client.B().Flushall().Build()).Error(); err != nil {
+	if err := client.Do(ctx, client.B().Flushdb().Build()).Error(); err != nil {
 		t.Fatalf("unexpected flush err %v", err)
 	}
 
@@ -85,8 +91,8 @@ func testFlush(t *testing.T, client Client) {
 
 	t.Logf("testing client side caching after flush\n")
 	jobs, wait = parallel(para)
-	for i := 0; i < keys; i++ {
-		key := strconv.Itoa(i)
+	for i := 0; i < keys && !t.Failed(); i++ {
+		key := "f" + strconv.Itoa(i)
 		jobs <- func() {
 			resp := client.DoCache(ctx, client.B().Get().Key(key).Cache(), time.Minute)
 			if !IsRedisNil(resp.Error()) {
@@ -114,15 +120,17 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 	keys := 10000
 	para := 8
 
+	prefix := strconv.Itoa(rand.Intn(100000))
+
 	kvs := make(map[string]string, keys)
 	for i := 0; i < keys; i++ {
-		kvs[strconv.Itoa(i)] = strconv.FormatInt(rand.Int63(), 10)
+		kvs[prefix+strconv.Itoa(i)] = strconv.FormatInt(rand.Int63(), 10)
 	}
 
 	t.Logf("testing SET with %d keys and %d parallelism\n", keys, para)
 	jobs, wait := parallel(para)
-	for i := 0; i < keys; i++ {
-		key := strconv.Itoa(i)
+	for i := 0; i < keys && !t.Failed(); i++ {
+		key := prefix + strconv.Itoa(i)
 		jobs <- func() {
 			val, err := client.Do(ctx, client.B().Set().Key(key).Value(kvs[key]).Build()).ToString()
 			if err != nil || val != "OK" {
@@ -131,11 +139,14 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 		}
 	}
 	wait()
+	if t.Failed() {
+		return
+	}
 
 	t.Logf("testing GET with %d keys and %d parallelism\n", keys*2, para)
 	jobs, wait = parallel(para)
-	for i := 0; i < keys*2; i++ {
-		key := strconv.Itoa(rand.Intn(keys * 2))
+	for i := 0; i < keys*2 && !t.Failed(); i++ {
+		key := prefix + strconv.Itoa(rand.Intn(keys*2))
 		jobs <- func() {
 			val, err := client.Do(ctx, client.B().Get().Key(key).Build()).ToString()
 			if v, ok := kvs[key]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
@@ -144,11 +155,14 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 		}
 	}
 	wait()
+	if t.Failed() {
+		return
+	}
 
 	t.Logf("testing stream GET with %d keys and %d parallelism\n", keys*2, para)
 	jobs, wait = parallel(para)
-	for i := 0; i < keys*2; i++ {
-		key := strconv.Itoa(rand.Intn(keys * 2))
+	for i := 0; i < keys*2 && !t.Failed(); i++ {
+		key := prefix + strconv.Itoa(rand.Intn(keys*2))
 		jobs <- func() {
 			s := client.DoStream(ctx, client.B().Get().Key(key).Build())
 			buf := bytes.NewBuffer(nil)
@@ -159,11 +173,14 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 		}
 	}
 	wait()
+	if t.Failed() {
+		return
+	}
 
-	t.Logf("testing GET with %d keys and %d parallelism with timeout\n", keys*100, para)
+	t.Logf("testing GET with %d keys and %d parallelism with 1ms timeout\n", keys*2, para)
 	jobs, wait = parallel(para)
-	for i := 0; i < keys*100; i++ {
-		key := strconv.Itoa(rand.Intn(keys))
+	for i := 0; i < keys*2 && !t.Failed(); i++ {
+		key := prefix + strconv.Itoa(rand.Intn(keys))
 		jobs <- func() {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
 			defer cancel()
@@ -176,12 +193,39 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 		}
 	}
 	wait()
+	if t.Failed() {
+		return
+	}
+
+	t.Logf("testing GET with %d keys and %d parallelism with 10ms timeout\n", keys*100, para)
+	jobs, wait = parallel(para)
+	for i := 0; i < keys*100 && !t.Failed(); i++ {
+		key := prefix + strconv.Itoa(rand.Intn(keys))
+		jobs <- func() {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)
+			defer cancel()
+			cmd := client.B().Get().Key(key).Build()
+			if i%10 == 0 {
+				cmd = cmd.ToPipe()
+			}
+			val, err := client.Do(ctx, cmd).ToString()
+			if !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, os.ErrDeadlineExceeded) {
+				if v, ok := kvs[key]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
+					t.Errorf("unexpected get response %v %v %v", val, err, ok)
+				}
+			}
+		}
+	}
+	wait()
+	if t.Failed() {
+		return
+	}
 
 	t.Logf("testing client side caching with %d interations and %d parallelism\n", keys*5, para)
 	jobs, wait = parallel(para)
 	hits, miss := int64(0), int64(0)
-	for i := 0; i < keys*10; i++ {
-		key := strconv.Itoa(rand.Intn(keys / 100))
+	for i := 0; i < keys*10 && !t.Failed(); i++ {
+		key := prefix + strconv.Itoa(rand.Intn(keys/100))
 		jobs <- func() {
 			resp := client.DoCache(ctx, client.B().Get().Key(key).Cache(), time.Minute)
 			val, err := resp.ToString()
@@ -196,6 +240,9 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 		}
 	}
 	wait()
+	if t.Failed() {
+		return
+	}
 	if csc {
 		if atomic.LoadInt64(&miss) != 100 || atomic.LoadInt64(&hits) != int64(keys*10-100) {
 			t.Fatalf("unexpected client side caching hits and miss %v %v", atomic.LoadInt64(&hits), atomic.LoadInt64(&miss))
@@ -208,8 +255,8 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 
 	t.Logf("testing DEL with %d keys and %d parallelism\n", keys*2, para)
 	jobs, wait = parallel(para)
-	for i := 0; i < keys*2; i++ {
-		key := strconv.Itoa(i)
+	for i := 0; i < keys*2 && !t.Failed(); i++ {
+		key := prefix + strconv.Itoa(i)
 		jobs <- func() {
 			val, err := client.Do(ctx, client.B().Del().Key(key).Build()).AsInt64()
 			if _, ok := kvs[key]; !((val == 1 && ok) || (val == 0 && !ok)) {
@@ -218,13 +265,16 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 		}
 	}
 	wait()
+	if t.Failed() {
+		return
+	}
 
 	time.Sleep(time.Second)
 
 	t.Logf("testing client side caching after delete\n")
 	jobs, wait = parallel(para)
-	for i := 0; i < keys/100; i++ {
-		key := strconv.Itoa(i)
+	for i := 0; i < keys/100 && !t.Failed(); i++ {
+		key := prefix + strconv.Itoa(i)
 		jobs <- func() {
 			resp := client.DoCache(ctx, client.B().Get().Key(key).Cache(), time.Minute)
 			if !IsRedisNil(resp.Error()) {
@@ -268,7 +318,7 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 
 	t.Logf("testing Multi SET with %d keys and %d parallelism\n", keys, para)
 	jobs, wait := parallel(para)
-	for i := 0; i < keys; i += batch {
+	for i := 0; i < keys && !t.Failed(); i += batch {
 		commands := make(Commands, 0, batch)
 		for j := 0; j < batch; j++ {
 			key := "m" + strconv.Itoa(i+j)
@@ -284,10 +334,13 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 		}
 	}
 	wait()
+	if t.Failed() {
+		return
+	}
 
 	t.Logf("testing GET with %d keys and %d parallelism\n", keys*2, para)
 	jobs, wait = parallel(para)
-	for i := 0; i < keys*2; i += batch {
+	for i := 0; i < keys*2 && !t.Failed(); i += batch {
 		cmdkeys := make([]string, 0, batch)
 		commands := make(Commands, 0, batch)
 		for j := 0; j < batch; j++ {
@@ -304,10 +357,13 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 		}
 	}
 	wait()
+	if t.Failed() {
+		return
+	}
 
-	t.Logf("testing GET with %d keys and %d parallelism with timeout\n", keys*100, para)
+	t.Logf("testing GET with %d keys and %d parallelism with 1ms timeout\n", keys*2, para)
 	jobs, wait = parallel(para)
-	for i := 0; i < keys*100; i += batch {
+	for i := 0; i < keys*2 && !t.Failed(); i += batch {
 		cmdkeys := make([]string, 0, batch)
 		commands := make(Commands, 0, batch)
 		for j := 0; j < batch; j++ {
@@ -328,11 +384,44 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 		}
 	}
 	wait()
+	if t.Failed() {
+		return
+	}
+
+	t.Logf("testing GET with %d keys and %d parallelism with 10ms timeout\n", keys*100, para)
+	jobs, wait = parallel(para)
+	for i := 0; i < keys*100 && !t.Failed(); i += batch {
+		cmdkeys := make([]string, 0, batch)
+		commands := make(Commands, 0, batch)
+		for j := 0; j < batch; j++ {
+			cmdkeys = append(cmdkeys, "m"+strconv.Itoa(rand.Intn(keys)))
+			commands = append(commands, client.B().Get().Key(cmdkeys[len(cmdkeys)-1]).Build())
+		}
+		if i%10 == 0 {
+			commands[0] = commands[0].ToPipe()
+		}
+		jobs <- func() {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)
+			defer cancel()
+			for j, resp := range client.DoMulti(ctx, commands...) {
+				val, err := resp.ToString()
+				if !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, os.ErrDeadlineExceeded) {
+					if v, ok := kvs[cmdkeys[j]]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
+						t.Fatalf("unexpected get response %v %v %v", val, err, ok)
+					}
+				}
+			}
+		}
+	}
+	wait()
+	if t.Failed() {
+		return
+	}
 
 	t.Logf("testing client side caching with %d interations and %d parallelism\n", keys*5, para)
 	jobs, wait = parallel(para)
 	hits, miss := int64(0), int64(0)
-	for i := 0; i < keys*10; i += batch {
+	for i := 0; i < keys*10 && !t.Failed(); i += batch {
 		cmdkeys := make([]string, 0, batch)
 		commands := make([]CacheableTTL, 0, batch)
 		for j := 0; j < batch; j++ {
@@ -354,6 +443,9 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 		}
 	}
 	wait()
+	if t.Failed() {
+		return
+	}
 	if csc {
 		if atomic.LoadInt64(&miss) != 100 || atomic.LoadInt64(&hits) != int64(keys*10-100) {
 			t.Fatalf("unexpected client side caching hits and miss %v %v", atomic.LoadInt64(&hits), atomic.LoadInt64(&miss))
@@ -366,7 +458,7 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 
 	t.Logf("testing DEL with %d keys and %d parallelism\n", keys*2, para)
 	jobs, wait = parallel(para)
-	for i := 0; i < keys*2; i += batch {
+	for i := 0; i < keys*2 && !t.Failed(); i += batch {
 		cmdkeys := make([]string, 0, batch)
 		commands := make(Commands, 0, batch)
 		for j := 0; j < batch; j++ {
@@ -383,12 +475,15 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 		}
 	}
 	wait()
+	if t.Failed() {
+		return
+	}
 
 	time.Sleep(time.Second)
 
 	t.Logf("testing client side caching after delete\n")
 	jobs, wait = parallel(para)
-	for i := 0; i < keys/100; i += batch {
+	for i := 0; i < keys/100 && !t.Failed(); i += batch {
 		cmdkeys := make([]string, 0, batch)
 		commands := make([]CacheableTTL, 0, batch)
 		for j := 0; j < batch; j++ {
@@ -510,6 +605,9 @@ func testMultiExec(t *testing.T, client Client) {
 	t.Logf("testing MULTI EXEC with %d keys and %d parallelism\n", keys, para)
 	jobs, wait := parallel(para)
 	for k, v := range kvs {
+		if t.Failed() {
+			break
+		}
 		k, v := k, v
 		jobs <- func() {
 			resps, err := client.DoMulti(ctx,
@@ -631,7 +729,7 @@ func testPubSub(t *testing.T, client Client) {
 
 	go func() {
 		time.Sleep(time.Second)
-		for i := 0; i < msgs; i++ {
+		for i := 0; i < msgs && !t.Failed(); i++ {
 			msg := strconv.Itoa(i)
 			ch := "ch1"
 			if i%10 == 0 {
@@ -644,6 +742,9 @@ func testPubSub(t *testing.T, client Client) {
 			}
 		}
 		wait()
+		if t.Failed() {
+			close(messages)
+		}
 	}()
 
 	for message := range messages {
@@ -714,7 +815,7 @@ func testPubSubSharded(t *testing.T, client Client) {
 
 	go func() {
 		time.Sleep(time.Second)
-		for i := 0; i < msgs; i++ {
+		for i := 0; i < msgs && !t.Failed(); i++ {
 			msg := strconv.Itoa(i)
 			ch := "ch1"
 			jobs <- func() {
@@ -724,6 +825,9 @@ func testPubSubSharded(t *testing.T, client Client) {
 			}
 		}
 		wait()
+		if t.Failed() {
+			close(messages)
+		}
 	}()
 
 	for message := range messages {
@@ -771,12 +875,15 @@ func testLua(t *testing.T, client Client) {
 	para := 4
 	kvs := make(map[string]string, keys)
 	for i := 0; i < keys; i++ {
-		kvs["m"+strconv.Itoa(i)] = strconv.FormatInt(rand.Int63(), 10)
+		kvs["l"+strconv.Itoa(i)] = strconv.FormatInt(rand.Int63(), 10)
 	}
 
 	t.Logf("testing lua with %d keys and %d parallelism\n", keys, para)
 	jobs, wait := parallel(para)
 	for k, v := range kvs {
+		if t.Failed() {
+			break
+		}
 		k := k
 		v := v
 		jobs <- func() {
@@ -812,6 +919,7 @@ func TestSingleClientIntegration(t *testing.T) {
 		InitAddress:       []string{"127.0.0.1:6379"},
 		ConnWriteTimeout:  180 * time.Second,
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 
 		DisableAutoPipelining: os.Getenv("DisableAutoPipelining") == "true",
 	})
@@ -845,6 +953,7 @@ func TestSentinelClientIntegration(t *testing.T) {
 		},
 		SelectDB:          2, // https://github.com/redis/rueidis/issues/138
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 
 		DisableAutoPipelining: os.Getenv("DisableAutoPipelining") == "true",
 	})
@@ -876,6 +985,7 @@ func TestClusterClientIntegration(t *testing.T) {
 		ShuffleInit:       true,
 		Dialer:            net.Dialer{KeepAlive: -1},
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 
 		DisableAutoPipelining: os.Getenv("DisableAutoPipelining") == "true",
 	})
@@ -903,6 +1013,7 @@ func TestSingleClient5Integration(t *testing.T) {
 		ConnWriteTimeout:  180 * time.Second,
 		DisableCache:      true,
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -925,6 +1036,7 @@ func TestCluster5ClientIntegration(t *testing.T) {
 		DisableCache:      true,
 		Dialer:            net.Dialer{KeepAlive: -1},
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -947,6 +1059,7 @@ func TestSentinel5ClientIntegration(t *testing.T) {
 			MasterSet: "test5",
 		},
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -966,6 +1079,7 @@ func TestKeyDBSingleClientIntegration(t *testing.T) {
 		InitAddress:       []string{"127.0.0.1:6344"},
 		ConnWriteTimeout:  180 * time.Second,
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -983,8 +1097,10 @@ func TestDragonflyDBSingleClientIntegration(t *testing.T) {
 	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
-		InitAddress:      []string{"127.0.0.1:6333"},
-		ConnWriteTimeout: 180 * time.Second,
+		InitAddress:       []string{"127.0.0.1:6333"},
+		ConnWriteTimeout:  180 * time.Second,
+		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -1002,9 +1118,11 @@ func TestKvrocksSingleClientIntegration(t *testing.T) {
 	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
-		InitAddress:      []string{"127.0.0.1:6666"},
-		ConnWriteTimeout: 180 * time.Second,
-		DisableCache:     true,
+		InitAddress:       []string{"127.0.0.1:6666"},
+		ConnWriteTimeout:  180 * time.Second,
+		DisableCache:      true,
+		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 	})
 	if err != nil {
 		t.Fatal(err)
