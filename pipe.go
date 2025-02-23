@@ -61,7 +61,7 @@ var _ wire = (*pipe)(nil)
 
 type pipe struct {
 	conn            net.Conn
-	error           atomic.Pointer[errs]
+	error           atomic.Value
 	clhks           atomic.Value // closed hook, invoked after the conn is closed
 	pshks           atomic.Value // pubsub hook, registered by the SetPubSubHooks
 	queue           queue
