@@ -847,19 +847,19 @@ func TestSlidingBloomFilterReset(t *testing.T) {
 			t.Error(err)
 		}
 
-		// Script'leri yeniden yükle
+		// Reload scripts
 		sbf := bf.(*slidingBloomFilter)
 		if err := sbf.initialize(); err != nil {
 			t.Fatalf("failed to initialize scripts: %v", err)
 		}
 
-		// Önce bir eleman ekleyelim
+		// Add an element first
 		err = bf.Add(context.Background(), "1")
 		if err != nil {
 			t.Error(err)
 		}
 
-		// Elemanın eklendiğini doğrulayalım
+		// Verify the element was added
 		exists, err := bf.Exists(context.Background(), "1")
 		if err != nil {
 			t.Error(err)
@@ -868,31 +868,31 @@ func TestSlidingBloomFilterReset(t *testing.T) {
 			t.Error("Key should exist before reset")
 		}
 
-		// Reset işleminden önce biraz bekleyelim
+		// Wait a bit before resetting
 		time.Sleep(100 * time.Millisecond)
 
-		// Önce Delete ile temizleyelim
+		// Clean up first
 		err = bf.Delete(context.Background())
 		if err != nil {
 			t.Error(err)
 		}
 
-		// Sonra Reset işlemini yapalım
+		// Then reset
 		err = bf.Reset(context.Background())
 		if err != nil && !rueidis.IsRedisNil(err) {
 			t.Error(err)
 		}
 
-		// Reset sonrası biraz bekleyelim
+		// Wait a bit after resetting
 		time.Sleep(100 * time.Millisecond)
 
-		// Yeni bir filtre oluşturalım (aynı isimle)
+		// Create a new filter (same name)
 		bf, err = NewSlidingBloomFilter(client, "test", 100, 0.05, time.Minute)
 		if err != nil {
 			t.Error(err)
 		}
 
-		// Reset sonrası elemanın var olmadığını kontrol edelim
+		// Verify the element does not exist after reset
 		exists, err = bf.Exists(context.Background(), "1")
 		if err != nil && !rueidis.IsRedisNil(err) {
 			t.Error(err)
@@ -901,7 +901,7 @@ func TestSlidingBloomFilterReset(t *testing.T) {
 			t.Error("Key should not exist after reset")
 		}
 
-		// Reset sonrası sayacın sıfır olduğunu kontrol edelim
+		// Verify the count is 0 after reset
 		count, err := bf.Count(context.Background())
 		if err != nil && !rueidis.IsRedisNil(err) {
 			t.Error(err)
@@ -928,25 +928,25 @@ func TestSlidingBloomFilterReset(t *testing.T) {
 			t.Error(err)
 		}
 
-		// Initialize script'leri yükle
+		// Reload scripts
 		err = bf.(*slidingBloomFilter).initialize()
 		if err != nil {
 			t.Fatalf("failed to initialize: %v", err)
 		}
 
-		// Reset işleminden önce biraz bekleyelim
+		// Wait a bit before resetting
 		time.Sleep(100 * time.Millisecond)
 
-		// Boş filtre üzerinde reset işlemi
+		// Reset on empty filter
 		err = bf.Reset(context.Background())
 		if err != nil && !rueidis.IsRedisNil(err) {
 			t.Error(err)
 		}
 
-		// Reset sonrası biraz bekleyelim
+		// Wait a bit after resetting
 		time.Sleep(100 * time.Millisecond)
 
-		// Reset sonrası sayacın sıfır olduğunu kontrol edelim
+		// Verify the count is 0 after reset
 		count, err := bf.Count(context.Background())
 		if err != nil && !rueidis.IsRedisNil(err) {
 			t.Error(err)
