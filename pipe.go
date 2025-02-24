@@ -337,6 +337,9 @@ func (p *pipe) background() {
 }
 
 func (p *pipe) _exit(err error) {
+	if err != nil {
+        	p.error.Store(&errs{error: err}) 
+    	}
 	p.error.CompareAndSwap(nil, &errs{error: err})
 	atomic.CompareAndSwapInt32(&p.state, 1, 2) // stop accepting new requests
 	_ = p.conn.Close()                         // force both read & write goroutine to exit
@@ -1546,11 +1549,11 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 func (p *pipe) Error() error {
     errPtr := p.error.Load()
     if errPtr == nil {
-        p.error.Store(&errs{error: nil})
-        return nil
+        return nil 
     }
     return errPtr.error
 }
+
 
 
 
