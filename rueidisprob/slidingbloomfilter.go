@@ -153,15 +153,11 @@ local filterKey = KEYS[1]
 local nextFilterKey = KEYS[2]
 local counterKey = KEYS[3]
 local nextCounterKey = KEYS[4]
-local lastRotationKey = KEYS[5]
 
-redis.call('SET', filterKey, "")
+redis.call('RENAME', nextFilterKey, filterKey)
+redis.call('RENAME', nextCounterKey, counterKey)
 redis.call('SET', nextFilterKey, "")
-redis.call('SET', counterKey, 0)
 redis.call('SET', nextCounterKey, 0)
-redis.call('DEL', lastRotationKey)
-
-return 1
 `
 
 	// Redis key suffixes
@@ -416,16 +412,11 @@ func (s *slidingBloomFilter) Reset(ctx context.Context) error {
 		s.client.B().
 			Eval().
 			Script(slidingBloomFilterResetScript).
-			Numkeys(5).
+			Numkeys(4).
 			Key(s.addMultiKeys...).
 			Build(),
 	)
-
-	if resp.Error() != nil && !rueidis.IsRedisNil(resp.Error()) {
-		return resp.Error()
-	}
-
-	return nil
+	return resp.Error()
 }
 
 func (s *slidingBloomFilter) Delete(ctx context.Context) error {

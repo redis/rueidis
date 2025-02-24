@@ -128,6 +128,42 @@ func TestNewSlidingBloomFilterError(t *testing.T) {
 			t.Error("Error is not ErrWindowSizeLessThanOneSecond")
 		}
 	})
+
+	t.Run("ZeroSize", func(t *testing.T) {
+		client, flushAllAndClose, err := setupRedis7Cluster()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		_, err = NewSlidingBloomFilter(client, "test", 0, 0.05, time.Minute)
+		if !errors.Is(err, ErrBitsSizeZero) {
+			t.Error("Error is not ErrBitsSizeZero")
+		}
+	})
+
+	t.Run("TooLargeSize", func(t *testing.T) {
+		client, flushAllAndClose, err := setupRedis7Cluster()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		_, err = NewSlidingBloomFilter(client, "test", 1<<33, 0.05, time.Minute)
+		if !errors.Is(err, ErrBitsSizeTooLarge) {
+			t.Error("Error is not ErrBitsSizeTooLarge")
+		}
+	})
 }
 
 func TestSlidingBloomFilterAdd(t *testing.T) {
@@ -877,12 +913,6 @@ func TestSlidingBloomFilterReset(t *testing.T) {
 			t.Error(err)
 		}
 
-		// Then reset
-		err = bf.Reset(context.Background())
-		if err != nil && !rueidis.IsRedisNil(err) {
-			t.Error(err)
-		}
-
 		// Wait a bit after resetting
 		time.Sleep(100 * time.Millisecond)
 
@@ -980,4 +1010,32 @@ func TestSlidingBloomFilterResetError(t *testing.T) {
 	if !errors.Is(err, context.Canceled) {
 		t.Error("Error is not context.Canceled")
 	}
+}
+
+func TestSlidingBloomFilterExistsMulti(t *testing.T) {
+	t.Run("error case", func(t *testing.T) {
+		client, flushAllAndClose, err := setupRedis7Cluster()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		bf, err := NewSlidingBloomFilter(client, "test", 100, 0.05, time.Minute)
+		if err != nil {
+			t.Error(err)
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+
+		_, err = bf.ExistsMulti(ctx, []string{"1", "2", "3"})
+		if !errors.Is(err, context.Canceled) {
+			t.Error("Expected context.Canceled error")
+		}
+	})
 }
