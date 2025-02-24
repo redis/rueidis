@@ -1550,7 +1550,7 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 }
 
 func (p *pipe) Error() error {
-    errPtr, ok := p.error.Load()
+    errPtr, ok := p.error.Load(); ok
     if !ok || errPtr == nil {
         return nil 
     }
