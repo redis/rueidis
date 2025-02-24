@@ -31,8 +31,6 @@ func TestNewSlidingBloomFilter(t *testing.T) {
 			t.Error(err)
 		}
 
-		fmt.Println(bf)
-
 		if bf == nil {
 			t.Error("Bloom filter is nil")
 		}
