@@ -31,6 +31,8 @@ func TestNewSlidingBloomFilter(t *testing.T) {
 			t.Error(err)
 		}
 
+		fmt.Println(bf)
+
 		if bf == nil {
 			t.Error("Bloom filter is nil")
 		}
@@ -106,6 +108,24 @@ func TestNewSlidingBloomFilterError(t *testing.T) {
 		_, err = NewSlidingBloomFilter(client, "test", 100, -0.01, time.Minute)
 		if !errors.Is(err, ErrFalsePositiveRateLessThanEqualZero) {
 			t.Error("Error is not ErrFalsePositiveRateLessThanEqualZero")
+		}
+	})
+
+	t.Run("WindowSizeLessThanOneSecond", func(t *testing.T) {
+		client, flushAllAndClose, err := setupRedis7Cluster()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		_, err = NewSlidingBloomFilter(client, "test", 100, 0.05, time.Millisecond)
+		if !errors.Is(err, ErrWindowSizeLessThanOneSecond) {
+			t.Error("Error is not ErrWindowSizeLessThanOneSecond")
 		}
 	})
 }
@@ -654,4 +674,310 @@ func TestSlidingBloomFilterConcurrentRotation(t *testing.T) {
 	}
 
 	t.Logf("Test ran for %v with %d clients", time.Since(startTime), numClients)
+}
+
+func TestSlidingBloomFilterCount(t *testing.T) {
+	t.Run("count exists", func(t *testing.T) {
+		client, flushAllAndClose, err := setupRedis7Cluster()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		bf, err := NewSlidingBloomFilter(client, "test", 100, 0.05, time.Minute)
+		if err != nil {
+			t.Error(err)
+		}
+
+		err = bf.Add(context.Background(), "1")
+		if err != nil {
+			t.Error(err)
+		}
+
+		count, err := bf.Count(context.Background())
+		if err != nil {
+			t.Error(err)
+		}
+		if count != 1 {
+			t.Error("Count is not 1")
+		}
+	})
+
+	t.Run("count does not exist", func(t *testing.T) {
+		client, flushAllAndClose, err := setupRedis7Cluster()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		bf, err := NewSlidingBloomFilter(client, "test", 100, 0.05, time.Minute)
+		if err != nil {
+			t.Error(err)
+		}
+
+		count, err := bf.Count(context.Background())
+		if err != nil {
+			t.Error(err)
+		}
+		if count != 0 {
+			t.Error("Count is not 0")
+		}
+	})
+
+	t.Run("add multiple items", func(t *testing.T) {
+		client, flushAllAndClose, err := setupRedis7Cluster()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		bf, err := NewSlidingBloomFilter(client, "test", 100, 0.05, time.Minute)
+		if err != nil {
+			t.Error(err)
+		}
+
+		keys := []string{"1", "2", "3"}
+		err = bf.AddMulti(context.Background(), keys)
+		if err != nil {
+			t.Error(err)
+		}
+
+		count, err := bf.Count(context.Background())
+		if err != nil {
+			t.Error(err)
+		}
+		if count != 3 {
+			t.Error("Count is not 3")
+		}
+	})
+}
+
+func TestSlidingBloomFilterCountError(t *testing.T) {
+	t.Run("count error", func(t *testing.T) {
+		client, flushAllAndClose, err := setupRedis7Cluster()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		bf, err := NewSlidingBloomFilter(client, "test", 100, 0.05, time.Minute)
+		if err != nil {
+			t.Error(err)
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		_, err = bf.Count(ctx)
+		if !errors.Is(err, context.Canceled) {
+			t.Error("Error is not context.Canceled")
+		}
+	})
+
+	t.Run("counter key is corrupted", func(t *testing.T) {
+		client, flushAllAndClose, err := setupRedis7Cluster()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		bf, err := NewSlidingBloomFilter(client, "test", 100, 0.05, time.Minute)
+		if err != nil {
+			t.Error(err)
+		}
+
+		resp := client.Do(
+			context.Background(),
+			client.B().
+				Set().
+				Key("{test}:c").
+				Value("not a number").
+				Build(),
+		)
+		if resp.Error() != nil {
+			t.Error(resp.Error())
+		}
+
+		_, err = bf.Count(context.Background())
+		if !errors.Is(err, strconv.ErrSyntax) {
+			t.Error("Error is not strconv.ErrSyntax")
+		}
+	})
+}
+
+func TestSlidingBloomFilterReset(t *testing.T) {
+	t.Run("reset exists", func(t *testing.T) {
+		client, flushAllAndClose, err := setupRedis7Cluster()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		bf, err := NewSlidingBloomFilter(client, "test", 100, 0.05, time.Minute)
+		if err != nil {
+			t.Error(err)
+		}
+
+		// Script'leri yeniden yükle
+		sbf := bf.(*slidingBloomFilter)
+		if err := sbf.initialize(); err != nil {
+			t.Fatalf("failed to initialize scripts: %v", err)
+		}
+
+		// Önce bir eleman ekleyelim
+		err = bf.Add(context.Background(), "1")
+		if err != nil {
+			t.Error(err)
+		}
+
+		// Elemanın eklendiğini doğrulayalım
+		exists, err := bf.Exists(context.Background(), "1")
+		if err != nil {
+			t.Error(err)
+		}
+		if !exists {
+			t.Error("Key should exist before reset")
+		}
+
+		// Reset işleminden önce biraz bekleyelim
+		time.Sleep(100 * time.Millisecond)
+
+		// Önce Delete ile temizleyelim
+		err = bf.Delete(context.Background())
+		if err != nil {
+			t.Error(err)
+		}
+
+		// Sonra Reset işlemini yapalım
+		err = bf.Reset(context.Background())
+		if err != nil && !rueidis.IsRedisNil(err) {
+			t.Error(err)
+		}
+
+		// Reset sonrası biraz bekleyelim
+		time.Sleep(100 * time.Millisecond)
+
+		// Yeni bir filtre oluşturalım (aynı isimle)
+		bf, err = NewSlidingBloomFilter(client, "test", 100, 0.05, time.Minute)
+		if err != nil {
+			t.Error(err)
+		}
+
+		// Reset sonrası elemanın var olmadığını kontrol edelim
+		exists, err = bf.Exists(context.Background(), "1")
+		if err != nil && !rueidis.IsRedisNil(err) {
+			t.Error(err)
+		}
+		if exists {
+			t.Error("Key should not exist after reset")
+		}
+
+		// Reset sonrası sayacın sıfır olduğunu kontrol edelim
+		count, err := bf.Count(context.Background())
+		if err != nil && !rueidis.IsRedisNil(err) {
+			t.Error(err)
+		}
+		if count != 0 {
+			t.Errorf("Count should be 0 after reset, got %d", count)
+		}
+	})
+
+	t.Run("reset does not exist", func(t *testing.T) {
+		client, flushAllAndClose, err := setupRedis7Cluster()
+		if err != nil {
+			t.Error(err)
+		}
+		defer func() {
+			err := flushAllAndClose()
+			if err != nil {
+				t.Error(err)
+			}
+		}()
+
+		bf, err := NewSlidingBloomFilter(client, "test", 100, 0.05, time.Minute)
+		if err != nil {
+			t.Error(err)
+		}
+
+		// Initialize script'leri yükle
+		err = bf.(*slidingBloomFilter).initialize()
+		if err != nil {
+			t.Fatalf("failed to initialize: %v", err)
+		}
+
+		// Reset işleminden önce biraz bekleyelim
+		time.Sleep(100 * time.Millisecond)
+
+		// Boş filtre üzerinde reset işlemi
+		err = bf.Reset(context.Background())
+		if err != nil && !rueidis.IsRedisNil(err) {
+			t.Error(err)
+		}
+
+		// Reset sonrası biraz bekleyelim
+		time.Sleep(100 * time.Millisecond)
+
+		// Reset sonrası sayacın sıfır olduğunu kontrol edelim
+		count, err := bf.Count(context.Background())
+		if err != nil && !rueidis.IsRedisNil(err) {
+			t.Error(err)
+		}
+		if count != 0 {
+			t.Errorf("Count should be 0 after reset, got %d", count)
+		}
+	})
+}
+
+func TestSlidingBloomFilterResetError(t *testing.T) {
+	client, flushAllAndClose, err := setupRedis7Cluster()
+	if err != nil {
+		t.Error(err)
+	}
+	defer func() {
+		err := flushAllAndClose()
+		if err != nil {
+			t.Error(err)
+		}
+	}()
+
+	bf, err := NewSlidingBloomFilter(client, "test", 100, 0.05, time.Minute)
+	if err != nil {
+		t.Error(err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	err = bf.Reset(ctx)
+	if !errors.Is(err, context.Canceled) {
+		t.Error("Error is not context.Canceled")
+	}
 }
