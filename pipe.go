@@ -137,6 +137,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 		}
 		p.cache = cacheStoreFn(CacheStoreOption{CacheSizeEachConn: option.CacheSizeEachConn})
 	}
+	p.error.Store(&errs{error: nil})
 	p.pshks.Store(emptypshks)
 	p.clhks.Store(emptyclhks)
 
