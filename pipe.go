@@ -118,6 +118,9 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 
 		r2ps: r2ps,
 	}
+	
+	p.error.Store(&errs{error: nil}) 
+	
 	if !nobg {
 		p.queue = newRing(option.RingScaleEachConn)
 		p.nsubs = newSubs()
@@ -337,6 +340,9 @@ func (p *pipe) background() {
 }
 
 func (p *pipe) _exit(err error) {
+	if p.error.Load() == nil {
+        	p.error.Store(&errs{error: nil}) 
+    	}
 	p.error.CompareAndSwap(nil, &errs{error: err})
 	atomic.CompareAndSwapInt32(&p.state, 1, 2) // stop accepting new requests
 	_ = p.conn.Close()                         // force both read & write goroutine to exit
@@ -1544,12 +1550,12 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 }
 
 func (p *pipe) Error() error {
-    if err := p.error.Load(); err != nil {
-        return err.error
+    errPtr, ok := p.error.Load().(*errs)
+    if !ok || errPtr == nil {
+        return nil 
     }
-    return nil 
+    return errPtr.error
 }
-
 
 func (p *pipe) Close() {
 	p.error.CompareAndSwap(nil, errClosing)
