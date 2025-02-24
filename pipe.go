@@ -137,7 +137,6 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 		}
 		p.cache = cacheStoreFn(CacheStoreOption{CacheSizeEachConn: option.CacheSizeEachConn})
 	}
-	p.error.Store(&errs{error: nil})
 	p.pshks.Store(emptypshks)
 	p.clhks.Store(emptyclhks)
 
@@ -1545,12 +1544,13 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 }
 
 func (p *pipe) Error() error {
-	errPtr := p.error.Load() // Load returns *errs
-	if errPtr == nil {
-		return nil // Prevent nil dereference
-	}
-	return errPtr.error
+    errPtr := p.error.Load()
+    if errPtr == nil {
+        p.error.Store(&errs{error: nil})
+    }
+    return errPtr.error
 }
+
 
 func (p *pipe) Close() {
 	p.error.CompareAndSwap(nil, errClosing)
