@@ -1547,9 +1547,11 @@ func (p *pipe) Error() error {
     errPtr := p.error.Load()
     if errPtr == nil {
         p.error.Store(&errs{error: nil})
+        return nil
     }
     return errPtr.error
 }
+
 
 
 func (p *pipe) Close() {
