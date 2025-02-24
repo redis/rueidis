@@ -1544,11 +1544,12 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 }
 
 func (p *pipe) Error() error {
-	if err := p.error.Load(); err != nil {
-		return err.error
-	}
-	return nil
+    if err := p.error.Load(); err != nil {
+        return err.error
+    }
+    return nil 
 }
+
 
 func (p *pipe) Close() {
 	p.error.CompareAndSwap(nil, errClosing)
