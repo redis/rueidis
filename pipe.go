@@ -61,7 +61,7 @@ var _ wire = (*pipe)(nil)
 
 type pipe struct {
 	conn            net.Conn
-	error           atomic.Value
+	error           atomic.Pointer[errs]
 	clhks           atomic.Value // closed hook, invoked after the conn is closed
 	pshks           atomic.Value // pubsub hook, registered by the SetPubSubHooks
 	queue           queue
@@ -337,7 +337,7 @@ func (p *pipe) background() {
 }
 
 func (p *pipe) _exit(err error) {
-	p.error.CompareAndSwap(nil, &errs{error: err})
+	p.error.Store(&errs{error: err})
 	atomic.CompareAndSwapInt32(&p.state, 1, 2) // stop accepting new requests
 	_ = p.conn.Close()                         // force both read & write goroutine to exit
 	p.clhks.Load().(func(error))(err)
@@ -1123,7 +1123,7 @@ func (p *pipe) DoStream(ctx context.Context, pool *pool, cmd Completed) RedisRes
 		}
 		_ = writeCmd(p.w, cmd.Commands())
 		if err := p.w.Flush(); err != nil {
-			p.error.CompareAndSwap(nil, &errs{error: err})
+			p.error.Store(&errs{error: err})
 			p.conn.Close()
 			p.background() // start the background worker to clean up goroutines
 		} else {
@@ -1188,7 +1188,7 @@ func (p *pipe) DoMultiStream(ctx context.Context, pool *pool, multi ...Completed
 			_ = writeCmd(p.w, cmd.Commands())
 		}
 		if err := p.w.Flush(); err != nil {
-			p.error.CompareAndSwap(nil, &errs{error: err})
+			p.error.Store(&errs{error: err})
 			p.conn.Close()
 			p.background() // start the background worker to clean up goroutines
 		} else {
@@ -1226,7 +1226,7 @@ func (p *pipe) syncDo(dl time.Time, dlOk bool, cmd Completed) (resp RedisResult)
 		if dlOk && errors.Is(err, os.ErrDeadlineExceeded) {
 			err = context.DeadlineExceeded
 		}
-		p.error.CompareAndSwap(nil, &errs{error: err})
+		p.error.Store(&errs{error: err})
 		p.conn.Close()
 		p.background() // start the background worker to clean up goroutines
 	}
@@ -1280,7 +1280,7 @@ abort:
 	if dlOk && errors.Is(err, os.ErrDeadlineExceeded) {
 		err = context.DeadlineExceeded
 	}
-	p.error.CompareAndSwap(nil, &errs{error: err})
+	p.error.Store(&errs{error: err})
 	p.conn.Close()
 	p.background() // start the background worker to clean up goroutines
 	for i := 0; i < len(resp); i++ {
@@ -1544,14 +1544,14 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 }
 
 func (p *pipe) Error() error {
-	if err, ok := p.error.Load().(*errs); ok {
+	if err := p.error.Load(); err != nil {
 		return err.error
 	}
 	return nil
 }
 
 func (p *pipe) Close() {
-	p.error.CompareAndSwap(nil, errClosing)
+	p.error.Store(errClosing)
 	block := atomic.AddInt32(&p.blcksig, 1)
 	waits := atomic.AddInt32(&p.waits, 1)
 	stopping1 := atomic.CompareAndSwapInt32(&p.state, 0, 2)
