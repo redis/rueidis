@@ -1,4 +1,4 @@
-module github.com/redis/rueidis
+module github.com/dannotripp/rueidis
 
 go 1.22.0
 
