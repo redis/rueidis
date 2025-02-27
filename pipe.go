@@ -1316,6 +1316,9 @@ func (p *pipe) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) Re
 	} else if entry != nil {
 		return newResult(entry.Wait(ctx))
 	}
+
+	fmt.Printf("[SHR-570] DEBUG MESSAGE: Commands: %v\n", cmd.Commands())
+
 	resp := p.DoMulti(
 		ctx,
 		cmds.OptInCmd,
