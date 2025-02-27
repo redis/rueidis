@@ -31,22 +31,22 @@ A fast Golang Redis client that does auto pipelining and supports server-assiste
 package main
 
 import (
-	"context"
-	"github.com/redis/rueidis"
+ "context"
+ "github.com/redis/rueidis"
 )
 
 func main() {
-	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
-	if err != nil {
-		panic(err)
-	}
-	defer client.Close()
+ client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
+ if err != nil {
+  panic(err)
+ }
+ defer client.Close()
 
-	ctx := context.Background()
-	// SET key val NX
-	err = client.Do(ctx, client.B().Set().Key("key").Value("val").Nx().Build()).Error()
-	// HGETALL hm
-	hm, err := client.Do(ctx, client.B().Hgetall().Key("hm").Build()).AsStrMap()
+ ctx := context.Background()
+ // SET key val NX
+ err = client.Do(ctx, client.B().Set().Key("key").Value("val").Nx().Build()).Error()
+ // HGETALL hm
+ hm, err := client.Do(ctx, client.B().Hgetall().Key("hm").Build()).AsStrMap()
 }
 ```
 
@@ -66,7 +66,6 @@ Once a command is built, use either `client.Do()` or `client.DoMulti()` to send 
 
 To reuse a command, use `Pin()` after `Build()` and it will prevent the command from being recycled.
 
-
 ## [Pipelining](https://redis.io/docs/manual/pipelining/)
 
 ### Auto Pipelining
@@ -78,13 +77,13 @@ For example:
 
 ```go
 func BenchmarkPipelining(b *testing.B, client rueidis.Client) {
-	// the below client.Do() operations will be issued from
-	// multiple goroutines and thus will be pipelined automatically.
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			client.Do(context.Background(), client.B().Get().Key("k").Build()).ToString()
-		}
-	})
+ // the below client.Do() operations will be issued from
+ // multiple goroutines and thus will be pipelined automatically.
+ b.RunParallel(func(pb *testing.PB) {
+  for pb.Next() {
+   client.Do(context.Background(), client.B().Get().Key("k").Build()).ToString()
+  }
+ })
 }
 ```
 
@@ -96,9 +95,9 @@ It is even able to achieve **~14x** throughput over go-redis in a local benchmar
 
 ![client_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_set_10.png)
 
-Benchmark source code: https://github.com/rueian/rueidis-benchmark
+Benchmark source code: <https://github.com/rueian/rueidis-benchmark>
 
-A benchmark result performed on two GCP n2-highcpu-2 machines also shows that rueidis can achieve higher throughput with lower latencies: https://github.com/redis/rueidis/pull/93
+A benchmark result performed on two GCP n2-highcpu-2 machines also shows that rueidis can achieve higher throughput with lower latencies: <https://github.com/redis/rueidis/pull/93>
 
 ### Disable Auto Pipelining
 
@@ -142,7 +141,7 @@ client.DoMultiCache(ctx,
     rueidis.CT(client.B().Get().Key("k2").Cache(), 2*time.Minute))
 ```
 
-Cached responses, including Redis Nils, will be invalidated either when being notified by redis servers or when their client-side TTLs are reached. See https://github.com/redis/rueidis/issues/534 for more details.
+Cached responses, including Redis Nils, will be invalidated either when being notified by redis servers or when their client-side TTLs are reached. See <https://github.com/redis/rueidis/issues/534> for more details.
 
 ### Benchmark
 
@@ -150,7 +149,7 @@ Server-assisted client-side caching can dramatically boost latencies and through
 
 ![client_test_get](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_get_10.png)
 
-Benchmark source code: https://github.com/rueian/rueidis-benchmark
+Benchmark source code: <https://github.com/rueian/rueidis-benchmark>
 
 ### Client-Side Caching Helpers
 
@@ -167,6 +166,7 @@ client.DoCache(ctx, client.B().Get().Key("k1").Cache(), time.Minute).IsCacheHit(
 ```
 
 If the OpenTelemetry is enabled by the `rueidisotel.NewClient(option)`, then there are also two metrics instrumented:
+
 * rueidis_do_cache_miss
 * rueidis_do_cache_hits
 
@@ -181,11 +181,11 @@ Although the default is opt-in mode, you can use broadcast mode by specifying yo
 
 ```go
 client, err := rueidis.NewClient(rueidis.ClientOption{
-	InitAddress:           []string{"127.0.0.1:6379"},
-	ClientTrackingOptions: []string{"PREFIX", "prefix1:", "PREFIX", "prefix2:", "BCAST"},
+ InitAddress:           []string{"127.0.0.1:6379"},
+ ClientTrackingOptions: []string{"PREFIX", "prefix1:", "PREFIX", "prefix2:", "BCAST"},
 })
 if err != nil {
-	panic(err)
+ panic(err)
 }
 client.DoCache(ctx, client.B().Get().Key("prefix1:1").Cache(), time.Minute).IsCacheHit() == false
 client.DoCache(ctx, client.B().Get().Key("prefix1:1").Cache(), time.Minute).IsCacheHit() == true
@@ -260,6 +260,7 @@ err = client.Receive(context.Background(), client.B().Subscribe().Channel("ch1",
 The provided handler will be called with the received message.
 
 It is important to note that `client.Receive()` will keep blocking until returning a value in the following cases:
+
 1. return `nil` when receiving any unsubscribe/punsubscribe message related to the provided `subscribe` command, including `sunsubscribe` messages caused by slot migrations.
 2. return `rueidis.ErrClosing` when the client is closed manually.
 3. return `ctx.Err()` when the `ctx` is done.
@@ -279,9 +280,9 @@ c, cancel := client.Dedicate()
 defer cancel()
 
 wait := c.SetPubSubHooks(rueidis.PubSubHooks{
-	OnMessage: func(m rueidis.PubSubMessage) {
-		// Handle the message. Note that if you want to call another `c.Do()` here, you need to do it in another goroutine or the `c` will be blocked.
-	}
+ OnMessage: func(m rueidis.PubSubMessage) {
+  // Handle the message. Note that if you want to call another `c.Do()` here, you need to do it in another goroutine or the `c` will be blocked.
+ }
 })
 c.Do(ctx, c.B().Subscribe().Channel("ch").Build())
 err := <-wait // disconnected with err
@@ -429,16 +430,16 @@ set the `EnableReplicaAZInfo` option and your `ReplicaSelector` function. For ex
 
 ```go
 client, err := rueidis.NewClient(rueidis.ClientOption{
-	InitAddress:         []string{"address.example.com:6379"},
-	EnableReplicaAZInfo: true,
-	ReplicaSelector: func(slot uint16, replicas []rueidis.ReplicaInfo) int {
-		for i, replica := range replicas {
-			if replica.AZ == "us-east-1a" {
-				return i // return the index of the replica.
-			}
-		}
-		return -1 // send to the primary.
-	},
+ InitAddress:         []string{"address.example.com:6379"},
+ EnableReplicaAZInfo: true,
+ ReplicaSelector: func(slot uint16, replicas []rueidis.ReplicaInfo) int {
+  for i, replica := range replicas {
+   if replica.AZ == "us-east-1a" {
+    return i // return the index of the replica.
+   }
+  }
+  return -1 // send to the primary.
+ },
 })
 ```
 
@@ -552,25 +553,25 @@ DecodeSliceOfJSON is useful when you would like to scan the results of an array 
 
 ```golang
 type User struct {
-	Name string `json:"name"`
+ Name string `json:"name"`
 }
 
 // Set some values
 if err = client.Do(ctx, client.B().Set().Key("user1").Value(`{"name": "name1"}`).Build()).Error(); err != nil {
-	return err
+ return err
 }
 if err = client.Do(ctx, client.B().Set().Key("user2").Value(`{"name": "name2"}`).Build()).Error(); err != nil {
-	return err
+ return err
 }
 
 // Scan MGET results into []*User
 var users []*User // or []User is also scannable
 if err := rueidis.DecodeSliceOfJSON(client.Do(ctx, client.B().Mget().Key("user1", "user2").Build()), &users); err != nil {
-	return err
+ return err
 }
 
 for _, user := range users {
-	fmt.Printf("%+v\n", user)
+ fmt.Printf("%+v\n", user)
 }
 /*
 &{name:name1}
@@ -578,20 +579,20 @@ for _, user := range users {
 */
 ```
 
-### !!!!!! DO NOT DO THIS !!!!!!
+### !!!!!! DO NOT DO THIS
 
 Please make sure that all values in the result have the same JSON structures.
 
 ```golang
 // Set a pure string value
 if err = client.Do(ctx, client.B().Set().Key("user1").Value("userName1").Build()).Error(); err != nil {
-	return err
+ return err
 }
 
 // Bad
 users := make([]*User, 0)
 if err := rueidis.DecodeSliceOfJSON(client.Do(ctx, client.B().Mget().Key("user1").Build()), &users); err != nil {
-	return err
+ return err
 }
 // -> Error: invalid character 'u' looking for the beginning of the value
 // in this case, use client.Do(ctx, client.B().Mget().Key("user1").Build()).AsStrSlice()
