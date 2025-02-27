@@ -95,9 +95,9 @@ It is even able to achieve **~14x** throughput over go-redis in a local benchmar
 
 ![client_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_set_10.png)
 
-Benchmark source code: <https://github.com/rueian/rueidis-benchmark>
+Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
-A benchmark result performed on two GCP n2-highcpu-2 machines also shows that rueidis can achieve higher throughput with lower latencies: <https://github.com/redis/rueidis/pull/93>
+A benchmark result performed on two GCP n2-highcpu-2 machines also shows that rueidis can achieve higher throughput with lower latencies: https://github.com/redis/rueidis/pull/93
 
 ### Disable Auto Pipelining
 
@@ -141,7 +141,7 @@ client.DoMultiCache(ctx,
     rueidis.CT(client.B().Get().Key("k2").Cache(), 2*time.Minute))
 ```
 
-Cached responses, including Redis Nils, will be invalidated either when being notified by redis servers or when their client-side TTLs are reached. See <https://github.com/redis/rueidis/issues/534> for more details.
+Cached responses, including Redis Nils, will be invalidated either when being notified by redis servers or when their client-side TTLs are reached. See https://github.com/redis/rueidis/issues/534 for more details.
 
 ### Benchmark
 
@@ -149,7 +149,7 @@ Server-assisted client-side caching can dramatically boost latencies and through
 
 ![client_test_get](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_get_10.png)
 
-Benchmark source code: <https://github.com/rueian/rueidis-benchmark>
+Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
 ### Client-Side Caching Helpers
 
