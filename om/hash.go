@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/redis/rueidis"
+	"github.com/dannotripp/rueidis"
 )
 
 // NewHashRepository creates an HashRepository.

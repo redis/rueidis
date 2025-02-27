@@ -6,7 +6,7 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/redis/rueidis"
+	"github.com/dannotripp/rueidis"
 )
 
 const (

@@ -9,8 +9,8 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/rueidislimiter"
+	"github.com/dannotripp/rueidis"
+	"github.com/dannotripp/rueidis/rueidislimiter"
 )
 
 func setup(t testing.TB) rueidis.Client {

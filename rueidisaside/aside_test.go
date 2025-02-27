@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/redis/rueidis"
+	"github.com/dannotripp/rueidis"
 )
 
 var addr = []string{"127.0.0.1:6379"}

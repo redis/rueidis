@@ -20,8 +20,8 @@ package main
 import (
 	"context"
 	"time"
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/rueidiscompat"
+	"github.com/dannotripp/rueidis"
+	"github.com/dannotripp/rueidis/rueidiscompat"
 )
 
 func main() {
@@ -48,8 +48,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/rueidiscompat"
+	"github.com/dannotripp/rueidis"
+	"github.com/dannotripp/rueidis/rueidiscompat"
 )
 
 func main() {
@@ -84,8 +84,8 @@ package main
 
 import (
 	"context"
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/rueidiscompat"
+	"github.com/dannotripp/rueidis"
+	"github.com/dannotripp/rueidis/rueidiscompat"
 )
 
 func main() {
@@ -132,8 +132,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/rueidiscompat"
+	"github.com/dannotripp/rueidis"
+	"github.com/dannotripp/rueidis/rueidiscompat"
 	"strconv"
 )
 
@@ -174,8 +174,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/rueidiscompat"
+	"github.com/dannotripp/rueidis"
+	"github.com/dannotripp/rueidis/rueidiscompat"
 )
 
 var incrBy = rueidiscompat.NewScript(`

@@ -1,11 +1,11 @@
-module github.com/redis/rueidis/rueidisotel
+module github.com/dannotripp/rueidis/rueidisotel
 
 go 1.22.0
 
-replace github.com/redis/rueidis => ../
+replace github.com/dannotripp/rueidis => ../
 
 require (
-	github.com/redis/rueidis v1.0.55
+	github.com/dannotripp/rueidis v1.0.55
 	go.opentelemetry.io/otel v1.34.0
 	go.opentelemetry.io/otel/metric v1.34.0
 	go.opentelemetry.io/otel/sdk v1.34.0

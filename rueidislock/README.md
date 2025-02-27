@@ -7,8 +7,8 @@ package main
 
 import (
 	"context"
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/rueidislock"
+	"github.com/dannotripp/rueidis"
+	"github.com/dannotripp/rueidis/rueidislock"
 )
 
 func main() {
@@ -80,8 +80,8 @@ import (
 
 	"github.com/bsm/redislock"
 	"github.com/redis/go-redis/v9"
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/rueidislock"
+	"github.com/dannotripp/rueidis"
+	"github.com/dannotripp/rueidis/rueidislock"
 )
 
 func Benchmark(b *testing.B) {

@@ -1,6 +1,6 @@
 package rueidis
 
-import "github.com/redis/rueidis/internal/cmds"
+import "github.com/dannotripp/rueidis/internal/cmds"
 
 // Builder represents a command builder. It should only be created from the client.B() method.
 type Builder = cmds.Builder

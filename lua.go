@@ -7,7 +7,7 @@ import (
 	"runtime"
 	"sync/atomic"
 
-	"github.com/redis/rueidis/internal/util"
+	"github.com/dannotripp/rueidis/internal/util"
 )
 
 // NewLuaScript creates a Lua instance whose Lua.Exec uses EVALSHA and EVAL.

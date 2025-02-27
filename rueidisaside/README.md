@@ -12,7 +12,7 @@ And if using a locking mechanism, how to get notified when a lock is released? I
 Thankfully, the above issues can be addressed better with the client-side caching along with the following additional benefits: 
 
 * Avoiding unnecessary network round trips. Redis will proactively invalidate the client-side cache.
-* Avoiding Cache Stampede by locking keys with the client-side caching, the same technique used in [rueidislock](https://github.com/redis/rueidis/tree/main/rueidislock). Only the first cache missed call can update the cache and others will wait for notifications.
+* Avoiding Cache Stampede by locking keys with the client-side caching, the same technique used in [rueidislock](https://github.com/dannotripp/rueidis/tree/main/rueidislock). Only the first cache missed call can update the cache and others will wait for notifications.
 
 ## Example
 
@@ -24,8 +24,8 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/rueidisaside"
+	"github.com/dannotripp/rueidis"
+	"github.com/dannotripp/rueidis/rueidisaside"
 )
 
 func main() {
@@ -65,8 +65,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/rueidisaside"
+	"github.com/dannotripp/rueidis"
+	"github.com/dannotripp/rueidis/rueidisaside"
 )
 
 type MyValue struct {

@@ -38,9 +38,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/internal/cmds"
-	"github.com/redis/rueidis/internal/util"
+	"github.com/dannotripp/rueidis"
+	"github.com/dannotripp/rueidis/internal/cmds"
+	"github.com/dannotripp/rueidis/internal/util"
 )
 
 const (

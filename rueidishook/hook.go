@@ -5,7 +5,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/redis/rueidis"
+	"github.com/dannotripp/rueidis"
 )
 
 var _ rueidis.Client = (*hookclient)(nil)

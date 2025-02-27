@@ -1,16 +1,16 @@
-module github.com/redis/rueidis/rueidiscompat
+module github.com/dannotripp/rueidis/rueidiscompat
 
 go 1.22.0
 
-replace github.com/redis/rueidis => ../
+replace github.com/dannotripp/rueidis => ../
 
-replace github.com/redis/rueidis/mock => ../mock
+replace github.com/dannotripp/rueidis/mock => ../mock
 
 require (
 	github.com/onsi/ginkgo/v2 v2.22.2
 	github.com/onsi/gomega v1.36.2
-	github.com/redis/rueidis v1.0.55
-	github.com/redis/rueidis/mock v1.0.55
+	github.com/dannotripp/rueidis v1.0.55
+	github.com/dannotripp/rueidis/mock v1.0.55
 	go.uber.org/mock v0.5.0
 )
 

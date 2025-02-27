@@ -17,7 +17,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/redis/rueidis/internal/cmds"
+	"github.com/dannotripp/rueidis/internal/cmds"
 )
 
 const LibName = "rueidis"
@@ -25,7 +25,7 @@ const LibVer = "1.0.55"
 
 var noHello = regexp.MustCompile("unknown command .?(HELLO|hello).?")
 
-// See https://github.com/redis/rueidis/pull/691
+// See https://github.com/dannotripp/rueidis/pull/691
 func isUnsubReply(msg *RedisMessage) bool {
 	// ex. NOPERM User limiteduser has no permissions to run the 'ping' command
 	// ex. LOADING server is loading the dataset in memory
@@ -444,13 +444,13 @@ func (p *pipe) _backgroundWrite() (err error) {
 			if flushDelay != 0 && atomic.LoadInt32(&p.waits) > 1 { // do not delay for sequential usage
 				// Blocking commands are executed in dedicated client which is acquired from pool.
 				// So, there is no sense to wait other commands to be written.
-				// https://github.com/redis/rueidis/issues/379
+				// https://github.com/dannotripp/rueidis/issues/379
 				var blocked bool
 				for i := 0; i < len(multi) && !blocked; i++ {
 					blocked = multi[i].IsBlock()
 				}
 				if !blocked {
-					time.Sleep(flushDelay - time.Since(flushStart)) // ref: https://github.com/redis/rueidis/issues/156
+					time.Sleep(flushDelay - time.Since(flushStart)) // ref: https://github.com/dannotripp/rueidis/issues/156
 				}
 			}
 		}
@@ -459,7 +459,7 @@ func (p *pipe) _backgroundWrite() (err error) {
 		}
 		for _, cmd := range multi {
 			err = writeCmd(p.w, cmd.Commands())
-			if cmd.IsUnsub() { // See https://github.com/redis/rueidis/pull/691
+			if cmd.IsUnsub() { // See https://github.com/dannotripp/rueidis/pull/691
 				err = writeCmd(p.w, cmds.PingCmd.Commands())
 			}
 		}
@@ -543,7 +543,7 @@ func (p *pipe) _backgroundRead() (err error) {
 				// We should ignore them and go fetch next message.
 				// We also treat all the other unsubscribe notifications just like sunsubscribe,
 				// so that we don't need to track how many channels we have subscribed to deal with wildcard unsubscribe command
-				// See https://github.com/redis/rueidis/pull/691
+				// See https://github.com/dannotripp/rueidis/pull/691
 				if unsub {
 					prply = false
 					unsub = false
@@ -587,7 +587,7 @@ func (p *pipe) _backgroundRead() (err error) {
 			// We should ignore them and go fetch next message.
 			// We also treat all the other unsubscribe notifications just like sunsubscribe,
 			// so that we don't need to track how many channels we have subscribed to deal with wildcard unsubscribe command
-			// See https://github.com/redis/rueidis/pull/691
+			// See https://github.com/dannotripp/rueidis/pull/691
 			if unsub {
 				prply = false
 				unsub = false
@@ -603,10 +603,10 @@ func (p *pipe) _backgroundRead() (err error) {
 		} else if multi[ff].NoReply() && msg.string == "QUEUED" {
 			panic(multiexecsub)
 		} else if multi[ff].IsUnsub() && !isUnsubReply(&msg) {
-			// See https://github.com/redis/rueidis/pull/691
+			// See https://github.com/dannotripp/rueidis/pull/691
 			skipUnsubReply = true
 		} else if skipUnsubReply {
-			// See https://github.com/redis/rueidis/pull/691
+			// See https://github.com/dannotripp/rueidis/pull/691
 			if !isUnsubReply(&msg) {
 				panic(protocolbug)
 			}

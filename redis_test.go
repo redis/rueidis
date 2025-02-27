@@ -951,7 +951,7 @@ func TestSentinelClientIntegration(t *testing.T) {
 		Sentinel: SentinelOption{
 			MasterSet: "test",
 		},
-		SelectDB:          2, // https://github.com/redis/rueidis/issues/138
+		SelectDB:          2, // https://github.com/dannotripp/rueidis/issues/138
 		PipelineMultiplex: 1,
 		BlockingPoolSize:  10,
 

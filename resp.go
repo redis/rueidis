@@ -371,7 +371,7 @@ func writeCmd(o *bufio.Writer, cmd []string) (err error) {
 	for _, m := range cmd {
 		err = writeB(o, '$', m)
 		// TODO: Can we set cmd[i] = "" here to allow GC to eagerly recycle memory?
-		// Related: https://github.com/redis/rueidis/issues/364
+		// Related: https://github.com/dannotripp/rueidis/issues/364
 	}
 	return err
 }

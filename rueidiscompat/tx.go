@@ -6,7 +6,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/redis/rueidis"
+	"github.com/dannotripp/rueidis"
 )
 
 var TxFailedErr = errors.New("redis: transaction failed")

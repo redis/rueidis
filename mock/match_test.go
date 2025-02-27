@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/internal/cmds"
+	"github.com/dannotripp/rueidis"
+	"github.com/dannotripp/rueidis/internal/cmds"
 	"go.uber.org/mock/gomock"
 )
 
@@ -63,7 +63,7 @@ func TestMatch_Other(t *testing.T) {
 		t.Fatalf("unexpected matched %s", m.String())
 	}
 	if m := Match("GET", "k"); m.Matches([]rueidis.Completed{
-		cmds.NewBuilder(cmds.NoSlot).Get().Key("k").Build(), // https://github.com/redis/rueidis/issues/120
+		cmds.NewBuilder(cmds.NoSlot).Get().Key("k").Build(), // https://github.com/dannotripp/rueidis/issues/120
 	}) {
 		t.Fatalf("unexpected matched %s", m.String())
 	}
@@ -78,7 +78,7 @@ func TestMatchFn_Other(t *testing.T) {
 	if m := MatchFn(func(cmd []string) bool {
 		return reflect.DeepEqual(cmd, []string{"GET", "k"})
 	}, "GET k"); m.Matches([]rueidis.Completed{
-		cmds.NewBuilder(cmds.NoSlot).Get().Key("k").Build(), // https://github.com/redis/rueidis/issues/120
+		cmds.NewBuilder(cmds.NoSlot).Get().Key("k").Build(), // https://github.com/dannotripp/rueidis/issues/120
 	}) {
 		t.Fatalf("unexpected matched %s", m.String())
 	}

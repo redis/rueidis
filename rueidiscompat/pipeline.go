@@ -33,7 +33,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/redis/rueidis"
+	"github.com/dannotripp/rueidis"
 )
 
 // Pipeliner is a mechanism to realise Redis Pipeline technique.

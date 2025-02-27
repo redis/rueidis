@@ -10,8 +10,8 @@ import (
     "fmt"
     "time"
 
-    "github.com/redis/rueidis"
-    "github.com/redis/rueidis/om"
+    "github.com/dannotripp/rueidis"
+    "github.com/dannotripp/rueidis/om"
 )
 
 type Example struct {

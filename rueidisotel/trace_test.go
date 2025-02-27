@@ -19,7 +19,7 @@ import (
 
 	metricapi "go.opentelemetry.io/otel/metric"
 
-	"github.com/redis/rueidis"
+	"github.com/dannotripp/rueidis"
 )
 
 var (

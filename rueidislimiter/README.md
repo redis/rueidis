@@ -15,7 +15,7 @@ This module provides an interface for token bucket rate limiting with precise co
 To install the `rueidislimiter` module, run:
 
 ```bash
-go get github.com/redis/rueidis/rueidislimiter
+go get github.com/dannotripp/rueidis/rueidislimiter
 ```
 
 ## Usage
@@ -32,8 +32,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/rueidislimiter"
+	"github.com/dannotripp/rueidis"
+	"github.com/dannotripp/rueidis/rueidislimiter"
 )
 
 func main() {

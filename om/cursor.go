@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/redis/rueidis"
+	"github.com/dannotripp/rueidis"
 )
 
 var EndOfCursor = errors.New("end of cursor")

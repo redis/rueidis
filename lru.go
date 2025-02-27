@@ -8,7 +8,7 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/redis/rueidis/internal/cmds"
+	"github.com/dannotripp/rueidis/internal/cmds"
 )
 
 const (

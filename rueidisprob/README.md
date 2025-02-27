@@ -20,8 +20,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/rueidisprob"
+	"github.com/dannotripp/rueidis"
+	"github.com/dannotripp/rueidis/rueidisprob"
 )
 
 func main() {
@@ -74,8 +74,8 @@ import (
     "context"
     "fmt"
 
-    "github.com/redis/rueidis"
-    "github.com/redis/rueidis/rueidisprob"
+    "github.com/dannotripp/rueidis"
+    "github.com/dannotripp/rueidis/rueidisprob"
 )
 
 func main() {
@@ -150,8 +150,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/rueidisprob"
+	"github.com/dannotripp/rueidis"
+	"github.com/dannotripp/rueidis/rueidisprob"
 )
 
 func main() {

@@ -3,7 +3,7 @@ package rueidis
 import (
 	"time"
 
-	"github.com/redis/rueidis/internal/util"
+	"github.com/dannotripp/rueidis/internal/util"
 )
 
 var (

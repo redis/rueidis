@@ -17,7 +17,7 @@ import (
 	"testing"
 
 	"go.uber.org/mock/gomock"
-	"github.com/redis/rueidis/mock"
+	"github.com/dannotripp/rueidis/mock"
 )
 
 func TestWithRueidis(t *testing.T) {
@@ -53,7 +53,7 @@ import (
 	"testing"
 
 	"go.uber.org/mock/gomock"
-	"github.com/redis/rueidis/mock"
+	"github.com/dannotripp/rueidis/mock"
 )
 
 func TestWithRueidisReceive(t *testing.T) {

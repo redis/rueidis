@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/oklog/ulid/v2"
-	"github.com/redis/rueidis"
+	"github.com/dannotripp/rueidis"
 )
 
 // NewJSONRepository creates an JSONRepository.

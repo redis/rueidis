@@ -10,8 +10,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/internal/util"
+	"github.com/dannotripp/rueidis"
+	"github.com/dannotripp/rueidis/internal/util"
 )
 
 // LockerOption should be passed to NewLocker to construct a Locker

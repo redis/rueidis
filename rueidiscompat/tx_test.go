@@ -31,7 +31,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/redis/rueidis"
+	"github.com/dannotripp/rueidis"
 )
 
 var _ = Describe("RESP3 TxPipeline Commands", func() {

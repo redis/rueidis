@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/redis/rueidis"
+	"github.com/dannotripp/rueidis"
 )
 
 func TestNewCountingBloomFilter(t *testing.T) {

@@ -1,8 +1,8 @@
 # rueidis
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/redis/rueidis.svg)](https://pkg.go.dev/github.com/redis/rueidis)
+[![Go Reference](https://pkg.go.dev/badge/github.com/dannotripp/rueidis.svg)](https://pkg.go.dev/github.com/dannotripp/rueidis)
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/redis/rueidis/tree/main.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/redis/rueidis/tree/main)
-[![Go Report Card](https://goreportcard.com/badge/github.com/redis/rueidis)](https://goreportcard.com/report/github.com/redis/rueidis)
+[![Go Report Card](https://goreportcard.com/badge/github.com/dannotripp/rueidis)](https://goreportcard.com/report/github.com/dannotripp/rueidis)
 [![codecov](https://codecov.io/gh/redis/rueidis/branch/master/graph/badge.svg?token=wGTB8GdY06)](https://codecov.io/gh/redis/rueidis)
 
 A fast Golang Redis client that does auto pipelining and supports server-assisted client-side caching.
@@ -32,7 +32,7 @@ package main
 
 import (
 	"context"
-	"github.com/redis/rueidis"
+	"github.com/dannotripp/rueidis"
 )
 
 func main() {
@@ -50,7 +50,7 @@ func main() {
 }
 ```
 
-Check out more examples: [Command Response Cheatsheet](https://github.com/redis/rueidis#command-response-cheatsheet)
+Check out more examples: [Command Response Cheatsheet](https://github.com/dannotripp/rueidis#command-response-cheatsheet)
 
 ## Developer Friendly Command Builder
 
@@ -98,7 +98,7 @@ It is even able to achieve **~14x** throughput over go-redis in a local benchmar
 
 Benchmark source code: https://github.com/rueian/rueidis-benchmark
 
-A benchmark result performed on two GCP n2-highcpu-2 machines also shows that rueidis can achieve higher throughput with lower latencies: https://github.com/redis/rueidis/pull/93
+A benchmark result performed on two GCP n2-highcpu-2 machines also shows that rueidis can achieve higher throughput with lower latencies: https://github.com/dannotripp/rueidis/pull/93
 
 ### Disable Auto Pipelining
 
@@ -142,7 +142,7 @@ client.DoMultiCache(ctx,
     rueidis.CT(client.B().Get().Key("k2").Cache(), 2*time.Minute))
 ```
 
-Cached responses, including Redis Nils, will be invalidated either when being notified by redis servers or when their client-side TTLs are reached. See https://github.com/redis/rueidis/issues/534 for more details.
+Cached responses, including Redis Nils, will be invalidated either when being notified by redis servers or when their client-side TTLs are reached. See https://github.com/dannotripp/rueidis/issues/534 for more details.
 
 ### Benchmark
 
@@ -197,7 +197,7 @@ Otherwise, their client-side cache will not be invalidated by redis.
 ### Client-Side Caching with Cache Aside Pattern
 
 Cache-Aside is a widely used caching strategy.
-[rueidisaside](https://github.com/redis/rueidis/blob/main/rueidisaside/README.md) can help you cache data into your client-side cache backed by Redis. For example:
+[rueidisaside](https://github.com/dannotripp/rueidis/blob/main/rueidisaside/README.md) can help you cache data into your client-side cache backed by Redis. For example:
 
 ```go
 client, err := rueidisaside.NewClient(rueidisaside.ClientOption{
@@ -216,7 +216,7 @@ val, err := client.Get(context.Background(), time.Minute, "mykey", func(ctx cont
 // ...
 ```
 
-Please refer to the full example at [rueidisaside](https://github.com/redis/rueidis/blob/main/rueidisaside/README.md).
+Please refer to the full example at [rueidisaside](https://github.com/dannotripp/rueidis/blob/main/rueidisaside/README.md).
 
 ### Disable Client-Side Caching
 
@@ -601,12 +601,12 @@ if err := rueidis.DecodeSliceOfJSON(client.Do(ctx, client.B().Mget().Key("user1"
 
 ## Contributing
 
-Contributions are welcome, including [issues](https://github.com/redis/rueidis/issues), [pull requests](https://github.com/redis/rueidis/pulls), and [discussions](https://github.com/redis/rueidis/discussions).
+Contributions are welcome, including [issues](https://github.com/dannotripp/rueidis/issues), [pull requests](https://github.com/dannotripp/rueidis/pulls), and [discussions](https://github.com/dannotripp/rueidis/discussions).
 Contributions mean a lot to us and help us improve this library and the community!
 
 Thanks to all the people who already contributed!
 
-<a href="https://github.com/redis/rueidis/graphs/contributors">
+<a href="https://github.com/dannotripp/rueidis/graphs/contributors">
   <img src="https://contributors-img.web.app/image?repo=redis/rueidis" />
 </a>
 

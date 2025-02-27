@@ -1298,7 +1298,7 @@ func TestRedisMessage(t *testing.T) {
 		}
 	})
 	t.Run("Trim ERR prefix", func(t *testing.T) {
-		// kvrocks: https://github.com/redis/rueidis/issues/152#issuecomment-1333923750
+		// kvrocks: https://github.com/dannotripp/rueidis/issues/152#issuecomment-1333923750
 		if (&RedisMessage{typ: '-', string: "ERR no_prefix"}).Error().Error() != "no_prefix" {
 			t.Fatal("fail to trim ERR")
 		}

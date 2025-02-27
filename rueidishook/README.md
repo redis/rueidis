@@ -13,8 +13,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/redis/rueidis"
-	"github.com/redis/rueidis/rueidishook"
+	"github.com/dannotripp/rueidis"
+	"github.com/dannotripp/rueidis/rueidishook"
 )
 
 type hook struct{}
