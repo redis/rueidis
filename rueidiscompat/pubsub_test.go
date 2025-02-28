@@ -30,12 +30,10 @@ import (
 	"bytes"
 	"context"
 	"sync"
-	"testing"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/stretchr/testify/require"
 )
 
 var _ = Describe("PubSub", func() {
@@ -475,17 +473,26 @@ func bigVal() []byte {
 	return bytes.Repeat([]byte{'*'}, 1<<17) // 128kb
 }
 
-func TestWithChannelSize(t *testing.T) {
-	customSize := 500
-	cfg := &chopt{}
-	WithChannelSize(customSize)(cfg)
-	require.Equal(t, customSize, cfg.chanSize, "channel size must match")
-}
+var _ = Describe("WithChannelSize", func() {
+	It("should set the channel size correctly", func() {
+		customSize := 500
+		cfg := &chopt{}
+		WithChannelSize(customSize)(cfg)
 
-func TestSubscriptionString(t *testing.T) {
-	require.Equal(t, "subscribe: channel", (&Subscription{Kind: "subscribe", Channel: "channel"}).String(), "String() output must match expected format")
-}
+		Expect(cfg.chanSize).To(Equal(customSize))
+	})
+})
 
-func TestMessageString(t *testing.T) {
-	require.Equal(t, "Message<channel: new>", (&Message{Channel: "channel", Payload: "new"}).String(), "String() output must match expected format")
-}
+var _ = Describe("Subscription", func() {
+	It("should return the correct string representation", func() {
+		sub := &Subscription{Kind: "subscribe", Channel: "channel"}
+		Expect(sub.String()).To(Equal("subscribe: channel"))
+	})
+})
+
+var _ = Describe("Message", func() {
+	It("should return the correct string representation", func() {
+		m := &Message{Channel: "channel", Payload: "new"}
+		Expect(m.String()).To(Equal("Message<channel: new>"))
+	})
+})
