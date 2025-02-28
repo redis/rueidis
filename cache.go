@@ -191,19 +191,19 @@ func (a *adapterEntry) Wait(ctx context.Context) (RedisMessage, error) {
 	}
 }
 
-func NewFlattenCache(limit int) CacheStore {
-	return &flatten{
+func NewChainedCache(limit int) CacheStore {
+	return &chained{
 		flights: cache.NewDoubleMap[*adapterEntry](64),
 		cache:   cache.NewLRUDoubleMap[[]byte](64, int64(limit)),
 	}
 }
 
-type flatten struct {
+type chained struct {
 	flights *cache.DoubleMap[*adapterEntry]
 	cache   *cache.LRUDoubleMap[[]byte]
 }
 
-func (f *flatten) Flight(key, cmd string, ttl time.Duration, now time.Time) (RedisMessage, CacheEntry) {
+func (f *chained) Flight(key, cmd string, ttl time.Duration, now time.Time) (RedisMessage, CacheEntry) {
 	ts := now.UnixMilli()
 	if e, ok := f.cache.Find(key, cmd, ts); ok {
 		var ret RedisMessage
@@ -219,7 +219,7 @@ func (f *flatten) Flight(key, cmd string, ttl time.Duration, now time.Time) (Red
 	return RedisMessage{}, nil
 }
 
-func (f *flatten) Update(key, cmd string, val RedisMessage, now time.Time) (sxat int64) {
+func (f *chained) Update(key, cmd string, val RedisMessage, now time.Time) (sxat int64) {
 	if af, ok := f.flights.Find(key, cmd); ok {
 		sxat = val.getExpireAt()
 		if af.xat < sxat || sxat == 0 {
@@ -234,14 +234,14 @@ func (f *flatten) Update(key, cmd string, val RedisMessage, now time.Time) (sxat
 	return sxat
 }
 
-func (f *flatten) Cancel(key, cmd string, err error) {
+func (f *chained) Cancel(key, cmd string, err error) {
 	if af, ok := f.flights.Find(key, cmd); ok {
 		f.flights.Delete(key, cmd)
 		af.setErr(err)
 	}
 }
 
-func (f *flatten) Delete(keys []RedisMessage) {
+func (f *chained) Delete(keys []RedisMessage) {
 	if keys == nil {
 		f.cache.Reset()
 	} else {
@@ -251,7 +251,7 @@ func (f *flatten) Delete(keys []RedisMessage) {
 	}
 }
 
-func (f *flatten) Close(err error) {
+func (f *chained) Close(err error) {
 	f.cache.DeleteAll()
 	f.flights.Close(func(entry *adapterEntry) {
 		entry.setErr(err)

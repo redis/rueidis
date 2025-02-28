@@ -185,7 +185,7 @@ func TestCacheStore(t *testing.T) {
 	})
 	t.Run("FlattenCache", func(t *testing.T) {
 		test(t, func() CacheStore {
-			return NewFlattenCache(DefaultCacheBytes)
+			return NewChainedCache(DefaultCacheBytes)
 		})
 	})
 }
