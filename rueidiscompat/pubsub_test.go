@@ -472,3 +472,27 @@ var _ = Describe("PubSub", func() {
 func bigVal() []byte {
 	return bytes.Repeat([]byte{'*'}, 1<<17) // 128kb
 }
+
+var _ = Describe("WithChannelSize", func() {
+	It("should set the channel size correctly", func() {
+		customSize := 500
+		cfg := &chopt{}
+		WithChannelSize(customSize)(cfg)
+
+		Expect(cfg.chanSize).To(Equal(customSize))
+	})
+})
+
+var _ = Describe("Subscription", func() {
+	It("should return the correct string representation", func() {
+		sub := &Subscription{Kind: "subscribe", Channel: "channel"}
+		Expect(sub.String()).To(Equal("subscribe: channel"))
+	})
+})
+
+var _ = Describe("Message", func() {
+	It("should return the correct string representation", func() {
+		m := &Message{Channel: "channel", Payload: "new"}
+		Expect(m.String()).To(Equal("Message<channel: new>"))
+	})
+})
