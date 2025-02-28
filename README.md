@@ -31,23 +31,22 @@ A fast Golang Redis client that does auto pipelining and supports server-assiste
 package main
 
 import (
-	   "context"
-	   "github.com/redis/rueidis"
+	"context"
+	"github.com/redis/rueidis"
 )
 
 func main() {
-    	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress:
-[]string{"127.0.0.1:6379"}})
-	    if err != nil {
-		        panic(err)
-	    }
-	    defer client.Close()
+	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
+	if err != nil {
+		panic(err)
+	}
+	defer client.Close()
 
-	    ctx := context.Background()
-	    // SET key val NX
-	    err = client.Do(ctx, client.B().Set().Key("key").Value("val").Nx().Build()).Error()
-	    // HGETALL hm
-	    hm, err := client.Do(ctx, client.B().Hgetall().Key("hm").Build()).AsStrMap()
+	ctx := context.Background()
+	// SET key val NX
+	err = client.Do(ctx, client.B().Set().Key("key").Value("val").Nx().Build()).Error()
+	// HGETALL hm
+	hm, err := client.Do(ctx, client.B().Hgetall().Key("hm").Build()).AsStrMap()
 }
 ```
 
@@ -78,11 +77,11 @@ For example:
 
 ```go
 func BenchmarkPipelining(b *testing.B, client rueidis.Client) {
-	    // the below client.Do() operations will be issued from
-	    // multiple goroutines and thus will be pipelined automatically.
-	    b.RunParallel(func(pb *testing.PB) {
-		        for pb.Next() {
-			            client.Do(context.Background(), client.B().Get().Key("k").Build()).ToString()
+	// the below client.Do() operations will be issued from
+	// multiple goroutines and thus will be pipelined automatically.
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			client.Do(context.Background(), client.B().Get().Key("k").Build()).ToString()
 		}
 	})
 }
@@ -182,11 +181,11 @@ Although the default is opt-in mode, you can use broadcast mode by specifying yo
 
 ```go
 client, err := rueidis.NewClient(rueidis.ClientOption{
-	    InitAddress:           []string{"127.0.0.1:6379"},
-	    ClientTrackingOptions: []string{"PREFIX", "prefix1:", "PREFIX", "prefix2:", "BCAST"},
+	InitAddress:           []string{"127.0.0.1:6379"},
+	ClientTrackingOptions: []string{"PREFIX", "prefix1:", "PREFIX", "prefix2:", "BCAST"},
 })
 if err != nil {
-        panic(err)
+	panic(err)
 }
 client.DoCache(ctx, client.B().Get().Key("prefix1:1").Cache(), time.Minute).IsCacheHit() == false
 client.DoCache(ctx, client.B().Get().Key("prefix1:1").Cache(), time.Minute).IsCacheHit() == true
@@ -281,9 +280,9 @@ c, cancel := client.Dedicate()
 defer cancel()
 
 wait := c.SetPubSubHooks(rueidis.PubSubHooks{
-        OnMessage: func(m rueidis.PubSubMessage) {
-                // Handle the message. Note that if you want to call another `c.Do()` here, you need to do it in another goroutine or the `c` will be blocked.
-        }
+	OnMessage: func(m rueidis.PubSubMessage) {
+		// Handle the message. Note that if you want to call another `c.Do()` here, you need to do it in another goroutine or the `c` will be blocked.
+	}
 })
 c.Do(ctx, c.B().Subscribe().Channel("ch").Build())
 err := <-wait // disconnected with err
@@ -431,16 +430,16 @@ set the `EnableReplicaAZInfo` option and your `ReplicaSelector` function. For ex
 
 ```go
 client, err := rueidis.NewClient(rueidis.ClientOption{
-	    InitAddress:         []string{"address.example.com:6379"},
-	    EnableReplicaAZInfo: true,
-	    ReplicaSelector: func(slot uint16, replicas []rueidis.ReplicaInfo) int {
-		        for i, replica := range replicas {
-			            if replica.AZ == "us-east-1a" {
-			                	return i // return the index of the replica.
-			            }
-		        }
-		        return -1 // send to the primary.
-	    },
+	InitAddress:         []string{"address.example.com:6379"},
+	EnableReplicaAZInfo: true,
+	ReplicaSelector: func(slot uint16, replicas []rueidis.ReplicaInfo) int {
+		for i, replica := range replicas {
+			if replica.AZ == "us-east-1a" {
+				return i // return the index of the replica.
+			}
+		}
+		return -1 // send to the primary.
+	},
 })
 ```
 
@@ -554,25 +553,25 @@ DecodeSliceOfJSON is useful when you would like to scan the results of an array 
 
 ```golang
 type User struct {
-        Name string `json:"name"`
+	Name string `json:"name"`
 }
 
 // Set some values
 if err = client.Do(ctx, client.B().Set().Key("user1").Value(`{"name": "name1"}`).Build()).Error(); err != nil {
-        return err
+	return err
 }
 if err = client.Do(ctx, client.B().Set().Key("user2").Value(`{"name": "name2"}`).Build()).Error(); err != nil {
-        return err
+	return err
 }
 
 // Scan MGET results into []*User
 var users []*User // or []User is also scannable
 if err := rueidis.DecodeSliceOfJSON(client.Do(ctx, client.B().Mget().Key("user1", "user2").Build()), &users); err != nil {
-        return err
+	return err
 }
 
 for _, user := range users {
-        fmt.Printf("%+v\n", user)
+	fmt.Printf("%+v\n", user)
 }
 /*
 &{name:name1}
@@ -587,13 +586,13 @@ Please make sure that all values in the result have the same JSON structures.
 ```golang
 // Set a pure string value
 if err = client.Do(ctx, client.B().Set().Key("user1").Value("userName1").Build()).Error(); err != nil {
-        return err
+	return err
 }
 
 // Bad
 users := make([]*User, 0)
 if err := rueidis.DecodeSliceOfJSON(client.Do(ctx, client.B().Mget().Key("user1").Build()), &users); err != nil {
-        return err
+	return err
 }
 // -> Error: invalid character 'u' looking for the beginning of the value
 // in this case, use client.Do(ctx, client.B().Mget().Key("user1").Build()).AsStrSlice()
