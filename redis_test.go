@@ -83,7 +83,7 @@ func testFlush(t *testing.T, client Client) {
 		return
 	}
 
-	if err := client.Do(ctx, client.B().Flushall().Build()).Error(); err != nil {
+	if err := client.Do(ctx, client.B().Flushdb().Build()).Error(); err != nil {
 		t.Fatalf("unexpected flush err %v", err)
 	}
 
@@ -177,14 +177,38 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 		return
 	}
 
-	t.Logf("testing GET with %d keys and %d parallelism with timeout\n", keys*100, para)
+	t.Logf("testing GET with %d keys and %d parallelism with 1ms timeout\n", keys*2, para)
 	jobs, wait = parallel(para)
-	for i := 0; i < keys*100 && !t.Failed(); i++ {
+	for i := 0; i < keys*2 && !t.Failed(); i++ {
 		key := prefix + strconv.Itoa(rand.Intn(keys))
 		jobs <- func() {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
 			defer cancel()
 			val, err := client.Do(ctx, client.B().Get().Key(key).Build()).ToString()
+			if !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, os.ErrDeadlineExceeded) {
+				if v, ok := kvs[key]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
+					t.Errorf("unexpected get response %v %v %v", val, err, ok)
+				}
+			}
+		}
+	}
+	wait()
+	if t.Failed() {
+		return
+	}
+
+	t.Logf("testing GET with %d keys and %d parallelism with 10ms timeout\n", keys*100, para)
+	jobs, wait = parallel(para)
+	for i := 0; i < keys*100 && !t.Failed(); i++ {
+		key := prefix + strconv.Itoa(rand.Intn(keys))
+		jobs <- func() {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)
+			defer cancel()
+			cmd := client.B().Get().Key(key).Build()
+			if i%10 == 0 {
+				cmd = cmd.ToPipe()
+			}
+			val, err := client.Do(ctx, cmd).ToString()
 			if !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, os.ErrDeadlineExceeded) {
 				if v, ok := kvs[key]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
 					t.Errorf("unexpected get response %v %v %v", val, err, ok)
@@ -337,9 +361,9 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 		return
 	}
 
-	t.Logf("testing GET with %d keys and %d parallelism with timeout\n", keys*100, para)
+	t.Logf("testing GET with %d keys and %d parallelism with 1ms timeout\n", keys*2, para)
 	jobs, wait = parallel(para)
-	for i := 0; i < keys*100 && !t.Failed(); i += batch {
+	for i := 0; i < keys*2 && !t.Failed(); i += batch {
 		cmdkeys := make([]string, 0, batch)
 		commands := make(Commands, 0, batch)
 		for j := 0; j < batch; j++ {
@@ -348,6 +372,36 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 		}
 		jobs <- func() {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
+			defer cancel()
+			for j, resp := range client.DoMulti(ctx, commands...) {
+				val, err := resp.ToString()
+				if !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, os.ErrDeadlineExceeded) {
+					if v, ok := kvs[cmdkeys[j]]; !((ok && val == v) || (!ok && IsRedisNil(err))) {
+						t.Fatalf("unexpected get response %v %v %v", val, err, ok)
+					}
+				}
+			}
+		}
+	}
+	wait()
+	if t.Failed() {
+		return
+	}
+
+	t.Logf("testing GET with %d keys and %d parallelism with 10ms timeout\n", keys*100, para)
+	jobs, wait = parallel(para)
+	for i := 0; i < keys*100 && !t.Failed(); i += batch {
+		cmdkeys := make([]string, 0, batch)
+		commands := make(Commands, 0, batch)
+		for j := 0; j < batch; j++ {
+			cmdkeys = append(cmdkeys, "m"+strconv.Itoa(rand.Intn(keys)))
+			commands = append(commands, client.B().Get().Key(cmdkeys[len(cmdkeys)-1]).Build())
+		}
+		if i%10 == 0 {
+			commands[0] = commands[0].ToPipe()
+		}
+		jobs <- func() {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*10)
 			defer cancel()
 			for j, resp := range client.DoMulti(ctx, commands...) {
 				val, err := resp.ToString()
@@ -865,6 +919,7 @@ func TestSingleClientIntegration(t *testing.T) {
 		InitAddress:       []string{"127.0.0.1:6379"},
 		ConnWriteTimeout:  180 * time.Second,
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 
 		DisableAutoPipelining: os.Getenv("DisableAutoPipelining") == "true",
 	})
@@ -898,6 +953,7 @@ func TestSentinelClientIntegration(t *testing.T) {
 		},
 		SelectDB:          2, // https://github.com/redis/rueidis/issues/138
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 
 		DisableAutoPipelining: os.Getenv("DisableAutoPipelining") == "true",
 	})
@@ -929,6 +985,7 @@ func TestClusterClientIntegration(t *testing.T) {
 		ShuffleInit:       true,
 		Dialer:            net.Dialer{KeepAlive: -1},
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 
 		DisableAutoPipelining: os.Getenv("DisableAutoPipelining") == "true",
 	})
@@ -956,6 +1013,7 @@ func TestSingleClient5Integration(t *testing.T) {
 		ConnWriteTimeout:  180 * time.Second,
 		DisableCache:      true,
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -978,6 +1036,7 @@ func TestCluster5ClientIntegration(t *testing.T) {
 		DisableCache:      true,
 		Dialer:            net.Dialer{KeepAlive: -1},
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -1000,6 +1059,7 @@ func TestSentinel5ClientIntegration(t *testing.T) {
 			MasterSet: "test5",
 		},
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -1019,6 +1079,7 @@ func TestKeyDBSingleClientIntegration(t *testing.T) {
 		InitAddress:       []string{"127.0.0.1:6344"},
 		ConnWriteTimeout:  180 * time.Second,
 		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -1036,8 +1097,10 @@ func TestDragonflyDBSingleClientIntegration(t *testing.T) {
 	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
-		InitAddress:      []string{"127.0.0.1:6333"},
-		ConnWriteTimeout: 180 * time.Second,
+		InitAddress:       []string{"127.0.0.1:6333"},
+		ConnWriteTimeout:  180 * time.Second,
+		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -1055,9 +1118,11 @@ func TestKvrocksSingleClientIntegration(t *testing.T) {
 	}
 	defer ShouldNotLeaked(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
-		InitAddress:      []string{"127.0.0.1:6666"},
-		ConnWriteTimeout: 180 * time.Second,
-		DisableCache:     true,
+		InitAddress:       []string{"127.0.0.1:6666"},
+		ConnWriteTimeout:  180 * time.Second,
+		DisableCache:      true,
+		PipelineMultiplex: 1,
+		BlockingPoolSize:  10,
 	})
 	if err != nil {
 		t.Fatal(err)

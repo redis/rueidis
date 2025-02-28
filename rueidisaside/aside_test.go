@@ -16,7 +16,7 @@ var addr = []string{"127.0.0.1:6379"}
 
 func makeClient(t *testing.T, addr []string) CacheAsideClient {
 	client, err := NewClient(ClientOption{
-		ClientOption: rueidis.ClientOption{InitAddress: addr, PipelineMultiplex: -1},
+		ClientOption: rueidis.ClientOption{InitAddress: addr, PipelineMultiplex: -1, SelectDB: 5},
 		ClientTTL:    time.Second,
 	})
 	if err != nil {
@@ -28,7 +28,7 @@ func makeClient(t *testing.T, addr []string) CacheAsideClient {
 func makeClientWithLuaLock(t *testing.T, addr []string) CacheAsideClient {
 	client, err := NewClient(ClientOption{
 		UseLuaLock:   true,
-		ClientOption: rueidis.ClientOption{InitAddress: addr, PipelineMultiplex: -1},
+		ClientOption: rueidis.ClientOption{InitAddress: addr, PipelineMultiplex: -1, SelectDB: 5},
 		ClientTTL:    time.Second,
 	})
 	if err != nil {
@@ -46,7 +46,7 @@ func TestClientErr(t *testing.T) {
 func TestWithClientBuilder(t *testing.T) {
 	var client rueidis.Client
 	c, err := NewClient(ClientOption{
-		ClientOption: rueidis.ClientOption{InitAddress: addr},
+		ClientOption: rueidis.ClientOption{InitAddress: addr, SelectDB: 5},
 		ClientBuilder: func(option rueidis.ClientOption) (_ rueidis.Client, err error) {
 			client, err = rueidis.NewClient(option)
 			return client, err

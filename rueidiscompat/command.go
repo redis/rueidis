@@ -4926,3 +4926,551 @@ type ModuleLoadexConfig struct {
 	Conf map[string]interface{}
 	Args []interface{}
 }
+
+type ClusterLink struct {
+	Direction           string
+	Node                string
+	CreateTime          int64
+	Events              string
+	SendBufferAllocated int64
+	SendBufferUsed      int64
+}
+
+// ClusterLinksCmd represents the response structure for ClusterLinks.
+type ClusterLinksCmd struct {
+	val []ClusterLink
+	err error
+}
+
+func (c *ClusterLinksCmd) SetErr(err error) {
+	c.err = err
+}
+
+func (c *ClusterLinksCmd) Err() error {
+	return c.err
+}
+
+func (cmd *ClusterLinksCmd) from(res rueidis.RedisResult) {
+	arr, err := res.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+
+	val := make([]ClusterLink, 0, len(arr))
+	for _, v := range arr {
+		dict, err := v.AsMap()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		link := ClusterLink{}
+
+		for k, v := range dict {
+			switch k {
+			case "direction":
+				link.Direction, _ = v.ToString()
+			case "node":
+				link.Node, _ = v.ToString()
+			case "create-time":
+				link.CreateTime, _ = v.ToInt64()
+			case "events":
+				link.Events, _ = v.ToString()
+			case "send-buffer-allocated":
+				link.SendBufferAllocated, _ = v.ToInt64()
+			case "send-buffer-used":
+				link.SendBufferUsed, _ = v.ToInt64()
+			default:
+				cmd.SetErr(fmt.Errorf("unexpected key %q in CLUSTER LINKS reply", k))
+				return
+			}
+		}
+		val = append(val, link)
+	}
+
+	cmd.val = val
+}
+
+func newClusterLinksCmd(resp rueidis.RedisResult) *ClusterLinksCmd {
+	cmd := &ClusterLinksCmd{}
+	cmd.from(resp)
+	return cmd
+}
+
+func (cmd *ClusterLinksCmd) SetVal(val []ClusterLink) {
+	cmd.val = val
+}
+
+func (cmd *ClusterLinksCmd) Val() []ClusterLink {
+	return cmd.val
+}
+
+func (cmd *ClusterLinksCmd) Result() ([]ClusterLink, error) {
+	return cmd.Val(), cmd.Err()
+}
+
+type SlowLog struct {
+	ID         int64
+	Time       time.Time
+	Duration   time.Duration
+	Args       []string
+	ClientAddr string
+	ClientName string
+}
+
+type SlowLogCmd struct {
+	baseCmd[[]*SlowLog]
+}
+
+func (cmd *SlowLogCmd) from(res rueidis.RedisResult) {
+	arr, err := res.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+
+	logEntries := make([]*SlowLog, 0, len(arr))
+	for _, msg := range arr {
+		log, err := msg.ToArray()
+
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+
+		if len(log) < 4 {
+			cmd.SetErr(fmt.Errorf("redis: got %d elements in slowlog get, expected at least 4", len(log)))
+			return
+		}
+
+		entry := SlowLog{}
+
+		entry.ID, err = log[0].AsInt64()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+
+		createdAt, err := log[1].AsInt64()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		entry.Time = time.Unix(createdAt, 0)
+
+		duration, err := log[2].AsInt64()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+		entry.Duration = time.Duration(duration) * time.Microsecond
+
+		argsArr, err := log[3].ToArray()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+
+		entry.Args = make([]string, len(argsArr))
+
+		for i, arg := range argsArr {
+			entry.Args[i], err = arg.ToString()
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+		}
+
+		if len(log) >= 5 {
+			entry.ClientAddr, err = log[4].ToString()
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+		}
+
+		if len(log) >= 6 {
+			entry.ClientName, err = log[5].ToString()
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+		}
+
+		logEntries = append(logEntries, &entry)
+	}
+	cmd.SetVal(logEntries)
+}
+
+func newSlowLogCmd(res rueidis.RedisResult) *SlowLogCmd {
+	cmd := &SlowLogCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+// LCSQuery is a parameter used for the LCS command
+type LCSQuery struct {
+	Key1         string
+	Key2         string
+	Len          bool
+	Idx          bool
+	MinMatchLen  int
+	WithMatchLen bool
+}
+
+// LCSMatch is the result set of the LCS command
+type LCSMatch struct {
+	MatchString string
+	Matches     []LCSMatchedPosition
+	Len         int64
+}
+
+type LCSMatchedPosition struct {
+	Key1 LCSPosition
+	Key2 LCSPosition
+
+	// only for withMatchLen is true
+	MatchLen int64
+}
+
+type LCSPosition struct {
+	Start int64
+	End   int64
+}
+
+type LCSCmd struct {
+	baseCmd[*LCSMatch]
+
+	// 1: match string
+	// 2: match len
+	// 3: match idx LCSMatch
+	readType uint8
+}
+
+func newLCSCmd(res rueidis.RedisResult, readType uint8) *LCSCmd {
+	cmd := &LCSCmd{readType: readType}
+	cmd.from(res)
+	return cmd
+}
+
+func (cmd *LCSCmd) SetVal(val *LCSMatch) {
+	cmd.val = val
+}
+
+func (cmd *LCSCmd) SetErr(err error) {
+	cmd.err = err
+}
+
+func (cmd *LCSCmd) Val() *LCSMatch {
+	return cmd.val
+}
+
+func (cmd *LCSCmd) Err() error {
+	return cmd.err
+}
+
+func (cmd *LCSCmd) Result() (*LCSMatch, error) {
+	return cmd.val, cmd.err
+}
+
+func (cmd *LCSCmd) from(res rueidis.RedisResult) {
+	lcs := &LCSMatch{}
+	var err error
+
+	switch cmd.readType {
+	case 1:
+		// match string
+		if lcs.MatchString, err = res.ToString(); err != nil {
+			cmd.SetErr(err)
+			return
+		}
+	case 2:
+		// match len
+		if lcs.Len, err = res.AsInt64(); err != nil {
+			cmd.SetErr(err)
+			return
+		}
+	case 3:
+		// read LCSMatch
+		if msgMap, err := res.AsMap(); err != nil {
+			cmd.SetErr(err)
+			return
+		} else {
+			// Validate length (should have exactly 2 keys: "matches" and "len")
+			if len(msgMap) != 2 {
+				cmd.SetErr(fmt.Errorf("redis: got %d elements in the map, wanted %d", len(msgMap), 2))
+				return
+			}
+
+			// read matches or len field
+			for key, value := range msgMap {
+				switch key {
+				case "matches":
+					// read array of matched positions
+					matches, err := cmd.readMatchedPositions(value)
+					if err != nil {
+						cmd.SetErr(err)
+						return
+					}
+					lcs.Matches = matches
+
+				case "len":
+					// read match length
+					matchLen, err := value.AsInt64()
+					if err != nil {
+						cmd.SetErr(err)
+						return
+					}
+					lcs.Len = matchLen
+				}
+			}
+		}
+	}
+
+	cmd.val = lcs
+}
+
+func (cmd *LCSCmd) readMatchedPositions(res rueidis.RedisMessage) ([]LCSMatchedPosition, error) {
+	val, err := res.ToArray()
+	if err != nil {
+		return nil, err
+	}
+
+	n := len(val)
+	positions := make([]LCSMatchedPosition, n)
+
+	for i := 0; i < n; i++ {
+		pn, err := val[i].ToArray()
+		if err != nil {
+			return nil, err
+		}
+
+		if len(pn) < 2 {
+			return nil, fmt.Errorf("invalid position format")
+		}
+
+		key1, err := cmd.readPosition(pn[0])
+		if err != nil {
+			return nil, err
+		}
+
+		key2, err := cmd.readPosition(pn[1])
+		if err != nil {
+			return nil, err
+		}
+
+		pos := LCSMatchedPosition{
+			Key1: key1,
+			Key2: key2,
+		}
+
+		// Read match length if WithMatchLen is true
+		if len(pn) > 2 {
+			if pos.MatchLen, err = pn[2].AsInt64(); err != nil {
+				return nil, err
+			}
+		}
+
+		positions[i] = pos
+	}
+
+	return positions, nil
+}
+
+func (cmd *LCSCmd) readPosition(res rueidis.RedisMessage) (LCSPosition, error) {
+	posArray, err := res.ToArray()
+	if err != nil {
+		return LCSPosition{}, err
+	}
+	if len(posArray) != 2 {
+		return LCSPosition{}, fmt.Errorf("redis: got %d elements in the array, wanted %d", len(posArray), 2)
+	}
+
+	start, err := posArray[0].AsInt64()
+	if err != nil {
+		return LCSPosition{}, err
+	}
+
+	end, err := posArray[1].AsInt64()
+	if err != nil {
+		return LCSPosition{}, err
+	}
+
+	return LCSPosition{Start: start, End: end}, nil
+}
+
+type FunctionStats struct {
+	Engines   []Engine
+	isRunning bool
+	rs        RunningScript
+	allrs     []RunningScript
+}
+
+func (fs *FunctionStats) Running() bool {
+	return fs.isRunning
+}
+
+func (fs *FunctionStats) RunningScript() (RunningScript, bool) {
+	return fs.rs, fs.isRunning
+}
+
+func (fs *FunctionStats) AllRunningScripts() []RunningScript {
+	return fs.allrs
+}
+
+type FunctionStatsCmd struct {
+	baseCmd[FunctionStats]
+}
+
+func newFunctionStatsCmd(res rueidis.RedisResult) *FunctionStatsCmd {
+	cmd := &FunctionStatsCmd{}
+	cmd.from(res)
+	return cmd
+}
+
+func (cmd *FunctionStatsCmd) from(res rueidis.RedisResult) {
+	var fstats FunctionStats
+	mp, err := res.AsMap()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+	for key, val := range mp {
+		switch key {
+		case "running_script":
+			fstats.rs, fstats.isRunning, err = cmd.parseRunningScript(val)
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+		case "engines":
+			fstats.Engines, err = cmd.parseEngines(val)
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+		case "all_running_scripts":
+			fstats.allrs, err = cmd.parseRunningScripts(val)
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
+		}
+
+	}
+	cmd.SetVal(fstats)
+}
+
+type RunningScript struct {
+	Name     string
+	Command  []string
+	Duration time.Duration
+}
+
+func (cmd *FunctionStatsCmd) parseRunningScript(msg rueidis.RedisMessage) (RunningScript, bool, error) {
+	rsMap, err := msg.AsMap()
+	if err != nil {
+		if rueidis.IsRedisNil(err) {
+			return RunningScript{}, false, nil
+		}
+		return RunningScript{}, false, err
+	}
+
+	if len(rsMap) == 0 {
+		return RunningScript{}, false, nil
+	}
+
+	val := RunningScript{}
+	for key, attr := range rsMap {
+		switch key {
+		case "name":
+			val.Name, err = attr.ToString()
+		case "command":
+			val.Command, err = attr.AsStrSlice()
+		case "duration_ms":
+			ms, err := attr.AsInt64()
+			if err != nil {
+				return RunningScript{}, false, err
+			}
+			val.Duration = time.Duration(ms) * time.Millisecond
+		}
+		if err != nil {
+			return RunningScript{}, false, err
+		}
+	}
+	return val, true, nil
+}
+
+type Engine struct {
+	Language       string
+	LibrariesCount int64
+	FunctionsCount int64
+}
+
+func (cmd *FunctionStatsCmd) parseEngines(msg rueidis.RedisMessage) ([]Engine, error) {
+
+	engineMap, err := msg.AsMap()
+	if err != nil {
+		if rueidis.IsRedisNil(err) {
+			return []Engine{}, nil
+		}
+		return []Engine{}, err
+	}
+	vals := make([]Engine, 0, len(engineMap))
+	for key, attr := range engineMap {
+		engine := Engine{}
+		engine.Language = key
+		emap, err := attr.AsMap()
+		if err != nil {
+			return []Engine{}, err
+		}
+		for k, v := range emap {
+			switch k {
+			case "libraries_count":
+				engine.LibrariesCount, err = v.AsInt64()
+			case "functions_count":
+				engine.FunctionsCount, err = v.AsInt64()
+			}
+			if err != nil {
+				return []Engine{}, err
+			}
+		}
+		vals = append(vals, engine)
+	}
+	return vals, nil
+}
+
+func (cmd *FunctionStatsCmd) parseRunningScripts(msg rueidis.RedisMessage) ([]RunningScript, error) {
+	rScriptMap, err := msg.AsMap()
+	if err != nil {
+		if rueidis.IsRedisNil(err) {
+			return []RunningScript{}, nil
+		}
+		return []RunningScript{}, err
+	}
+	vals := make([]RunningScript, 0, len(rScriptMap))
+	for _, attr := range rScriptMap {
+		var val RunningScript
+		attrMap, err := attr.AsMap()
+		for k, v := range attrMap {
+			switch k {
+			case "name":
+				val.Name, err = v.ToString()
+			case "duration_ms":
+				ms, err := v.AsInt64()
+				if err != nil {
+					return []RunningScript{}, err
+				}
+				val.Duration = time.Duration(ms) * time.Millisecond
+			case "command":
+				val.Command, err = v.AsStrSlice()
+			}
+			if err != nil {
+				return []RunningScript{}, err
+			}
+		}
+		vals = append(vals, val)
+
+	}
+	return vals, err
+}
