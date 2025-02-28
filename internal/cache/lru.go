@@ -39,6 +39,7 @@ func (h *linked[V]) close() {
 
 type LRUDoubleMap[V any] struct {
 	ma    map[string]*linked[V]
+	mi    []string
 	bp    sync.Pool
 	mu    sync.RWMutex
 	head  unsafe.Pointer
@@ -157,6 +158,30 @@ func (m *LRUDoubleMap[V]) Insert(key1, key2 string, size, ts, now int64, v V) {
 }
 
 func (m *LRUDoubleMap[V]) Delete(key1 string) {
+	if m.mi == nil {
+		m.mi = make([]string, 0, bpsize)
+	} else if len(m.mi) == bpsize {
+		m.mu.Lock()
+		for _, key := range m.mi {
+			if h := m.ma[key]; h != nil && h.ts == 0 {
+				m.remove(h)
+			}
+		}
+		if h := m.ma[key1]; h != nil {
+			m.remove(h)
+		}
+		for m.head != nil {
+			h := (*linked[V])(m.head)
+			if h.ts != 0 && atomic.LoadInt64(&m.total) <= m.limit {
+				break
+			}
+			m.remove(h)
+		}
+		m.mu.Unlock()
+		clear(m.mi)
+		return
+	}
+	m.mi = append(m.mi, key1)
 	m.mu.RLock()
 	if h := m.ma[key1]; h != nil {
 		h.close()
@@ -167,6 +192,7 @@ func (m *LRUDoubleMap[V]) Delete(key1 string) {
 func (m *LRUDoubleMap[V]) DeleteAll() {
 	m.mu.Lock()
 	m.ma = nil
+	m.mi = nil
 	m.head = nil
 	m.tail = nil
 	atomic.StoreInt64(&m.total, 0)
@@ -177,6 +203,7 @@ func (m *LRUDoubleMap[V]) DeleteAll() {
 func (m *LRUDoubleMap[V]) Reset() {
 	m.mu.Lock()
 	m.ma = make(map[string]*linked[V], len(m.ma))
+	m.mi = nil
 	m.head = nil
 	m.tail = nil
 	atomic.StoreInt64(&m.total, 0)
@@ -194,7 +221,7 @@ func (m *LRUDoubleMap[V]) moveToTail(s []*linked[V]) {
 	}
 	for m.head != nil {
 		h := (*linked[V])(m.head)
-		if atomic.LoadInt64(&m.total) <= m.limit && h.ts != 0 {
+		if h.ts != 0 && atomic.LoadInt64(&m.total) <= m.limit {
 			break
 		}
 		m.remove(h)
