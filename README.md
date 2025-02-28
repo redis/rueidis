@@ -66,7 +66,6 @@ Once a command is built, use either `client.Do()` or `client.DoMulti()` to send 
 
 To reuse a command, use `Pin()` after `Build()` and it will prevent the command from being recycled.
 
-
 ## [Pipelining](https://redis.io/docs/manual/pipelining/)
 
 ### Auto Pipelining
@@ -167,6 +166,7 @@ client.DoCache(ctx, client.B().Get().Key("k1").Cache(), time.Minute).IsCacheHit(
 ```
 
 If the OpenTelemetry is enabled by the `rueidisotel.NewClient(option)`, then there are also two metrics instrumented:
+
 * rueidis_do_cache_miss
 * rueidis_do_cache_hits
 
@@ -260,6 +260,7 @@ err = client.Receive(context.Background(), client.B().Subscribe().Channel("ch1",
 The provided handler will be called with the received message.
 
 It is important to note that `client.Receive()` will keep blocking until returning a value in the following cases:
+
 1. return `nil` when receiving any unsubscribe/punsubscribe message related to the provided `subscribe` command, including `sunsubscribe` messages caused by slot migrations.
 2. return `rueidis.ErrClosing` when the client is closed manually.
 3. return `ctx.Err()` when the `ctx` is done.
