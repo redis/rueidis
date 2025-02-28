@@ -155,7 +155,7 @@ type pool struct {
 
 type pipe struct {
 	conn            net.Conn
-	error           atomic.Value
+	error           atomic.Pointer[errs]
 	clhks           atomic.Value // closed hook, invoked after the conn is closed
 	pshks           atomic.Value // pubsub hook, registered by the SetPubSubHooks
 	queue           any
@@ -190,3 +190,5 @@ type stream struct {
 	e error
 	n int
 }
+
+type errs struct{ error }
