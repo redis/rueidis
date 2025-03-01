@@ -323,7 +323,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 			p.background()
 		}
 		if p.timeout > 0 && p.pinggap > 0 {
-			go p.backgroundPing()
+			p.schedulePing(atomic.LoadInt32(&p.recvs))
 		}
 	}
 	return p, nil
@@ -657,6 +657,45 @@ func (p *pipe) backgroundPing() {
 	if err != ErrClosing {
 		p._exit(err)
 	}
+}
+
+func (p *pipe) schedulePing(prevRecv int32) {
+	if p.timeout <= 0 || p.pinggap <= 0 {
+		return
+	}
+
+	time.AfterFunc(p.pinggap, func() {
+		if atomic.LoadInt32(&p.blcksig) != 0 ||
+			(atomic.LoadInt32(&p.state) == 0 && atomic.LoadInt32(&p.waits) != 0) {
+			p.schedulePing(prevRecv) // Reschedule without sending PING
+			return
+		}
+
+		recv := atomic.LoadInt32(&p.recvs)
+		if recv != prevRecv {
+			p.schedulePing(recv) // Activity detected, reset the cycle
+			return
+		}
+
+		ch := make(chan error, 1)
+		tm := time.NewTimer(p.timeout)
+		go func() { ch <- p.Do(context.Background(), cmds.PingCmd).NonRedisError() }()
+
+		select {
+		case <-p.close:
+			return // Stop if the connection is closing
+		case <-tm.C:
+			p._exit(os.ErrDeadlineExceeded)
+			return
+		case err := <-ch:
+			tm.Stop()
+			if err == nil || atomic.LoadInt32(&p.blcksig) != 0 {
+				p.schedulePing(recv) // No error, reschedule
+			} else {
+				p._exit(err)
+			}
+		}
+	})
 }
 
 func (p *pipe) handlePush(values []RedisMessage) (reply bool, unsubscribe bool) {
