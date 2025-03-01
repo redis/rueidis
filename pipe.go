@@ -118,7 +118,6 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 
 		r2ps: r2ps,
 	}
-	p.error.Store(&errs{})
 	if !nobg {
 		p.queue = newRing(option.RingScaleEachConn)
 		p.nsubs = newSubs()
