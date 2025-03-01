@@ -228,16 +228,18 @@ func (f *chained) Update(key, cmd string, val RedisMessage, now time.Time) (sxat
 		}
 		bs := val.CacheMarshal(nil)
 		f.cache.Insert(key, cmd, int64(len(bs)+len(key)+len(cmd))+int64(cache.LRUEntrySize)+64, sxat, now.UnixMilli(), bs)
-		f.flights.Delete(key, cmd)
-		af.setVal(val)
+		if f.flights.Delete(key, cmd) {
+			af.setVal(val)
+		}
 	}
 	return sxat
 }
 
 func (f *chained) Cancel(key, cmd string, err error) {
 	if af, ok := f.flights.Find(key, cmd); ok {
-		f.flights.Delete(key, cmd)
-		af.setErr(err)
+		if f.flights.Delete(key, cmd) {
+			af.setErr(err)
+		}
 	}
 }
 

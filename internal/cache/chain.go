@@ -38,35 +38,37 @@ func (h *chain[V]) empty() bool {
 	return h.node.next == nil && h.node.key == ""
 }
 
-func (h *chain[V]) delete(key string) bool {
+func (h *chain[V]) delete(key string) (bool, bool) {
 	var zero V
 	if h.node.key == key {
 		h.node.key = ""
 		h.node.val = zero
-		return h.node.next == nil
+		return h.node.next == nil, true
 	}
 
 	if h.node.next == nil {
-		return h.node.key == ""
+		return h.node.key == "", false
 	}
 
 	if h.node.next.key == key {
 		h.node.next.key = ""
 		h.node.next.val = zero
 		h.node.next, h.node.next.next = h.node.next.next, nil
-		return h.empty()
+		return h.empty(), true
 	}
 
 	prev := h.node.next
 	curr := h.node.next.next
+	deleted := false
 	for curr != nil {
 		if curr.key == key {
 			curr.key = ""
 			curr.val = zero
 			prev.next, curr.next = curr.next, nil
+			deleted = true
 			break
 		}
 		prev, curr = curr, curr.next
 	}
-	return h.empty()
+	return h.empty(), deleted
 }

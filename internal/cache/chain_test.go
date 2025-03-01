@@ -12,7 +12,7 @@ func TestChain(t *testing.T) {
 	if _, ok := h.find("any"); ok {
 		t.Fatal("value is found")
 	}
-	if empty := h.delete("any"); !empty {
+	if empty, deleted := h.delete("any"); !empty || deleted {
 		t.Fatal("not empty")
 	}
 	h.insert("1", 1)
@@ -27,7 +27,7 @@ func TestChain(t *testing.T) {
 	if v, ok := h.find("3"); !ok || v != 3 {
 		t.Fatal("value is not found")
 	}
-	if empty := h.delete("1"); empty {
+	if empty, deleted := h.delete("1"); empty || !deleted {
 		t.Fatal("empty")
 	}
 	if _, ok := h.find("1"); ok {
@@ -39,7 +39,7 @@ func TestChain(t *testing.T) {
 	if v, ok := h.find("3"); !ok || v != 3 {
 		t.Fatal("value is not found")
 	}
-	if empty := h.delete("2"); empty {
+	if empty, deleted := h.delete("2"); empty || !deleted {
 		t.Fatal("empty")
 	}
 	if _, ok := h.find("2"); ok {
@@ -55,10 +55,10 @@ func TestChain(t *testing.T) {
 	if v, ok := h.find("4"); !ok || v != 4 {
 		t.Fatal("value is not found")
 	}
-	if empty := h.delete("3"); empty {
+	if empty, deleted := h.delete("3"); empty || !deleted {
 		t.Fatal("empty")
 	}
-	if empty := h.delete("4"); !empty {
+	if empty, deleted := h.delete("4"); !empty || !deleted {
 		t.Fatal("not empty")
 	}
 }

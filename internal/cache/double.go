@@ -66,12 +66,12 @@ func (m *DoubleMap[V]) FindOrInsert(key1, key2 string, fn func() V) (val V, ok b
 	return
 }
 
-func (m *DoubleMap[V]) Delete(key1, key2 string) {
+func (m *DoubleMap[V]) Delete(key1, key2 string) (deleted bool) {
 	var empty bool
 	m.mu.RLock()
 	if h := m.ma[key1]; h != nil {
 		h.mu.Lock()
-		empty = h.delete(key2)
+		empty, deleted = h.delete(key2)
 		h.mu.Unlock()
 	}
 	m.mu.RUnlock()
@@ -89,6 +89,7 @@ func (m *DoubleMap[V]) Delete(key1, key2 string) {
 			m.bp.Put(e)
 		}(m, e)
 	}
+	return
 }
 
 func (m *DoubleMap[V]) delete(keys []string) {
