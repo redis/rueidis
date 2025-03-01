@@ -191,6 +191,8 @@ func (a *adapterEntry) Wait(ctx context.Context) (RedisMessage, error) {
 	}
 }
 
+// NewChainedCache returns a CacheStore optimized for concurrency, memory efficiency and GC, compared to
+// the default client side caching CacheStore. However, it is not yet optimized for DoMultiCache.
 func NewChainedCache(limit int) CacheStore {
 	return &chained{
 		flights: cache.NewDoubleMap[*adapterEntry](64),
