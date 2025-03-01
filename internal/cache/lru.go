@@ -158,7 +158,7 @@ func (m *LRUDoubleMap[V]) Insert(key1, key2 string, size, ts, now int64, v V) {
 }
 
 func (m *LRUDoubleMap[V]) Delete(key1 string) {
-	if m.mi == nil {
+	if m.mi == nil { // no need to lock m.mi because this Delete is called sequentially.
 		m.mi = make([]string, 0, bpsize)
 	} else if len(m.mi) == bpsize {
 		m.mu.Lock()
@@ -181,12 +181,15 @@ func (m *LRUDoubleMap[V]) Delete(key1 string) {
 		clear(m.mi)
 		return
 	}
-	m.mi = append(m.mi, key1)
 	m.mu.RLock()
-	if h := m.ma[key1]; h != nil {
+	h := m.ma[key1]
+	if h != nil {
 		h.close()
 	}
 	m.mu.RUnlock()
+	if h != nil {
+		m.mi = append(m.mi, key1)
+	}
 }
 
 func (m *LRUDoubleMap[V]) DeleteAll() {

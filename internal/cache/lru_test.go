@@ -3,6 +3,7 @@ package cache
 import (
 	"runtime"
 	"strconv"
+	"sync/atomic"
 	"testing"
 )
 
@@ -71,6 +72,44 @@ func TestLRUDoubleMap(t *testing.T) {
 	}
 	if _, ok := m.Find("2", "f", 1); ok {
 		t.Fatal("should not find")
+	}
+}
+
+func TestLRUDoubleMap_BatchDelete(t *testing.T) {
+	m := NewLRUDoubleMap[int](bpsize, bpsize)
+	m.Insert("1", "a", 1, 2, 1, 1)
+	m.Insert("2", "c", 1, 2, 1, 3)
+	m.Delete("1")
+	m.Delete("2")
+	if _, ok := m.Find("1", "a", 1); ok {
+		t.Fatal("should not find")
+	}
+	if _, ok := m.Find("2", "c", 1); ok {
+		t.Fatal("should not find")
+	}
+	m.mu.Lock()
+	heads := len(m.ma)
+	total := atomic.LoadInt64(&m.total)
+	m.mu.Unlock()
+	if heads != 2 {
+		t.Fatal("should have 2 heads")
+	}
+	if total == 0 {
+		t.Fatal("should not have 0 total")
+	}
+	for i := 0; i < bpsize; i++ {
+		m.Delete("1")
+		m.Delete("2")
+	}
+	m.mu.Lock()
+	heads = len(m.ma)
+	total = atomic.LoadInt64(&m.total)
+	m.mu.Unlock()
+	if heads != 0 {
+		t.Fatal("should have 0 heads")
+	}
+	if total != 0 {
+		t.Fatal("should have 0 total")
 	}
 }
 
