@@ -252,6 +252,8 @@ func TestNewPipe(t *testing.T) {
 		n1, n2 := net.Pipe()
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
+			mock.Expect("AUTH", "pa").
+				ReplyString("OK")
 			mock.Expect("HELLO", "2").
 				Reply(RedisMessage{
 					typ: '*',
@@ -262,8 +264,6 @@ func TestNewPipe(t *testing.T) {
 						{typ: '+', string: "us-west-1a"},
 					},
 				})
-			mock.Expect("AUTH", "pa").
-				ReplyString("OK")
 			mock.Expect("CLIENT", "SETNAME", "cn").
 				ReplyString("OK")
 			mock.Expect("SELECT", "1").
@@ -650,10 +650,10 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
-			mock.Expect("HELLO", "2").
-				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("AUTH", "pa").
 				ReplyString("OK")
+			mock.Expect("HELLO", "2").
+				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("CLIENT", "SETNAME", "cn").
 				ReplyString("OK")
 			mock.Expect("SELECT", "1").
@@ -693,10 +693,10 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
-			mock.Expect("HELLO", "2").
-				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("AUTH", "ua", "pa").
 				ReplyString("OK")
+			mock.Expect("HELLO", "2").
+				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("CLIENT", "SETNAME", "cn").
 				ReplyString("OK")
 			mock.Expect("SELECT", "1").
@@ -739,10 +739,10 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
-			mock.Expect("HELLO", "2").
-				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("AUTH", "pa").
 				ReplyString("OK")
+			mock.Expect("HELLO", "2").
+				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("CLIENT", "SETNAME", "cn").
 				ReplyString("OK")
 			mock.Expect("SELECT", "1").
@@ -787,10 +787,10 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
-			mock.Expect("HELLO", "2").
-				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("AUTH", "pa").
 				ReplyString("OK")
+			mock.Expect("HELLO", "2").
+				ReplyError("ERR unknown command `HELLO`")
 			mock.Expect("CLIENT", "SETNAME", "cn").
 				ReplyString("OK")
 			mock.Expect("SELECT", "1").
