@@ -258,12 +258,12 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 			return nil, ErrNoCache
 		}
 		init = init[:0]
-		init = append(init, []string{"HELLO", "2"})
 		if password != "" && username == "" {
 			init = append(init, []string{"AUTH", password})
 		} else if username != "" {
 			init = append(init, []string{"AUTH", username, password})
 		}
+		init = append(init, []string{"HELLO", "2"})
 		if option.ClientName != "" {
 			init = append(init, []string{"CLIENT", "SETNAME", option.ClientName})
 		}
@@ -312,7 +312,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 					p.Close()
 					return nil, err
 				}
-				if i == 0 {
+				if i == 1 && init[i][0] == "HELLO" {
 					p.info, err = r.AsMap()
 				}
 			}
