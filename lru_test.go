@@ -26,7 +26,7 @@ func TestLRU(t *testing.T) {
 		}
 		m := RedisMessage{typ: '+', string: "0", values: []RedisMessage{{}}}
 		m.setExpireAt(time.Now().Add(PTTL * time.Millisecond).UnixMilli())
-		store.Update("0", "GET", m)
+		store.Update("0", "GET", m, time.Now())
 		return store.(*lru)
 	}
 
@@ -49,7 +49,7 @@ func TestLRU(t *testing.T) {
 			t.Fatalf("got unexpected value from the Flight after pttl: %v %v", v, entry)
 		}
 		m := RedisMessage{typ: '+', string: "1"}
-		lru.Update("1", "GET", m)
+		lru.Update("1", "GET", m, time.Now())
 		if v, _ := lru.Flight("1", "GET", TTL, time.Now()); v.typ == 0 {
 			t.Fatalf("did not get the value from the second Flight")
 		} else if v.string != "1" {
@@ -98,7 +98,7 @@ func TestLRU(t *testing.T) {
 			lru.Flight(strconv.Itoa(i), "GET", TTL, time.Now())
 			m := RedisMessage{typ: '+', string: strconv.Itoa(i)}
 			m.setExpireAt(time.Now().Add(PTTL * time.Millisecond).UnixMilli())
-			lru.Update(strconv.Itoa(i), "GET", m)
+			lru.Update(strconv.Itoa(i), "GET", m, time.Now())
 		}
 		if v, entry := lru.Flight("1", "GET", TTL, time.Now()); v.typ != 0 {
 			t.Fatalf("got evicted value from the first Flight: %v %v", v, entry)
@@ -123,7 +123,7 @@ func TestLRU(t *testing.T) {
 		for i := 1; i < Entries; i++ {
 			lru.Flight(strconv.Itoa(i), "GET", TTL, time.Now())
 			m := RedisMessage{typ: '+', string: strconv.Itoa(i)}
-			lru.Update(strconv.Itoa(i), "GET", m)
+			lru.Update(strconv.Itoa(i), "GET", m, time.Now())
 		}
 		for i := 1; i < Entries; i++ {
 			if v, _ := lru.Flight(strconv.Itoa(i), "GET", TTL, time.Now()); v.string != strconv.Itoa(i) {
@@ -157,7 +157,7 @@ func TestLRU(t *testing.T) {
 
 		m := RedisMessage{typ: '+', string: "this Update should have no effect"}
 		m.setExpireAt(time.Now().Add(PTTL * time.Millisecond).UnixMilli())
-		lru.Update("1", "GET", m)
+		lru.Update("1", "GET", m, time.Now())
 		for i := 0; i < 2; i++ { // entry should be always nil after the first call if Close
 			if v, entry := lru.Flight("1", "GET", TTL, time.Now()); v.typ != 0 || entry != nil {
 				t.Fatalf("got unexpected value from the first Flight: %v %v", v, entry)
@@ -194,7 +194,7 @@ func TestLRU(t *testing.T) {
 		lru.Flight("key", "cmd", time.Second, time.Now())
 		m := RedisMessage{typ: 1}
 		m.setExpireAt(time.Now().Add(time.Second).UnixMilli())
-		lru.Update("key", "cmd", m)
+		lru.Update("key", "cmd", m, time.Now())
 		if v := lru.GetTTL("key", "cmd"); !roughly(v, time.Second) {
 			t.Fatalf("unexpected %v", v)
 		}
@@ -206,7 +206,7 @@ func TestLRU(t *testing.T) {
 			lru.Flight("key", "cmd", 2*time.Second, time.Now())
 			m := RedisMessage{typ: 1}
 			m.setExpireAt(time.Now().Add(time.Second).UnixMilli())
-			lru.Update("key", "cmd", m)
+			lru.Update("key", "cmd", m, time.Now())
 			if v, _ := lru.Flight("key", "cmd", 2*time.Second, time.Now()); v.CacheTTL() != 1 {
 				t.Fatalf("unexpected %v", v.CacheTTL())
 			}
@@ -216,7 +216,7 @@ func TestLRU(t *testing.T) {
 			lru.Flight("key", "cmd", 2*time.Second, time.Now())
 			m := RedisMessage{typ: 1}
 			m.setExpireAt(time.Now().Add(3 * time.Second).UnixMilli())
-			lru.Update("key", "cmd", m)
+			lru.Update("key", "cmd", m, time.Now())
 			if v, _ := lru.Flight("key", "cmd", 2*time.Second, time.Now()); v.CacheTTL() != 2 {
 				t.Fatalf("unexpected %v", v.CacheTTL())
 			}
@@ -225,7 +225,7 @@ func TestLRU(t *testing.T) {
 			lru := setup(t)
 			lru.Flight("key", "cmd", 2*time.Second, time.Now())
 			m := RedisMessage{typ: 1}
-			lru.Update("key", "cmd", m)
+			lru.Update("key", "cmd", m, time.Now())
 			if v, _ := lru.Flight("key", "cmd", 2*time.Second, time.Now()); v.CacheTTL() != 2 {
 				t.Fatalf("unexpected %v", v.CacheTTL())
 			}
@@ -234,7 +234,7 @@ func TestLRU(t *testing.T) {
 			lru := setup(t)
 			lru.Flight("key", "cmd", 2*time.Second, time.Now())
 			m := RedisMessage{typ: 1}
-			lru.Update("key", "cmd", m)
+			lru.Update("key", "cmd", m, time.Now())
 			if v, _ := lru.Flight("key", "cmd", 2*time.Second, time.Now()); v.CacheTTL() != 2 {
 				t.Fatalf("unexpected %v", v.CacheTTL())
 			}
@@ -260,7 +260,7 @@ func TestLRU(t *testing.T) {
 			t.Fatalf("got unexpected value from the Flight after pttl: %v %v", v, entry)
 		}
 		m := RedisMessage{typ: '+', string: "1"}
-		lru.Update("1", "GET", m)
+		lru.Update("1", "GET", m, time.Now())
 		if v, _ := flights(lru, time.Now(), TTL, "GET", "1"); v.typ == 0 {
 			t.Fatalf("did not get the value from the second Flight")
 		} else if v.string != "1" {
@@ -309,7 +309,7 @@ func TestLRU(t *testing.T) {
 			flights(lru, time.Now(), TTL, "GET", strconv.Itoa(i))
 			m := RedisMessage{typ: '+', string: strconv.Itoa(i)}
 			m.setExpireAt(time.Now().Add(PTTL * time.Millisecond).UnixMilli())
-			lru.Update(strconv.Itoa(i), "GET", m)
+			lru.Update(strconv.Itoa(i), "GET", m, time.Now())
 		}
 		if v, entry := flights(lru, time.Now(), TTL, "GET", "1"); v.typ != 0 {
 			t.Fatalf("got evicted value from the first Flight: %v %v", v, entry)
@@ -334,7 +334,7 @@ func TestLRU(t *testing.T) {
 		for i := 1; i < Entries; i++ {
 			flights(lru, time.Now(), TTL, "GET", strconv.Itoa(i))
 			m := RedisMessage{typ: '+', string: strconv.Itoa(i)}
-			lru.Update(strconv.Itoa(i), "GET", m)
+			lru.Update(strconv.Itoa(i), "GET", m, time.Now())
 		}
 		for i := 1; i < Entries; i++ {
 			if v, _ := flights(lru, time.Now(), TTL, "GET", strconv.Itoa(i)); v.string != strconv.Itoa(i) {
@@ -368,7 +368,7 @@ func TestLRU(t *testing.T) {
 
 		m := RedisMessage{typ: '+', string: "this Update should have no effect"}
 		m.setExpireAt(time.Now().Add(PTTL * time.Millisecond).UnixMilli())
-		lru.Update("1", "GET", m)
+		lru.Update("1", "GET", m, time.Now())
 		for i := 0; i < 2; i++ { // entry should be always nil after the first call if Close
 			if v, entry := flights(lru, time.Now(), TTL, "GET", "1"); v.typ != 0 || entry != nil {
 				t.Fatalf("got unexpected value from the first Flight: %v %v", v, entry)
@@ -405,7 +405,7 @@ func TestLRU(t *testing.T) {
 		flights(lru, time.Now(), time.Second, "cmd", "key")
 		m := RedisMessage{typ: 1}
 		m.setExpireAt(time.Now().Add(time.Second).UnixMilli())
-		lru.Update("key", "cmd", m)
+		lru.Update("key", "cmd", m, time.Now())
 		if v := lru.GetTTL("key", "cmd"); !roughly(v, time.Second) {
 			t.Fatalf("unexpected %v", v)
 		}
@@ -417,7 +417,7 @@ func TestLRU(t *testing.T) {
 			flights(lru, time.Now(), time.Second*2, "cmd", "key")
 			m := RedisMessage{typ: 1}
 			m.setExpireAt(time.Now().Add(time.Second).UnixMilli())
-			lru.Update("key", "cmd", m)
+			lru.Update("key", "cmd", m, time.Now())
 			if v, _ := flights(lru, time.Now(), time.Second*2, "cmd", "key"); v.CacheTTL() != 1 {
 				t.Fatalf("unexpected %v", v.CacheTTL())
 			}
@@ -427,7 +427,7 @@ func TestLRU(t *testing.T) {
 			flights(lru, time.Now(), time.Second*2, "cmd", "key")
 			m := RedisMessage{typ: 1}
 			m.setExpireAt(time.Now().Add(3 * time.Second).UnixMilli())
-			lru.Update("key", "cmd", m)
+			lru.Update("key", "cmd", m, time.Now())
 			if v, _ := flights(lru, time.Now(), time.Second*2, "cmd", "key"); v.CacheTTL() != 2 {
 				t.Fatalf("unexpected %v", v.CacheTTL())
 			}
@@ -436,7 +436,7 @@ func TestLRU(t *testing.T) {
 			lru := setup(t)
 			flights(lru, time.Now(), time.Second*2, "cmd", "key")
 			m := RedisMessage{typ: 1}
-			lru.Update("key", "cmd", m)
+			lru.Update("key", "cmd", m, time.Now())
 			if v, _ := flights(lru, time.Now(), time.Second*2, "cmd", "key"); v.CacheTTL() != 2 {
 				t.Fatalf("unexpected %v", v.CacheTTL())
 			}
@@ -445,7 +445,7 @@ func TestLRU(t *testing.T) {
 			lru := setup(t)
 			flights(lru, time.Now(), time.Second*2, "cmd", "key")
 			m := RedisMessage{typ: 1}
-			lru.Update("key", "cmd", m)
+			lru.Update("key", "cmd", m, time.Now())
 			if v, _ := flights(lru, time.Now(), time.Second*2, "cmd", "key"); v.CacheTTL() != 2 {
 				t.Fatalf("unexpected %v", v.CacheTTL())
 			}
@@ -483,7 +483,7 @@ func BenchmarkLRU(b *testing.B) {
 			lru.Flight(key, "GET", TTL, time.Now())
 			m := RedisMessage{}
 			m.setExpireAt(time.Now().Add(PTTL * time.Millisecond).UnixMilli())
-			lru.Update(key, "GET", m)
+			lru.Update(key, "GET", m, time.Now())
 		}
 	})
 }
