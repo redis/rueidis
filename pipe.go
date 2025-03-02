@@ -263,6 +263,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 		} else if username != "" {
 			init = append(init, []string{"AUTH", username, password})
 		}
+		helloIndex := len(init)
 		init = append(init, []string{"HELLO", "2"})
 		if option.ClientName != "" {
 			init = append(init, []string{"CLIENT", "SETNAME", option.ClientName})
@@ -312,7 +313,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 					p.Close()
 					return nil, err
 				}
-				if i == 1 && init[i][0] == "HELLO" {
+				if i == helloIndex {
 					p.info, err = r.AsMap()
 				}
 			}
