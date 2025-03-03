@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func newPool(cap int, dead wire, cleanup time.Duration, minSize int, makeFn func() wire) *pool {
+func newPool(cap int, dead wire, cleanup time.Duration, minSize int, idleTm time.Duration, makeFn func() wire) *pool {
 	if cap <= 0 {
 		cap = DefaultPoolSize
 	}
@@ -19,6 +19,7 @@ func newPool(cap int, dead wire, cleanup time.Duration, minSize int, makeFn func
 		list:    make([]wire, 0, 4),
 		cond:    sync.NewCond(&sync.Mutex{}),
 		cleanup: cleanup,
+		idleTm:  idleTm,
 	}
 }
 
@@ -34,6 +35,7 @@ type pool struct {
 	cap     int
 	down    bool
 	timerOn bool
+	idleTm  time.Duration
 }
 
 func (p *pool) Acquire() (v wire) {
@@ -72,6 +74,7 @@ retry:
 func (p *pool) Store(v wire) {
 	p.cond.L.Lock()
 	if !p.down && v.Error() == nil {
+		v.SetLastAccess(time.Now())
 		p.list = append(p.list, v)
 		p.startTimerIfNeeded()
 	} else {
@@ -111,6 +114,26 @@ func (p *pool) removeIdleConns() {
 	defer p.cond.L.Unlock()
 
 	newLen := min(p.minSize, len(p.list))
+	if p.idleTm > 0 && newLen < len(p.list) {
+		t := time.Now()
+		pos := len(p.list)-1
+		for i := 0; i < pos && pos >= newLen; {
+			if t.Sub(p.list[pos].LastAccess()) > p.idleTm {
+				pos--
+			} else if t.Sub(p.list[i].LastAccess()) > p.idleTm {
+				p.list[i], p.list[pos] = p.list[pos], p.list[i]
+				pos--
+				i++
+			} else {
+				i++
+			}
+		}
+		if t.Sub(p.list[pos].LastAccess()) > p.idleTm {
+			newLen = max(newLen, pos)
+		} else {
+			newLen = max(newLen, pos+1)
+		}
+	}
 	for i, w := range p.list[newLen:] {
 		w.Close()
 		p.list[newLen+i] = nil

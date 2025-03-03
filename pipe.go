@@ -55,6 +55,8 @@ type wire interface {
 	CleanSubscriptions()
 	SetPubSubHooks(hooks PubSubHooks) <-chan error
 	SetOnCloseHook(fn func(error))
+	SetLastAccess(tm time.Time)
+	LastAccess() time.Time
 }
 
 var _ wire = (*pipe)(nil)
@@ -79,6 +81,7 @@ type pipe struct {
 	timeout         time.Duration
 	pinggap         time.Duration
 	maxFlushDelay   time.Duration
+	lastAccess      time.Time // last access time, updated when connection is stored
 	once            sync.Once
 	r2mu            sync.Mutex
 	version         int32
@@ -1585,6 +1588,16 @@ func (p *pipe) Close() {
 		p.r2pipe.Close()
 	}
 	p.r2mu.Unlock()
+}
+
+// SetLastAccess set last access time
+func (p *pipe) SetLastAccess(tm time.Time) {
+	p.lastAccess = tm
+}
+
+// LastAccess get last access time
+func (p *pipe) LastAccess() time.Time {
+	return p.lastAccess
 }
 
 type pshks struct {

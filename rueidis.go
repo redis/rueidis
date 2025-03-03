@@ -159,6 +159,8 @@ type ClientOption struct {
 	// Only relevant if BlockingPoolCleanup is not 0. This parameter limits
 	// the number of idle connections that can be removed by BlockingPoolCleanup.
 	BlockingPoolMinSize int
+	// BlockingPoolConnIdleTime is the minimum time to live for idle connections
+	BlockingPoolConnIdleTime time.Duration
 
 	// BlockingPoolSize is the size of the connection pool shared by blocking commands (ex BLPOP, XREAD with BLOCK).
 	// The default is DefaultPoolSize.

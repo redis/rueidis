@@ -1085,6 +1085,7 @@ type mockWire struct {
 	CleanSubscriptionsFn func()
 	SetPubSubHooksFn     func(hooks PubSubHooks) <-chan error
 	SetOnCloseHookFn     func(fn func(error))
+	accessTm time.Time
 }
 
 func (m *mockWire) Do(ctx context.Context, cmd Completed) RedisResult {
@@ -1193,4 +1194,18 @@ func (m *mockWire) Close() {
 	if m.CloseFn != nil {
 		m.CloseFn()
 	}
+}
+
+func (m *mockWire) SetLastAccess(tm time.Time) {
+	if m == nil {
+		return
+	}
+	m.accessTm = tm
+}
+
+func (m *mockWire) LastAccess() time.Time {
+	if m == nil {
+		return time.Time{}
+	}
+	return m.accessTm
 }
