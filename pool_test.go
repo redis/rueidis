@@ -378,12 +378,12 @@ func TestPoolWithIdleTTL(t *testing.T) {
 			p.cond.L.Lock()
 			if p.size != midSize {
 				defer p.cond.L.Unlock()
-				t.Fatalf(" size must be equal to %d, actual: %d", midSize, p.size)
+				t.Fatalf("size must be equal to %d, actual: %d", midSize, p.size)
 			}
 
 			if len(p.list) != midSize {
 				defer p.cond.L.Unlock()
-				t.Fatalf(" pool len must equal to %d, actual: %d", midSize, len(p.list))
+				t.Fatalf("pool len must equal to %d, actual: %d", midSize, len(p.list))
 			}
 			p.cond.L.Unlock()
 		}
@@ -404,12 +404,12 @@ func TestPoolWithIdleTTL(t *testing.T) {
 			p.cond.L.Lock()
 			if p.size != minSize {
 				defer p.cond.L.Unlock()
-				t.Fatalf(" size must be equal to %d, actual: %d", minSize, p.size)
+				t.Fatalf("size must be equal to %d, actual: %d", minSize, p.size)
 			}
 
 			if len(p.list) != minSize {
 				defer p.cond.L.Unlock()
-				t.Fatalf(" pool len must equal to %d, actual: %d", minSize, len(p.list))
+				t.Fatalf("pool len must equal to %d, actual: %d", minSize, len(p.list))
 			}
 			p.cond.L.Unlock()
 		}
