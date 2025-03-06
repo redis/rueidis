@@ -37,7 +37,7 @@ func newSingleClient(opt *ClientOption, prev conn, connFn connFn, retryer retryH
 }
 
 func newSingleClientWithConn(conn conn, builder Builder, retry, disableCache bool, retryer retryHandler) *singleClient {
-	return &singleClient{cmd: builder, conn: conn, retry: retry, retryHandler: retryer, DisableCache: disableCache, mode: ModeStandalone}
+	return &singleClient{cmd: builder, conn: conn, retry: retry, retryHandler: retryer, DisableCache: disableCache, mode: ClientModeStandalone}
 }
 
 func (c *singleClient) B() Builder {

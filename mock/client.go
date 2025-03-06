@@ -61,7 +61,7 @@ func (m *Client) B() rueidis.Builder {
 }
 
 func (m *Client) Mode() rueidis.ClientMode {
-	return rueidis.ModeStandalone
+	return rueidis.ClientModeStandalone
 }
 
 // Close mocks base method.

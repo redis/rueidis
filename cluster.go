@@ -58,7 +58,7 @@ func newClusterClient(opt *ClientOption, connFn connFn, retryer retryHandler) (*
 		retry:        !opt.DisableRetry,
 		retryHandler: retryer,
 		stopCh:       make(chan struct{}),
-		mode:         ModeCluster,
+		mode:         ClientModeCluster,
 	}
 
 	if opt.ReplicaOnly && opt.SendToReplicas != nil {

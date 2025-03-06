@@ -36,9 +36,9 @@ const (
 	// MaxPipelineMultiplex is the maximum meaningful value for ClientOption.PipelineMultiplex
 	MaxPipelineMultiplex = 8
 	// https://github.com/valkey-io/valkey/blob/1a34a4ff7f101bb6b17a0b5e9aa3bf7d6bd29f68/src/networking.c#L4118-L4124
-	ModeCluster    ClientMode = "cluster"
-	ModeSentinel   ClientMode = "sentinel"
-	ModeStandalone ClientMode = "standalone"
+	ClientModeCluster    ClientMode = "cluster"
+	ClientModeSentinel   ClientMode = "sentinel"
+	ClientModeStandalone ClientMode = "standalone"
 )
 
 var (

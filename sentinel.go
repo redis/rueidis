@@ -26,7 +26,7 @@ func newSentinelClient(opt *ClientOption, connFn connFn, retryer retryHandler) (
 		retry:        !opt.DisableRetry,
 		retryHandler: retryer,
 		replica:      opt.ReplicaOnly,
-		mode:         ModeSentinel,
+		mode:         ClientModeSentinel,
 	}
 
 	for _, sentinel := range opt.InitAddress {
