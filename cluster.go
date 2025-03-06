@@ -35,7 +35,7 @@ type clusterClient struct {
 	stop         uint32
 	cmd          Builder
 	retry        bool
-	mode         Mode
+	mode         ClientMode
 }
 
 // NOTE: connrole and conn must be initialized at the same time
@@ -1205,7 +1205,7 @@ func (c *clusterClient) Nodes() map[string]Client {
 	return _nodes
 }
 
-func (c *clusterClient) Mode() Mode {
+func (c *clusterClient) Mode() ClientMode {
 	return c.mode
 }
 

@@ -36,9 +36,9 @@ const (
 	// MaxPipelineMultiplex is the maximum meaningful value for ClientOption.PipelineMultiplex
 	MaxPipelineMultiplex = 8
 	// https://github.com/valkey-io/valkey/blob/1a34a4ff7f101bb6b17a0b5e9aa3bf7d6bd29f68/src/networking.c#L4118-L4124
-	ModeCluster    Mode = "cluster"
-	ModeSentinel   Mode = "sentinel"
-	ModeStandalone Mode = "standalone"
+	ModeCluster    ClientMode = "cluster"
+	ModeSentinel   ClientMode = "sentinel"
+	ModeStandalone ClientMode = "standalone"
 )
 
 var (
@@ -262,7 +262,7 @@ type ReplicaInfo struct {
 	AZ   string
 }
 
-type Mode string
+type ClientMode string
 
 // Client is the redis client interface for both single redis instance and redis cluster. It should be created from the NewClient()
 type Client interface {
@@ -317,7 +317,7 @@ type Client interface {
 	// in standalone, sentinel, or cluster mode.
 	// This can be useful for determining the type of Redis deployment the client is connected to
 	// and for making decisions based on the deployment type.
-	Mode() Mode
+	Mode() ClientMode
 }
 
 // DedicatedClient is obtained from Client.Dedicated() and it will be bound to single redis connection and

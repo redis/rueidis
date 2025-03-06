@@ -57,7 +57,7 @@ type sentinelClient struct {
 	cmd          Builder
 	retry        bool
 	replica      bool
-	mode         Mode
+	mode         ClientMode
 }
 
 func (c *sentinelClient) B() Builder {
@@ -220,7 +220,7 @@ func (c *sentinelClient) Nodes() map[string]Client {
 	return map[string]Client{conn.Addr(): newSingleClientWithConn(conn, c.cmd, c.retry, disableCache, c.retryHandler)}
 }
 
-func (c *sentinelClient) Mode() Mode {
+func (c *sentinelClient) Mode() ClientMode {
 	return c.mode
 }
 

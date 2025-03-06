@@ -204,7 +204,7 @@ type client struct {
 	DedicatedFn    func(fn func(DedicatedClient) error) (err error)
 	DedicateFn     func() (DedicatedClient, func())
 	CloseFn        func()
-	ModeFn         func() Mode
+	ModeFn         func() ClientMode
 }
 
 func (c *client) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) error {
@@ -272,7 +272,7 @@ func (c *client) Nodes() map[string]Client {
 	return map[string]Client{"addr": c}
 }
 
-func (c *client) Mode() Mode {
+func (c *client) Mode() ClientMode {
 	return c.ModeFn()
 }
 

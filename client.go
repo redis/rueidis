@@ -16,7 +16,7 @@ type singleClient struct {
 	cmd          Builder
 	retry        bool
 	DisableCache bool
-	mode         Mode
+	mode         ClientMode
 }
 
 func newSingleClient(opt *ClientOption, prev conn, connFn connFn, retryer retryHandler) (*singleClient, error) {
@@ -190,7 +190,7 @@ func (c *singleClient) Nodes() map[string]Client {
 	return map[string]Client{c.conn.Addr(): c}
 }
 
-func (c *singleClient) Mode() Mode {
+func (c *singleClient) Mode() ClientMode {
 	return c.mode
 }
 

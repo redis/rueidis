@@ -107,7 +107,7 @@ func (p *txproxy) Nodes() map[string]rueidis.Client {
 	panic("not implemented")
 }
 
-func (p *txproxy) Mode() rueidis.Mode {
+func (p *txproxy) Mode() rueidis.ClientMode {
 	panic("not implemented")
 }
 

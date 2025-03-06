@@ -60,7 +60,7 @@ func (m *Client) B() rueidis.Builder {
 	return cmds.NewBuilder(m.slot)
 }
 
-func (m *Client) Mode() rueidis.Mode {
+func (m *Client) Mode() rueidis.ClientMode {
 	return rueidis.ModeStandalone
 }
 
