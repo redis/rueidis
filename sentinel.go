@@ -26,7 +26,6 @@ func newSentinelClient(opt *ClientOption, connFn connFn, retryer retryHandler) (
 		retry:        !opt.DisableRetry,
 		retryHandler: retryer,
 		replica:      opt.ReplicaOnly,
-		mode:         ClientModeSentinel,
 	}
 
 	for _, sentinel := range opt.InitAddress {
@@ -57,7 +56,6 @@ type sentinelClient struct {
 	cmd          Builder
 	retry        bool
 	replica      bool
-	mode         ClientMode
 }
 
 func (c *sentinelClient) B() Builder {
@@ -221,7 +219,7 @@ func (c *sentinelClient) Nodes() map[string]Client {
 }
 
 func (c *sentinelClient) Mode() ClientMode {
-	return c.mode
+	return ClientModeSentinel
 }
 
 func (c *sentinelClient) Close() {

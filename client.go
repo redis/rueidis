@@ -16,7 +16,6 @@ type singleClient struct {
 	cmd          Builder
 	retry        bool
 	DisableCache bool
-	mode         ClientMode
 }
 
 func newSingleClient(opt *ClientOption, prev conn, connFn connFn, retryer retryHandler) (*singleClient, error) {
@@ -37,7 +36,7 @@ func newSingleClient(opt *ClientOption, prev conn, connFn connFn, retryer retryH
 }
 
 func newSingleClientWithConn(conn conn, builder Builder, retry, disableCache bool, retryer retryHandler) *singleClient {
-	return &singleClient{cmd: builder, conn: conn, retry: retry, retryHandler: retryer, DisableCache: disableCache, mode: ClientModeStandalone}
+	return &singleClient{cmd: builder, conn: conn, retry: retry, retryHandler: retryer, DisableCache: disableCache}
 }
 
 func (c *singleClient) B() Builder {
@@ -191,7 +190,7 @@ func (c *singleClient) Nodes() map[string]Client {
 }
 
 func (c *singleClient) Mode() ClientMode {
-	return c.mode
+	return ClientModeStandalone
 }
 
 func (c *singleClient) Close() {

@@ -35,7 +35,6 @@ type clusterClient struct {
 	stop         uint32
 	cmd          Builder
 	retry        bool
-	mode         ClientMode
 }
 
 // NOTE: connrole and conn must be initialized at the same time
@@ -58,7 +57,6 @@ func newClusterClient(opt *ClientOption, connFn connFn, retryer retryHandler) (*
 		retry:        !opt.DisableRetry,
 		retryHandler: retryer,
 		stopCh:       make(chan struct{}),
-		mode:         ClientModeCluster,
 	}
 
 	if opt.ReplicaOnly && opt.SendToReplicas != nil {
@@ -1206,7 +1204,7 @@ func (c *clusterClient) Nodes() map[string]Client {
 }
 
 func (c *clusterClient) Mode() ClientMode {
-	return c.mode
+	return ClientModeCluster
 }
 
 func (c *clusterClient) Close() {
