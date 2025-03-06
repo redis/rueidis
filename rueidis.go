@@ -35,6 +35,10 @@ const (
 	DefaultWriteBuffer = 1 << 19
 	// MaxPipelineMultiplex is the maximum meaningful value for ClientOption.PipelineMultiplex
 	MaxPipelineMultiplex = 8
+	// https://github.com/valkey-io/valkey/blob/1a34a4ff7f101bb6b17a0b5e9aa3bf7d6bd29f68/src/networking.c#L4118-L4124
+	ModeCluster    Mode = "cluster"
+	ModeSentinel   Mode = "sentinel"
+	ModeStandalone Mode = "standalone"
 )
 
 var (
@@ -258,6 +262,8 @@ type ReplicaInfo struct {
 	AZ   string
 }
 
+type Mode string
+
 // Client is the redis client interface for both single redis instance and redis cluster. It should be created from the NewClient()
 type Client interface {
 	CoreClient
@@ -307,6 +313,8 @@ type Client interface {
 	// Nodes returns each redis node this client known as rueidis.Client. This is useful if you want to
 	// send commands to some specific redis nodes in the cluster.
 	Nodes() map[string]Client
+
+	Mode() Mode
 }
 
 // DedicatedClient is obtained from Client.Dedicated() and it will be bound to single redis connection and

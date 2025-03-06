@@ -60,6 +60,11 @@ func (m *Client) B() rueidis.Builder {
 	return cmds.NewBuilder(m.slot)
 }
 
+// Mode implements rueidis.Client.
+func (m *Client) Mode() rueidis.Mode {
+	return rueidis.ModeStandalone
+}
+
 // Close mocks base method.
 func (m *Client) Close() {
 	m.ctrl.T.Helper()
