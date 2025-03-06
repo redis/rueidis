@@ -313,7 +313,10 @@ type Client interface {
 	// Nodes returns each redis node this client known as rueidis.Client. This is useful if you want to
 	// send commands to some specific redis nodes in the cluster.
 	Nodes() map[string]Client
-
+	// Mode returns the current mode of the client, which indicates whether the client is operating
+	// in standalone, sentinel, or cluster mode.
+	// This can be useful for determining the type of Redis deployment the client is connected to
+	// and for making decisions based on the deployment type.
 	Mode() Mode
 }
 
