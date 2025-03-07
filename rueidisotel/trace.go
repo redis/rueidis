@@ -203,6 +203,10 @@ func (o *otelclient) Nodes() map[string]rueidis.Client {
 	return nodes
 }
 
+func (o *otelclient) Mode() rueidis.ClientMode {
+	return o.client.Mode()
+}
+
 func (o *otelclient) Close() {
 	o.client.Close()
 }

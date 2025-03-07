@@ -189,6 +189,10 @@ func (c *singleClient) Nodes() map[string]Client {
 	return map[string]Client{c.conn.Addr(): c}
 }
 
+func (c *singleClient) Mode() ClientMode {
+	return ClientModeStandalone
+}
+
 func (c *singleClient) Close() {
 	atomic.StoreUint32(&c.stop, 1)
 	c.conn.Close()

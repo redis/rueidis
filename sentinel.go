@@ -218,6 +218,10 @@ func (c *sentinelClient) Nodes() map[string]Client {
 	return map[string]Client{conn.Addr(): newSingleClientWithConn(conn, c.cmd, c.retry, disableCache, c.retryHandler)}
 }
 
+func (c *sentinelClient) Mode() ClientMode {
+	return ClientModeSentinel
+}
+
 func (c *sentinelClient) Close() {
 	atomic.StoreUint32(&c.stop, 1)
 	c.mu.Lock()

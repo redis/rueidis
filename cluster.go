@@ -1203,6 +1203,10 @@ func (c *clusterClient) Nodes() map[string]Client {
 	return _nodes
 }
 
+func (c *clusterClient) Mode() ClientMode {
+	return ClientModeCluster
+}
+
 func (c *clusterClient) Close() {
 	if atomic.CompareAndSwapUint32(&c.stop, 0, 1) {
 		close(c.stopCh)

@@ -82,6 +82,10 @@ func (c *hookclient) Nodes() map[string]rueidis.Client {
 	return nodes
 }
 
+func (c *hookclient) Mode() rueidis.ClientMode {
+	return c.client.Mode()
+}
+
 func (c *hookclient) Close() {
 	c.client.Close()
 }
@@ -148,6 +152,10 @@ func (e *extended) Dedicate() (client rueidis.DedicatedClient, cancel func()) {
 
 func (e *extended) Nodes() map[string]rueidis.Client {
 	panic("Nodes() is not allowed with rueidis.DedicatedClient")
+}
+
+func (e *extended) Mode() rueidis.ClientMode {
+	panic("Mode() is not allowed with rueidis.DedicatedClient")
 }
 
 type result struct {
