@@ -1589,6 +1589,12 @@ func TestClusterClient(t *testing.T) {
 		}
 	})
 
+	t.Run("Mode", func(t *testing.T) {
+		if client.Mode() != ClientModeCluster {
+			t.Fatalf("unexpected mode %v", client.Mode())
+		}
+	})
+
 	t.Run("Delegate Do with no slot", func(t *testing.T) {
 		c := client.B().Info().Build()
 		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "Info" {

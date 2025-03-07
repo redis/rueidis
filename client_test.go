@@ -262,6 +262,12 @@ func TestSingleClient(t *testing.T) {
 		}
 	})
 
+	t.Run("Mode", func(t *testing.T) {
+		if v := client.Mode(); v != ClientModeStandalone {
+			t.Fatalf("unexpected mode %v", v)
+		}
+	})
+
 	t.Run("Delegate Do", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()
 		m.DoFn = func(cmd Completed) RedisResult {

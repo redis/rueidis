@@ -782,6 +782,12 @@ func TestSentinelClientDelegate(t *testing.T) {
 		}
 	})
 
+	t.Run("Mode", func(t *testing.T) {
+		if mode := client.Mode(); mode != ClientModeSentinel {
+			t.Fatalf("unexpected mode %v", mode)
+		}
+	})
+
 	t.Run("Delegate Do", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()
 		m.DoFn = func(cmd Completed) RedisResult {
