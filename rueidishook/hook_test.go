@@ -78,6 +78,12 @@ func (w *wronghook) DoMultiStream(client rueidis.Client, ctx context.Context, mu
 func testHooked(t *testing.T, hooked rueidis.Client, mocked *mock.Client) {
 	ctx := context.Background()
 	{
+		mocked.EXPECT().Mode().Return(rueidis.ClientModeStandalone)
+		if mode := hooked.Mode(); mode != rueidis.ClientModeStandalone {
+			t.Fatalf("unexpected mode %v", mode)
+		}
+	}
+	{
 		mocked.EXPECT().Do(ctx, mock.Match("GET", "a")).Return(mock.Result(mock.RedisNil()))
 		if err := hooked.Do(ctx, hooked.B().Get().Key("a").Build()).Error(); !rueidis.IsRedisNil(err) {
 			t.Fatalf("unexpected err %v", err)
@@ -247,6 +253,12 @@ func TestForbiddenMethodForDedicatedClient(t *testing.T) {
 		fn  func(client rueidis.Client)
 		msg string
 	}{
+		{
+			fn: func(client rueidis.Client) {
+				client.Mode()
+			},
+			msg: "Mode() is not allowed with rueidis.DedicatedClient",
+		},
 		{
 			fn: func(client rueidis.Client) {
 				client.DoCache(context.Background(), client.B().Get().Key("").Cache(), time.Second)

@@ -18,6 +18,12 @@ func TestNewClient(t *testing.T) {
 	ctx := context.Background()
 	client := NewClient(ctrl)
 	{
+		client.EXPECT().Mode().Return(rueidis.ClientModeStandalone)
+		if mode := client.Mode(); mode != rueidis.ClientModeStandalone {
+			t.Fatalf("unexpected val %v", mode)
+		}
+	}
+	{
 		client.EXPECT().Do(ctx, Match("GET", "a")).Return(Result(RedisNil()))
 		if err := client.Do(ctx, client.B().Get().Key("a").Build()).Error(); !rueidis.IsRedisNil(err) {
 			t.Fatalf("unexpected err %v", err)
