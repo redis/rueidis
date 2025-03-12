@@ -2,8 +2,6 @@ module github.com/redis/rueidis/rueidislimiter
 
 go 1.22.0
 
-toolchain go1.24.1
-
 replace github.com/redis/rueidis => ../
 
 replace github.com/redis/rueidis/mock => ../mock
