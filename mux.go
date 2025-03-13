@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"runtime"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -41,6 +42,7 @@ type conn interface {
 	Store(w wire)
 	Addr() string
 	SetOnCloseHook(func(error))
+	OptInCmd() cmds.Completed
 }
 
 var _ conn = (*mux)(nil)
@@ -60,6 +62,7 @@ type mux struct {
 	maxm   int
 
 	usePool bool
+	optin   bool
 }
 
 func makeMux(dst string, option *ClientOption, dialFn dialFn) *mux {
@@ -95,6 +98,7 @@ func newMux(dst string, option *ClientOption, init, dead wire, wireFn wireFn, wi
 		maxm: option.BlockingPipeline,
 
 		usePool: option.DisableAutoPipelining,
+		optin:   isOptIn(option.ClientTrackingOptions),
 	}
 	m.clhks.Store(emptyclhks)
 	for i := 0; i < len(m.wire); i++ {
@@ -104,6 +108,22 @@ func newMux(dst string, option *ClientOption, init, dead wire, wireFn wireFn, wi
 	m.dpool = newPool(option.BlockingPoolSize, dead, option.BlockingPoolCleanup, option.BlockingPoolMinSize, wireFn)
 	m.spool = newPool(option.BlockingPoolSize, dead, option.BlockingPoolCleanup, option.BlockingPoolMinSize, wireNoBgFn)
 	return m
+}
+
+func isOptIn(opts []string) bool {
+	for _, opt := range opts {
+		if opt := strings.ToUpper(opt); opt == "BCAST" || opt == "OPTOUT" {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *mux) OptInCmd() cmds.Completed {
+	if m.optin {
+		return cmds.OptInCmd
+	}
+	return cmds.OptInNopCmd
 }
 
 func (m *mux) SetOnCloseHook(fn func(error)) {

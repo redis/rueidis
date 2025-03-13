@@ -156,7 +156,10 @@ func setup(t *testing.T, option ClientOption) (*pipe, *redisMock, func(), func()
 					{typ: ':', integer: 3},
 				},
 			})
-		if !option.DisableCache {
+		if option.ClientTrackingOptions != nil {
+			mock.Expect(append([]string{"CLIENT", "TRACKING", "ON"}, option.ClientTrackingOptions...)...).
+				ReplyString("OK")
+		} else if !option.DisableCache {
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 				ReplyString("OK")
 		}
@@ -1274,6 +1277,190 @@ func TestClientSideCaching(t *testing.T) {
 
 	expectCSC := func(ttl int64, resp string) {
 		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("MULTI").
+			Expect("PTTL", "a").
+			Expect("GET", "a").
+			Expect("EXEC").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			Reply(RedisMessage{typ: '*', values: []RedisMessage{
+				{typ: ':', integer: ttl},
+				{typ: '+', string: resp},
+			}})
+	}
+	invalidateCSC := func(keys RedisMessage) {
+		mock.Expect().Reply(RedisMessage{
+			typ: '>',
+			values: []RedisMessage{
+				{typ: '+', string: "invalidate"},
+				keys,
+			},
+		})
+	}
+
+	go func() {
+		expectCSC(-1, "1")
+	}()
+	// single flight
+	miss := uint64(0)
+	hits := uint64(0)
+	times := 2000
+	wg := sync.WaitGroup{}
+	wg.Add(times)
+	for i := 0; i < times; i++ {
+		go func() {
+			defer wg.Done()
+			v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
+			if v.string != "1" {
+				t.Errorf("unexpected cached result, expected %v, got %v", "1", v.string)
+			}
+			if v.IsCacheHit() {
+				atomic.AddUint64(&hits, 1)
+			} else {
+				atomic.AddUint64(&miss, 1)
+			}
+		}()
+	}
+	wg.Wait()
+
+	if v := atomic.LoadUint64(&miss); v != 1 {
+		t.Fatalf("unexpected cache miss count %v", v)
+	}
+
+	if v := atomic.LoadUint64(&hits); v != uint64(times-1) {
+		t.Fatalf("unexpected cache hits count %v", v)
+	}
+
+	// cache invalidation
+	invalidateCSC(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "a"}}})
+	go func() {
+		expectCSC(-1, "2")
+	}()
+
+	for {
+		if v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).ToMessage(); v.string == "2" {
+			break
+		}
+		t.Logf("waiting for invalidating")
+	}
+
+	// cache flush invalidation
+	invalidateCSC(RedisMessage{typ: '_'})
+	go func() {
+		expectCSC(-1, "3")
+	}()
+
+	for {
+		if v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).ToMessage(); v.string == "3" {
+			break
+		}
+		t.Logf("waiting for invalidating")
+	}
+}
+
+func TestClientSideCachingBCAST(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{
+		ClientTrackingOptions: []string{"PREFIX", "a", "BCAST"},
+	})
+	defer cancel()
+
+	expectCSC := func(ttl int64, resp string) {
+		mock.Expect("ECHO", "").
+			Expect("MULTI").
+			Expect("PTTL", "a").
+			Expect("GET", "a").
+			Expect("EXEC").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("OK").
+			Reply(RedisMessage{typ: '*', values: []RedisMessage{
+				{typ: ':', integer: ttl},
+				{typ: '+', string: resp},
+			}})
+	}
+	invalidateCSC := func(keys RedisMessage) {
+		mock.Expect().Reply(RedisMessage{
+			typ: '>',
+			values: []RedisMessage{
+				{typ: '+', string: "invalidate"},
+				keys,
+			},
+		})
+	}
+
+	go func() {
+		expectCSC(-1, "1")
+	}()
+	// single flight
+	miss := uint64(0)
+	hits := uint64(0)
+	times := 2000
+	wg := sync.WaitGroup{}
+	wg.Add(times)
+	for i := 0; i < times; i++ {
+		go func() {
+			defer wg.Done()
+			v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
+			if v.string != "1" {
+				t.Errorf("unexpected cached result, expected %v, got %v", "1", v.string)
+			}
+			if v.IsCacheHit() {
+				atomic.AddUint64(&hits, 1)
+			} else {
+				atomic.AddUint64(&miss, 1)
+			}
+		}()
+	}
+	wg.Wait()
+
+	if v := atomic.LoadUint64(&miss); v != 1 {
+		t.Fatalf("unexpected cache miss count %v", v)
+	}
+
+	if v := atomic.LoadUint64(&hits); v != uint64(times-1) {
+		t.Fatalf("unexpected cache hits count %v", v)
+	}
+
+	// cache invalidation
+	invalidateCSC(RedisMessage{typ: '*', values: []RedisMessage{{typ: '+', string: "a"}}})
+	go func() {
+		expectCSC(-1, "2")
+	}()
+
+	for {
+		if v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).ToMessage(); v.string == "2" {
+			break
+		}
+		t.Logf("waiting for invalidating")
+	}
+
+	// cache flush invalidation
+	invalidateCSC(RedisMessage{typ: '_'})
+	go func() {
+		expectCSC(-1, "3")
+	}()
+
+	for {
+		if v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), time.Second).ToMessage(); v.string == "3" {
+			break
+		}
+		t.Logf("waiting for invalidating")
+	}
+}
+
+func TestClientSideCachingOPTOUT(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{
+		ClientTrackingOptions: []string{"OPTOUT"},
+	})
+	defer cancel()
+
+	expectCSC := func(ttl int64, resp string) {
+		mock.Expect("ECHO", "").
 			Expect("MULTI").
 			Expect("PTTL", "a").
 			Expect("GET", "a").

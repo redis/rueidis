@@ -90,6 +90,9 @@ func TestCompleted_IsOptIn(t *testing.T) {
 	if cmd := OptInCmd; !cmd.IsOptIn() {
 		t.Fatalf("should be opt in command")
 	}
+	if cmd := OptInNopCmd; !cmd.IsOptIn() {
+		t.Fatalf("should be opt in command")
+	}
 }
 
 func TestCompleted_NoReply(t *testing.T) {

@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/redis/rueidis/internal/cmds"
 )
 
 type mockConn struct {
@@ -189,6 +191,10 @@ func (m *mockConn) Addr() string {
 		return m.AddrFn()
 	}
 	return ""
+}
+
+func (m *mockConn) OptInCmd() cmds.Completed {
+	return cmds.OptInCmd
 }
 
 func TestNewSingleClientNoNode(t *testing.T) {
