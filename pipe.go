@@ -91,18 +91,18 @@ type pipe struct {
 	noNoDelay       bool
 }
 
-type pipeFn func(connFn func() (net.Conn, error), option *ClientOption) (p *pipe, err error)
+type pipeFn func(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error)
 
-func newPipe(connFn func() (net.Conn, error), option *ClientOption) (p *pipe, err error) {
-	return _newPipe(connFn, option, false, false)
+func newPipe(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error) {
+	return _newPipe(ctx, connFn, option, false, false)
 }
 
-func newPipeNoBg(connFn func() (net.Conn, error), option *ClientOption) (p *pipe, err error) {
-	return _newPipe(connFn, option, false, true)
+func newPipeNoBg(ctx context.Context, connFn func(context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error) {
+	return _newPipe(ctx, connFn, option, false, true)
 }
 
-func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg bool) (p *pipe, err error) {
-	conn, err := connFn()
+func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error), option *ClientOption, r2ps, nobg bool) (p *pipe, err error) {
+	conn, err := connFn(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 	}
 	if !r2ps {
 		p.r2psFn = func() (p *pipe, err error) {
-			return _newPipe(connFn, option, true, nobg)
+			return _newPipe(context.Background(), connFn, option, true, nobg)
 		}
 	}
 	if !nobg && !option.DisableCache {

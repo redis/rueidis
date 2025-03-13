@@ -1799,7 +1799,7 @@ func TestClusterClient(t *testing.T) {
 				t.Errorf("Dedicated should panic if cross slots is used")
 			}
 		}()
-		m.AcquireFn = func() wire { return &mockWire{} }
+		m.AcquireFn = func(_ context.Context) wire { return &mockWire{} }
 		client.Dedicated(func(c DedicatedClient) error {
 			c.Do(context.Background(), c.B().Get().Key("a").Build()).Error()
 			return c.Do(context.Background(), c.B().Get().Key("b").Build()).Error()
@@ -1812,7 +1812,7 @@ func TestClusterClient(t *testing.T) {
 				t.Errorf("Dedicated should panic if cross slots is used")
 			}
 		}()
-		m.AcquireFn = func() wire {
+		m.AcquireFn = func(_ context.Context) wire {
 			return &mockWire{
 				DoMultiFn: func(multi ...Completed) *redisresults {
 					return &redisresults{s: []RedisResult{
@@ -1841,7 +1841,7 @@ func TestClusterClient(t *testing.T) {
 	})
 
 	t.Run("Dedicated Multi Cross Slot Err", func(t *testing.T) {
-		m.AcquireFn = func() wire { return &mockWire{} }
+		m.AcquireFn = func(_ context.Context) wire { return &mockWire{} }
 		err := client.Dedicated(func(c DedicatedClient) (err error) {
 			defer func() {
 				err = errors.New(recover().(string))
@@ -1865,7 +1865,7 @@ func TestClusterClient(t *testing.T) {
 				return e
 			},
 		}
-		m.AcquireFn = func() wire {
+		m.AcquireFn = func(_ context.Context) wire {
 			return w
 		}
 		if err := client.Dedicated(func(c DedicatedClient) error {
@@ -1914,7 +1914,7 @@ func TestClusterClient(t *testing.T) {
 				closed = true
 			},
 		}
-		m.AcquireFn = func() wire {
+		m.AcquireFn = func(_ context.Context) wire {
 			return w
 		}
 		stored := false
@@ -2022,7 +2022,7 @@ func TestClusterClient(t *testing.T) {
 				closed = true
 			},
 		}
-		m.AcquireFn = func() wire {
+		m.AcquireFn = func(_ context.Context) wire {
 			return w
 		}
 		stored := false
@@ -2092,7 +2092,7 @@ func TestClusterClient(t *testing.T) {
 	t.Run("Dedicate Delegate Release On Close", func(t *testing.T) {
 		stored := 0
 		w := &mockWire{}
-		m.AcquireFn = func() wire { return w }
+		m.AcquireFn = func(_ context.Context) wire { return w }
 		m.StoreFn = func(ww wire) { stored++ }
 		c, _ := client.Dedicate()
 		c.Do(context.Background(), c.B().Get().Key("a").Build())
@@ -2107,7 +2107,7 @@ func TestClusterClient(t *testing.T) {
 	t.Run("Dedicate Delegate No Duplicate Release", func(t *testing.T) {
 		stored := 0
 		w := &mockWire{}
-		m.AcquireFn = func() wire { return w }
+		m.AcquireFn = func(_ context.Context) wire { return w }
 		m.StoreFn = func(ww wire) { stored++ }
 		c, cancel := client.Dedicate()
 		c.Do(context.Background(), c.B().Get().Key("a").Build())
@@ -2399,7 +2399,7 @@ func TestClusterClient_SendToOnlyPrimaryNodes(t *testing.T) {
 				t.Errorf("Dedicated should panic if cross slots is used")
 			}
 		}()
-		primaryNodeConn.AcquireFn = func() wire { return &mockWire{} }
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire { return &mockWire{} }
 		client.Dedicated(func(c DedicatedClient) error {
 			c.Do(context.Background(), c.B().Get().Key("a").Build()).Error()
 			return c.Do(context.Background(), c.B().Get().Key("b").Build()).Error()
@@ -2412,7 +2412,7 @@ func TestClusterClient_SendToOnlyPrimaryNodes(t *testing.T) {
 				t.Errorf("Dedicated should panic if cross slots is used")
 			}
 		}()
-		primaryNodeConn.AcquireFn = func() wire {
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire {
 			return &mockWire{
 				DoMultiFn: func(multi ...Completed) *redisresults {
 					return &redisresults{s: []RedisResult{
@@ -2441,7 +2441,7 @@ func TestClusterClient_SendToOnlyPrimaryNodes(t *testing.T) {
 	})
 
 	t.Run("Dedicated Multi Cross Slot Err", func(t *testing.T) {
-		primaryNodeConn.AcquireFn = func() wire { return &mockWire{} }
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire { return &mockWire{} }
 		err := client.Dedicated(func(c DedicatedClient) (err error) {
 			defer func() {
 				err = errors.New(recover().(string))
@@ -2465,7 +2465,7 @@ func TestClusterClient_SendToOnlyPrimaryNodes(t *testing.T) {
 				return e
 			},
 		}
-		primaryNodeConn.AcquireFn = func() wire {
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire {
 			return w
 		}
 		if err := client.Dedicated(func(c DedicatedClient) error {
@@ -2514,7 +2514,7 @@ func TestClusterClient_SendToOnlyPrimaryNodes(t *testing.T) {
 				closed = true
 			},
 		}
-		primaryNodeConn.AcquireFn = func() wire {
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire {
 			return w
 		}
 		stored := false
@@ -2622,7 +2622,7 @@ func TestClusterClient_SendToOnlyPrimaryNodes(t *testing.T) {
 				closed = true
 			},
 		}
-		primaryNodeConn.AcquireFn = func() wire {
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire {
 			return w
 		}
 		stored := false
@@ -2888,7 +2888,7 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 				t.Errorf("Dedicated should panic if cross slots is used")
 			}
 		}()
-		primaryNodeConn.AcquireFn = func() wire { return &mockWire{} }
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire { return &mockWire{} }
 		client.Dedicated(func(c DedicatedClient) error {
 			c.Do(context.Background(), c.B().Get().Key("a").Build()).Error()
 			return c.Do(context.Background(), c.B().Get().Key("b").Build()).Error()
@@ -2901,7 +2901,7 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 				t.Errorf("Dedicated should panic if cross slots is used")
 			}
 		}()
-		primaryNodeConn.AcquireFn = func() wire {
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire {
 			return &mockWire{
 				DoMultiFn: func(multi ...Completed) *redisresults {
 					return &redisresults{s: []RedisResult{
@@ -2930,7 +2930,7 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 	})
 
 	t.Run("Dedicated Multi Cross Slot Err", func(t *testing.T) {
-		primaryNodeConn.AcquireFn = func() wire { return &mockWire{} }
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire { return &mockWire{} }
 		err := client.Dedicated(func(c DedicatedClient) (err error) {
 			defer func() {
 				err = errors.New(recover().(string))
@@ -2954,10 +2954,10 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 				return e
 			},
 		}
-		primaryNodeConn.AcquireFn = func() wire {
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire {
 			return w
 		}
-		replicaNodeConn.AcquireFn = func() wire {
+		replicaNodeConn.AcquireFn = func(_ context.Context) wire {
 			return w
 		} // Subscribe can work on replicas
 		if err := client.Dedicated(func(c DedicatedClient) error {
@@ -3006,7 +3006,7 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 				closed = true
 			},
 		}
-		primaryNodeConn.AcquireFn = func() wire {
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire {
 			return w
 		}
 		stored := false
@@ -3114,7 +3114,7 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 				closed = true
 			},
 		}
-		primaryNodeConn.AcquireFn = func() wire {
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire {
 			return w
 		}
 		stored := false
@@ -3478,7 +3478,7 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 				t.Errorf("Dedicated should panic if cross slots is used")
 			}
 		}()
-		primaryNodeConn.AcquireFn = func() wire { return &mockWire{} }
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire { return &mockWire{} }
 		client.Dedicated(func(c DedicatedClient) error {
 			c.Do(context.Background(), c.B().Get().Key("a").Build()).Error()
 			return c.Do(context.Background(), c.B().Get().Key("b").Build()).Error()
@@ -3491,7 +3491,7 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 				t.Errorf("Dedicated should panic if cross slots is used")
 			}
 		}()
-		primaryNodeConn.AcquireFn = func() wire {
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire {
 			return &mockWire{
 				DoMultiFn: func(multi ...Completed) *redisresults {
 					return &redisresults{s: []RedisResult{
@@ -3520,7 +3520,7 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 	})
 
 	t.Run("Dedicated Multi Cross Slot Err", func(t *testing.T) {
-		primaryNodeConn.AcquireFn = func() wire { return &mockWire{} }
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire { return &mockWire{} }
 		err := client.Dedicated(func(c DedicatedClient) (err error) {
 			defer func() {
 				err = errors.New(recover().(string))
@@ -3544,10 +3544,10 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 				return e
 			},
 		}
-		primaryNodeConn.AcquireFn = func() wire {
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire {
 			return w
 		}
-		replicaNodeConn.AcquireFn = func() wire {
+		replicaNodeConn.AcquireFn = func(_ context.Context) wire {
 			return w
 		} // Subscribe can work on replicas
 		if err := client.Dedicated(func(c DedicatedClient) error {
@@ -3596,7 +3596,7 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 				closed = true
 			},
 		}
-		primaryNodeConn.AcquireFn = func() wire {
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire {
 			return w
 		}
 		stored := false
@@ -3704,7 +3704,7 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 				closed = true
 			},
 		}
-		primaryNodeConn.AcquireFn = func() wire {
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire {
 			return w
 		}
 		stored := false
@@ -6306,7 +6306,7 @@ func TestClusterClientLoadingRetry(t *testing.T) {
 			}
 			return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
 		}
-		m.AcquireFn = func() wire { return &mockWire{DoFn: m.DoFn} }
+		m.AcquireFn = func(_ context.Context) wire { return &mockWire{DoFn: m.DoFn} }
 
 		err := client.Dedicated(func(c DedicatedClient) error {
 			if v, err := c.Do(context.Background(), c.B().Get().Key("test").Build()).ToString(); err != nil || v != "OK" {
@@ -6329,7 +6329,7 @@ func TestClusterClientLoadingRetry(t *testing.T) {
 			}
 			return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "OK"}, nil)}}
 		}
-		m.AcquireFn = func() wire { return &mockWire{DoMultiFn: m.DoMultiFn} }
+		m.AcquireFn = func(_ context.Context) wire { return &mockWire{DoMultiFn: m.DoMultiFn} }
 
 		err := client.Dedicated(func(c DedicatedClient) error {
 			resps := c.DoMulti(context.Background(), c.B().Get().Key("test").Build())
@@ -6783,7 +6783,7 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 				t.Errorf("Dedicated should panic if cross slots is used")
 			}
 		}()
-		primaryNodeConn.AcquireFn = func() wire { return &mockWire{} }
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire { return &mockWire{} }
 		client.Dedicated(func(c DedicatedClient) error {
 			c.Do(context.Background(), c.B().Get().Key("a").Build()).Error()
 			return c.Do(context.Background(), c.B().Get().Key("b").Build()).Error()
@@ -6796,7 +6796,7 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 				t.Errorf("Dedicated should panic if cross slots is used")
 			}
 		}()
-		primaryNodeConn.AcquireFn = func() wire {
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire {
 			return &mockWire{
 				DoMultiFn: func(multi ...Completed) *redisresults {
 					return &redisresults{s: []RedisResult{
@@ -6825,7 +6825,7 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 	})
 
 	t.Run("Dedicated Multi Cross Slot Err", func(t *testing.T) {
-		primaryNodeConn.AcquireFn = func() wire { return &mockWire{} }
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire { return &mockWire{} }
 		err := client.Dedicated(func(c DedicatedClient) (err error) {
 			defer func() {
 				err = errors.New(recover().(string))
@@ -6849,8 +6849,8 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 				return e
 			},
 		}
-		primaryNodeConn.AcquireFn = func() wire { return w }
-		replicaNodeConn.AcquireFn = func() wire { return w } // Subscribe can work on replicas
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire { return w }
+		replicaNodeConn.AcquireFn = func(_ context.Context) wire { return w } // Subscribe can work on replicas
 		if err := client.Dedicated(func(c DedicatedClient) error {
 			return c.Receive(context.Background(), c.B().Subscribe().Channel("a").Build(), func(msg PubSubMessage) {})
 		}); err != e {
@@ -6897,7 +6897,7 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 				closed = true
 			},
 		}
-		primaryNodeConn.AcquireFn = func() wire {
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire {
 			return w
 		}
 		stored := false
@@ -7005,7 +7005,7 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 				closed = true
 			},
 		}
-		primaryNodeConn.AcquireFn = func() wire {
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire {
 			return w
 		}
 		stored := false
@@ -7284,7 +7284,7 @@ func TestClusterClient_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T
 				t.Errorf("Dedicated should panic if cross slots is used")
 			}
 		}()
-		primaryNodeConn.AcquireFn = func() wire { return &mockWire{} }
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire { return &mockWire{} }
 		client.Dedicated(func(c DedicatedClient) error {
 			c.Do(context.Background(), c.B().Get().Key("a").Build()).Error()
 			return c.Do(context.Background(), c.B().Get().Key("b").Build()).Error()
@@ -7297,7 +7297,7 @@ func TestClusterClient_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T
 				t.Errorf("Dedicated should panic if cross slots is used")
 			}
 		}()
-		primaryNodeConn.AcquireFn = func() wire {
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire {
 			return &mockWire{
 				DoMultiFn: func(multi ...Completed) *redisresults {
 					return &redisresults{s: []RedisResult{
@@ -7326,7 +7326,7 @@ func TestClusterClient_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T
 	})
 
 	t.Run("Dedicated Multi Cross Slot Err", func(t *testing.T) {
-		primaryNodeConn.AcquireFn = func() wire { return &mockWire{} }
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire { return &mockWire{} }
 		err := client.Dedicated(func(c DedicatedClient) (err error) {
 			defer func() {
 				err = errors.New(recover().(string))
@@ -7350,7 +7350,7 @@ func TestClusterClient_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T
 				return e
 			},
 		}
-		primaryNodeConn.AcquireFn = func() wire {
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire {
 			return w
 		}
 		if err := client.Dedicated(func(c DedicatedClient) error {
@@ -7399,7 +7399,7 @@ func TestClusterClient_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T
 				closed = true
 			},
 		}
-		primaryNodeConn.AcquireFn = func() wire {
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire {
 			return w
 		}
 		stored := false
@@ -7507,7 +7507,7 @@ func TestClusterClient_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T
 				closed = true
 			},
 		}
-		primaryNodeConn.AcquireFn = func() wire {
+		primaryNodeConn.AcquireFn = func(_ context.Context) wire {
 			return w
 		}
 		stored := false

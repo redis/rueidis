@@ -172,7 +172,7 @@ retry:
 }
 
 func (c *singleClient) Dedicated(fn func(DedicatedClient) error) (err error) {
-	wire := c.conn.Acquire()
+	wire := c.conn.Acquire(context.Background())
 	dsc := &dedicatedSingleClient{cmd: c.cmd, conn: c.conn, wire: wire, retry: c.retry, retryHandler: c.retryHandler}
 	err = fn(dsc)
 	dsc.release()
@@ -180,7 +180,7 @@ func (c *singleClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 }
 
 func (c *singleClient) Dedicate() (DedicatedClient, func()) {
-	wire := c.conn.Acquire()
+	wire := c.conn.Acquire(context.Background())
 	dsc := &dedicatedSingleClient{cmd: c.cmd, conn: c.conn, wire: wire, retry: c.retry, retryHandler: c.retryHandler}
 	return dsc, dsc.release
 }
