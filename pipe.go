@@ -89,6 +89,7 @@ type pipe struct {
 	recvs           int32
 	r2ps            bool // identify this pipe is used for resp2 pubsub or not
 	noNoDelay       bool
+	optin           bool
 }
 
 type pipeFn func(connFn func() (net.Conn, error), option *ClientOption) (p *pipe, err error)
@@ -116,7 +117,8 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 		maxFlushDelay: option.MaxFlushDelay,
 		noNoDelay:     option.DisableTCPNoDelay,
 
-		r2ps: r2ps,
+		r2ps:  r2ps,
+		optin: isOptIn(option.ClientTrackingOptions),
 	}
 	if !nobg {
 		p.queue = newRing(option.RingScaleEachConn)
@@ -1300,6 +1302,13 @@ next:
 	return m, nil
 }
 
+func (p *pipe) optInCmd() cmds.Completed {
+	if p.optin {
+		return cmds.OptInCmd
+	}
+	return cmds.OptInNopCmd
+}
+
 func (p *pipe) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) RedisResult {
 	if p.cache == nil {
 		return p.Do(ctx, Completed(cmd))
@@ -1319,7 +1328,7 @@ func (p *pipe) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) Re
 	}
 	resp := p.DoMulti(
 		ctx,
-		cmds.OptInCmd,
+		p.optInCmd(),
 		cmds.MultiCmd,
 		cmds.NewCompleted([]string{"PTTL", ck}),
 		Completed(cmd),
@@ -1387,7 +1396,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 		}
 
 		multi := make([]Completed, 0, keys+4)
-		multi = append(multi, cmds.OptInCmd, cmds.MultiCmd)
+		multi = append(multi, p.optInCmd(), cmds.MultiCmd)
 		for _, key := range rewritten.Commands()[1 : keys+1] {
 			multi = append(multi, builder.Pttl().Key(key).Build())
 		}
@@ -1473,7 +1482,7 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 		for _, i := range missed {
 			ct := multi[i]
 			ck, _ := cmds.CacheKey(ct.Cmd)
-			missing = append(missing, cmds.OptInCmd, cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(ct.Cmd), cmds.ExecCmd)
+			missing = append(missing, p.optInCmd(), cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(ct.Cmd), cmds.ExecCmd)
 		}
 	} else {
 		for i, ct := range multi {
@@ -1487,7 +1496,7 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 				entries.e[i] = entry // store entries for later entry.Wait() to avoid MGET deadlock each others.
 				continue
 			}
-			missing = append(missing, cmds.OptInCmd, cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(ct.Cmd), cmds.ExecCmd)
+			missing = append(missing, p.optInCmd(), cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(ct.Cmd), cmds.ExecCmd)
 		}
 	}
 

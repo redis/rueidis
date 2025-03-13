@@ -126,6 +126,26 @@ func TestMuxAddr(t *testing.T) {
 	}
 }
 
+func TestMuxOptInCmd(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+
+	if m := makeMux("dst1", &ClientOption{
+		ClientTrackingOptions: []string{"OPTOUT"},
+	}, nil); m.OptInCmd() != cmds.OptInNopCmd {
+		t.Fatalf("unexpected OptInCmd")
+	}
+	if m := makeMux("dst1", &ClientOption{
+		ClientTrackingOptions: []string{"PREFIX", "a", "BCAST"},
+	}, nil); m.OptInCmd() != cmds.OptInNopCmd {
+		t.Fatalf("unexpected OptInCmd")
+	}
+	if m := makeMux("dst1", &ClientOption{
+		ClientTrackingOptions: nil,
+	}, nil); m.OptInCmd() != cmds.OptInCmd {
+		t.Fatalf("unexpected OptInCmd")
+	}
+}
+
 func TestMuxDialSuppress(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	var wires, waits, done int64

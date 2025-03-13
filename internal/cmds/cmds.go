@@ -7,10 +7,10 @@ const (
 	blockTag = uint16(1 << 14)
 	readonly = uint16(1 << 13)
 	noRetTag = uint16(1<<12) | readonly | pipeTag // make noRetTag can also be retried and auto pipelining
-	mtGetTag = uint16(1<<11) | readonly // make mtGetTag can also be retried
-	scrRoTag = uint16(1<<10) | readonly // make scrRoTag can also be retried
+	mtGetTag = uint16(1<<11) | readonly           // make mtGetTag can also be retried
+	scrRoTag = uint16(1<<10) | readonly           // make scrRoTag can also be retried
 	unsubTag = uint16(1<<9) | noRetTag
-	pipeTag  = uint16(1<<8) // make blocking mode request can use auto pipelining
+	pipeTag  = uint16(1 << 8) // make blocking mode request can use auto pipelining
 	// InitSlot indicates that the command be sent to any redis node in cluster
 	InitSlot = uint16(1 << 14)
 	// NoSlot indicates that the command has no key slot specified
@@ -21,6 +21,11 @@ var (
 	// OptInCmd is predefined CLIENT CACHING YES
 	OptInCmd = Completed{
 		cs: newCommandSlice([]string{"CLIENT", "CACHING", "YES"}),
+		cf: optInTag,
+	}
+	// OptInNopCmd is a predefined alternative for CLIENT CACHING YES in BCAST/OPTOUT mode.
+	OptInNopCmd = Completed{
+		cs: newCommandSlice([]string{"ECHO", ""}),
 		cf: optInTag,
 	}
 	// MultiCmd is predefined MULTI
