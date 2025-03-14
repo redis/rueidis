@@ -330,3 +330,122 @@ func TestPoolWithIdleTTL(t *testing.T) {
 		p.Close()
 	})
 }
+
+func TestPoolWithAcquireCtx(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	setup := func(size int, delay time.Duration) *pool {
+		return newPool(size, dead, 0, 0, func(ctx context.Context) wire {
+			var err error 
+			closed := false
+			timer := time.NewTimer(delay)
+			defer timer.Stop()
+			select {
+			case <-ctx.Done():
+				err = ctx.Err()
+				closed = true
+			case <-timer.C:
+				// noop
+			}
+			
+			return &mockWire{
+				CloseFn: func() {
+					closed = true
+				},
+				ErrorFn: func() error {
+					if err != nil {
+						return err
+					} else if closed {
+						return ErrClosing
+					}
+					return nil
+				},
+			}
+		})
+	}
+	t.Run("Acquire connections, all exceed context deadline", func(t *testing.T) {
+		p := setup(10, time.Millisecond*5)
+		conns := make([]wire, 10)
+
+		for i := 0; i < 2; i++ {
+			for i := range conns {
+				ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
+				w := p.Acquire(ctx)
+				conns[i] = w
+				cancel()
+			}
+
+			for _, w := range conns {
+				p.Store(w)
+			}
+
+			p.cond.L.Lock()
+			if p.size != 0 {
+				defer p.cond.L.Unlock()
+				t.Fatalf("size must be equal to 0, actual: %d", p.size)
+			}
+
+			if len(p.list) != 0 {
+				defer p.cond.L.Unlock()
+				t.Fatalf("pool len must equal to 0, actual: %d", len(p.list))
+			}
+			p.cond.L.Unlock()
+		}
+
+		p.Close()
+	})
+
+	t.Run("Acquire connections, some exceed context deadline", func(t *testing.T) {
+		p := setup(10, time.Millisecond*5)
+		conns := make([]wire, 10)
+
+		// size = 5
+		for i := range conns {
+			d := time.Millisecond
+			if i % 2 == 0 {
+				d = time.Millisecond * 8
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), d)
+			w := p.Acquire(ctx)
+			conns[i] = w
+			cancel()
+		}
+		for _, w := range conns {
+			p.Store(w)
+		}
+		p.cond.L.Lock()
+		if p.size != len(conns)/2 {
+			defer p.cond.L.Unlock()
+			t.Fatalf("size must be equal to %d, actual: %d", len(conns)/2, p.size)
+		}
+
+		if len(p.list) != len(conns)/2 {
+			defer p.cond.L.Unlock()
+			t.Fatalf("pool len must equal to %d, actual: %d", len(conns)/2, len(p.list))
+		}
+		p.cond.L.Unlock()
+
+		// size = 10
+		for i := range conns {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond * 8)
+			w := p.Acquire(ctx)
+			conns[i] = w
+			cancel()
+		}
+		for _, w := range conns {
+			p.Store(w)
+		}
+		p.cond.L.Lock()
+		if p.size != len(conns) {
+			defer p.cond.L.Unlock()
+			t.Fatalf("size must be equal to %d, actual: %d", len(conns), p.size)
+		}
+
+		if len(p.list) != len(conns) {
+			defer p.cond.L.Unlock()
+			t.Fatalf("pool len must equal to %d, actual: %d", len(conns), len(p.list))
+		}
+		p.cond.L.Unlock()
+		
+		p.Close()
+	})
+}
