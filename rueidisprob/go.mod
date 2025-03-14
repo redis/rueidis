@@ -1,6 +1,8 @@
 module github.com/redis/rueidis/rueidisprob
 
-go 1.22.0
+go 1.23.0
+
+toolchain go1.23.4
 
 replace github.com/redis/rueidis => ../
 
@@ -9,4 +11,4 @@ require (
 	github.com/twmb/murmur3 v1.1.8
 )
 
-require golang.org/x/sys v0.30.0 // indirect
+require golang.org/x/sys v0.31.0 // indirect
