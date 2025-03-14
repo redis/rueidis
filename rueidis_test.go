@@ -407,6 +407,27 @@ func TestCustomDialFnIsCalled(t *testing.T) {
 	}
 }
 
+func TestCustomDialCtxFnIsCalled(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	isFnCalled := false
+	option := ClientOption{
+		InitAddress: []string{"127.0.0.1:0"},
+		DialCtxFn: func(ctx context.Context, s string, dialer *net.Dialer, config *tls.Config) (conn net.Conn, err error) {
+			isFnCalled = true
+			return nil, errors.New("dial error")
+		},
+	}
+
+	_, err := NewClient(option)
+
+	if !isFnCalled {
+		t.Fatalf("excepted ClientOption.DialFn to be called")
+	}
+	if err == nil {
+		t.Fatalf("expected dial error")
+	}
+}
+
 func ExampleIsRedisNil() {
 	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
 	if err != nil {

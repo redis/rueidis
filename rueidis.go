@@ -70,6 +70,7 @@ type ClientOption struct {
 	TLSConfig *tls.Config
 
 	// DialFn allows for a custom function to be used to create net.Conn connections
+	// Deprecated: use DialCtxFn instead.
 	DialFn func(string, *net.Dialer, *tls.Config) (conn net.Conn, err error)
 
 	// DialCtxFn allows for a custom function to be used to create net.Conn connections
