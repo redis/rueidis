@@ -1,6 +1,7 @@
 package rueidis
 
 import (
+	"context"
 	"errors"
 	"runtime"
 	"sync/atomic"
@@ -15,7 +16,7 @@ func TestPool(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	setup := func(size int) (*pool, *int32) {
 		var count int32
-		return newPool(size, dead, 0, 0, func() wire {
+		return newPool(size, dead, 0, 0, func(context.Context) wire {
 			atomic.AddInt32(&count, 1)
 			closed := false
 			return &mockWire{
@@ -33,7 +34,7 @@ func TestPool(t *testing.T) {
 	}
 
 	t.Run("DefaultPoolSize", func(t *testing.T) {
-		p := newPool(0, dead, 0, 0, func() wire { return nil })
+		p := newPool(0, dead, 0, 0, func(context.Context) wire { return nil })
 		if cap(p.list) == 0 {
 			t.Fatalf("DefaultPoolSize is not applied")
 		}
@@ -42,7 +43,7 @@ func TestPool(t *testing.T) {
 	t.Run("Reuse", func(t *testing.T) {
 		pool, count := setup(100)
 		for i := 0; i < 1000; i++ {
-			pool.Store(pool.Acquire())
+			pool.Store(pool.Acquire(context.Background()))
 		}
 		if atomic.LoadInt32(count) != 1 {
 			t.Fatalf("pool does not reuse connection")
@@ -51,8 +52,8 @@ func TestPool(t *testing.T) {
 
 	t.Run("Reuse without broken connections", func(t *testing.T) {
 		pool, count := setup(100)
-		c1 := pool.Acquire()
-		c2 := pool.Acquire()
+		c1 := pool.Acquire(context.Background())
+		c2 := pool.Acquire(context.Background())
 		pool.Store(c1)
 		pool.Store(c2)
 		pool.cond.L.Lock()
@@ -60,7 +61,7 @@ func TestPool(t *testing.T) {
 			p.Close()
 		}
 		pool.cond.L.Unlock()
-		c3 := pool.Acquire()
+		c3 := pool.Acquire(context.Background())
 		if c3.Error() != nil {
 			t.Fatalf("c3.Error() is not nil")
 		}
@@ -81,7 +82,7 @@ func TestPool(t *testing.T) {
 		conn := make([]wire, 100)
 		pool, count := setup(len(conn))
 		for i := 0; i < len(conn); i++ {
-			conn[i] = pool.Acquire()
+			conn[i] = pool.Acquire(context.Background())
 		}
 		if atomic.LoadInt32(count) != 100 {
 			t.Fatalf("unexpected acquire count")
@@ -92,7 +93,7 @@ func TestPool(t *testing.T) {
 			}
 		}()
 		for i := 0; i < len(conn); i++ {
-			pool.Acquire()
+			pool.Acquire(context.Background())
 		}
 		if atomic.LoadInt32(count) > 100 {
 			t.Fatalf("pool must not exceed the size limit")
@@ -103,11 +104,11 @@ func TestPool(t *testing.T) {
 		conn := make([]wire, 100)
 		pool, _ := setup(len(conn))
 		for i := 0; i < len(conn); i++ {
-			w := pool.Acquire()
+			w := pool.Acquire(context.Background())
 			go pool.Store(w)
 		}
 		for i := 0; i < len(conn); i++ {
-			conn[i] = pool.Acquire()
+			conn[i] = pool.Acquire(context.Background())
 		}
 		for i := 0; i < len(conn); i++ {
 			for j := i + 1; j < len(conn); j++ {
@@ -120,8 +121,8 @@ func TestPool(t *testing.T) {
 
 	t.Run("Close", func(t *testing.T) {
 		pool, count := setup(2)
-		w1 := pool.Acquire()
-		w2 := pool.Acquire()
+		w1 := pool.Acquire(context.Background())
+		w2 := pool.Acquire(context.Background())
 		if w1.Error() != nil {
 			t.Fatalf("unexpected err %v", w1.Error())
 		}
@@ -137,7 +138,7 @@ func TestPool(t *testing.T) {
 			t.Fatalf("pool does not close existing wire after Close()")
 		}
 		for i := 0; i < 100; i++ {
-			if rw := pool.Acquire(); rw != dead {
+			if rw := pool.Acquire(context.Background()); rw != dead {
 				t.Fatalf("pool does not return the dead wire after Close()")
 			}
 		}
@@ -149,12 +150,12 @@ func TestPool(t *testing.T) {
 
 	t.Run("Close Empty", func(t *testing.T) {
 		pool, count := setup(2)
-		w1 := pool.Acquire()
+		w1 := pool.Acquire(context.Background())
 		if w1.Error() != nil {
 			t.Fatalf("unexpected err %v", w1.Error())
 		}
 		pool.Close()
-		w2 := pool.Acquire()
+		w2 := pool.Acquire(context.Background())
 		if w2.Error() != ErrClosing {
 			t.Fatalf("pool does not close wire after Close()")
 		}
@@ -162,7 +163,7 @@ func TestPool(t *testing.T) {
 			t.Fatalf("pool should not make new wire")
 		}
 		for i := 0; i < 100; i++ {
-			if rw := pool.Acquire(); rw != dead {
+			if rw := pool.Acquire(context.Background()); rw != dead {
 				t.Fatalf("pool does not return the dead wire after Close()")
 			}
 		}
@@ -174,7 +175,7 @@ func TestPool(t *testing.T) {
 
 	t.Run("Close Waiting", func(t *testing.T) {
 		pool, count := setup(1)
-		w1 := pool.Acquire()
+		w1 := pool.Acquire(context.Background())
 		if w1.Error() != nil {
 			t.Fatalf("unexpected err %v", w1.Error())
 		}
@@ -182,7 +183,7 @@ func TestPool(t *testing.T) {
 		for i := 0; i < 100; i++ {
 			go func() {
 				atomic.AddInt64(&pending, 1)
-				if rw := pool.Acquire(); rw != dead {
+				if rw := pool.Acquire(context.Background()); rw != dead {
 					t.Errorf("pool does not return the dead wire after Close()")
 				}
 				atomic.AddInt64(&pending, -1)
@@ -209,7 +210,7 @@ func TestPoolError(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	setup := func(size int) (*pool, *int32) {
 		var count int32
-		return newPool(size, dead, 0, 0, func() wire {
+		return newPool(size, dead, 0, 0, func(context.Context) wire {
 			w := &pipe{}
 			w.pshks.Store(emptypshks)
 			c := atomic.AddInt32(&count, 1)
@@ -224,7 +225,7 @@ func TestPoolError(t *testing.T) {
 		conn := make([]wire, 100)
 		pool, count := setup(len(conn))
 		for i := 0; i < len(conn); i++ {
-			conn[i] = pool.Acquire()
+			conn[i] = pool.Acquire(context.Background())
 		}
 		if atomic.LoadInt32(count) != int32(len(conn)) {
 			t.Fatalf("unexpected acquire count")
@@ -233,7 +234,7 @@ func TestPoolError(t *testing.T) {
 			pool.Store(conn[i])
 		}
 		for i := 0; i < len(conn); i++ {
-			conn[i] = pool.Acquire()
+			conn[i] = pool.Acquire(context.Background())
 		}
 		if atomic.LoadInt32(count) != int32(len(conn)+len(conn)/2) {
 			t.Fatalf("unexpected acquire count")
@@ -244,7 +245,7 @@ func TestPoolError(t *testing.T) {
 func TestPoolWithIdleTTL(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	setup := func(size int, ttl time.Duration, minSize int) *pool {
-		return newPool(size, dead, ttl, minSize, func() wire {
+		return newPool(size, dead, ttl, minSize, func(context.Context) wire {
 			closed := false
 			return &mockWire{
 				CloseFn: func() {
@@ -267,7 +268,7 @@ func TestPoolWithIdleTTL(t *testing.T) {
 
 		for i := 0; i < 2; i++ {
 			for i := range conns {
-				w := p.Acquire()
+				w := p.Acquire(context.Background())
 				conns[i] = w
 			}
 
@@ -301,7 +302,7 @@ func TestPoolWithIdleTTL(t *testing.T) {
 
 		for i := 0; i < 2; i++ {
 			for i := range conns {
-				w := p.Acquire()
+				w := p.Acquire(context.Background())
 				conns[i] = w
 			}
 

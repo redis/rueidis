@@ -1,11 +1,12 @@
 package rueidis
 
 import (
+	"context"
 	"sync"
 	"time"
 )
 
-func newPool(cap int, dead wire, cleanup time.Duration, minSize int, makeFn func() wire) *pool {
+func newPool(cap int, dead wire, cleanup time.Duration, minSize int, makeFn func(context.Context) wire) *pool {
 	if cap <= 0 {
 		cap = DefaultPoolSize
 	}
@@ -26,7 +27,7 @@ type pool struct {
 	dead    wire
 	cond    *sync.Cond
 	timer   *time.Timer
-	make    func() wire
+	make    func(context.Context) wire
 	list    []wire
 	cleanup time.Duration
 	size    int
@@ -36,7 +37,7 @@ type pool struct {
 	timerOn bool
 }
 
-func (p *pool) Acquire() (v wire) {
+func (p *pool) Acquire(ctx context.Context) (v wire) {
 	p.cond.L.Lock()
 retry:
 	for len(p.list) == 0 && p.size == p.cap && !p.down {
@@ -52,7 +53,7 @@ retry:
 		// unlock before start to make a new wire
 		// allowing others to make wires concurrently instead of waiting in line
 		p.cond.L.Unlock()
-		v = p.make()
+		v = p.make(ctx)
 		return v
 	}
 

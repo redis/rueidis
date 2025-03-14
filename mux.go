@@ -12,9 +12,9 @@ import (
 	"github.com/redis/rueidis/internal/util"
 )
 
-type connFn func(dst string, opt *ClientOption) conn
-type dialFn func(dst string, opt *ClientOption) (net.Conn, error)
-type wireFn func() wire
+type connFn func(ctx context.Context, dst string, opt *ClientOption) conn
+type dialFn func(ctx context.Context, dst string, opt *ClientOption) (net.Conn, error)
+type wireFn func(ctx context.Context) wire
 
 type singleconnect struct {
 	w wire
@@ -30,14 +30,14 @@ type conn interface {
 	Receive(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
 	DoStream(ctx context.Context, cmd Completed) RedisResultStream
 	DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisResultStream
-	Info() map[string]RedisMessage
-	Version() int
-	AZ() string
-	Error() error
+	Info(context.Context) map[string]RedisMessage
+	Version(context.Context) int
+	AZ(context.Context) string
+	Error(context.Context) error
 	Close()
-	Dial() error
+	Dial(context.Context) error
 	Override(conn)
-	Acquire() wire
+	Acquire(context.Context) wire
 	Store(w wire)
 	Addr() string
 	SetOnCloseHook(func(error))
@@ -62,14 +62,14 @@ type mux struct {
 	usePool bool
 }
 
-func makeMux(dst string, option *ClientOption, dialFn dialFn) *mux {
+func makeMux(ctx context.Context, dst string, option *ClientOption, dialFn dialFn) *mux {
 	dead := deadFn()
-	connFn := func() (net.Conn, error) {
-		return dialFn(dst, option)
+	connFn := func(ctx context.Context) (net.Conn, error) {
+		return dialFn(ctx, dst, option)
 	}
-	wireFn := func(pipeFn pipeFn) func() wire {
-		return func() (w wire) {
-			w, err := pipeFn(connFn, option)
+	wireFn := func(pipeFn pipeFn) func(context.Context) wire {
+		return func(ctx context.Context) (w wire) {
+			w, err := pipeFn(ctx, connFn, option)
 			if err != nil {
 				dead.error.Store(&errs{error: err})
 				w = dead
@@ -132,7 +132,7 @@ func (m *mux) Override(cc conn) {
 	}
 }
 
-func (m *mux) _pipe(i uint16) (w wire, err error) {
+func (m *mux) _pipe(ctx context.Context, i uint16) (w wire, err error) {
 	if w = m.wire[i].Load().(wire); w != m.init {
 		return w, nil
 	}
@@ -151,7 +151,7 @@ func (m *mux) _pipe(i uint16) (w wire, err error) {
 	}
 
 	if w = m.wire[i].Load().(wire); w == m.init {
-		if w = m.wireFn(); w != m.dead {
+		if w = m.wireFn(ctx); w != m.dead {
 			m.setCloseHookOnWire(i, w)
 			m.wire[i].Store(w)
 		} else {
@@ -173,39 +173,39 @@ func (m *mux) _pipe(i uint16) (w wire, err error) {
 	return w, err
 }
 
-func (m *mux) pipe(i uint16) wire {
-	w, _ := m._pipe(i)
+func (m *mux) pipe(ctx context.Context, i uint16) wire {
+	w, _ := m._pipe(ctx, i)
 	return w // this should never be nil
 }
 
-func (m *mux) Dial() error {
-	_, err := m._pipe(0)
+func (m *mux) Dial(ctx context.Context) error {
+	_, err := m._pipe(ctx, 0)
 	return err
 }
 
-func (m *mux) Info() map[string]RedisMessage {
-	return m.pipe(0).Info()
+func (m *mux) Info(ctx context.Context) map[string]RedisMessage {
+	return m.pipe(ctx, 0).Info()
 }
 
-func (m *mux) Version() int {
-	return m.pipe(0).Version()
+func (m *mux) Version(ctx context.Context) int {
+	return m.pipe(ctx, 0).Version()
 }
 
-func (m *mux) AZ() string {
-	return m.pipe(0).AZ()
+func (m *mux) AZ(ctx context.Context) string {
+	return m.pipe(ctx, 0).AZ()
 }
 
-func (m *mux) Error() error {
-	return m.pipe(0).Error()
+func (m *mux) Error(ctx context.Context) error {
+	return m.pipe(ctx, 0).Error()
 }
 
 func (m *mux) DoStream(ctx context.Context, cmd Completed) RedisResultStream {
-	wire := m.spool.Acquire()
+	wire := m.spool.Acquire(ctx)
 	return wire.DoStream(ctx, m.spool, cmd)
 }
 
 func (m *mux) DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisResultStream {
-	wire := m.spool.Acquire()
+	wire := m.spool.Acquire(ctx)
 	return wire.DoMultiStream(ctx, m.spool, multi...)
 }
 
@@ -242,7 +242,7 @@ block:
 }
 
 func (m *mux) blocking(pool *pool, ctx context.Context, cmd Completed) (resp RedisResult) {
-	wire := pool.Acquire()
+	wire := pool.Acquire(ctx)
 	resp = wire.Do(ctx, cmd)
 	if resp.NonRedisError() != nil { // abort the wire if blocking command return early (ex. context.DeadlineExceeded)
 		wire.Close()
@@ -252,7 +252,7 @@ func (m *mux) blocking(pool *pool, ctx context.Context, cmd Completed) (resp Red
 }
 
 func (m *mux) blockingMulti(pool *pool, ctx context.Context, cmd []Completed) (resp *redisresults) {
-	wire := pool.Acquire()
+	wire := pool.Acquire(ctx)
 	resp = wire.DoMulti(ctx, cmd...)
 	for _, res := range resp.s {
 		if res.NonRedisError() != nil { // abort the wire if blocking command return early (ex. context.DeadlineExceeded)
@@ -266,7 +266,7 @@ func (m *mux) blockingMulti(pool *pool, ctx context.Context, cmd []Completed) (r
 
 func (m *mux) pipeline(ctx context.Context, cmd Completed) (resp RedisResult) {
 	slot := slotfn(len(m.wire), cmd.Slot(), cmd.NoReply())
-	wire := m.pipe(slot)
+	wire := m.pipe(ctx, slot)
 	if resp = wire.Do(ctx, cmd); isBroken(resp.NonRedisError(), wire) {
 		m.wire[slot].CompareAndSwap(wire, m.init)
 	}
@@ -275,7 +275,7 @@ func (m *mux) pipeline(ctx context.Context, cmd Completed) (resp RedisResult) {
 
 func (m *mux) pipelineMulti(ctx context.Context, cmd []Completed) (resp *redisresults) {
 	slot := slotfn(len(m.wire), cmd[0].Slot(), cmd[0].NoReply())
-	wire := m.pipe(slot)
+	wire := m.pipe(ctx, slot)
 	resp = wire.DoMulti(ctx, cmd...)
 	for _, r := range resp.s {
 		if isBroken(r.NonRedisError(), wire) {
@@ -288,7 +288,7 @@ func (m *mux) pipelineMulti(ctx context.Context, cmd []Completed) (resp *redisre
 
 func (m *mux) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) RedisResult {
 	slot := cmd.Slot() & uint16(len(m.wire)-1)
-	wire := m.pipe(slot)
+	wire := m.pipe(ctx, slot)
 	resp := wire.DoCache(ctx, cmd, ttl)
 	if isBroken(resp.NonRedisError(), wire) {
 		m.wire[slot].CompareAndSwap(wire, m.init)
@@ -346,7 +346,7 @@ func (m *mux) DoMultiCache(ctx context.Context, multi ...CacheableTTL) (results 
 }
 
 func (m *mux) doMultiCache(ctx context.Context, slot uint16, multi []CacheableTTL) (resps *redisresults) {
-	wire := m.pipe(slot)
+	wire := m.pipe(ctx, slot)
 	resps = wire.DoMultiCache(ctx, multi...)
 	for _, r := range resps.s {
 		if isBroken(r.NonRedisError(), wire) {
@@ -359,7 +359,7 @@ func (m *mux) doMultiCache(ctx context.Context, slot uint16, multi []CacheableTT
 
 func (m *mux) Receive(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 	slot := slotfn(len(m.wire), subscribe.Slot(), subscribe.NoReply())
-	wire := m.pipe(slot)
+	wire := m.pipe(ctx, slot)
 	err := wire.Receive(ctx, subscribe, fn)
 	if isBroken(err, wire) {
 		m.wire[slot].CompareAndSwap(wire, m.init)
@@ -367,8 +367,8 @@ func (m *mux) Receive(ctx context.Context, subscribe Completed, fn func(message 
 	return err
 }
 
-func (m *mux) Acquire() wire {
-	return m.dpool.Acquire()
+func (m *mux) Acquire(ctx context.Context) wire {
+	return m.dpool.Acquire(ctx)
 }
 
 func (m *mux) Store(w wire) {

@@ -18,7 +18,7 @@ func TestSentinelClientInit(t *testing.T) {
 	t.Run("Init no nodes", func(t *testing.T) {
 		if _, err := newSentinelClient(
 			&ClientOption{InitAddress: []string{}},
-			func(dst string, opt *ClientOption) conn { return nil },
+			func(ctx context.Context, dst string, opt *ClientOption) conn { return nil },
 			newRetryer(defaultRetryDelayFn),
 		); err != ErrNoAddr {
 			t.Fatalf("unexpected err %v", err)
@@ -29,7 +29,7 @@ func TestSentinelClientInit(t *testing.T) {
 		v := errors.New("dial err")
 		if _, err := newSentinelClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn { return &mockConn{DialFn: func() error { return v }} },
+			func(ctx context.Context, dst string, opt *ClientOption) conn { return &mockConn{DialFn: func() error { return v }} },
 			newRetryer(defaultRetryDelayFn),
 		); err != v {
 			t.Fatalf("unexpected err %v", err)
@@ -40,7 +40,7 @@ func TestSentinelClientInit(t *testing.T) {
 		v := errors.New("refresh err")
 		if _, err := newSentinelClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoMultiFn: func(cmd ...Completed) *redisresults { return &redisresults{s: []RedisResult{newErrResult(v)}} },
 				}
@@ -126,7 +126,7 @@ func TestSentinelClientInit(t *testing.T) {
 		}
 		client, err := newSentinelClient(
 			&ClientOption{InitAddress: []string{":0", ":1", ":2"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				if dst == ":0" {
 					return s0
 				}
@@ -334,7 +334,7 @@ func TestSentinelClientInit(t *testing.T) {
 
 		client, err := newSentinelClient(
 			&ClientOption{InitAddress: []string{":0", ":1", ":2"}, ReplicaOnly: true},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				if dst == ":0" {
 					return slaveWithMultiError
 				}
@@ -436,7 +436,7 @@ func TestSentinelClientInit(t *testing.T) {
 		}
 		client, err := newSentinelClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				if dst == ":0" {
 					return s0
 				}
@@ -562,7 +562,7 @@ func TestSentinelClientInit(t *testing.T) {
 		}
 		client, err := newSentinelClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				if dst == ":0" {
 					return s0
 				}
@@ -629,7 +629,7 @@ func TestSentinelRefreshAfterClose(t *testing.T) {
 	}
 	client, err := newSentinelClient(
 		&ClientOption{InitAddress: []string{":0"}},
-		func(dst string, opt *ClientOption) conn {
+		func(ctx context.Context, dst string, opt *ClientOption) conn {
 			if dst == ":0" {
 				return s0
 			}
@@ -674,7 +674,7 @@ func TestSentinelSwitchAfterClose(t *testing.T) {
 	}
 	client, err := newSentinelClient(
 		&ClientOption{InitAddress: []string{":0"}},
-		func(dst string, opt *ClientOption) conn {
+		func(ctx context.Context, dst string, opt *ClientOption) conn {
 			if dst == ":0" {
 				return s0
 			}
@@ -716,7 +716,7 @@ func TestSentinelClientDelegate(t *testing.T) {
 	}
 	client, err := newSentinelClient(
 		&ClientOption{InitAddress: []string{":0"}},
-		func(dst string, opt *ClientOption) conn {
+		func(ctx context.Context, dst string, opt *ClientOption) conn {
 			if dst == ":0" {
 				return s0
 			}
@@ -734,7 +734,7 @@ func TestSentinelClientDelegate(t *testing.T) {
 
 	disabledCacheClient, err := newSentinelClient(
 		&ClientOption{InitAddress: []string{":0"}, DisableCache: true},
-		func(dst string, opt *ClientOption) conn {
+		func(ctx context.Context, dst string, opt *ClientOption) conn {
 			if dst == ":0" {
 				return s0
 			}
@@ -1082,7 +1082,7 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 		}
 		client, err := newSentinelClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				if dst == ":0" {
 					return s0
 				}
@@ -1242,7 +1242,7 @@ func TestSentinelClientPubSub(t *testing.T) {
 				MasterSet: "test",
 			},
 		},
-		func(dst string, opt *ClientOption) conn {
+		func(ctx context.Context, dst string, opt *ClientOption) conn {
 			if dst == ":0" {
 				return s0
 			}
@@ -1411,7 +1411,7 @@ func TestSentinelReplicaOnlyClientPubSub(t *testing.T) {
 			},
 			ReplicaOnly: true,
 		},
-		func(dst string, opt *ClientOption) conn {
+		func(ctx context.Context, dst string, opt *ClientOption) conn {
 			if dst == ":0" {
 				return s0
 			}
@@ -1539,7 +1539,7 @@ func TestSentinelClientRetry(t *testing.T) {
 				InitAddress: []string{":0"},
 				Sentinel:    SentinelOption{MasterSet: "masters"},
 			},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return m
 			},
 			newRetryer(defaultRetryDelayFn),
@@ -1576,7 +1576,7 @@ func TestSentinelClientLoadingRetry(t *testing.T) {
 		}
 		client, err := newSentinelClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				if dst == ":0" {
 					return s0
 				}

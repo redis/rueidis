@@ -701,7 +701,7 @@ func TestClusterClientInit(t *testing.T) {
 	t.Run("Init no nodes", func(t *testing.T) {
 		if _, err := newClusterClient(
 			&ClientOption{InitAddress: []string{}},
-			func(dst string, opt *ClientOption) conn { return nil },
+			func(ctx context.Context, dst string, opt *ClientOption) conn { return nil },
 			newRetryer(defaultRetryDelayFn),
 		); err != ErrNoAddr {
 			t.Fatalf("unexpected err %v", err)
@@ -712,7 +712,7 @@ func TestClusterClientInit(t *testing.T) {
 		v := errors.New("dial err")
 		if _, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DialFn: func() error { return v }}
 			},
 			newRetryer(defaultRetryDelayFn),
@@ -725,7 +725,7 @@ func TestClusterClientInit(t *testing.T) {
 		v := errors.New("refresh err")
 		if _, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult { return newErrResult(v) }}
 			},
 			newRetryer(defaultRetryDelayFn),
@@ -738,7 +738,7 @@ func TestClusterClientInit(t *testing.T) {
 		var first int64
 		if _, err := newClusterClient(
 			&ClientOption{InitAddress: []string{"127.0.0.1:0", "127.0.1.1:1"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						if atomic.AddInt64(&first, 1) == 1 {
@@ -758,7 +758,7 @@ func TestClusterClientInit(t *testing.T) {
 		var first int64
 		if _, err := newClusterClient(
 			&ClientOption{InitAddress: []string{"127.0.0.1:0", "127.0.1.1:1"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						if atomic.AddInt64(&first, 1) == 1 {
@@ -778,7 +778,7 @@ func TestClusterClientInit(t *testing.T) {
 	t.Run("Refresh no slots cluster", func(t *testing.T) {
 		if _, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						return newResult(RedisMessage{typ: '*', values: []RedisMessage{}}, nil)
@@ -794,7 +794,7 @@ func TestClusterClientInit(t *testing.T) {
 	t.Run("Refresh no shards cluster", func(t *testing.T) {
 		if _, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						return newResult(RedisMessage{typ: '*', values: []RedisMessage{}}, nil)
@@ -812,7 +812,7 @@ func TestClusterClientInit(t *testing.T) {
 		getClient := func(version int) (client *clusterClient, err error) {
 			return newClusterClient(
 				&ClientOption{InitAddress: []string{"127.0.4.1:4"}},
-				func(dst string, opt *ClientOption) conn {
+				func(ctx context.Context, dst string, opt *ClientOption) conn {
 					return &mockConn{
 						DoFn: func(cmd Completed) RedisResult {
 							if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
@@ -886,7 +886,7 @@ func TestClusterClientInit(t *testing.T) {
 			var first int64
 			client, err := newClusterClient(
 				&ClientOption{InitAddress: []string{"127.0.1.1:1", "127.0.2.1:2"}},
-				func(dst string, opt *ClientOption) conn {
+				func(ctx context.Context, dst string, opt *ClientOption) conn {
 					return &mockConn{
 						DoFn: func(cmd Completed) RedisResult {
 							if atomic.LoadInt64(&first) == 1 {
@@ -908,7 +908,7 @@ func TestClusterClientInit(t *testing.T) {
 			var first int64
 			client, err := newClusterClient(
 				&ClientOption{InitAddress: []string{"127.0.1.1:1", "127.0.2.1:2"}},
-				func(dst string, opt *ClientOption) conn {
+				func(ctx context.Context, dst string, opt *ClientOption) conn {
 					return &mockConn{
 						DoFn: func(cmd Completed) RedisResult {
 							if atomic.LoadInt64(&first) == 1 {
@@ -974,7 +974,7 @@ func TestClusterClientInit(t *testing.T) {
 			var first int64
 			client, err := newClusterClient(
 				&ClientOption{InitAddress: []string{"127.0.1.1:1", "127.0.2.1:2", "redis.example.com"}},
-				func(dst string, opt *ClientOption) conn {
+				func(ctx context.Context, dst string, opt *ClientOption) conn {
 					return &mockConn{
 						DoFn: func(cmd Completed) RedisResult {
 							if atomic.LoadInt64(&first) == 1 {
@@ -996,7 +996,7 @@ func TestClusterClientInit(t *testing.T) {
 			var first int64
 			client, err := newClusterClient(
 				&ClientOption{InitAddress: []string{"127.0.1.1:1", "127.0.2.1:2", "redis.example.com"}},
-				func(dst string, opt *ClientOption) conn {
+				func(ctx context.Context, dst string, opt *ClientOption) conn {
 					return &mockConn{
 						DoFn: func(cmd Completed) RedisResult {
 							if atomic.LoadInt64(&first) == 1 {
@@ -1019,7 +1019,7 @@ func TestClusterClientInit(t *testing.T) {
 	t.Run("Shards tls", func(t *testing.T) {
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{"127.0.0.1:0"}, TLSConfig: &tls.Config{}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						return shardsRespTls
@@ -1060,7 +1060,7 @@ func TestClusterClientInit(t *testing.T) {
 					return true
 				},
 			},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				copiedM := *m
 				return &copiedM
 			},
@@ -1122,7 +1122,7 @@ func TestClusterClientInit(t *testing.T) {
 					return true
 				},
 			},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				if dst == "127.0.0.1:0" || dst == "127.0.2.1:0" {
 					if opt.ReplicaOnly {
 						t.Fatalf("unexpected replicaOnly option in primary node")
@@ -1175,7 +1175,7 @@ func TestClusterClientInit(t *testing.T) {
 					ShardsRefreshInterval: -1 * time.Millisecond,
 				},
 			},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						return singleSlotResp
@@ -1209,7 +1209,7 @@ func TestClusterClientInit(t *testing.T) {
 					return 0
 				},
 			},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				copiedM := *m
 				return &copiedM
 			},
@@ -1288,7 +1288,7 @@ func TestClusterClientInit(t *testing.T) {
 					return 1
 				},
 			},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				switch {
 				case dst == "127.0.0.2:1" || dst == "127.0.1.2:1":
 					return replicaNodeConn1
@@ -1375,7 +1375,7 @@ func TestClusterClientInit(t *testing.T) {
 					return -1
 				},
 			},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				switch {
 				case dst == "127.0.0.2:1" || dst == "127.0.1.2:1":
 					return replicaNodeConn1
@@ -1480,7 +1480,7 @@ func TestClusterClientInit(t *testing.T) {
 				},
 				EnableReplicaAZInfo: true,
 			},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				switch {
 				case dst == "127.0.0.2:1" || dst == "127.0.1.2:1":
 					return replicaNodeConn1
@@ -1572,7 +1572,7 @@ func TestClusterClient(t *testing.T) {
 
 	client, err := newClusterClient(
 		&ClientOption{InitAddress: []string{"127.0.0.1:0"}},
-		func(dst string, opt *ClientOption) conn {
+		func(ctx context.Context, dst string, opt *ClientOption) conn {
 			return m
 		},
 		newRetryer(defaultRetryDelayFn),
@@ -2248,7 +2248,7 @@ func TestClusterClient_SendToOnlyPrimaryNodes(t *testing.T) {
 				return false
 			},
 		},
-		func(dst string, opt *ClientOption) conn {
+		func(ctx context.Context, dst string, opt *ClientOption) conn {
 			if dst == "127.0.0.1:0" || dst == "127.0.2.1:0" { // primary nodes
 				return primaryNodeConn
 			} else { // replica nodes
@@ -2747,7 +2747,7 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 				return true
 			},
 		},
-		func(dst string, opt *ClientOption) conn {
+		func(ctx context.Context, dst string, opt *ClientOption) conn {
 			if dst == "127.0.0.1:0" || dst == "127.0.2.1:0" { // primary nodes
 				return primaryNodeConn
 			} else { // replica nodes
@@ -3288,7 +3288,7 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 				return cmd.IsReadOnly()
 			},
 		},
-		func(dst string, opt *ClientOption) conn {
+		func(ctx context.Context, dst string, opt *ClientOption) conn {
 			if dst == "127.0.0.1:0" || dst == "127.0.2.1:0" { // primary nodes
 				return primaryNodeConn
 			} else { // replica nodes
@@ -3812,7 +3812,7 @@ func TestClusterClient_SendPrimaryNodeOnlyButOneSlotAssigned(t *testing.T) {
 				return false
 			},
 		},
-		func(dst string, opt *ClientOption) conn {
+		func(ctx context.Context, dst string, opt *ClientOption) conn {
 			return primaryNodeConn
 		},
 		newRetryer(defaultRetryDelayFn),
@@ -3880,7 +3880,7 @@ func TestClusterClientErr(t *testing.T) {
 		}
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn { return m },
+			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -3928,7 +3928,7 @@ func TestClusterClientErr(t *testing.T) {
 		}
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn { return m },
+			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -3973,7 +3973,7 @@ func TestClusterClientErr(t *testing.T) {
 		}}
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn { return m },
+			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -4006,7 +4006,7 @@ func TestClusterClientErr(t *testing.T) {
 		}}
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn { return m },
+			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -4030,7 +4030,7 @@ func TestClusterClientErr(t *testing.T) {
 		}}
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn { return m },
+			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -4057,7 +4057,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count, check int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				atomic.AddInt64(&check, 1)
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
@@ -4086,7 +4086,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
 						return slotsMultiResp
@@ -4111,7 +4111,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
@@ -4148,7 +4148,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					return slotsMultiResp
 				}, DoMultiFn: func(multi ...Completed) *redisresults {
@@ -4179,7 +4179,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						return slotsMultiResp
@@ -4223,7 +4223,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					return slotsMultiResp
 				}, DoMultiFn: func(multi ...Completed) *redisresults {
@@ -4321,7 +4321,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					return slotsMultiResp
 				}, DoMultiFn: func(multi ...Completed) *redisresults {
@@ -4421,7 +4421,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					return slotsMultiResp
 				}, DoMultiFn: func(multi ...Completed) *redisresults {
@@ -4514,7 +4514,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					return slotsMultiResp
 				}, DoMultiFn: func(multi ...Completed) *redisresults {
@@ -4610,7 +4610,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					return slotsMultiResp
 				}, DoMultiFn: func(multi ...Completed) *redisresults {
@@ -4709,7 +4709,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					return slotsMultiResp
 				}, DoMultiFn: func(multi ...Completed) *redisresults {
@@ -4811,7 +4811,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					return slotsMultiResp
 				}, DoMultiFn: func(multi ...Completed) *redisresults {
@@ -4876,7 +4876,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					return slotsMultiResp
 				}, DoMultiFn: func(multi ...Completed) *redisresults {
@@ -4941,7 +4941,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					return slotsMultiResp
 				}, DoMultiFn: func(multi ...Completed) *redisresults {
@@ -4992,7 +4992,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					return slotsMultiResp
 				}, DoMultiFn: func(multi ...Completed) *redisresults {
@@ -5029,7 +5029,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					return slotsMultiResp
 				}, DoMultiFn: func(multi ...Completed) *redisresults {
@@ -5064,7 +5064,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count, check int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				if dst == ":2" {
 					atomic.AddInt64(&check, 1)
 				}
@@ -5095,7 +5095,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count, check int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				if dst == ":2" {
 					atomic.AddInt64(&check, 1)
 				}
@@ -5132,7 +5132,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count, check int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				if dst == ":2" {
 					atomic.AddInt64(&check, 1)
 				}
@@ -5175,7 +5175,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					return slotsMultiResp
 				}, DoMultiFn: func(multi ...Completed) *redisresults {
@@ -5210,7 +5210,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						return slotsMultiResp
@@ -5237,7 +5237,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						return slotsMultiResp
@@ -5273,7 +5273,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					return slotsMultiResp
 				}, DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
@@ -5304,7 +5304,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						return slotsMultiResp
@@ -5348,7 +5348,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					return slotsMultiResp
 				}, DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
@@ -5385,7 +5385,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
@@ -5415,7 +5415,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						return slotsMultiResp
@@ -5450,7 +5450,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						return slotsMultiResp
@@ -5491,7 +5491,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						return slotsMultiResp
@@ -5521,7 +5521,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						return slotsMultiResp
@@ -5551,7 +5551,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						return slotsMultiResp
@@ -5593,7 +5593,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
 						return slotsMultiResp
@@ -5618,7 +5618,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					return slotsMultiResp
 				}, DoMultiFn: func(multi ...Completed) *redisresults {
@@ -5644,7 +5644,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					return slotsMultiResp
 				}, DoMultiFn: func(multi ...Completed) *redisresults {
@@ -5676,7 +5676,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						return slotsMultiResp
@@ -5703,7 +5703,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					return slotsMultiResp
 				}, DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
@@ -5727,7 +5727,7 @@ func TestClusterClientErr(t *testing.T) {
 		var count int64
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{DoFn: func(cmd Completed) RedisResult {
 					if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
 						return slotsMultiResp
@@ -5765,7 +5765,7 @@ func TestClusterClientRetry(t *testing.T) {
 		}
 		c, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn { return m },
+			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -5788,7 +5788,7 @@ func TestClusterClientReplicaOnly_PickReplica(t *testing.T) {
 
 	client, err := newClusterClient(
 		&ClientOption{InitAddress: []string{"127.0.0.1:0"}, ReplicaOnly: true},
-		func(dst string, opt *ClientOption) conn {
+		func(ctx context.Context, dst string, opt *ClientOption) conn {
 			copiedM := *m
 			return &copiedM
 		},
@@ -5827,7 +5827,7 @@ func TestClusterClientReplicaOnly_PickMasterIfNoReplica(t *testing.T) {
 
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{"127.0.0.1:0"}, ReplicaOnly: true},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				copiedM := *m
 				return &copiedM
 			},
@@ -5863,7 +5863,7 @@ func TestClusterClientReplicaOnly_PickMasterIfNoReplica(t *testing.T) {
 
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{"127.0.0.1:0"}, ReplicaOnly: true},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				copiedM := *m
 				return &copiedM
 			},
@@ -5997,7 +5997,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 					ShardsRefreshInterval: 0,
 				},
 			},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						// initial call
@@ -6034,7 +6034,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 					ShardsRefreshInterval: time.Second,
 				},
 			},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						if atomic.AddInt64(&callCount, 1) >= 3 {
@@ -6078,7 +6078,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 					ShardsRefreshInterval: time.Second,
 				},
 			},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						if c := atomic.AddInt64(&callCount, 1); c >= 6 {
@@ -6127,7 +6127,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 					ShardsRefreshInterval: time.Second,
 				},
 			},
-			func(dst string, opt *ClientOption) conn {
+			func(ctx context.Context, dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						if c := atomic.AddInt64(&callCount, 1); c >= 6 {
@@ -6181,7 +6181,7 @@ func TestClusterClientLoadingRetry(t *testing.T) {
 		}
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn { return m },
+			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -6361,7 +6361,7 @@ func TestClusterClientMovedRetry(t *testing.T) {
 		}
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn { return m },
+			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -6429,7 +6429,7 @@ func TestClusterClientCacheASKRetry(t *testing.T) {
 		}
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(dst string, opt *ClientOption) conn { return m },
+			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -6593,7 +6593,7 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 				return 0
 			},
 		},
-		func(dst string, opt *ClientOption) conn {
+		func(ctx context.Context, dst string, opt *ClientOption) conn {
 			if dst == "127.0.0.1:0" || dst == "127.0.2.1:0" { // primary node
 				return primaryNodeConn
 			} else { // replica node
@@ -7133,7 +7133,7 @@ func TestClusterClient_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T
 				return -1
 			},
 		},
-		func(dst string, opt *ClientOption) conn {
+		func(ctx context.Context, dst string, opt *ClientOption) conn {
 			if dst == "127.0.0.1:0" || dst == "127.0.2.1:0" { // primary nodes
 				return primaryNodeConn
 			} else { // replica nodes

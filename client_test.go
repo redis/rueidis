@@ -42,14 +42,14 @@ func (m *mockConn) Override(c conn) {
 	}
 }
 
-func (m *mockConn) Dial() error {
+func (m *mockConn) Dial(ctx context.Context) error {
 	if m.DialFn != nil {
 		return m.DialFn()
 	}
 	return nil
 }
 
-func (m *mockConn) Acquire() wire {
+func (m *mockConn) Acquire(ctx context.Context) wire {
 	if m.AcquireFn != nil {
 		return m.AcquireFn()
 	}
@@ -150,28 +150,28 @@ func (m *mockConn) SetOnCloseHook(func(error)) {
 
 }
 
-func (m *mockConn) Info() map[string]RedisMessage {
+func (m *mockConn) Info(ctx context.Context) map[string]RedisMessage {
 	if m.InfoFn != nil {
 		return m.InfoFn()
 	}
 	return nil
 }
 
-func (m *mockConn) Version() int {
+func (m *mockConn) Version(ctx context.Context) int {
 	if m.VersionFn != nil {
 		return m.VersionFn()
 	}
 	return 0
 }
 
-func (m *mockConn) AZ() string {
+func (m *mockConn) AZ(ctx context.Context) string {
 	if m.AZFn != nil {
 		return m.AZFn()
 	}
 	return ""
 }
 
-func (m *mockConn) Error() error {
+func (m *mockConn) Error(ctx context.Context) error {
 	if m.ErrorFn != nil {
 		return m.ErrorFn()
 	}
@@ -194,7 +194,7 @@ func (m *mockConn) Addr() string {
 func TestNewSingleClientNoNode(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	if _, err := newSingleClient(
-		&ClientOption{}, nil, func(dst string, opt *ClientOption) conn {
+		&ClientOption{}, nil, func(ctx context.Context, dst string, opt *ClientOption) conn {
 			return nil
 		}, newRetryer(defaultRetryDelayFn),
 	); err != ErrNoAddr {
@@ -205,7 +205,7 @@ func TestNewSingleClientNoNode(t *testing.T) {
 func TestNewSingleClientReplicaOnlyNotSupported(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	if _, err := newSingleClient(
-		&ClientOption{ReplicaOnly: true, InitAddress: []string{"localhost"}}, nil, func(dst string, opt *ClientOption) conn { return nil }, newRetryer(defaultRetryDelayFn),
+		&ClientOption{ReplicaOnly: true, InitAddress: []string{"localhost"}}, nil, func(ctx context.Context, dst string, opt *ClientOption) conn { return nil }, newRetryer(defaultRetryDelayFn),
 	); err != ErrReplicaOnlyNotSupported {
 		t.Fatalf("unexpected err %v", err)
 	}
@@ -215,7 +215,7 @@ func TestNewSingleClientError(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	v := errors.New("dail err")
 	if _, err := newSingleClient(
-		&ClientOption{InitAddress: []string{""}}, nil, func(dst string, opt *ClientOption) conn { return &mockConn{DialFn: func() error { return v }} }, newRetryer(defaultRetryDelayFn),
+		&ClientOption{InitAddress: []string{""}}, nil, func(ctx context.Context, dst string, opt *ClientOption) conn { return &mockConn{DialFn: func() error { return v }} }, newRetryer(defaultRetryDelayFn),
 	); err != v {
 		t.Fatalf("unexpected err %v", err)
 	}
@@ -228,7 +228,7 @@ func TestNewSingleClientOverride(t *testing.T) {
 	if _, err := newSingleClient(
 		&ClientOption{InitAddress: []string{""}},
 		m1,
-		func(dst string, opt *ClientOption) conn {
+		func(ctx context.Context, dst string, opt *ClientOption) conn {
 			return &mockConn{OverrideFn: func(c conn) { m2 = c }}
 		},
 		newRetryer(defaultRetryDelayFn),
@@ -249,7 +249,7 @@ func TestSingleClient(t *testing.T) {
 	client, err := newSingleClient(
 		&ClientOption{InitAddress: []string{""}},
 		m,
-		func(dst string, opt *ClientOption) conn { return m },
+		func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
 		newRetryer(defaultRetryDelayFn),
 	)
 	if err != nil {
@@ -621,7 +621,7 @@ func TestSingleClientRetry(t *testing.T) {
 		c, err := newSingleClient(
 			&ClientOption{InitAddress: []string{""}},
 			m,
-			func(dst string, opt *ClientOption) conn { return m },
+			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -1261,7 +1261,7 @@ func TestSingleClientLoadingRetry(t *testing.T) {
 		client, err := newSingleClient(
 			&ClientOption{InitAddress: []string{""}},
 			m,
-			func(dst string, opt *ClientOption) conn { return m },
+			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {

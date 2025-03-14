@@ -27,9 +27,10 @@ func newSingleClient(opt *ClientOption, prev conn, connFn connFn, retryer retryH
 		return nil, ErrReplicaOnlyNotSupported
 	}
 
-	conn := connFn(opt.InitAddress[0], opt)
+	ctx := context.Background()
+	conn := connFn(ctx, opt.InitAddress[0], opt)
 	conn.Override(prev)
-	if err := conn.Dial(); err != nil {
+	if err := conn.Dial(ctx); err != nil {
 		return nil, err
 	}
 	return newSingleClientWithConn(conn, cmds.NewBuilder(cmds.NoSlot), !opt.DisableRetry, opt.DisableCache, retryer), nil
@@ -172,7 +173,7 @@ retry:
 }
 
 func (c *singleClient) Dedicated(fn func(DedicatedClient) error) (err error) {
-	wire := c.conn.Acquire()
+	wire := c.conn.Acquire(context.Background())
 	dsc := &dedicatedSingleClient{cmd: c.cmd, conn: c.conn, wire: wire, retry: c.retry, retryHandler: c.retryHandler}
 	err = fn(dsc)
 	dsc.release()
@@ -180,7 +181,7 @@ func (c *singleClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 }
 
 func (c *singleClient) Dedicate() (DedicatedClient, func()) {
-	wire := c.conn.Acquire()
+	wire := c.conn.Acquire(context.Background())
 	dsc := &dedicatedSingleClient{cmd: c.cmd, conn: c.conn, wire: wire, retry: c.retry, retryHandler: c.retryHandler}
 	return dsc, dsc.release
 }
