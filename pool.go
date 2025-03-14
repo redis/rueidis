@@ -27,7 +27,7 @@ type pool struct {
 	dead    wire
 	cond    *sync.Cond
 	timer   *time.Timer
-	make    func(context.Context) wire
+	make    func(ctx context.Context) wire
 	list    []wire
 	cleanup time.Duration
 	size    int

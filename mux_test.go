@@ -23,7 +23,7 @@ func setupMux(wires []*mockWire) (conn *mux, checkClean func(t *testing.T)) {
 func setupMuxWithOption(wires []*mockWire, option *ClientOption) (conn *mux, checkClean func(t *testing.T)) {
 	var mu sync.Mutex
 	var count = -1
-	wfn := func(context.Context) wire {
+	wfn := func(_ context.Context) wire {
 		mu.Lock()
 		defer mu.Unlock()
 		count++
@@ -43,24 +43,23 @@ func TestNewMuxDailErr(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	c := 0
 	e := errors.New("any")
-	ctx := context.Background()
-	m := makeMux(ctx, "", &ClientOption{}, func(ctx context.Context, dst string, opt *ClientOption) (net.Conn, error) {
+	m := makeMux("", &ClientOption{}, func(_ context.Context, dst string, opt *ClientOption) (net.Conn, error) {
 		c++
 		return nil, e
 	})
-	if err := m.Dial(ctx); err != e {
+	if err := m.Dial(); err != e {
 		t.Fatalf("unexpected return %v", err)
 	}
 	if c != 1 {
 		t.Fatalf("dialFn not called")
 	}
-	if w := m.pipe(ctx, 0); w != m.dead { // c = 2
+	if w := m.pipe(context.Background(), 0); w != m.dead { // c = 2
 		t.Fatalf("unexpected wire %v", w)
 	}
-	if err := m.Dial(ctx); err != e { // c = 3
+	if err := m.Dial(); err != e { // c = 3
 		t.Fatalf("unexpected return %v", err)
 	}
-	if w := m.Acquire(ctx); w != m.dead {
+	if w := m.Acquire(context.Background()); w != m.dead {
 		t.Fatalf("unexpected wire %v", w)
 	}
 	if c != 4 {
@@ -72,7 +71,6 @@ func TestNewMux(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	n1, n2 := net.Pipe()
 	mock := &redisMock{t: t, buf: bufio.NewReader(n2), conn: n2}
-	ctx := context.Background()
 	go func() {
 		mock.Expect("HELLO", "3").
 			Reply(RedisMessage{
@@ -91,19 +89,19 @@ func TestNewMux(t *testing.T) {
 		mock.Expect("PING").ReplyString("OK")
 		mock.Close()
 	}()
-	m := makeMux(ctx, "", &ClientOption{}, func(ctx context.Context, dst string, opt *ClientOption) (net.Conn, error) {
+	m := makeMux("", &ClientOption{}, func(_ context.Context, dst string, opt *ClientOption) (net.Conn, error) {
 		return n1, nil
 	})
-	if err := m.Dial(ctx); err != nil {
+	if err := m.Dial(); err != nil {
 		t.Fatalf("unexpected error %v", err)
 	}
 
 	t.Run("Override with previous mux", func(t *testing.T) {
-		m2 := makeMux(ctx, "", &ClientOption{}, func(ctx context.Context, dst string, opt *ClientOption) (net.Conn, error) {
+		m2 := makeMux("", &ClientOption{}, func(_ context.Context, dst string, opt *ClientOption) (net.Conn, error) {
 			return n1, nil
 		})
 		m2.Override(m)
-		if err := m2.Dial(ctx); err != nil {
+		if err := m2.Dial(); err != nil {
 			t.Fatalf("unexpected error %v", err)
 		}
 		m2.Close()
@@ -112,9 +110,8 @@ func TestNewMux(t *testing.T) {
 
 func TestNewMuxPipelineMultiplex(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
-	ctx := context.Background()
 	for _, v := range []int{-1, 0, 1, 2} {
-		m := makeMux(ctx, "", &ClientOption{PipelineMultiplex: v}, func(ctx context.Context, dst string, opt *ClientOption) (net.Conn, error) { return nil, nil })
+		m := makeMux("", &ClientOption{PipelineMultiplex: v}, func(_ context.Context, dst string, opt *ClientOption) (net.Conn, error) { return nil, nil })
 		if (v < 0 && len(m.wire) != 1) || (v >= 0 && len(m.wire) != 1<<v) {
 			t.Fatalf("unexpected len(m.wire): %v", len(m.wire))
 		}
@@ -123,7 +120,7 @@ func TestNewMuxPipelineMultiplex(t *testing.T) {
 
 func TestMuxAddr(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
-	m := makeMux(context.Background(), "dst1", &ClientOption{}, nil)
+	m := makeMux("dst1", &ClientOption{}, nil)
 	if m.Addr() != "dst1" {
 		t.Fatalf("unexpected m.Addr != dst1")
 	}
@@ -133,18 +130,17 @@ func TestMuxDialSuppress(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	var wires, waits, done int64
 	blocking := make(chan struct{})
-	ctx := context.Background()
-	m := newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func(ctx context.Context) wire {
+	m := newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func(_ context.Context) wire {
 		atomic.AddInt64(&wires, 1)
 		<-blocking
 		return &mockWire{}
-	}, func(ctx context.Context) wire {
+	}, func(_ context.Context) wire {
 		return &mockWire{}
 	})
 	for i := 0; i < 1000; i++ {
 		go func() {
 			atomic.AddInt64(&waits, 1)
-			m.Info(ctx)
+			m.Info()
 			atomic.AddInt64(&done, 1)
 		}()
 	}
@@ -202,12 +198,11 @@ func TestMuxReuseWire(t *testing.T) {
 		})
 		defer checkClean(t)
 		defer m.Close()
-		ctx := context.Background()
-		if err := m.Dial(ctx); err != nil {
+		if err := m.Dial(); err != nil {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 
-		wire1 := m.dpool.Acquire(ctx)
+		wire1 := m.dpool.Acquire(context.Background())
 
 		go func() {
 			// this should use the second wire
@@ -257,12 +252,11 @@ func TestMuxReuseWire(t *testing.T) {
 		m.usePool = true // switch to spool
 		defer checkClean(t)
 		defer m.Close()
-		ctx := context.Background()
-		if err := m.Dial(ctx); err != nil {
+		if err := m.Dial(); err != nil {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 
-		wire1 := m.spool.Acquire(ctx)
+		wire1 := m.spool.Acquire(context.Background())
 
 		go func() {
 			// this should use the second wire
@@ -319,12 +313,11 @@ func TestMuxReuseWire(t *testing.T) {
 		m.usePool = true // switch to spool
 		defer checkClean(t)
 		defer m.Close()
-		ctx := context.Background()
-		if err := m.Dial(ctx); err != nil {
+		if err := m.Dial(); err != nil {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 
-		wire1 := m.spool.Acquire(ctx)
+		wire1 := m.spool.Acquire(context.Background())
 
 		go func() {
 			// this should use the second wire
@@ -377,12 +370,11 @@ func TestMuxReuseWire(t *testing.T) {
 		})
 		defer checkClean(t)
 		defer m.Close()
-		ctx := context.Background()
-		if err := m.Dial(ctx); err != nil {
+		if err := m.Dial(); err != nil {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 
-		wire1 := m.dpool.Acquire(ctx)
+		wire1 := m.dpool.Acquire(context.Background())
 
 		go func() {
 			// this should use the second wire
@@ -422,12 +414,11 @@ func TestMuxReuseWire(t *testing.T) {
 		defer checkClean(t)
 		defer m.Close()
 
-		ctx := context.Background()
-		if err := m.Dial(ctx); err != nil {
+		if err := m.Dial(); err != nil {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 
-		wire1 := m.Acquire(ctx)
+		wire1 := m.Acquire(context.Background())
 		m.Store(wire1)
 
 		if !cleaned {
@@ -449,8 +440,7 @@ func TestMuxDelegation(t *testing.T) {
 		})
 		defer checkClean(t)
 		defer m.Close()
-		ctx := context.Background()
-		if info := m.Info(ctx); info == nil || info["key"].string != "value" {
+		if info := m.Info(); info == nil || info["key"].string != "value" {
 			t.Fatalf("unexpected info %v", info)
 		}
 	})
@@ -465,8 +455,7 @@ func TestMuxDelegation(t *testing.T) {
 		})
 		defer checkClean(t)
 		defer m.Close()
-		ctx := context.Background()
-		if version := m.Version(ctx); version != 7 {
+		if version := m.Version(); version != 7 {
 			t.Fatalf("unexpected version %v", version)
 		}
 	})
@@ -481,8 +470,7 @@ func TestMuxDelegation(t *testing.T) {
 		})
 		defer checkClean(t)
 		defer m.Close()
-		ctx := context.Background()
-		if az := m.AZ(ctx); az != "az" {
+		if az := m.AZ(); az != "az" {
 			t.Fatalf("unexpected az %v", az)
 		}
 	})
@@ -498,8 +486,7 @@ func TestMuxDelegation(t *testing.T) {
 		})
 		defer checkClean(t)
 		defer m.Close()
-		ctx := context.Background()
-		if err := m.Error(ctx); err != e {
+		if err := m.Error(); err != e {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
@@ -671,9 +658,9 @@ func TestMuxDelegation(t *testing.T) {
 		m, checkClean := setupMuxWithOption(wires, &ClientOption{PipelineMultiplex: multiplex})
 		defer checkClean(t)
 		defer m.Close()
-		ctx := context.Background()
+
 		for i := range wires {
-			m._pipe(ctx, uint16(i))
+			m._pipe(context.Background(), uint16(i))
 		}
 
 		builder := cmds.NewBuilder(cmds.NoSlot)
@@ -714,9 +701,8 @@ func TestMuxDelegation(t *testing.T) {
 		defer checkClean(t)
 		defer m.Close()
 
-		ctx := context.Background()
 		for i := range wires {
-			m._pipe(ctx, uint16(i))
+			m._pipe(context.Background(), uint16(i))
 		}
 
 		builder := cmds.NewBuilder(cmds.NoSlot)
@@ -781,9 +767,7 @@ func TestMuxDelegation(t *testing.T) {
 		})
 		defer checkClean(t)
 		defer m.Close()
-
-		ctx := context.Background()
-		if err := m.Dial(ctx); err != nil {
+		if err := m.Dial(); err != nil {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 
@@ -834,8 +818,7 @@ func TestMuxDelegation(t *testing.T) {
 		})
 		defer checkClean(t)
 		defer m.Close()
-		ctx := context.Background()
-		if err := m.Dial(ctx); err != nil {
+		if err := m.Dial(); err != nil {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 		if err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"BLOCK"})).Error(); err != context.DeadlineExceeded {
@@ -872,8 +855,7 @@ func TestMuxDelegation(t *testing.T) {
 		})
 		defer checkClean(t)
 		defer m.Close()
-		ctx := context.Background()
-		if err := m.Dial(ctx); err != nil {
+		if err := m.Dial(); err != nil {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 
@@ -926,8 +908,7 @@ func TestMuxDelegation(t *testing.T) {
 		})
 		defer checkClean(t)
 		defer m.Close()
-		ctx := context.Background()
-		if err := m.Dial(ctx); err != nil {
+		if err := m.Dial(); err != nil {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 
@@ -982,8 +963,7 @@ func TestMuxDelegation(t *testing.T) {
 		})
 		defer checkClean(t)
 		defer m.Close()
-		ctx := context.Background()
-		if err := m.Dial(ctx); err != nil {
+		if err := m.Dial(); err != nil {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 		if err := m.DoMulti(
@@ -1058,11 +1038,10 @@ func TestMuxRegisterCloseHook(t *testing.T) {
 
 func BenchmarkClientSideCaching(b *testing.B) {
 	setup := func(b *testing.B) *mux {
-		ctx := context.Background()
-		c := makeMux(ctx, "127.0.0.1:6379", &ClientOption{CacheSizeEachConn: DefaultCacheBytes}, func(ctx context.Context, dst string, opt *ClientOption) (conn net.Conn, err error) {
+		c := makeMux("127.0.0.1:6379", &ClientOption{CacheSizeEachConn: DefaultCacheBytes}, func(_ context.Context, dst string, opt *ClientOption) (conn net.Conn, err error) {
 			return net.Dial("tcp", dst)
 		})
-		if err := c.Dial(ctx); err != nil {
+		if err := c.Dial(); err != nil {
 			panic(err)
 		}
 		b.SetParallelism(100)

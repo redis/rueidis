@@ -16,7 +16,7 @@ func TestPool(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	setup := func(size int) (*pool, *int32) {
 		var count int32
-		return newPool(size, dead, 0, 0, func(context.Context) wire {
+		return newPool(size, dead, 0, 0, func(_ context.Context) wire {
 			atomic.AddInt32(&count, 1)
 			closed := false
 			return &mockWire{
@@ -34,7 +34,7 @@ func TestPool(t *testing.T) {
 	}
 
 	t.Run("DefaultPoolSize", func(t *testing.T) {
-		p := newPool(0, dead, 0, 0, func(context.Context) wire { return nil })
+		p := newPool(0, dead, 0, 0, func(_ context.Context) wire { return nil })
 		if cap(p.list) == 0 {
 			t.Fatalf("DefaultPoolSize is not applied")
 		}
@@ -210,7 +210,7 @@ func TestPoolError(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	setup := func(size int) (*pool, *int32) {
 		var count int32
-		return newPool(size, dead, 0, 0, func(context.Context) wire {
+		return newPool(size, dead, 0, 0, func(_ context.Context) wire {
 			w := &pipe{}
 			w.pshks.Store(emptypshks)
 			c := atomic.AddInt32(&count, 1)
@@ -245,7 +245,7 @@ func TestPoolError(t *testing.T) {
 func TestPoolWithIdleTTL(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	setup := func(size int, ttl time.Duration, minSize int) *pool {
-		return newPool(size, dead, ttl, minSize, func(context.Context) wire {
+		return newPool(size, dead, ttl, minSize, func(_ context.Context) wire {
 			closed := false
 			return &mockWire{
 				CloseFn: func() {

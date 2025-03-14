@@ -79,8 +79,8 @@ func newClusterClient(opt *ClientOption, connFn connFn, retryer retryHandler) (*
 		client.rOpt = &rOpt
 	}
 
-	client.connFn = func(ctx context.Context, dst string, opt *ClientOption) conn {
-		cc := connFn(ctx, dst, opt)
+	client.connFn = func(dst string, opt *ClientOption) conn {
+		cc := connFn(dst, opt)
 		cc.SetOnCloseHook(func(err error) {
 			client.lazyRefresh()
 		})
@@ -108,12 +108,11 @@ func (c *clusterClient) init() error {
 	if len(c.opt.InitAddress) == 0 {
 		return ErrNoAddr
 	}
-	ctx := context.Background()
 	results := make(chan error, len(c.opt.InitAddress))
 	for _, addr := range c.opt.InitAddress {
-		cc := c.connFn(ctx, addr, c.opt)
+		cc := c.connFn(addr, c.opt)
 		go func(addr string, cc conn) {
-			if err := cc.Dial(ctx); err == nil {
+			if err := cc.Dial(); err == nil {
 				c.mu.Lock()
 				if _, ok := c.conns[addr]; ok {
 					go cc.Close() // abort the new connection instead of closing the old one which may already been used
@@ -170,7 +169,7 @@ func getClusterSlots(c conn, timeout time.Duration) clusterslots {
 	} else {
 		ctx = context.Background()
 	}
-	v := c.Version(ctx)
+	v := c.Version()
 	if v < 8 {
 		return clusterslots{reply: c.Do(ctx, cmds.SlotCmd), addr: c.Addr(), ver: v}
 	}
@@ -186,7 +185,6 @@ func (c *clusterClient) _refresh() (err error) {
 	}
 	c.mu.RUnlock()
 
-	ctx := context.Background()
 	var result clusterslots
 	for i := 0; i < cap(results); i++ {
 		if i&3 == 0 { // batch CLUSTER SLOTS/CLUSTER SHARDS for every 4 connections
@@ -210,14 +208,14 @@ func (c *clusterClient) _refresh() (err error) {
 	groups := result.parse(c.opt.TLSConfig != nil)
 	conns := make(map[string]connrole, len(groups))
 	for master, g := range groups {
-		conns[master] = connrole{conn: c.connFn(ctx, master, c.opt)}
+		conns[master] = connrole{conn: c.connFn(master, c.opt)}
 		if c.rOpt != nil {
 			for _, nodeInfo := range g.nodes[1:] {
-				conns[nodeInfo.Addr] = connrole{conn: c.connFn(ctx, nodeInfo.Addr, c.rOpt)}
+				conns[nodeInfo.Addr] = connrole{conn: c.connFn(nodeInfo.Addr, c.rOpt)}
 			}
 		} else {
 			for _, nodeInfo := range g.nodes[1:] {
-				conns[nodeInfo.Addr] = connrole{conn: c.connFn(ctx, nodeInfo.Addr, c.opt)}
+				conns[nodeInfo.Addr] = connrole{conn: c.connFn(nodeInfo.Addr, c.opt)}
 			}
 		}
 	}
@@ -225,7 +223,7 @@ func (c *clusterClient) _refresh() (err error) {
 	for _, addr := range c.opt.InitAddress {
 		if _, ok := conns[addr]; !ok {
 			conns[addr] = connrole{
-				conn:   c.connFn(ctx, addr, c.opt),
+				conn:   c.connFn(addr, c.opt),
 				hidden: true,
 			}
 		}
@@ -268,7 +266,7 @@ func (c *clusterClient) _refresh() (err error) {
 						for j := i; j <= i+4 && j <= n; j++ {
 							wg.Add(1)
 							go func(wg *sync.WaitGroup, conn conn, info *ReplicaInfo) {
-								info.AZ = conn.AZ(ctx)
+								info.AZ = conn.AZ()
 								wg.Done()
 							}(&wg, conns[g.nodes[j].Addr].conn, &g.nodes[j])
 						}
@@ -468,9 +466,8 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn, slot uint16, mode 
 		return cc.conn
 	}
 	c.mu.Lock()
-	ctx := context.Background()
 	if cc = c.conns[addr]; cc.conn == nil {
-		p := c.connFn(ctx, addr, c.opt)
+		p := c.connFn(addr, c.opt)
 		cc = connrole{conn: p}
 		c.conns[addr] = cc
 		if mode == RedirectMove {
@@ -484,7 +481,7 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn, slot uint16, mode 
 			time.Sleep(time.Second * 5)
 			prev.Close()
 		}(prev)
-		p := c.connFn(ctx, addr, c.opt)
+		p := c.connFn(addr, c.opt)
 		cc = connrole{conn: p}
 		c.conns[addr] = cc
 		if mode == RedirectMove { // MOVED should always point to the primary.

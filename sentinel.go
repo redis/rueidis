@@ -273,21 +273,20 @@ func (c *sentinelClient) _switchTarget(addr string) (err error) {
 	if atomic.LoadUint32(&c.stop) == 1 {
 		return nil
 	}
-	ctx := context.Background()
 	if c.mAddr == addr {
 		target = c.mConn.Load().(conn)
-		if target.Error(ctx) != nil {
+		if target.Error() != nil {
 			target = nil
 		}
 	}
 	if target == nil {
-		target = c.connFn(ctx, addr, c.mOpt)
-		if err = target.Dial(ctx); err != nil {
+		target = c.connFn(addr, c.mOpt)
+		if err = target.Dial(); err != nil {
 			return err
 		}
 	}
 
-	resp, err := target.Do(ctx, cmds.RoleCmd).ToArray()
+	resp, err := target.Do(context.Background(), cmds.RoleCmd).ToArray()
 	if err != nil {
 		target.Close()
 		return err
@@ -327,7 +326,6 @@ func (c *sentinelClient) _refresh() (err error) {
 
 	c.mu.Lock()
 	head := c.sentinels.Front()
-	ctx := context.Background()
 	for e := head; e != nil; {
 		if atomic.LoadUint32(&c.stop) == 1 {
 			c.mu.Unlock()
@@ -335,13 +333,13 @@ func (c *sentinelClient) _refresh() (err error) {
 		}
 		addr := e.Value.(string)
 
-		if c.sAddr != addr || c.sConn == nil || c.sConn.Error(ctx) != nil {
+		if c.sAddr != addr || c.sConn == nil || c.sConn.Error() != nil {
 			if c.sConn != nil {
 				c.sConn.Close()
 			}
 			c.sAddr = addr
-			c.sConn = c.connFn(ctx, addr, c.sOpt)
-			err = c.sConn.Dial(ctx)
+			c.sConn = c.connFn(addr, c.sOpt)
+			err = c.sConn.Dial()
 		}
 		if err == nil {
 			// listWatch returns server address with sentinels.
@@ -369,7 +367,7 @@ func (c *sentinelClient) _refresh() (err error) {
 		if master := c.mConn.Load(); master == nil {
 			err = ErrNoAddr
 		} else {
-			err = master.(conn).Error(ctx)
+			err = master.(conn).Error()
 		}
 	}
 	return err

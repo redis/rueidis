@@ -71,7 +71,9 @@ type ClientOption struct {
 
 	// DialFn allows for a custom function to be used to create net.Conn connections
 	DialFn func(string, *net.Dialer, *tls.Config) (conn net.Conn, err error)
-	DialFnCtx func(context.Context, string, *net.Dialer, *tls.Config) (conn net.Conn, err error)
+
+	// DialCtxFn allows for a custom function to be used to create net.Conn connections
+	DialCtxFn func(context.Context, string, *net.Dialer, *tls.Config) (conn net.Conn, err error)
 
 	// NewCacheStoreFn allows a custom client side caching store for each connection
 	NewCacheStoreFn NewCacheStoreFn
@@ -461,19 +463,20 @@ func singleClientMultiplex(multiplex int) int {
 	return multiplex
 }
 
-func makeConn(ctx context.Context, dst string, opt *ClientOption) conn {
-	return makeMux(ctx, dst, opt, dial)
+func makeConn(dst string, opt *ClientOption) conn {
+	return makeMux(dst, opt, dial)
 }
 
 func dial(ctx context.Context, dst string, opt *ClientOption) (conn net.Conn, err error) {
-	if opt.DialFnCtx != nil {
-		return opt.DialFnCtx(ctx, dst, &opt.Dialer, opt.TLSConfig)
-	} else if opt.DialFn != nil { // maintain it for compatability reason
+	if opt.DialCtxFn != nil {
+		return opt.DialCtxFn(ctx, dst, &opt.Dialer, opt.TLSConfig)
+	}
+	if opt.DialFn != nil {
 		return opt.DialFn(dst, &opt.Dialer, opt.TLSConfig)
 	}
 	if opt.TLSConfig != nil {
-		tlsDialer := &tls.Dialer{NetDialer: &opt.Dialer, Config: opt.TLSConfig}
-		conn, err = tlsDialer.DialContext(ctx, "tcp", dst)
+		dialer := tls.Dialer{NetDialer: &opt.Dialer, Config: opt.TLSConfig}
+		conn, err = dialer.DialContext(ctx, "tcp", dst)
 	} else {
 		conn, err = opt.Dialer.DialContext(ctx, "tcp", dst)
 	}

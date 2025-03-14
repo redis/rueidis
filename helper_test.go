@@ -15,7 +15,7 @@ func TestMGetCache(t *testing.T) {
 		client, err := newSingleClient(
 			&ClientOption{InitAddress: []string{""}},
 			m,
-			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
+			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -24,7 +24,7 @@ func TestMGetCache(t *testing.T) {
 		disabledCacheClient, err := newSingleClient(
 			&ClientOption{InitAddress: []string{""}, DisableCache: true},
 			m,
-			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
+			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -81,7 +81,7 @@ func TestMGetCache(t *testing.T) {
 		}
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
+			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -89,7 +89,7 @@ func TestMGetCache(t *testing.T) {
 		}
 		disabledCacheClient, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}, DisableCache: true},
-			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
+			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -178,7 +178,7 @@ func TestMGet(t *testing.T) {
 		client, err := newSingleClient(
 			&ClientOption{InitAddress: []string{""}},
 			m,
-			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
+			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -219,7 +219,7 @@ func TestMGet(t *testing.T) {
 		}
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
+			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -277,7 +277,7 @@ func TestMDel(t *testing.T) {
 		client, err := newSingleClient(
 			&ClientOption{InitAddress: []string{""}},
 			m,
-			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
+			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -318,7 +318,7 @@ func TestMDel(t *testing.T) {
 		}
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
+			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -372,7 +372,7 @@ func TestMSet(t *testing.T) {
 		client, err := newSingleClient(
 			&ClientOption{InitAddress: []string{""}},
 			m,
-			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
+			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -414,7 +414,7 @@ func TestMSet(t *testing.T) {
 		}
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
+			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -477,7 +477,7 @@ func TestMSetNX(t *testing.T) {
 		client, err := newSingleClient(
 			&ClientOption{InitAddress: []string{""}},
 			m,
-			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
+			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -519,7 +519,7 @@ func TestMSetNX(t *testing.T) {
 		}
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
+			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -582,7 +582,7 @@ func TestMSetNXNotSet(t *testing.T) {
 		client, err := newSingleClient(
 			&ClientOption{InitAddress: []string{""}},
 			m,
-			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
+			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -607,7 +607,7 @@ func TestJsonMGetCache(t *testing.T) {
 		client, err := newSingleClient(
 			&ClientOption{InitAddress: []string{""}},
 			m,
-			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
+			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -653,7 +653,7 @@ func TestJsonMGetCache(t *testing.T) {
 		}
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
+			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -715,7 +715,7 @@ func TestJsonMGet(t *testing.T) {
 		client, err := newSingleClient(
 			&ClientOption{InitAddress: []string{""}},
 			m,
-			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
+			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -756,7 +756,7 @@ func TestJsonMGet(t *testing.T) {
 		}
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
+			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -813,7 +813,7 @@ func TestJsonMSet(t *testing.T) {
 		client, err := newSingleClient(
 			&ClientOption{InitAddress: []string{""}},
 			m,
-			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
+			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {
@@ -855,7 +855,7 @@ func TestJsonMSet(t *testing.T) {
 		}
 		client, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
-			func(ctx context.Context, dst string, opt *ClientOption) conn { return m },
+			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
 		if err != nil {

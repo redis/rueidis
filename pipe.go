@@ -91,9 +91,9 @@ type pipe struct {
 	noNoDelay       bool
 }
 
-type pipeFn func(ctx context.Context, connFn func(context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error)
+type pipeFn func(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error)
 
-func newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error) {
+func newPipe(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error) {
 	return _newPipe(ctx, connFn, option, false, false)
 }
 

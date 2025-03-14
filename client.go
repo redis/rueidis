@@ -27,10 +27,9 @@ func newSingleClient(opt *ClientOption, prev conn, connFn connFn, retryer retryH
 		return nil, ErrReplicaOnlyNotSupported
 	}
 
-	ctx := context.Background()
-	conn := connFn(ctx, opt.InitAddress[0], opt)
+	conn := connFn(opt.InitAddress[0], opt)
 	conn.Override(prev)
-	if err := conn.Dial(ctx); err != nil {
+	if err := conn.Dial(); err != nil {
 		return nil, err
 	}
 	return newSingleClientWithConn(conn, cmds.NewBuilder(cmds.NoSlot), !opt.DisableRetry, opt.DisableCache, retryer), nil

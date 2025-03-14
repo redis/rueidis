@@ -12,7 +12,7 @@ import (
 	"github.com/redis/rueidis/internal/util"
 )
 
-type connFn func(ctx context.Context, dst string, opt *ClientOption) conn
+type connFn func(dst string, opt *ClientOption) conn
 type dialFn func(ctx context.Context, dst string, opt *ClientOption) (net.Conn, error)
 type wireFn func(ctx context.Context) wire
 
@@ -30,14 +30,14 @@ type conn interface {
 	Receive(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
 	DoStream(ctx context.Context, cmd Completed) RedisResultStream
 	DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisResultStream
-	Info(context.Context) map[string]RedisMessage
-	Version(context.Context) int
-	AZ(context.Context) string
-	Error(context.Context) error
+	Info() map[string]RedisMessage
+	Version() int
+	AZ() string
+	Error() error
 	Close()
-	Dial(context.Context) error
+	Dial() error
 	Override(conn)
-	Acquire(context.Context) wire
+	Acquire(ctx context.Context) wire
 	Store(w wire)
 	Addr() string
 	SetOnCloseHook(func(error))
@@ -62,7 +62,7 @@ type mux struct {
 	usePool bool
 }
 
-func makeMux(ctx context.Context, dst string, option *ClientOption, dialFn dialFn) *mux {
+func makeMux(dst string, option *ClientOption, dialFn dialFn) *mux {
 	dead := deadFn()
 	connFn := func(ctx context.Context) (net.Conn, error) {
 		return dialFn(ctx, dst, option)
@@ -178,25 +178,25 @@ func (m *mux) pipe(ctx context.Context, i uint16) wire {
 	return w // this should never be nil
 }
 
-func (m *mux) Dial(ctx context.Context) error {
-	_, err := m._pipe(ctx, 0)
+func (m *mux) Dial() error {
+	_, err := m._pipe(context.Background(), 0)
 	return err
 }
 
-func (m *mux) Info(ctx context.Context) map[string]RedisMessage {
-	return m.pipe(ctx, 0).Info()
+func (m *mux) Info() map[string]RedisMessage {
+	return m.pipe(context.Background(), 0).Info()
 }
 
-func (m *mux) Version(ctx context.Context) int {
-	return m.pipe(ctx, 0).Version()
+func (m *mux) Version() int {
+	return m.pipe(context.Background(), 0).Version()
 }
 
-func (m *mux) AZ(ctx context.Context) string {
-	return m.pipe(ctx, 0).AZ()
+func (m *mux) AZ() string {
+	return m.pipe(context.Background(), 0).AZ()
 }
 
-func (m *mux) Error(ctx context.Context) error {
-	return m.pipe(ctx, 0).Error()
+func (m *mux) Error() error {
+	return m.pipe(context.Background(), 0).Error()
 }
 
 func (m *mux) DoStream(ctx context.Context, cmd Completed) RedisResultStream {
