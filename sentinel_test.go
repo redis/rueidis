@@ -927,7 +927,7 @@ func TestSentinelClientDelegate(t *testing.T) {
 				return ErrClosing
 			},
 		}
-		m.AcquireFn = func(_ context.Context) wire {
+		m.AcquireFn = func() wire {
 			return w
 		}
 		stored := false
@@ -976,7 +976,7 @@ func TestSentinelClientDelegate(t *testing.T) {
 				return ErrClosing
 			},
 		}
-		m.AcquireFn = func(_ context.Context) wire {
+		m.AcquireFn = func() wire {
 			return w
 		}
 		stored := false
@@ -1709,7 +1709,7 @@ func TestSentinelClientLoadingRetry(t *testing.T) {
 			}
 			return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
 		}
-		m1.AcquireFn = func(_ context.Context) wire { return &mockWire{DoFn: m1.DoFn} }
+		m1.AcquireFn = func() wire { return &mockWire{DoFn: m1.DoFn} }
 
 		err := client.Dedicated(func(c DedicatedClient) error {
 			if v, err := c.Do(context.Background(), c.B().Get().Key("test").Build()).ToString(); err != nil || v != "OK" {
@@ -1732,7 +1732,7 @@ func TestSentinelClientLoadingRetry(t *testing.T) {
 			}
 			return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "OK"}, nil)}}
 		}
-		m1.AcquireFn = func(_ context.Context) wire { return &mockWire{DoMultiFn: m1.DoMultiFn} }
+		m1.AcquireFn = func() wire { return &mockWire{DoMultiFn: m1.DoMultiFn} }
 
 		err := client.Dedicated(func(c DedicatedClient) error {
 			resps := c.DoMulti(context.Background(), c.B().Get().Key("test").Build())
