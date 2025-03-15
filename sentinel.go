@@ -198,7 +198,7 @@ func (c *sentinelClient) DoMultiStream(ctx context.Context, multi ...Completed) 
 
 func (c *sentinelClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 	master := c.mConn.Load().(conn)
-	wire := master.Acquire()
+	wire := master.Acquire(context.Background())
 	dsc := &dedicatedSingleClient{cmd: c.cmd, conn: master, wire: wire, retry: c.retry, retryHandler: c.retryHandler}
 	err = fn(dsc)
 	dsc.release()
@@ -207,7 +207,7 @@ func (c *sentinelClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 
 func (c *sentinelClient) Dedicate() (DedicatedClient, func()) {
 	master := c.mConn.Load().(conn)
-	wire := master.Acquire()
+	wire := master.Acquire(context.Background())
 	dsc := &dedicatedSingleClient{cmd: c.cmd, conn: master, wire: wire, retry: c.retry, retryHandler: c.retryHandler}
 	return dsc, dsc.release
 }

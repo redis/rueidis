@@ -15,11 +15,24 @@ import (
 )
 
 func TestNewClient(t *testing.T) {
-	t.Run("client option only", func(t *testing.T) {
+	t.Run("client option only (no ctx)", func(t *testing.T) {
 		c, err := NewClient(rueidis.ClientOption{
 			InitAddress: []string{"127.0.0.1:6379"},
 			DialFn: func(dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
 				return dialer.Dial("tcp", dst)
+			},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer c.Close()
+	})
+
+	t.Run("client option only", func(t *testing.T) {
+		c, err := NewClient(rueidis.ClientOption{
+			InitAddress: []string{"127.0.0.1:6379"},
+			DialCtxFn: func(ctx context.Context, dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
+				return dialer.DialContext(ctx, "tcp", dst)
 			},
 		})
 		if err != nil {
@@ -34,8 +47,8 @@ func TestNewClient(t *testing.T) {
 		c, err := NewClient(
 			rueidis.ClientOption{
 				InitAddress: []string{"127.0.0.1:6379"},
-				DialFn: func(dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
-					return dialer.Dial("tcp", dst)
+				DialCtxFn: func(ctx context.Context, dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
+					return dialer.DialContext(ctx, "tcp", dst)
 				},
 			},
 			WithMeterProvider(meterProvider),
@@ -50,8 +63,8 @@ func TestNewClient(t *testing.T) {
 		c, err := NewClient(
 			rueidis.ClientOption{
 				InitAddress: []string{"127.0.0.1:6379"},
-				DialFn: func(dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
-					return dialer.Dial("tcp", dst)
+				DialCtxFn: func(ctx context.Context, dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
+					return dialer.DialContext(ctx, "tcp", dst)
 				},
 			},
 			WithHistogramOption(HistogramOption{
@@ -79,8 +92,8 @@ func TestNewClientError(t *testing.T) {
 	t.Run("invalid client option", func(t *testing.T) {
 		_, err := NewClient(rueidis.ClientOption{
 			InitAddress: []string{""},
-			DialFn: func(dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
-				return dialer.Dial("tcp", dst)
+			DialCtxFn: func(ctx context.Context, dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
+				return dialer.DialContext(ctx, "tcp", dst)
 			},
 		})
 		if err == nil {
@@ -120,8 +133,8 @@ func TestTrackDialing(t *testing.T) {
 		c, err := NewClient(
 			rueidis.ClientOption{
 				InitAddress: []string{"127.0.0.1:6379"},
-				DialFn: func(dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
-					return dialer.Dial("tcp", dst)
+				DialCtxFn: func(ctx context.Context, dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
+					return dialer.DialContext(ctx, "tcp", dst)
 				},
 			},
 			WithMeterProvider(meterProvider),
@@ -169,8 +182,8 @@ func TestTrackDialing(t *testing.T) {
 		c, err := NewClient(
 			rueidis.ClientOption{
 				InitAddress: []string{"127.0.0.1:6379"},
-				DialFn: func(dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
-					return dialer.Dial("tcp", dst)
+				DialCtxFn: func(ctx context.Context, dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
+					return dialer.DialContext(ctx, "tcp", dst)
 				},
 			},
 			WithMeterProvider(meterProvider),
@@ -198,8 +211,8 @@ func TestTrackDialing(t *testing.T) {
 		_, err := NewClient(
 			rueidis.ClientOption{
 				InitAddress: []string{""},
-				DialFn: func(dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
-					return dialer.Dial("tcp", dst)
+				DialCtxFn: func(ctx context.Context, dst string, dialer *net.Dialer, _ *tls.Config) (conn net.Conn, err error) {
+					return dialer.DialContext(ctx, "tcp", dst)
 				},
 			},
 			WithMeterProvider(meterProvider),

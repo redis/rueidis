@@ -1274,7 +1274,7 @@ func (c *dedicatedClusterClient) acquire(ctx context.Context, slot uint16) (wire
 		}
 		return nil, err
 	}
-	c.wire = c.conn.Acquire()
+	c.wire = c.conn.Acquire(ctx)
 	if p := c.pshks; p != nil {
 		c.pshks = nil
 		ch := c.wire.SetPubSubHooks(p.hooks)

@@ -168,7 +168,7 @@ func setup(t *testing.T, option ClientOption) (*pipe, *redisMock, func(), func()
 		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 			ReplyError("UNKNOWN COMMAND")
 	}()
-	p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &option)
+	p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &option)
 	if err != nil {
 		t.Fatalf("pipe setup failed: %v", err)
 	}
@@ -231,7 +231,7 @@ func TestNewPipe(t *testing.T) {
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", "1").
 				ReplyString("OK")
 		}()
-		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB:      1,
 			Password:      "pa",
 			ClientName:    "cn",
@@ -280,7 +280,7 @@ func TestNewPipe(t *testing.T) {
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", "1").
 				ReplyString("OK")
 		}()
-		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB:      1,
 			Password:      "pa",
 			ClientName:    "cn",
@@ -323,7 +323,7 @@ func TestNewPipe(t *testing.T) {
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
 		}()
-		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB:   1,
 			Username:   "ua",
 			Password:   "pa",
@@ -362,7 +362,7 @@ func TestNewPipe(t *testing.T) {
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
 		}()
-		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB: 1,
 			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
 				return AuthCredentials{
@@ -400,7 +400,7 @@ func TestNewPipe(t *testing.T) {
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
 		}()
-		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			ClientTrackingOptions: []string{"OPTIN", "NOLOOP"},
 		})
 		if err != nil {
@@ -435,7 +435,7 @@ func TestNewPipe(t *testing.T) {
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
 		}()
-		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB:    1,
 			Username:    "ua",
 			Password:    "pa",
@@ -474,7 +474,7 @@ func TestNewPipe(t *testing.T) {
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
 		}()
-		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB:    1,
 			Username:    "ua",
 			Password:    "pa",
@@ -494,7 +494,7 @@ func TestNewPipe(t *testing.T) {
 		n1, n2 := net.Pipe()
 		n1.Close()
 		n2.Close()
-		if _, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{}); err != io.ErrClosedPipe {
+		if _, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{}); err != io.ErrClosedPipe {
 			t.Fatalf("pipe setup should failed with io.ErrClosedPipe, but got %v", err)
 		}
 	})
@@ -502,7 +502,7 @@ func TestNewPipe(t *testing.T) {
 		n1, n2 := net.Pipe()
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() { mock.Expect("PING").ReplyString("OK") }()
-		_, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+		_, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB: 1,
 			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
 				return AuthCredentials{}, fmt.Errorf("auth credential failure")
@@ -531,7 +531,7 @@ func TestNewPipe(t *testing.T) {
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 				ReplyString("OK")
 		}()
-		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			ClientSetInfo: DisableClientSetInfo,
 		})
 		go func() {
@@ -564,7 +564,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("PING").ReplyString("OK")
 		}()
-		if _, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{}); !errors.Is(err, ErrNoCache) {
+		if _, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{}); !errors.Is(err, ErrNoCache) {
 			t.Fatalf("unexpected err: %v", err)
 		}
 		mock.Close()
@@ -585,7 +585,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("PING").ReplyString("OK")
 		}()
-		if _, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{}); !errors.Is(err, ErrNoCache) {
+		if _, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{}); !errors.Is(err, ErrNoCache) {
 			t.Fatalf("unexpected err: %v", err)
 		}
 		mock.Close()
@@ -623,7 +623,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
 		}()
-		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			DisableCache: true,
 		})
 		if err != nil {
@@ -666,7 +666,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
 		}()
-		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB:     1,
 			Password:     "pa",
 			ClientName:   "cn",
@@ -709,7 +709,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
 		}()
-		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB:     1,
 			Username:     "ua",
 			Password:     "pa",
@@ -757,7 +757,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
 		}()
-		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB:     1,
 			Password:     "pa",
 			ClientName:   "cn",
@@ -805,7 +805,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
 		}()
-		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB:     1,
 			Password:     "pa",
 			ClientName:   "cn",
@@ -839,7 +839,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 			n1.Close()
 			n2.Close()
 		}()
-		_, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+		_, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			SelectDB:     1,
 			Username:     "ua",
 			Password:     "pa",
@@ -859,7 +859,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 			mock.Expect("HELLO", "2").
 				ReplyError("ERR unknown command `HELLO`")
 		}()
-		p, err := newPipe(func() (net.Conn, error) { return n1, nil }, &ClientOption{
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			DisableCache:  true,
 			ClientSetInfo: DisableClientSetInfo,
 		})
@@ -1078,7 +1078,7 @@ func TestDoStreamRecycle(t *testing.T) {
 	if err := s.Error(); err != io.EOF {
 		t.Errorf("unexpected err %v\n", err)
 	}
-	if w := conns.Acquire(); w != p {
+	if w := conns.Acquire(context.Background()); w != p {
 		t.Errorf("pipe is not recycled\n")
 	}
 }
@@ -1131,7 +1131,7 @@ func TestDoStreamRecycleDestinationFull(t *testing.T) {
 	if err := s.Error(); err != io.EOF {
 		t.Errorf("unexpected err %v\n", err)
 	}
-	if w := conns.Acquire(); w != p {
+	if w := conns.Acquire(context.Background()); w != p {
 		t.Errorf("pipe is not recycled\n")
 	}
 }
@@ -1164,7 +1164,7 @@ func TestDoMultiStreamRecycle(t *testing.T) {
 	if err := s.Error(); err != io.EOF {
 		t.Errorf("unexpected err %v\n", err)
 	}
-	if w := conns.Acquire(); w != p {
+	if w := conns.Acquire(context.Background()); w != p {
 		t.Errorf("pipe is not recycled\n")
 	}
 }
@@ -1197,7 +1197,7 @@ func TestDoMultiStreamRecycleDestinationFull(t *testing.T) {
 	if err := s.Error(); err != io.EOF {
 		t.Errorf("unexpected err %v\n", err)
 	}
-	if w := conns.Acquire(); w != p {
+	if w := conns.Acquire(context.Background()); w != p {
 		t.Errorf("pipe is not recycled\n")
 	}
 }
@@ -3832,7 +3832,7 @@ func TestPubSub(t *testing.T) {
 		p, _, cancel, _ := setup(t, ClientOption{})
 		p.version = 5
 		e := errors.New("any")
-		p.r2psFn = func() (p *pipe, err error) {
+		p.r2psFn = func(_ context.Context) (p *pipe, err error) {
 			return nil, e
 		}
 		defer cancel()

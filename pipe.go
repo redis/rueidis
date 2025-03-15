@@ -70,7 +70,7 @@ type pipe struct {
 	w               *bufio.Writer
 	close           chan struct{}
 	onInvalidations func([]RedisMessage)
-	r2psFn          func() (p *pipe, err error) // func to build pipe for resp2 pubsub
+	r2psFn          func(context.Context) (p *pipe, err error) // func to build pipe for resp2 pubsub
 	r2pipe          *pipe                       // internal pipe for resp2 pubsub only
 	ssubs           *subs                       // pubsub smessage subscriptions
 	nsubs           *subs                       // pubsub  message subscriptions
@@ -92,18 +92,18 @@ type pipe struct {
 	optin           bool
 }
 
-type pipeFn func(connFn func() (net.Conn, error), option *ClientOption) (p *pipe, err error)
+type pipeFn func(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error)
 
-func newPipe(connFn func() (net.Conn, error), option *ClientOption) (p *pipe, err error) {
-	return _newPipe(connFn, option, false, false)
+func newPipe(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error) {
+	return _newPipe(ctx, connFn, option, false, false)
 }
 
-func newPipeNoBg(connFn func() (net.Conn, error), option *ClientOption) (p *pipe, err error) {
-	return _newPipe(connFn, option, false, true)
+func newPipeNoBg(ctx context.Context, connFn func(context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error) {
+	return _newPipe(ctx, connFn, option, false, true)
 }
 
-func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg bool) (p *pipe, err error) {
-	conn, err := connFn()
+func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error), option *ClientOption, r2ps, nobg bool) (p *pipe, err error) {
+	conn, err := connFn(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -128,8 +128,8 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 		p.close = make(chan struct{})
 	}
 	if !r2ps {
-		p.r2psFn = func() (p *pipe, err error) {
-			return _newPipe(connFn, option, true, nobg)
+		p.r2psFn = func(ctx context.Context) (p *pipe, err error) {
+			return _newPipe(ctx, connFn, option, true, nobg)
 		}
 	}
 	if !nobg && !option.DisableCache {
@@ -203,7 +203,7 @@ func _newPipe(connFn func() (net.Conn, error), option *ClientOption, r2ps, nobg 
 		timeout = DefaultDialTimeout
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	r2 := option.AlwaysRESP2
@@ -730,13 +730,13 @@ func (p *pipe) handlePush(values []RedisMessage) (reply bool, unsubscribe bool) 
 	return false, false
 }
 
-func (p *pipe) _r2pipe() (r2p *pipe) {
+func (p *pipe) _r2pipe(ctx context.Context) (r2p *pipe) {
 	p.r2mu.Lock()
 	if p.r2pipe != nil {
 		r2p = p.r2pipe
 	} else {
 		var err error
-		if r2p, err = p.r2psFn(); err != nil {
+		if r2p, err = p.r2psFn(ctx); err != nil {
 			r2p = epipeFn(err)
 		} else {
 			p.r2pipe = r2p
@@ -752,7 +752,7 @@ func (p *pipe) Receive(ctx context.Context, subscribe Completed, fn func(message
 	}
 
 	if p.version < 6 && p.r2psFn != nil {
-		return p._r2pipe().Receive(ctx, subscribe, fn)
+		return p._r2pipe(ctx).Receive(ctx, subscribe, fn)
 	}
 
 	cmds.CompletedCS(subscribe).Verify()
@@ -810,7 +810,7 @@ func (p *pipe) CleanSubscriptions() {
 
 func (p *pipe) SetPubSubHooks(hooks PubSubHooks) <-chan error {
 	if p.version < 6 && p.r2psFn != nil {
-		return p._r2pipe().SetPubSubHooks(hooks)
+		return p._r2pipe(context.Background()).SetPubSubHooks(hooks)
 	}
 	if hooks.isZero() {
 		if old := p.pshks.Swap(emptypshks).(*pshks); old.close != nil {
@@ -875,7 +875,7 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 
 	if cmd.NoReply() {
 		if p.version < 6 && p.r2psFn != nil {
-			return p._r2pipe().Do(ctx, cmd)
+			return p._r2pipe(ctx).Do(ctx, cmd)
 		}
 	}
 
@@ -960,7 +960,7 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 			return resp
 		} else if p.r2psFn != nil {
 			resultsp.Put(resp)
-			return p._r2pipe().DoMulti(ctx, multi...)
+			return p._r2pipe(ctx).DoMulti(ctx, multi...)
 		}
 	}
 

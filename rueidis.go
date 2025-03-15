@@ -70,7 +70,11 @@ type ClientOption struct {
 	TLSConfig *tls.Config
 
 	// DialFn allows for a custom function to be used to create net.Conn connections
+	// Deprecated: use DialCtxFn instead.
 	DialFn func(string, *net.Dialer, *tls.Config) (conn net.Conn, err error)
+
+	// DialCtxFn allows for a custom function to be used to create net.Conn connections
+	DialCtxFn func(context.Context, string, *net.Dialer, *tls.Config) (conn net.Conn, err error)
 
 	// NewCacheStoreFn allows a custom client side caching store for each connection
 	NewCacheStoreFn NewCacheStoreFn
@@ -464,14 +468,18 @@ func makeConn(dst string, opt *ClientOption) conn {
 	return makeMux(dst, opt, dial)
 }
 
-func dial(dst string, opt *ClientOption) (conn net.Conn, err error) {
+func dial(ctx context.Context, dst string, opt *ClientOption) (conn net.Conn, err error) {
+	if opt.DialCtxFn != nil {
+		return opt.DialCtxFn(ctx, dst, &opt.Dialer, opt.TLSConfig)
+	}
 	if opt.DialFn != nil {
 		return opt.DialFn(dst, &opt.Dialer, opt.TLSConfig)
 	}
 	if opt.TLSConfig != nil {
-		conn, err = tls.DialWithDialer(&opt.Dialer, "tcp", dst, opt.TLSConfig)
+		dialer := tls.Dialer{NetDialer: &opt.Dialer, Config: opt.TLSConfig}
+		conn, err = dialer.DialContext(ctx, "tcp", dst)
 	} else {
-		conn, err = opt.Dialer.Dial("tcp", dst)
+		conn, err = opt.Dialer.DialContext(ctx, "tcp", dst)
 	}
 	return conn, err
 }

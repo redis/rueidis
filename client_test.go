@@ -51,7 +51,7 @@ func (m *mockConn) Dial() error {
 	return nil
 }
 
-func (m *mockConn) Acquire() wire {
+func (m *mockConn) Acquire(ctx context.Context) wire {
 	if m.AcquireFn != nil {
 		return m.AcquireFn()
 	}
