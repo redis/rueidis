@@ -927,7 +927,7 @@ func TestSentinelClientDelegate(t *testing.T) {
 				return ErrClosing
 			},
 		}
-		m.AcquireFn = func(_ context.Context) wire {
+		m.AcquireFn = func() wire {
 			return w
 		}
 		stored := false
@@ -976,7 +976,7 @@ func TestSentinelClientDelegate(t *testing.T) {
 				return ErrClosing
 			},
 		}
-		m.AcquireFn = func(_ context.Context) wire {
+		m.AcquireFn = func() wire {
 			return w
 		}
 		stored := false
