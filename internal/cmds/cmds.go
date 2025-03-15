@@ -39,6 +39,7 @@ var (
 	// RoleCmd is predefined ROLE
 	RoleCmd = Completed{
 		cs: newCommandSlice([]string{"ROLE"}),
+		cf: pipeTag,
 	}
 
 	// UnsubscribeCmd is predefined UNSUBSCRIBE
@@ -63,10 +64,12 @@ var (
 	// SlotCmd is predefined CLUSTER SLOTS
 	SlotCmd = Completed{
 		cs: newCommandSlice([]string{"CLUSTER", "SLOTS"}),
+		cf: pipeTag,
 	}
 	// ShardsCmd is predefined CLUSTER SHARDS
 	ShardsCmd = Completed{
 		cs: newCommandSlice([]string{"CLUSTER", "SHARDS"}),
+		cf: pipeTag,
 	}
 	// AskingCmd is predefined CLUSTER ASKING
 	AskingCmd = Completed{
