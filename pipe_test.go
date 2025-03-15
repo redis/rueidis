@@ -3645,7 +3645,7 @@ func TestPubSub(t *testing.T) {
 		p, _, cancel, _ := setup(t, ClientOption{})
 		p.version = 5
 		e := errors.New("any")
-		p.r2psFn = func() (p *pipe, err error) {
+		p.r2psFn = func(_ context.Context) (p *pipe, err error) {
 			return nil, e
 		}
 		defer cancel()

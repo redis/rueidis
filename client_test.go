@@ -14,10 +14,8 @@ import (
 
 type mockConn struct {
 	DoFn            func(cmd Completed) RedisResult
-	DoCtxFn         func(ctx context.Context, cmd Completed) RedisResult
 	DoCacheFn       func(cmd Cacheable, ttl time.Duration) RedisResult
 	DoMultiFn       func(multi ...Completed) *redisresults
-	DoMultiCtxFn    func(ctx context.Context, multi ...Completed) *redisresults
 	DoMultiCacheFn  func(multi ...CacheableTTL) *redisresults
 	ReceiveFn       func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
 	DoStreamFn      func(cmd Completed) RedisResultStream
@@ -68,9 +66,7 @@ func (m *mockConn) Do(ctx context.Context, cmd Completed) RedisResult {
 	if fn := m.DoOverride[strings.Join(cmd.Commands(), " ")]; fn != nil {
 		return fn(cmd)
 	}
-	if m.DoCtxFn != nil {
-		return m.DoCtxFn(ctx, cmd)
-	} else if m.DoFn != nil {
+	if m.DoFn != nil {
 		return m.DoFn(cmd)
 	}
 	return RedisResult{}
@@ -112,9 +108,7 @@ func (m *mockConn) DoMulti(ctx context.Context, multi ...Completed) *redisresult
 	if len(overrides) == len(multi) {
 		return &redisresults{s: overrides}
 	}
-	if m.DoMultiCtxFn != nil {
-		return m.DoMultiCtxFn(ctx, multi...)
-	} else if m.DoMultiFn != nil {
+	if m.DoMultiFn != nil {
 		return m.DoMultiFn(multi...)
 	}
 	return nil
@@ -618,64 +612,6 @@ func TestSingleClient(t *testing.T) {
 				fn()
 			}
 		}
-	})
-
-	t.Run("Acquire Exceed Context Deadline", func(t *testing.T) {
-		w := &mockWire{}
-		m.AcquireFn = func(ctx context.Context) wire {
-			timer := time.NewTimer(time.Millisecond*10)
-			defer timer.Stop()
-			select {
-			case <-ctx.Done():
-				return epipeFn(ctx.Err())
-			case <-timer.C:
-				// noop
-			}
-			return w
-		}
-		m.DoCtxFn = func(ctx context.Context, cmd Completed) RedisResult {
-			if ww := m.AcquireFn(ctx); ww != w {
-				return newErrResult(ww.Error())
-			}
-			return newResult(RedisMessage{typ: '+', string: "Acquire"}, nil)
-		}
-		m.DoMultiCtxFn = func(ctx context.Context, cmd ...Completed) *redisresults {
-			if ww := m.AcquireFn(ctx); ww != w {
-				return &redisresults{s: []RedisResult{newErrResult(ww.Error())}}
-			}
-			return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "Acquire"}, nil)}}
-		}
-		
-		m.StoreFn = func(ww wire) {
-			if (err == nil && ww != dead) || (err != nil && ww != w) {
-				t.Fatalf("received unexpected wire %v", ww)
-			}
-			err = nil
-		}
-		ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond)
-		if v, err := client.Do(ctx, client.B().Get().Key("a").Build()).ToString(); err == nil || v == "Acquire" {
-			t.Fatalf("unexpected response %v %v", v, err)
-		}
-		cancel()
-		ctx, cancel = context.WithTimeout(context.Background(), time.Millisecond*20)
-		if v, err := client.Do(ctx, client.B().Get().Key("a").Build()).ToString(); err != nil || v != "Acquire" {
-			t.Fatalf("unexpected response %v %v", v, err)
-		}
-		cancel()
-		ctx, cancel = context.WithTimeout(context.Background(), time.Millisecond)
-		for _, resp := range client.DoMulti(ctx, client.B().Get().Key("a").Build()) {
-			if v, err := resp.ToString(); err == nil || v == "Acquire" {
-				t.Fatalf("unexpected response %v %v", v, err)
-			}
-		}
-		cancel()
-		ctx, cancel = context.WithTimeout(context.Background(), time.Millisecond*20)
-		for _, resp := range client.DoMulti(ctx, client.B().Get().Key("a").Build()) {
-			if v, err := resp.ToString(); err != nil || v != "Acquire" {
-				t.Fatalf("unexpected response %v %v", v, err)
-			}
-		}
-		cancel()
 	})
 }
 
