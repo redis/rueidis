@@ -90,6 +90,7 @@ type pipe struct {
 	r2ps            bool // identify this pipe is used for resp2 pubsub or not
 	noNoDelay       bool
 	optin           bool
+	pingTimer       *time.Timer
 }
 
 type pipeFn func(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error)
@@ -630,17 +631,18 @@ func (p *pipe) _backgroundRead() (err error) {
 
 func (p *pipe) backgroundPing() {
 	var prev, recv int32
-	var timer *time.Timer
 	
 	prev = atomic.LoadInt32(&p.recvs)
-	timer = time.AfterFunc(p.pinggap, func() {
+	p.pingTimer = time.AfterFunc(p.pinggap, func() {
 		var err error
 		recv = atomic.LoadInt32(&p.recvs)
 		reset := false
 		defer func(){
 			prev = atomic.LoadInt32(&p.recvs)
-			if reset && timer != nil {
-				timer.Reset(p.pinggap)
+			if reset {
+				p.pingTimer.Reset(p.pinggap)
+			} else {
+				p.pingTimer.Stop()
 			}
 		}()
 		if recv != prev || atomic.LoadInt32(&p.blcksig) != 0 || (atomic.LoadInt32(&p.state) == 0 && atomic.LoadInt32(&p.waits) != 0) {
@@ -654,7 +656,7 @@ func (p *pipe) backgroundPing() {
 		case <-tm.C:
 			err = os.ErrDeadlineExceeded
 		case err = <-ch:
-			// noop
+			tm.Stop()
 		}
 		if err != nil && atomic.LoadInt32(&p.blcksig) != 0 {
 			err = nil
@@ -1595,6 +1597,9 @@ func (p *pipe) Close() {
 	}
 	atomic.AddInt32(&p.waits, -1)
 	atomic.AddInt32(&p.blcksig, -1)
+	if p.pingTimer != nil {
+		p.pingTimer.Stop()
+	}
 	if p.conn != nil {
 		p.conn.Close()
 	}
