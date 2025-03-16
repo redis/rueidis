@@ -5315,6 +5315,45 @@ func TestErrorPipe(t *testing.T) {
 	}
 }
 
+func TestBackgroundPing(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	timeout := 100*time.Millisecond
+	t.Run("background ping", func(t *testing.T) {
+		opt := ClientOption{ConnWriteTimeout: timeout, 
+							Dialer: net.Dialer{KeepAlive: timeout}, 
+							DisableAutoPipelining: true}
+		p, mock, cancel, _ := setup(t, opt)
+		defer cancel()
+		go func() {
+			mock.Expect("PING").ReplyString("OK")
+		}()
+		time.Sleep(50*time.Millisecond)
+		prev := atomic.LoadInt32(&p.recvs)
+		
+		for i := range 10 {
+			atomic.AddInt32(&p.blcksig, 1) // block
+			time.Sleep(timeout)
+			atomic.AddInt32(&p.blcksig, -1) // unblock
+			recv := atomic.LoadInt32(&p.recvs)
+			if prev != recv {
+				t.Fatalf("round %d unexpect recv %v, need be equal to prev %v", i, recv, prev)
+			}
+		}
+
+		for i := range 10 {
+			go func() {
+				mock.Expect("PING").ReplyString("OK")
+			}()
+			time.Sleep(timeout)
+			recv := atomic.LoadInt32(&p.recvs)		
+			if prev == recv {
+				t.Fatalf("round %d unexpect recv %v, need be different from prev %v", i, recv, prev)
+			}
+			prev = recv
+		}
+	})
+}
+
 func TestCloseHook(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	t.Run("normal close", func(t *testing.T) {
