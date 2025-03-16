@@ -634,6 +634,7 @@ func (p *pipe) backgroundPing() {
 	
 	prev = atomic.LoadInt32(&p.recvs)
 	timer = time.AfterFunc(p.pinggap, func() {
+		var err error
 		recv = atomic.LoadInt32(&p.recvs)
 		reset := false
 		defer func(){
@@ -646,9 +647,15 @@ func (p *pipe) backgroundPing() {
 			reset = true
 			return
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
-		defer cancel()
-		err := p.Do(ctx, cmds.PingCmd).NonRedisError()
+		ch := make(chan error, 1)
+		tm := time.NewTimer(p.timeout)
+		go func() { ch <- p.Do(context.Background(), cmds.PingCmd).NonRedisError() }()
+		select {
+		case <-tm.C:
+			err = os.ErrDeadlineExceeded
+		case err = <-ch:
+			// noop
+		}
 		if err != nil && atomic.LoadInt32(&p.blcksig) != 0 {
 			err = nil
 		}
