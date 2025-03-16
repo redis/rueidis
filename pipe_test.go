@@ -5324,9 +5324,6 @@ func TestBackgroundPing(t *testing.T) {
 							DisableAutoPipelining: true}
 		p, mock, cancel, _ := setup(t, opt)
 		defer cancel()
-		go func() {
-			mock.Expect("PING").ReplyString("OK")
-		}()
 		time.Sleep(50*time.Millisecond)
 		prev := atomic.LoadInt32(&p.recvs)
 		
@@ -5340,10 +5337,12 @@ func TestBackgroundPing(t *testing.T) {
 			}
 		}
 
-		for i := range 10 {
-			go func() {
+		go func() {
+			for range 10 {
 				mock.Expect("PING").ReplyString("OK")
-			}()
+			}
+		}()
+		for i := range 10 {
 			time.Sleep(timeout)
 			recv := atomic.LoadInt32(&p.recvs)		
 			if prev == recv {
