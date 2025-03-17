@@ -75,6 +75,7 @@ type pipe struct {
 	ssubs           *subs                       // pubsub smessage subscriptions
 	nsubs           *subs                       // pubsub  message subscriptions
 	psubs           *subs                       // pubsub pmessage subscriptions
+	pingTimer       *time.Timer					// timer for background ping
 	info            map[string]RedisMessage
 	timeout         time.Duration
 	pinggap         time.Duration
@@ -90,7 +91,6 @@ type pipe struct {
 	r2ps            bool // identify this pipe is used for resp2 pubsub or not
 	noNoDelay       bool
 	optin           bool
-	pingTimer       *time.Timer
 }
 
 type pipeFn func(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error)
@@ -636,17 +636,13 @@ func (p *pipe) backgroundPing() {
 	p.pingTimer = time.AfterFunc(p.pinggap, func() {
 		var err error
 		recv = atomic.LoadInt32(&p.recvs)
-		reset := false
 		defer func(){
 			prev = atomic.LoadInt32(&p.recvs)
-			if reset {
+			if err == nil {
 				p.pingTimer.Reset(p.pinggap)
-			} else {
-				p.pingTimer.Stop()
 			}
 		}()
 		if recv != prev || atomic.LoadInt32(&p.blcksig) != 0 || (atomic.LoadInt32(&p.state) == 0 && atomic.LoadInt32(&p.waits) != 0) {
-			reset = true
 			return
 		}
 		ch := make(chan error, 1)
@@ -663,14 +659,6 @@ func (p *pipe) backgroundPing() {
 		}
 		if err != nil && err != ErrClosing {
 			p._exit(err)
-		}
-		select {
-		case <-p.close:
-			return
-		default:
-		}
-		if err == nil {
-			reset = true
 		}
 	})
 }
