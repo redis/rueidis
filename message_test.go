@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"unsafe"
 )
 
 type wrapped struct {
@@ -85,7 +86,7 @@ func TestRedisErrorIsMoved(t *testing.T) {
 		{err: "MOVED 1 [::1]:1", addr: "[::1]:1"},
 		{err: "MOVED 1 ::1:1", addr: "[::1]:1"},
 	} {
-		e := RedisError{typ: '-', string: c.err}
+		e := RedisError(redisMessageContainString('-', c.err))
 		if addr, ok := e.IsMoved(); !ok || addr != c.addr {
 			t.Fail()
 		}
@@ -101,7 +102,7 @@ func TestRedisErrorIsAsk(t *testing.T) {
 		{err: "ASK 1 [::1]:1", addr: "[::1]:1"},
 		{err: "ASK 1 ::1:1", addr: "[::1]:1"},
 	} {
-		e := RedisError{typ: '-', string: c.err}
+		e := RedisError(redisMessageContainString('-', c.err))
 		if addr, ok := e.IsAsk(); !ok || addr != c.addr {
 			t.Fail()
 		}
@@ -114,7 +115,8 @@ func TestIsRedisBusyGroup(t *testing.T) {
 		t.Fatal("TestIsRedisBusyGroup fail")
 	}
 
-	err = &RedisError{string: "BUSYGROUP Consumer Group name already exists"}
+	redisErr := RedisError(redisMessageContainString('-', "BUSYGROUP Consumer Group name already exists"))
+	err = &redisErr
 	if !IsRedisBusyGroup(err) {
 		t.Fatal("TestIsRedisBusyGroup fail")
 	}
@@ -162,10 +164,10 @@ func TestRedisResult(t *testing.T) {
 		if v, _ := (RedisResult{val: RedisMessage{typ: ':', integer: 1}}).AsBool(); !v {
 			t.Fatal("ToBool not get value as expected")
 		}
-		if v, _ := (RedisResult{val: RedisMessage{typ: '+', string: "OK"}}).AsBool(); !v {
+		if v, _ := (RedisResult{val: redisMessageContainString('+', "OK")}).AsBool(); !v {
 			t.Fatal("ToBool not get value as expected")
 		}
-		if v, _ := (RedisResult{val: RedisMessage{typ: '$', string: "OK"}}).AsBool(); !v {
+		if v, _ := (RedisResult{val: redisMessageContainString('$', "OK")}).AsBool(); !v {
 			t.Fatal("ToBool not get value as expected")
 		}
 	})
@@ -177,7 +179,7 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).ToFloat64(); err == nil {
 			t.Fatal("ToFloat64 not failed as expected")
 		}
-		if v, _ := (RedisResult{val: RedisMessage{typ: ',', string: "0.1"}}).ToFloat64(); v != 0.1 {
+		if v, _ := (RedisResult{val: redisMessageContainString(',', "0.1")}).ToFloat64(); v != 0.1 {
 			t.Fatal("ToFloat64 not get value as expected")
 		}
 	})
@@ -189,7 +191,7 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).ToString(); err == nil {
 			t.Fatal("ToString not failed as expected")
 		}
-		if v, _ := (RedisResult{val: RedisMessage{typ: '+', string: "0.1"}}).ToString(); v != "0.1" {
+		if v, _ := (RedisResult{val: redisMessageContainString('+', "0.1")}).ToString(); v != "0.1" {
 			t.Fatal("ToString not get value as expected")
 		}
 	})
@@ -201,7 +203,7 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsReader(); err == nil {
 			t.Fatal("AsReader not failed as expected")
 		}
-		r, _ := (RedisResult{val: RedisMessage{typ: '+', string: "0.1"}}).AsReader()
+		r, _ := (RedisResult{val: redisMessageContainString('+', "0.1")}).AsReader()
 		bs, _ := io.ReadAll(r)
 		if !bytes.Equal(bs, []byte("0.1")) {
 			t.Fatalf("AsReader not get value as expected %v", bs)
@@ -215,7 +217,7 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsBytes(); err == nil {
 			t.Fatal("AsBytes not failed as expected")
 		}
-		bs, _ := (RedisResult{val: RedisMessage{typ: '+', string: "0.1"}}).AsBytes()
+		bs, _ := (RedisResult{val: redisMessageContainString('+', "0.1")}).AsBytes()
 		if !bytes.Equal(bs, []byte("0.1")) {
 			t.Fatalf("AsBytes not get value as expected %v", bs)
 		}
@@ -229,7 +231,7 @@ func TestRedisResult(t *testing.T) {
 		if err := (RedisResult{val: RedisMessage{typ: '-'}}).DecodeJSON(&v); err == nil {
 			t.Fatal("DecodeJSON not failed as expected")
 		}
-		if _ = (RedisResult{val: RedisMessage{typ: '+', string: `{"k":"v"}`}}).DecodeJSON(&v); v["k"] != "v" {
+		if _ = (RedisResult{val: redisMessageContainString('+', `{"k":"v"}`)}).DecodeJSON(&v); v["k"] != "v" {
 			t.Fatalf("DecodeJSON not get value as expected %v", v)
 		}
 	})
@@ -241,7 +243,7 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsInt64(); err == nil {
 			t.Fatal("AsInt64 not failed as expected")
 		}
-		if v, _ := (RedisResult{val: RedisMessage{typ: '+', string: "1"}}).AsInt64(); v != 1 {
+		if v, _ := (RedisResult{val: redisMessageContainString('+', "1")}).AsInt64(); v != 1 {
 			t.Fatal("AsInt64 not get value as expected")
 		}
 		if v, _ := (RedisResult{val: RedisMessage{typ: ':', integer: 2}}).AsInt64(); v != 2 {
@@ -256,7 +258,7 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsUint64(); err == nil {
 			t.Fatal("AsUint64 not failed as expected")
 		}
-		if v, _ := (RedisResult{val: RedisMessage{typ: '+', string: "1"}}).AsUint64(); v != 1 {
+		if v, _ := (RedisResult{val: redisMessageContainString('+', "1")}).AsUint64(); v != 1 {
 			t.Fatal("AsUint64 not get value as expected")
 		}
 		if v, _ := (RedisResult{val: RedisMessage{typ: ':', integer: 2}}).AsUint64(); v != 2 {
@@ -271,10 +273,10 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsFloat64(); err == nil {
 			t.Fatal("AsFloat64 not failed as expected")
 		}
-		if v, _ := (RedisResult{val: RedisMessage{typ: '+', string: "1.1"}}).AsFloat64(); v != 1.1 {
+		if v, _ := (RedisResult{val: redisMessageContainString('+', "1.1")}).AsFloat64(); v != 1.1 {
 			t.Fatal("AsFloat64 not get value as expected")
 		}
-		if v, _ := (RedisResult{val: RedisMessage{typ: ',', string: "2.2"}}).AsFloat64(); v != 2.2 {
+		if v, _ := (RedisResult{val: redisMessageContainString(',', "2.2")}).AsFloat64(); v != 2.2 {
 			t.Fatal("AsFloat64 not get value as expected")
 		}
 	})
@@ -286,8 +288,8 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).ToArray(); err == nil {
 			t.Fatal("ToArray not failed as expected")
 		}
-		values := []RedisMessage{{string: "item", typ: '+'}}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).ToArray(); !reflect.DeepEqual(ret, values) {
+		values := []RedisMessage{redisMessageContainString('+', "item")}
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', values)}).ToArray(); !reflect.DeepEqual(ret, values) {
 			t.Fatal("ToArray not get value as expected")
 		}
 	})
@@ -299,8 +301,8 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsStrSlice(); err == nil {
 			t.Fatal("AsStrSlice not failed as expected")
 		}
-		values := []RedisMessage{{string: "item", typ: '+'}}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsStrSlice(); !reflect.DeepEqual(ret, []string{"item"}) {
+		values := []RedisMessage{redisMessageContainString('+', "item")}
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', values)}).AsStrSlice(); !reflect.DeepEqual(ret, []string{"item"}) {
 			t.Fatal("AsStrSlice not get value as expected")
 		}
 	})
@@ -313,15 +315,15 @@ func TestRedisResult(t *testing.T) {
 			t.Fatal("AsIntSlice not failed as expected")
 		}
 		values := []RedisMessage{{integer: 2, typ: ':'}}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsIntSlice(); !reflect.DeepEqual(ret, []int64{2}) {
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', values)}).AsIntSlice(); !reflect.DeepEqual(ret, []int64{2}) {
 			t.Fatal("AsIntSlice not get value as expected")
 		}
-		values = []RedisMessage{{string: "3", typ: '+'}}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsIntSlice(); !reflect.DeepEqual(ret, []int64{3}) {
+		values = []RedisMessage{redisMessageContainString('+', "3")}
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', values)}).AsIntSlice(); !reflect.DeepEqual(ret, []int64{3}) {
 			t.Fatal("AsIntSlice not get value as expected")
 		}
-		values = []RedisMessage{{string: "ab", typ: '+'}}
-		if _, err := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsIntSlice(); err == nil {
+		values = []RedisMessage{redisMessageContainString('+', "ab")}
+		if _, err := (RedisResult{val: redisMessageContainSlice('*', values)}).AsIntSlice(); err == nil {
 			t.Fatal("AsIntSlice not failed as expected")
 		}
 	})
@@ -333,11 +335,11 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsFloatSlice(); err == nil {
 			t.Fatal("AsFloatSlice not failed as expected")
 		}
-		if _, err := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{string: "fff", typ: ','}}}}).AsFloatSlice(); err == nil {
+		if _, err := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{redisMessageContainString(',', "fff")})}).AsFloatSlice(); err == nil {
 			t.Fatal("AsFloatSlice not failed as expected")
 		}
-		values := []RedisMessage{{integer: 1, typ: ':'}, {string: "2", typ: '+'}, {string: "3", typ: '$'}, {string: "4", typ: ','}}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsFloatSlice(); !reflect.DeepEqual(ret, []float64{1, 2, 3, 4}) {
+		values := []RedisMessage{{integer: 1, typ: ':'}, redisMessageContainString('+', "2"), redisMessageContainString('$', "3"), redisMessageContainString(',', "4")}
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', values)}).AsFloatSlice(); !reflect.DeepEqual(ret, []float64{1, 2, 3, 4}) {
 			t.Fatal("AsFloatSlice not get value as expected")
 		}
 	})
@@ -349,8 +351,8 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsBoolSlice(); err == nil {
 			t.Fatal("AsBoolSlice not failed as expected")
 		}
-		values := []RedisMessage{{integer: 1, typ: ':'}, {string: "0", typ: '+'}, {integer: 1, typ: typeBool}}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsBoolSlice(); !reflect.DeepEqual(ret, []bool{true, false, true}) {
+		values := []RedisMessage{{integer: 1, typ: ':'}, redisMessageContainString('+', "0"), {integer: 1, typ: typeBool}}
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', values)}).AsBoolSlice(); !reflect.DeepEqual(ret, []bool{true, false, true}) {
 			t.Fatal("AsBoolSlice not get value as expected")
 		}
 	})
@@ -362,9 +364,9 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsMap(); err == nil {
 			t.Fatal("AsMap not failed as expected")
 		}
-		values := []RedisMessage{{string: "key", typ: '+'}, {string: "value", typ: '+'}}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsMap(); !reflect.DeepEqual(map[string]RedisMessage{
-			values[0].string: values[1],
+		values := []RedisMessage{redisMessageContainString('+', "key"), redisMessageContainString('+', "value")}
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', values)}).AsMap(); !reflect.DeepEqual(map[string]RedisMessage{
+			values[0].string(): values[1],
 		}, ret) {
 			t.Fatal("AsMap not get value as expected")
 		}
@@ -377,9 +379,9 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsStrMap(); err == nil {
 			t.Fatal("AsStrMap not failed as expected")
 		}
-		values := []RedisMessage{{string: "key", typ: '+'}, {string: "value", typ: '+'}}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsStrMap(); !reflect.DeepEqual(map[string]string{
-			values[0].string: values[1].string,
+		values := []RedisMessage{redisMessageContainString('+', "key"), redisMessageContainString('+', "value")}
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', values)}).AsStrMap(); !reflect.DeepEqual(map[string]string{
+			values[0].string(): values[1].string(),
 		}, ret) {
 			t.Fatal("AsStrMap not get value as expected")
 		}
@@ -392,11 +394,11 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsIntMap(); err == nil {
 			t.Fatal("AsIntMap not failed as expected")
 		}
-		if _, err := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{string: "key", typ: '+'}, {string: "value", typ: '+'}}}}).AsIntMap(); err == nil {
+		if _, err := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "key"), redisMessageContainString('+', "value")})}).AsIntMap(); err == nil {
 			t.Fatal("AsIntMap not failed as expected")
 		}
-		values := []RedisMessage{{string: "k1", typ: '+'}, {string: "1", typ: '+'}, {string: "k2", typ: '+'}, {integer: 2, typ: ':'}}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: values}}).AsIntMap(); !reflect.DeepEqual(map[string]int64{
+		values := []RedisMessage{redisMessageContainString('+', "k1"), redisMessageContainString('+', "1"), redisMessageContainString('+', "k2"), {integer: 2, typ: ':'}}
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', values)}).AsIntMap(); !reflect.DeepEqual(map[string]int64{
 			"k1": 1,
 			"k2": 2,
 		}, ret) {
@@ -411,9 +413,9 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).ToMap(); err == nil {
 			t.Fatal("ToMap not failed as expected")
 		}
-		values := []RedisMessage{{string: "key", typ: '+'}, {string: "value", typ: '+'}}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '%', values: values}}).ToMap(); !reflect.DeepEqual(map[string]RedisMessage{
-			values[0].string: values[1],
+		values := []RedisMessage{redisMessageContainString('+', "key"), redisMessageContainString('+', "value")}
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('%', values)}).ToMap(); !reflect.DeepEqual(map[string]RedisMessage{
+			values[0].string(): values[1],
 		}, ret) {
 			t.Fatal("ToMap not get value as expected")
 		}
@@ -426,23 +428,24 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).ToAny(); err == nil {
 			t.Fatal("ToAny not failed as expected")
 		}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '%', values: []RedisMessage{{typ: '+', string: "key"}, {typ: ':', integer: 1}}},
-			{typ: '%', values: []RedisMessage{{typ: '+', string: "nil"}, {typ: '_'}}},
-			{typ: '%', values: []RedisMessage{{typ: '+', string: "err"}, {typ: '-', string: "err"}}},
-			{typ: ',', string: "1.2"},
-			{typ: '+', string: "str"},
+		redisErr := RedisError(redisMessageContainString('-', "err"))
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainSlice('%', []RedisMessage{redisMessageContainString('+', "key"), {typ: ':', integer: 1}}),
+			redisMessageContainSlice('%', []RedisMessage{redisMessageContainString('+', "nil"), {typ: '_'}}),
+			redisMessageContainSlice('%', []RedisMessage{redisMessageContainString('+', "err"), redisMessageContainString('-', "err")}),
+			redisMessageContainString(',', "1.2"),
+			redisMessageContainString('+', "str"),
 			{typ: '#', integer: 0},
-			{typ: '-', string: "err"},
+			redisMessageContainString('-', "err"),
 			{typ: '_'},
-		}}}).ToAny(); !reflect.DeepEqual([]any{
+		})}).ToAny(); !reflect.DeepEqual([]any{
 			map[string]any{"key": int64(1)},
 			map[string]any{"nil": nil},
-			map[string]any{"err": &RedisError{typ: '-', string: "err"}},
+			map[string]any{"err": &redisErr},
 			1.2,
 			"str",
 			false,
-			&RedisError{typ: '-', string: "err"},
+			&redisErr,
 			nil,
 		}, ret) {
 			t.Fatal("ToAny not get value as expected")
@@ -456,13 +459,13 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsXRangeEntry(); err == nil {
 			t.Fatal("AsXRangeEntry not failed as expected")
 		}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{string: "id", typ: '+'}, {typ: '*', values: []RedisMessage{{typ: '+', string: "a"}, {typ: '+', string: "b"}}}}}}).AsXRangeEntry(); !reflect.DeepEqual(XRangeEntry{
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "id"), redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "a"), redisMessageContainString('+', "b")})})}).AsXRangeEntry(); !reflect.DeepEqual(XRangeEntry{
 			ID:          "id",
 			FieldValues: map[string]string{"a": "b"},
 		}, ret) {
 			t.Fatal("AsXRangeEntry not get value as expected")
 		}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{string: "id", typ: '+'}, {typ: '_'}}}}).AsXRangeEntry(); !reflect.DeepEqual(XRangeEntry{
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "id"), {typ: '_'}})}).AsXRangeEntry(); !reflect.DeepEqual(XRangeEntry{
 			ID:          "id",
 			FieldValues: nil,
 		}, ret) {
@@ -477,10 +480,10 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsXRange(); err == nil {
 			t.Fatal("AsXRange not failed as expected")
 		}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '*', values: []RedisMessage{{string: "id1", typ: '+'}, {typ: '*', values: []RedisMessage{{typ: '+', string: "a"}, {typ: '+', string: "b"}}}}},
-			{typ: '*', values: []RedisMessage{{string: "id2", typ: '+'}, {typ: '_'}}},
-		}}}).AsXRange(); !reflect.DeepEqual([]XRangeEntry{{
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "id1"), redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "a"), redisMessageContainString('+', "b")})}),
+			redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "id2"), {typ: '_'}}),
+		})}).AsXRange(); !reflect.DeepEqual([]XRangeEntry{{
 			ID:          "id1",
 			FieldValues: map[string]string{"a": "b"},
 		}, {
@@ -498,17 +501,17 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsXRead(); err == nil {
 			t.Fatal("AsXRead not failed as expected")
 		}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '%', values: []RedisMessage{
-			{typ: '+', string: "stream1"},
-			{typ: '*', values: []RedisMessage{
-				{typ: '*', values: []RedisMessage{{string: "id1", typ: '+'}, {typ: '*', values: []RedisMessage{{typ: '+', string: "a"}, {typ: '+', string: "b"}}}}},
-				{typ: '*', values: []RedisMessage{{string: "id2", typ: '+'}, {typ: '_'}}},
-			}},
-			{typ: '+', string: "stream2"},
-			{typ: '*', values: []RedisMessage{
-				{typ: '*', values: []RedisMessage{{string: "id3", typ: '+'}, {typ: '*', values: []RedisMessage{{typ: '+', string: "c"}, {typ: '+', string: "d"}}}}},
-			}},
-		}}}).AsXRead(); !reflect.DeepEqual(map[string][]XRangeEntry{
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('%', []RedisMessage{
+			redisMessageContainString('+', "stream1"),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "id1"), redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "a"), redisMessageContainString('+', "b")})}),
+				redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "id2"), {typ: '_'}}),
+			}),
+			redisMessageContainString('+', "stream2"),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "id3"), redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "c"), redisMessageContainString('+', "d")})}),
+			}),
+		})}).AsXRead(); !reflect.DeepEqual(map[string][]XRangeEntry{
 			"stream1": {
 				{ID: "id1", FieldValues: map[string]string{"a": "b"}},
 				{ID: "id2", FieldValues: nil}},
@@ -518,21 +521,21 @@ func TestRedisResult(t *testing.T) {
 		}, ret) {
 			t.Fatal("AsXRead not get value as expected")
 		}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "stream1"},
-				{typ: '*', values: []RedisMessage{
-					{typ: '*', values: []RedisMessage{{string: "id1", typ: '+'}, {typ: '*', values: []RedisMessage{{typ: '+', string: "a"}, {typ: '+', string: "b"}}}}},
-					{typ: '*', values: []RedisMessage{{string: "id2", typ: '+'}, {typ: '_'}}},
-				}},
-			}},
-			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "stream2"},
-				{typ: '*', values: []RedisMessage{
-					{typ: '*', values: []RedisMessage{{string: "id3", typ: '+'}, {typ: '*', values: []RedisMessage{{typ: '+', string: "c"}, {typ: '+', string: "d"}}}}},
-				}},
-			}},
-		}}}).AsXRead(); !reflect.DeepEqual(map[string][]XRangeEntry{
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('+', "stream1"),
+				redisMessageContainSlice('*', []RedisMessage{
+					redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "id1"), redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "a"), redisMessageContainString('+', "b")})}),
+					redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "id2"), {typ: '_'}}),
+				}),
+			}),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('+', "stream2"),
+				redisMessageContainSlice('*', []RedisMessage{
+					redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "id3"), redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "c"), redisMessageContainString('+', "d")})}),
+				}),
+			}),
+		})}).AsXRead(); !reflect.DeepEqual(map[string][]XRangeEntry{
 			"stream1": {
 				{ID: "id1", FieldValues: map[string]string{"a": "b"}},
 				{ID: "id2", FieldValues: nil}},
@@ -551,16 +554,16 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsZScore(); err == nil {
 			t.Fatal("AsZScore not failed as expected")
 		}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '+', string: "m1"},
-			{typ: '+', string: "1"},
-		}}}).AsZScore(); !reflect.DeepEqual(ZScore{Member: "m1", Score: 1}, ret) {
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainString('+', "m1"),
+			redisMessageContainString('+', "1"),
+		})}).AsZScore(); !reflect.DeepEqual(ZScore{Member: "m1", Score: 1}, ret) {
 			t.Fatal("AsZScore not get value as expected")
 		}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '+', string: "m1"},
-			{typ: ',', string: "1"},
-		}}}).AsZScore(); !reflect.DeepEqual(ZScore{Member: "m1", Score: 1}, ret) {
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainString('+', "m1"),
+			redisMessageContainString(',', "1"),
+		})}).AsZScore(); !reflect.DeepEqual(ZScore{Member: "m1", Score: 1}, ret) {
 			t.Fatal("AsZScore not get value as expected")
 		}
 	})
@@ -572,27 +575,27 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsZScores(); err == nil {
 			t.Fatal("AsZScores not failed as expected")
 		}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '+', string: "m1"},
-			{typ: '+', string: "1"},
-			{typ: '+', string: "m2"},
-			{typ: '+', string: "2"},
-		}}}).AsZScores(); !reflect.DeepEqual([]ZScore{
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainString('+', "m1"),
+			redisMessageContainString('+', "1"),
+			redisMessageContainString('+', "m2"),
+			redisMessageContainString('+', "2"),
+		})}).AsZScores(); !reflect.DeepEqual([]ZScore{
 			{Member: "m1", Score: 1},
 			{Member: "m2", Score: 2},
 		}, ret) {
 			t.Fatal("AsZScores not get value as expected")
 		}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "m1"},
-				{typ: ',', string: "1"},
-			}},
-			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "m2"},
-				{typ: ',', string: "2"},
-			}},
-		}}}).AsZScores(); !reflect.DeepEqual([]ZScore{
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('+', "m1"),
+				redisMessageContainString(',', "1"),
+			}),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('+', "m2"),
+				redisMessageContainString(',', "2"),
+			}),
+		})}).AsZScores(); !reflect.DeepEqual([]ZScore{
 			{Member: "m1", Score: 1},
 			{Member: "m2", Score: 2},
 		}, ret) {
@@ -607,13 +610,13 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsLMPop(); err == nil {
 			t.Fatal("AsLMPop not failed as expected")
 		}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '+', string: "k"},
-			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "1"},
-				{typ: '+', string: "2"},
-			}},
-		}}}).AsLMPop(); !reflect.DeepEqual(KeyValues{
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainString('+', "k"),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('+', "1"),
+				redisMessageContainString('+', "2"),
+			}),
+		})}).AsLMPop(); !reflect.DeepEqual(KeyValues{
 			Key:    "k",
 			Values: []string{"1", "2"},
 		}, ret) {
@@ -628,19 +631,19 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsZMPop(); err == nil {
 			t.Fatal("AsZMPop not failed as expected")
 		}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '+', string: "k"},
-			{typ: '*', values: []RedisMessage{
-				{typ: '*', values: []RedisMessage{
-					{typ: '+', string: "1"},
-					{typ: ',', string: "1"},
-				}},
-				{typ: '*', values: []RedisMessage{
-					{typ: '+', string: "2"},
-					{typ: ',', string: "2"},
-				}},
-			}},
-		}}}).AsZMPop(); !reflect.DeepEqual(KeyZScores{
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainString('+', "k"),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainSlice('*', []RedisMessage{
+					redisMessageContainString('+', "1"),
+					redisMessageContainString(',', "1"),
+				}),
+				redisMessageContainSlice('*', []RedisMessage{
+					redisMessageContainString('+', "2"),
+					redisMessageContainString(',', "2"),
+				}),
+			}),
+		})}).AsZMPop(); !reflect.DeepEqual(KeyZScores{
 			Key: "k",
 			Values: []ZScore{
 				{Member: "1", Score: 1},
@@ -658,168 +661,168 @@ func TestRedisResult(t *testing.T) {
 		if _, _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsFtSearch(); err == nil {
 			t.Fatal("AsFtSearch not failed as expected")
 		}
-		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+		if n, ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
 			{typ: ':', integer: 3},
-			{typ: '+', string: "a"},
-			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "k1"},
-				{typ: '+', string: "v1"},
-				{typ: '+', string: "kk"},
-				{typ: '+', string: "vv"},
-			}},
-			{typ: '+', string: "b"},
-			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "k2"},
-				{typ: '+', string: "v2"},
-				{typ: '+', string: "kk"},
-				{typ: '+', string: "vv"},
-			}},
-		}}}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
+			redisMessageContainString('+', "a"),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('+', "k1"),
+				redisMessageContainString('+', "v1"),
+				redisMessageContainString('+', "kk"),
+				redisMessageContainString('+', "vv"),
+			}),
+			redisMessageContainString('+', "b"),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('+', "k2"),
+				redisMessageContainString('+', "v2"),
+				redisMessageContainString('+', "kk"),
+				redisMessageContainString('+', "vv"),
+			}),
+		})}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
 			{Key: "a", Doc: map[string]string{"k1": "v1", "kk": "vv"}},
 			{Key: "b", Doc: map[string]string{"k2": "v2", "kk": "vv"}},
 		}, ret) {
 			t.Fatal("AsFtSearch not get value as expected")
 		}
-		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+		if n, ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
 			{typ: ':', integer: 3},
-			{typ: '+', string: "a"},
-			{typ: '+', string: "1"},
-			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "k1"},
-				{typ: '+', string: "v1"},
-			}},
-			{typ: '+', string: "b"},
-			{typ: '+', string: "2"},
-			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "k2"},
-				{typ: '+', string: "v2"},
-			}},
-		}}}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
+			redisMessageContainString('+', "a"),
+			redisMessageContainString('+', "1"),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('+', "k1"),
+				redisMessageContainString('+', "v1"),
+			}),
+			redisMessageContainString('+', "b"),
+			redisMessageContainString('+', "2"),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('+', "k2"),
+				redisMessageContainString('+', "v2"),
+			}),
+		})}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
 			{Key: "a", Doc: map[string]string{"k1": "v1"}, Score: 1},
 			{Key: "b", Doc: map[string]string{"k2": "v2"}, Score: 2},
 		}, ret) {
 			t.Fatal("AsFtSearch not get value as expected")
 		}
-		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+		if n, ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
 			{typ: ':', integer: 3},
-			{typ: '+', string: "a"},
-			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "k1"},
-				{typ: '+', string: "v1"},
-				{typ: '+', string: "kk"},
-				{typ: '+', string: "vv"},
-			}},
-		}}}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
+			redisMessageContainString('+', "a"),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('+', "k1"),
+				redisMessageContainString('+', "v1"),
+				redisMessageContainString('+', "kk"),
+				redisMessageContainString('+', "vv"),
+			}),
+		})}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
 			{Key: "a", Doc: map[string]string{"k1": "v1", "kk": "vv"}},
 		}, ret) {
 			t.Fatal("AsFtSearch not get value as expected")
 		}
-		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+		if n, ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
 			{typ: ':', integer: 3},
-			{typ: '+', string: "a"},
-			{typ: '+', string: "b"},
-		}}}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
+			redisMessageContainString('+', "a"),
+			redisMessageContainString('+', "b"),
+		})}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
 			{Key: "a", Doc: nil},
 			{Key: "b", Doc: nil},
 		}, ret) {
 			t.Fatal("AsFtSearch not get value as expected")
 		}
-		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+		if n, ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
 			{typ: ':', integer: 3},
-			{typ: '+', string: "a"},
-			{typ: '+', string: "1"},
-			{typ: '+', string: "b"},
-			{typ: '+', string: "2"},
-		}}}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
+			redisMessageContainString('+', "a"),
+			redisMessageContainString('+', "1"),
+			redisMessageContainString('+', "b"),
+			redisMessageContainString('+', "2"),
+		})}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
 			{Key: "a", Doc: nil, Score: 1},
 			{Key: "b", Doc: nil, Score: 2},
 		}, ret) {
 			t.Fatal("AsFtSearch not get value as expected")
 		}
-		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+		if n, ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
 			{typ: ':', integer: 3},
-			{typ: '+', string: "1"},
-			{typ: '+', string: "2"},
-		}}}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
+			redisMessageContainString('+', "1"),
+			redisMessageContainString('+', "2"),
+		})}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
 			{Key: "1", Doc: nil},
 			{Key: "2", Doc: nil},
 		}, ret) {
 			t.Fatal("AsFtSearch not get value as expected")
 		}
-		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+		if n, ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
 			{typ: ':', integer: 3},
-			{typ: '+', string: "a"},
-		}}}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
+			redisMessageContainString('+', "a"),
+		})}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
 			{Key: "a", Doc: nil},
 		}, ret) {
 			t.Fatal("AsFtSearch not get value as expected")
 		}
-		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+		if n, ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
 			{typ: ':', integer: 3},
-		}}}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{}, ret) {
+		})}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{}, ret) {
 			t.Fatal("AsFtSearch not get value as expected")
 		}
 	})
 
 	t.Run("AsFtSearch RESP3", func(t *testing.T) {
-		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '%', values: []RedisMessage{
-			{typ: '+', string: "total_results"},
+		if n, ret, _ := (RedisResult{val: redisMessageContainSlice('%', []RedisMessage{
+			redisMessageContainString('+', "total_results"),
 			{typ: ':', integer: 3},
-			{typ: '+', string: "results"},
-			{typ: '*', values: []RedisMessage{
-				{typ: '%', values: []RedisMessage{
-					{typ: '+', string: "id"},
-					{typ: '+', string: "1"},
-					{typ: '+', string: "extra_attributes"},
-					{typ: '%', values: []RedisMessage{
-						{typ: '+', string: "$"},
-						{typ: '+', string: "1"},
-					}},
-					{typ: '+', string: "score"},
-					{typ: ',', string: "1"},
-				}},
-				{typ: '%', values: []RedisMessage{
-					{typ: '+', string: "id"},
-					{typ: '+', string: "2"},
-					{typ: '+', string: "extra_attributes"},
-					{typ: '%', values: []RedisMessage{
-						{typ: '+', string: "$"},
-						{typ: '+', string: "2"},
-					}},
-					{typ: '+', string: "score"},
-					{typ: ',', string: "2"},
-				}},
-			}},
-			{typ: '+', string: "error"},
-			{typ: '*', values: []RedisMessage{}},
-		}}}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
+			redisMessageContainString('+', "results"),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainSlice('%', []RedisMessage{
+					redisMessageContainString('+', "id"),
+					redisMessageContainString('+', "1"),
+					redisMessageContainString('+', "extra_attributes"),
+					redisMessageContainSlice('%', []RedisMessage{
+						redisMessageContainString('+', "$"),
+						redisMessageContainString('+', "1"),
+					}),
+					redisMessageContainString('+', "score"),
+					redisMessageContainString(',', "1"),
+				}),
+				redisMessageContainSlice('%', []RedisMessage{
+					redisMessageContainString('+', "id"),
+					redisMessageContainString('+', "2"),
+					redisMessageContainString('+', "extra_attributes"),
+					redisMessageContainSlice('%', []RedisMessage{
+						redisMessageContainString('+', "$"),
+						redisMessageContainString('+', "2"),
+					}),
+					redisMessageContainString('+', "score"),
+					redisMessageContainString(',', "2"),
+				}),
+			}),
+			redisMessageContainString('+', "error"),
+			redisMessageContainSlice('*', []RedisMessage{}),
+		})}).AsFtSearch(); n != 3 || !reflect.DeepEqual([]FtSearchDoc{
 			{Key: "1", Doc: map[string]string{"$": "1"}, Score: 1},
 			{Key: "2", Doc: map[string]string{"$": "2"}, Score: 2},
 		}, ret) {
 			t.Fatal("AsFtSearch not get value as expected")
 		}
-		if _, _, err := (RedisResult{val: RedisMessage{typ: '%', values: []RedisMessage{
-			{typ: '+', string: "total_results"},
+		if _, _, err := (RedisResult{val: redisMessageContainSlice('%', []RedisMessage{
+			redisMessageContainString('+', "total_results"),
 			{typ: ':', integer: 3},
-			{typ: '+', string: "results"},
-			{typ: '*', values: []RedisMessage{
-				{typ: '%', values: []RedisMessage{
-					{typ: '+', string: "id"},
-					{typ: '+', string: "1"},
-					{typ: '+', string: "extra_attributes"},
-					{typ: '%', values: []RedisMessage{
-						{typ: '+', string: "$"},
-						{typ: '+', string: "1"},
-					}},
-					{typ: '+', string: "score"},
-					{typ: ',', string: "1"},
-				}},
-			}},
-			{typ: '+', string: "error"},
-			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "mytimeout"},
-			}},
-		}}}).AsFtSearch(); err == nil || err.Error() != "mytimeout" {
+			redisMessageContainString('+', "results"),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainSlice('%', []RedisMessage{
+					redisMessageContainString('+', "id"),
+					redisMessageContainString('+', "1"),
+					redisMessageContainString('+', "extra_attributes"),
+					redisMessageContainSlice('%', []RedisMessage{
+						redisMessageContainString('+', "$"),
+						redisMessageContainString('+', "1"),
+					}),
+					redisMessageContainString('+', "score"),
+					redisMessageContainString(',', "1"),
+				}),
+			}),
+			redisMessageContainString('+', "error"),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('+', "mytimeout"),
+			}),
+		})}).AsFtSearch(); err == nil || err.Error() != "mytimeout" {
 			t.Fatal("AsFtSearch not get value as expected")
 		}
 	})
@@ -831,93 +834,93 @@ func TestRedisResult(t *testing.T) {
 		if _, _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsFtAggregate(); err == nil {
 			t.Fatal("AsFtAggregate not failed as expected")
 		}
-		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+		if n, ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
 			{typ: ':', integer: 3},
-			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "k1"},
-				{typ: '+', string: "v1"},
-				{typ: '+', string: "kk"},
-				{typ: '+', string: "vv"},
-			}},
-			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "k2"},
-				{typ: '+', string: "v2"},
-				{typ: '+', string: "kk"},
-				{typ: '+', string: "vv"},
-			}},
-		}}}).AsFtAggregate(); n != 3 || !reflect.DeepEqual([]map[string]string{
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('+', "k1"),
+				redisMessageContainString('+', "v1"),
+				redisMessageContainString('+', "kk"),
+				redisMessageContainString('+', "vv"),
+			}),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('+', "k2"),
+				redisMessageContainString('+', "v2"),
+				redisMessageContainString('+', "kk"),
+				redisMessageContainString('+', "vv"),
+			}),
+		})}).AsFtAggregate(); n != 3 || !reflect.DeepEqual([]map[string]string{
 			{"k1": "v1", "kk": "vv"},
 			{"k2": "v2", "kk": "vv"},
 		}, ret) {
 			t.Fatal("AsFtAggregate not get value as expected")
 		}
-		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+		if n, ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
 			{typ: ':', integer: 3},
-			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "k1"},
-				{typ: '+', string: "v1"},
-				{typ: '+', string: "kk"},
-				{typ: '+', string: "vv"},
-			}},
-		}}}).AsFtAggregate(); n != 3 || !reflect.DeepEqual([]map[string]string{
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('+', "k1"),
+				redisMessageContainString('+', "v1"),
+				redisMessageContainString('+', "kk"),
+				redisMessageContainString('+', "vv"),
+			}),
+		})}).AsFtAggregate(); n != 3 || !reflect.DeepEqual([]map[string]string{
 			{"k1": "v1", "kk": "vv"},
 		}, ret) {
 			t.Fatal("AsFtAggregate not get value as expected")
 		}
-		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
+		if n, ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
 			{typ: ':', integer: 3},
-		}}}).AsFtAggregate(); n != 3 || !reflect.DeepEqual([]map[string]string{}, ret) {
+		})}).AsFtAggregate(); n != 3 || !reflect.DeepEqual([]map[string]string{}, ret) {
 			t.Fatal("AsFtAggregate not get value as expected")
 		}
 	})
 
 	t.Run("AsFtAggregate RESP3", func(t *testing.T) {
-		if n, ret, _ := (RedisResult{val: RedisMessage{typ: '%', values: []RedisMessage{
-			{typ: '+', string: "total_results"},
+		if n, ret, _ := (RedisResult{val: redisMessageContainSlice('%', []RedisMessage{
+			redisMessageContainString('+', "total_results"),
 			{typ: ':', integer: 3},
-			{typ: '+', string: "results"},
-			{typ: '*', values: []RedisMessage{
-				{typ: '%', values: []RedisMessage{
-					{typ: '+', string: "extra_attributes"},
-					{typ: '%', values: []RedisMessage{
-						{typ: '+', string: "$"},
-						{typ: '+', string: "1"},
-					}},
-				}},
-				{typ: '%', values: []RedisMessage{
-					{typ: '+', string: "extra_attributes"},
-					{typ: '%', values: []RedisMessage{
-						{typ: '+', string: "$"},
-						{typ: '+', string: "2"},
-					}},
-				}},
-			}},
-			{typ: '+', string: "error"},
-			{typ: '*', values: []RedisMessage{}},
-		}}}).AsFtAggregate(); n != 3 || !reflect.DeepEqual([]map[string]string{
+			redisMessageContainString('+', "results"),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainSlice('%', []RedisMessage{
+					redisMessageContainString('+', "extra_attributes"),
+					redisMessageContainSlice('%', []RedisMessage{
+						redisMessageContainString('+', "$"),
+						redisMessageContainString('+', "1"),
+					}),
+				}),
+				redisMessageContainSlice('%', []RedisMessage{
+					redisMessageContainString('+', "extra_attributes"),
+					redisMessageContainSlice('%', []RedisMessage{
+						redisMessageContainString('+', "$"),
+						redisMessageContainString('+', "2"),
+					}),
+				}),
+			}),
+			redisMessageContainString('+', "error"),
+			redisMessageContainSlice('*', []RedisMessage{}),
+		})}).AsFtAggregate(); n != 3 || !reflect.DeepEqual([]map[string]string{
 			{"$": "1"},
 			{"$": "2"},
 		}, ret) {
 			t.Fatal("AsFtAggregate not get value as expected")
 		}
-		if _, _, err := (RedisResult{val: RedisMessage{typ: '%', values: []RedisMessage{
-			{typ: '+', string: "total_results"},
+		if _, _, err := (RedisResult{val: redisMessageContainSlice('%', []RedisMessage{
+			redisMessageContainString('+', "total_results"),
 			{typ: ':', integer: 3},
-			{typ: '+', string: "results"},
-			{typ: '*', values: []RedisMessage{
-				{typ: '%', values: []RedisMessage{
-					{typ: '+', string: "extra_attributes"},
-					{typ: '%', values: []RedisMessage{
-						{typ: '+', string: "$"},
-						{typ: '+', string: "1"},
-					}},
-				}},
-			}},
-			{typ: '+', string: "error"},
-			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "mytimeout"},
-			}},
-		}}}).AsFtAggregate(); err == nil || err.Error() != "mytimeout" {
+			redisMessageContainString('+', "results"),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainSlice('%', []RedisMessage{
+					redisMessageContainString('+', "extra_attributes"),
+					redisMessageContainSlice('%', []RedisMessage{
+						redisMessageContainString('+', "$"),
+						redisMessageContainString('+', "1"),
+					}),
+				}),
+			}),
+			redisMessageContainString('+', "error"),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('+', "mytimeout"),
+			}),
+		})}).AsFtAggregate(); err == nil || err.Error() != "mytimeout" {
 			t.Fatal("AsFtAggregate not get value as expected")
 		}
 	})
@@ -929,108 +932,108 @@ func TestRedisResult(t *testing.T) {
 		if _, _, _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsFtAggregateCursor(); err == nil {
 			t.Fatal("AsFtAggregate not failed as expected")
 		}
-		if c, n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '*', values: []RedisMessage{
+		if c, n, ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainSlice('*', []RedisMessage{
 				{typ: ':', integer: 3},
-				{typ: '*', values: []RedisMessage{
-					{typ: '+', string: "k1"},
-					{typ: '+', string: "v1"},
-					{typ: '+', string: "kk"},
-					{typ: '+', string: "vv"},
-				}},
-				{typ: '*', values: []RedisMessage{
-					{typ: '+', string: "k2"},
-					{typ: '+', string: "v2"},
-					{typ: '+', string: "kk"},
-					{typ: '+', string: "vv"},
-				}},
-			}},
+				redisMessageContainSlice('*', []RedisMessage{
+					redisMessageContainString('+', "k1"),
+					redisMessageContainString('+', "v1"),
+					redisMessageContainString('+', "kk"),
+					redisMessageContainString('+', "vv"),
+				}),
+				redisMessageContainSlice('*', []RedisMessage{
+					redisMessageContainString('+', "k2"),
+					redisMessageContainString('+', "v2"),
+					redisMessageContainString('+', "kk"),
+					redisMessageContainString('+', "vv"),
+				}),
+			}),
 			{typ: ':', integer: 1},
-		}}}).AsFtAggregateCursor(); c != 1 || n != 3 || !reflect.DeepEqual([]map[string]string{
+		})}).AsFtAggregateCursor(); c != 1 || n != 3 || !reflect.DeepEqual([]map[string]string{
 			{"k1": "v1", "kk": "vv"},
 			{"k2": "v2", "kk": "vv"},
 		}, ret) {
 			t.Fatal("AsFtAggregate not get value as expected")
 		}
-		if c, n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '*', values: []RedisMessage{
+		if c, n, ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainSlice('*', []RedisMessage{
 				{typ: ':', integer: 3},
-				{typ: '*', values: []RedisMessage{
-					{typ: '+', string: "k1"},
-					{typ: '+', string: "v1"},
-					{typ: '+', string: "kk"},
-					{typ: '+', string: "vv"},
-				}},
-			}},
+				redisMessageContainSlice('*', []RedisMessage{
+					redisMessageContainString('+', "k1"),
+					redisMessageContainString('+', "v1"),
+					redisMessageContainString('+', "kk"),
+					redisMessageContainString('+', "vv"),
+				}),
+			}),
 			{typ: ':', integer: 1},
-		}}}).AsFtAggregateCursor(); c != 1 || n != 3 || !reflect.DeepEqual([]map[string]string{
+		})}).AsFtAggregateCursor(); c != 1 || n != 3 || !reflect.DeepEqual([]map[string]string{
 			{"k1": "v1", "kk": "vv"},
 		}, ret) {
 			t.Fatal("AsFtAggregate not get value as expected")
 		}
-		if c, n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '*', values: []RedisMessage{
+		if c, n, ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainSlice('*', []RedisMessage{
 				{typ: ':', integer: 3},
-			}},
+			}),
 			{typ: ':', integer: 1},
-		}}}).AsFtAggregateCursor(); c != 1 || n != 3 || !reflect.DeepEqual([]map[string]string{}, ret) {
+		})}).AsFtAggregateCursor(); c != 1 || n != 3 || !reflect.DeepEqual([]map[string]string{}, ret) {
 			t.Fatal("AsFtAggregate not get value as expected")
 		}
 	})
 
 	t.Run("AsFtAggregate Cursor RESP3", func(t *testing.T) {
-		if c, n, ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '%', values: []RedisMessage{
-				{typ: '+', string: "total_results"},
+		if c, n, ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainSlice('%', []RedisMessage{
+				redisMessageContainString('+', "total_results"),
 				{typ: ':', integer: 3},
-				{typ: '+', string: "results"},
-				{typ: '*', values: []RedisMessage{
-					{typ: '%', values: []RedisMessage{
-						{typ: '+', string: "extra_attributes"},
-						{typ: '%', values: []RedisMessage{
-							{typ: '+', string: "$"},
-							{typ: '+', string: "1"},
-						}},
-					}},
-					{typ: '%', values: []RedisMessage{
-						{typ: '+', string: "extra_attributes"},
-						{typ: '%', values: []RedisMessage{
-							{typ: '+', string: "$"},
-							{typ: '+', string: "2"},
-						}},
-					}},
-				}},
-				{typ: '+', string: "error"},
-				{typ: '*', values: []RedisMessage{}},
-			}},
+				redisMessageContainString('+', "results"),
+				redisMessageContainSlice('*', []RedisMessage{
+					redisMessageContainSlice('%', []RedisMessage{
+						redisMessageContainString('+', "extra_attributes"),
+						redisMessageContainSlice('%', []RedisMessage{
+							redisMessageContainString('+', "$"),
+							redisMessageContainString('+', "1"),
+						}),
+					}),
+					redisMessageContainSlice('%', []RedisMessage{
+						redisMessageContainString('+', "extra_attributes"),
+						redisMessageContainSlice('%', []RedisMessage{
+							redisMessageContainString('+', "$"),
+							redisMessageContainString('+', "2"),
+						}),
+					}),
+				}),
+				redisMessageContainString('+', "error"),
+				redisMessageContainSlice('*', []RedisMessage{}),
+			}),
 			{typ: ':', integer: 1},
-		}}}).AsFtAggregateCursor(); c != 1 || n != 3 || !reflect.DeepEqual([]map[string]string{
+		})}).AsFtAggregateCursor(); c != 1 || n != 3 || !reflect.DeepEqual([]map[string]string{
 			{"$": "1"},
 			{"$": "2"},
 		}, ret) {
 			t.Fatal("AsFtAggregate not get value as expected")
 		}
-		if _, _, _, err := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '%', values: []RedisMessage{
-				{typ: '+', string: "total_results"},
+		if _, _, _, err := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainSlice('%', []RedisMessage{
+				redisMessageContainString('+', "total_results"),
 				{typ: ':', integer: 3},
-				{typ: '+', string: "results"},
-				{typ: '*', values: []RedisMessage{
-					{typ: '%', values: []RedisMessage{
-						{typ: '+', string: "extra_attributes"},
-						{typ: '%', values: []RedisMessage{
-							{typ: '+', string: "$"},
-							{typ: '+', string: "1"},
-						}},
-					}},
-				}},
-				{typ: '+', string: "error"},
-				{typ: '*', values: []RedisMessage{
-					{typ: '+', string: "mytimeout"},
-				}},
-			}},
+				redisMessageContainString('+', "results"),
+				redisMessageContainSlice('*', []RedisMessage{
+					redisMessageContainSlice('%', []RedisMessage{
+						redisMessageContainString('+', "extra_attributes"),
+						redisMessageContainSlice('%', []RedisMessage{
+							redisMessageContainString('+', "$"),
+							redisMessageContainString('+', "1"),
+						}),
+					}),
+				}),
+				redisMessageContainString('+', "error"),
+				redisMessageContainSlice('*', []RedisMessage{
+					redisMessageContainString('+', "mytimeout"),
+				}),
+			}),
 			{typ: ':', integer: 1},
-		}}}).AsFtAggregateCursor(); err == nil || err.Error() != "mytimeout" {
+		})}).AsFtAggregateCursor(); err == nil || err.Error() != "mytimeout" {
 			t.Fatal("AsFtAggregate not get value as expected")
 		}
 	})
@@ -1043,161 +1046,161 @@ func TestRedisResult(t *testing.T) {
 			t.Fatal("AsGeosearch not failed as expected")
 		}
 		//WithDist, WithHash, WithCoord
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '*', values: []RedisMessage{
-				{typ: '$', string: "k1"},
-				{typ: ',', string: "2.5"},
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('$', "k1"),
+				redisMessageContainString(',', "2.5"),
 				{typ: ':', integer: 1},
-				{typ: '*', values: []RedisMessage{
-					{typ: ',', string: "28.0473"},
-					{typ: ',', string: "26.2041"},
-				}},
-			}},
-			{typ: '*', values: []RedisMessage{
-				{typ: '$', string: "k2"},
-				{typ: ',', string: "4.5"},
+				redisMessageContainSlice('*', []RedisMessage{
+					redisMessageContainString(',', "28.0473"),
+					redisMessageContainString(',', "26.2041"),
+				}),
+			}),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('$', "k2"),
+				redisMessageContainString(',', "4.5"),
 				{typ: ':', integer: 4},
-				{typ: '*', values: []RedisMessage{
-					{typ: ',', string: "72.4973"},
-					{typ: ',', string: "13.2263"},
-				}},
-			}},
-		}}}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
+				redisMessageContainSlice('*', []RedisMessage{
+					redisMessageContainString(',', "72.4973"),
+					redisMessageContainString(',', "13.2263"),
+				}),
+			}),
+		})}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
 			{Name: "k1", Dist: 2.5, GeoHash: 1, Longitude: 28.0473, Latitude: 26.2041},
 			{Name: "k2", Dist: 4.5, GeoHash: 4, Longitude: 72.4973, Latitude: 13.2263},
 		}, ret) {
 			t.Fatal("AsGeosearch not get value as expected")
 		}
 		//WithHash, WithCoord
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '*', values: []RedisMessage{
-				{typ: '$', string: "k1"},
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('$', "k1"),
 				{typ: ':', integer: 1},
-				{typ: '*', values: []RedisMessage{
-					{typ: ',', string: "84.3877"},
-					{typ: ',', string: "33.7488"},
-				}},
-			}},
-			{typ: '*', values: []RedisMessage{
-				{typ: '$', string: "k2"},
+				redisMessageContainSlice('*', []RedisMessage{
+					redisMessageContainString(',', "84.3877"),
+					redisMessageContainString(',', "33.7488"),
+				}),
+			}),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('$', "k2"),
 				{typ: ':', integer: 4},
-				{typ: '*', values: []RedisMessage{
-					{typ: ',', string: "115.8613"},
-					{typ: ',', string: "31.9523"},
-				}},
-			}},
-		}}}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
+				redisMessageContainSlice('*', []RedisMessage{
+					redisMessageContainString(',', "115.8613"),
+					redisMessageContainString(',', "31.9523"),
+				}),
+			}),
+		})}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
 			{Name: "k1", GeoHash: 1, Longitude: 84.3877, Latitude: 33.7488},
 			{Name: "k2", GeoHash: 4, Longitude: 115.8613, Latitude: 31.9523},
 		}, ret) {
 			t.Fatal("AsGeosearch not get value as expected")
 		}
 		//WithDist, WithCoord
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '*', values: []RedisMessage{
-				{typ: '$', string: "k1"},
-				{typ: ',', string: "2.50076"},
-				{typ: '*', values: []RedisMessage{
-					{typ: ',', string: "84.3877"},
-					{typ: ',', string: "33.7488"},
-				}},
-			}},
-			{typ: '*', values: []RedisMessage{
-				{typ: '$', string: "k2"},
-				{typ: ',', string: "1024.96"},
-				{typ: '*', values: []RedisMessage{
-					{typ: ',', string: "115.8613"},
-					{typ: ',', string: "31.9523"},
-				}},
-			}},
-		}}}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('$', "k1"),
+				redisMessageContainString(',', "2.50076"),
+				redisMessageContainSlice('*', []RedisMessage{
+					redisMessageContainString(',', "84.3877"),
+					redisMessageContainString(',', "33.7488"),
+				}),
+			}),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('$', "k2"),
+				redisMessageContainString(',', "1024.96"),
+				redisMessageContainSlice('*', []RedisMessage{
+					redisMessageContainString(',', "115.8613"),
+					redisMessageContainString(',', "31.9523"),
+				}),
+			}),
+		})}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
 			{Name: "k1", Dist: 2.50076, Longitude: 84.3877, Latitude: 33.7488},
 			{Name: "k2", Dist: 1024.96, Longitude: 115.8613, Latitude: 31.9523},
 		}, ret) {
 			t.Fatal("AsGeosearch not get value as expected")
 		}
 		//WithCoord
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '*', values: []RedisMessage{
-				{typ: '$', string: "k1"},
-				{typ: '*', values: []RedisMessage{
-					{typ: ',', string: "122.4194"},
-					{typ: ',', string: "37.7749"},
-				}},
-			}},
-			{typ: '*', values: []RedisMessage{
-				{typ: '$', string: "k2"},
-				{typ: '*', values: []RedisMessage{
-					{typ: ',', string: "35.6762"},
-					{typ: ',', string: "139.6503"},
-				}},
-			}},
-		}}}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('$', "k1"),
+				redisMessageContainSlice('*', []RedisMessage{
+					redisMessageContainString(',', "122.4194"),
+					redisMessageContainString(',', "37.7749"),
+				}),
+			}),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('$', "k2"),
+				redisMessageContainSlice('*', []RedisMessage{
+					redisMessageContainString(',', "35.6762"),
+					redisMessageContainString(',', "139.6503"),
+				}),
+			}),
+		})}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
 			{Name: "k1", Longitude: 122.4194, Latitude: 37.7749},
 			{Name: "k2", Longitude: 35.6762, Latitude: 139.6503},
 		}, ret) {
 			t.Fatal("AsGeosearch not get value as expected")
 		}
 		//WithDist
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '*', values: []RedisMessage{
-				{typ: '$', string: "k1"},
-				{typ: ',', string: "2.50076"},
-			}},
-			{typ: '*', values: []RedisMessage{
-				{typ: '$', string: "k2"},
-				{typ: ',', string: strconv.FormatFloat(math.MaxFloat64, 'E', -1, 64)},
-			}},
-		}}}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('$', "k1"),
+				redisMessageContainString(',', "2.50076"),
+			}),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('$', "k2"),
+				redisMessageContainString(',', strconv.FormatFloat(math.MaxFloat64, 'E', -1, 64)),
+			}),
+		})}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
 			{Name: "k1", Dist: 2.50076},
 			{Name: "k2", Dist: math.MaxFloat64},
 		}, ret) {
 			t.Fatal("AsGeosearch not get value as expected")
 		}
 		//WithHash
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '*', values: []RedisMessage{
-				{typ: '$', string: "k1"},
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('$', "k1"),
 				{typ: ':', integer: math.MaxInt64},
-			}},
-			{typ: '*', values: []RedisMessage{
-				{typ: '$', string: "k2"},
+			}),
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('$', "k2"),
 				{typ: ':', integer: 22296},
-			}},
-		}}}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
+			}),
+		})}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
 			{Name: "k1", GeoHash: math.MaxInt64},
 			{Name: "k2", GeoHash: 22296},
 		}, ret) {
 			t.Fatal("AsGeosearch not get value as expected")
 		}
 		//With no additional options
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '$', string: "k1"},
-			{typ: '$', string: "k2"},
-		}}}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainString('$', "k1"),
+			redisMessageContainString('$', "k2"),
+		})}).AsGeosearch(); !reflect.DeepEqual([]GeoLocation{
 			{Name: "k1"},
 			{Name: "k2"},
 		}, ret) {
 			t.Fatal("AsGeosearch not get value as expected")
 		}
 		//With wrong distance
-		if _, err := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '*', values: []RedisMessage{
-				{typ: '$', string: "k1"},
-				{typ: ',', string: "wrong distance"},
-			}},
-		}}}).AsGeosearch(); err == nil {
+		if _, err := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('$', "k1"),
+				redisMessageContainString(',', "wrong distance"),
+			}),
+		})}).AsGeosearch(); err == nil {
 			t.Fatal("AsGeosearch not failed as expected")
 		}
 		//With wrong coordinates
-		if _, err := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '*', values: []RedisMessage{
-				{typ: '$', string: "k2"},
-				{typ: '*', values: []RedisMessage{
-					{typ: ',', string: "35.6762"},
-				}},
-			}},
-		}}}).AsGeosearch(); err == nil {
+		if _, err := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('$', "k2"),
+				redisMessageContainSlice('*', []RedisMessage{
+					redisMessageContainString(',', "35.6762"),
+				}),
+			}),
+		})}).AsGeosearch(); err == nil {
 			t.Fatal("AsGeosearch not failed as expected")
 		}
 	})
@@ -1259,17 +1262,17 @@ func TestRedisResult(t *testing.T) {
 		}{
 			{
 				input: RedisResult{
-					val: RedisMessage{typ: '*', values: []RedisMessage{
-						{typ: '*', values: []RedisMessage{
+					val: redisMessageContainSlice('*', []RedisMessage{
+						redisMessageContainSlice('*', []RedisMessage{
 							{typ: ':', integer: 0},
 							{typ: ':', integer: 0},
-							{typ: '*', values: []RedisMessage{ // master
-								{typ: '+', string: "127.0.3.1"},
+							redisMessageContainSlice('*', []RedisMessage{ // master
+								redisMessageContainString('+', "127.0.3.1"),
 								{typ: ':', integer: 3},
-								{typ: '+', string: ""},
-							}},
-						}},
-					}},
+								redisMessageContainString('+', ""),
+							}),
+						}),
+					}),
 				},
 				expected: `{"Message":{"Value":[{"Value":[{"Value":0,"Type":"int64"},{"Value":0,"Type":"int64"},{"Value":[{"Value":"127.0.3.1","Type":"simple string"},{"Value":3,"Type":"int64"},{"Value":"","Type":"simple string"}],"Type":"array"}],"Type":"array"}],"Type":"array"}}`,
 			},
@@ -1299,7 +1302,8 @@ func TestRedisMessage(t *testing.T) {
 	})
 	t.Run("Trim ERR prefix", func(t *testing.T) {
 		// kvrocks: https://github.com/redis/rueidis/issues/152#issuecomment-1333923750
-		if (&RedisMessage{typ: '-', string: "ERR no_prefix"}).Error().Error() != "no_prefix" {
+		redisMessageError := redisMessageContainString('-', "ERR no_prefix")
+		if (&redisMessageError).Error().Error() != "no_prefix" {
 			t.Fatal("fail to trim ERR")
 		}
 	})
@@ -1452,7 +1456,8 @@ func TestRedisMessage(t *testing.T) {
 		}
 
 		// Test case where the message type is '*', which is not a RESP3 string
-		if val, err := (&RedisMessage{typ: '*', values: []RedisMessage{{}}}).AsInt64(); err == nil {
+		redisMessageArrayWithEmptyMessage := redisMessageContainSlice('*', []RedisMessage{{}})
+		if val, err := (&redisMessageArrayWithEmptyMessage).AsInt64(); err == nil {
 			t.Fatal("AsInt64 did not fail as expected")
 		} else if val != 0 {
 			t.Fatalf("expected 0, got %d", val)
@@ -1470,7 +1475,8 @@ func TestRedisMessage(t *testing.T) {
 		}
 
 		// Test case where the message type is '*', which is not a RESP3 string
-		if val, err := (&RedisMessage{typ: '*', values: []RedisMessage{{}}}).AsUint64(); err == nil {
+		redisMessageArrayWithEmptyMessage := redisMessageContainSlice('*', []RedisMessage{{}})
+		if val, err := (&redisMessageArrayWithEmptyMessage).AsUint64(); err == nil {
 			t.Fatal("AsUint64 did not fail as expected")
 		} else if val != 0 {
 			t.Fatalf("expected 0, got %d", val)
@@ -1670,11 +1676,13 @@ func TestRedisMessage(t *testing.T) {
 			t.Fatal("AsXRangeEntry did not fail as expected")
 		}
 
-		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{{typ: '_'}, {typ: '%'}}}).AsXRangeEntry(); err == nil {
+		redisMessageNullAndMap := redisMessageContainSlice('*', []RedisMessage{{typ: '_'}, {typ: '%'}})
+		if _, err := (&redisMessageNullAndMap).AsXRangeEntry(); err == nil {
 			t.Fatal("AsXRangeEntry did not fail as expected")
 		}
 
-		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{{typ: ':'}, {typ: '%'}}}).AsXRangeEntry(); err == nil {
+		redisMessageIntAndMap := redisMessageContainSlice('*', []RedisMessage{{typ: ':'}, {typ: '%'}})
+		if _, err := (&redisMessageIntAndMap).AsXRangeEntry(); err == nil {
 			t.Fatal("AsXRangeEntry did not fail as expected")
 		} else if !strings.Contains(err.Error(), fmt.Sprintf("redis message type %s is not a string", typeNames[':'])) {
 			t.Fatalf("unexpected error: %v", err)
@@ -1690,11 +1698,13 @@ func TestRedisMessage(t *testing.T) {
 			t.Fatal("AsXRangeEntry did not fail as expected")
 		}
 
-		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{{typ: '+'}, {typ: '-'}}}).AsXRangeEntry(); err == nil {
+		redisMessageStringAndErr := redisMessageContainSlice('*', []RedisMessage{{typ: '+'}, {typ: '-'}})
+		if _, err := (&redisMessageStringAndErr).AsXRangeEntry(); err == nil {
 			t.Fatal("AsXRangeEntry did not fail as expected")
 		}
 
-		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{{typ: '+'}, {typ: 't'}}}).AsXRangeEntry(); err == nil {
+		redisMessageStringAndUnknown := redisMessageContainSlice('*', []RedisMessage{{typ: '+'}, {typ: 't'}})
+		if _, err := (&redisMessageStringAndUnknown).AsXRangeEntry(); err == nil {
 			t.Fatal("AsXRangeEntry did not fail as expected")
 		} else if !strings.Contains(err.Error(), "redis message type t is not a map/array/set") {
 			t.Fatalf("unexpected error: %v", err)
@@ -1706,7 +1716,8 @@ func TestRedisMessage(t *testing.T) {
 			t.Fatal("AsXRange not failed as expected")
 		}
 
-		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{{typ: '_'}}}).AsXRange(); err == nil {
+		redisMessageArrayWithNull := redisMessageContainSlice('*', []RedisMessage{{typ: '_'}})
+		if _, err := (&redisMessageArrayWithNull).AsXRange(); err == nil {
 			t.Fatal("AsXRange not failed as expected")
 		}
 	})
@@ -1716,27 +1727,30 @@ func TestRedisMessage(t *testing.T) {
 			t.Fatal("AsXRead did not fail as expected")
 		}
 
-		if _, err := (&RedisMessage{typ: '%', values: []RedisMessage{
-			{typ: '+', string: "stream1"},
-			{typ: '*', values: []RedisMessage{{typ: '*', values: []RedisMessage{{string: "id1", typ: '+'}}}}},
-		}}).AsXRead(); err == nil {
+		redisMessageMapIncorrectLen := redisMessageContainSlice('%', []RedisMessage{
+			redisMessageContainString('+', "stream1"),
+			redisMessageContainSlice('*', []RedisMessage{redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "id1")})}),
+		})
+		if _, err := (&redisMessageMapIncorrectLen).AsXRead(); err == nil {
 			t.Fatal("AsXRead did not fail as expected")
 		}
 
-		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "stream1"},
-			}},
-		}}).AsXRead(); err == nil {
+		redisMessageArrayIncorrectLen := redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('+', "stream1"),
+			}),
+		})
+		if _, err := (&redisMessageArrayIncorrectLen).AsXRead(); err == nil {
 			t.Fatal("AsXRead did not fail as expected")
 		}
 
-		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "stream1"},
-				{typ: '*', values: []RedisMessage{{typ: '*', values: []RedisMessage{{string: "id1", typ: '+'}}}}},
-			}},
-		}}).AsXRead(); err == nil {
+		redisMessageArrayIncorrectLen2 := redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('+', "stream1"),
+				redisMessageContainSlice('*', []RedisMessage{redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "id1")})}),
+			}),
+		})
+		if _, err := (&redisMessageArrayIncorrectLen2).AsXRead(); err == nil {
 			t.Fatal("AsXRead did not fail as expected")
 		}
 
@@ -1763,18 +1777,20 @@ func TestRedisMessage(t *testing.T) {
 		if _, err := (&RedisMessage{typ: '_'}).AsZScores(); err == nil {
 			t.Fatal("AsZScore not failed as expected")
 		}
-		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '+', string: "m1"},
-			{typ: '+', string: "m2"},
-		}}).AsZScores(); err == nil {
+		redisMessageStringArray := redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainString('+', "m1"),
+			redisMessageContainString('+', "m2"),
+		})
+		if _, err := (&redisMessageStringArray).AsZScores(); err == nil {
 			t.Fatal("AsZScores not fails as expected")
 		}
-		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '*', values: []RedisMessage{
-				{typ: '+', string: "m1"},
-				{typ: '+', string: "m2"},
-			}},
-		}}).AsZScores(); err == nil {
+		redisMessageNestedStringArray := redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainSlice('*', []RedisMessage{
+				redisMessageContainString('+', "m1"),
+				redisMessageContainString('+', "m2"),
+			}),
+		})
+		if _, err := (&redisMessageNestedStringArray).AsZScores(); err == nil {
 			t.Fatal("AsZScores not fails as expected")
 		}
 	})
@@ -1784,16 +1800,18 @@ func TestRedisMessage(t *testing.T) {
 			t.Fatal("AsLMPop did not fail as expected")
 		}
 
-		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '+', string: "k"},
+		redisMessageStringAndNull := redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainString('+', "k"),
 			{typ: '_'},
-		}}).AsLMPop(); err == nil {
+		})
+		if _, err := (&redisMessageStringAndNull).AsLMPop(); err == nil {
 			t.Fatal("AsLMPop did not fail as expected")
 		}
 
-		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '+', string: "k"},
-		}}).AsLMPop(); err == nil {
+		redisMessageStringArray := redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainString('+', "k"),
+		})
+		if _, err := (&redisMessageStringArray).AsLMPop(); err == nil {
 			t.Fatal("AsLMPop did not fail as expected")
 		} else if !strings.Contains(err.Error(), fmt.Sprintf("redis message type %s is not a LMPOP response", typeNames['*'])) {
 			t.Fatalf("unexpected error: %v", err)
@@ -1805,16 +1823,18 @@ func TestRedisMessage(t *testing.T) {
 			t.Fatal("AsZMPop did not fail as expected")
 		}
 
-		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '+', string: "k"},
+		redisMessageStringAndNull := redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainString('+', "k"),
 			{typ: '_'},
-		}}).AsZMPop(); err == nil {
+		})
+		if _, err := (&redisMessageStringAndNull).AsZMPop(); err == nil {
 			t.Fatal("AsZMPop did not fail as expected")
 		}
 
-		if _, err := (&RedisMessage{typ: '*', values: []RedisMessage{
-			{typ: '+', string: "k"},
-		}}).AsZMPop(); err == nil {
+		redisMessageStringArray := redisMessageContainSlice('*', []RedisMessage{
+			redisMessageContainString('+', "k"),
+		})
+		if _, err := (&redisMessageStringArray).AsZMPop(); err == nil {
 			t.Fatal("AsZMPop did not fail as expected")
 		} else if !strings.Contains(err.Error(), fmt.Sprintf("redis message type %s is not a ZMPOP response", typeNames['*'])) {
 			t.Fatalf("unexpected error: %v", err)
@@ -1864,29 +1884,31 @@ func TestRedisMessage(t *testing.T) {
 		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsScanEntry(); err == nil {
 			t.Fatal("AsScanEntry not failed as expected")
 		}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{string: "1", typ: '+'}, {typ: '*', values: []RedisMessage{{typ: '+', string: "a"}, {typ: '+', string: "b"}}}}}}).AsScanEntry(); !reflect.DeepEqual(ScanEntry{
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "1"), redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "a"), redisMessageContainString('+', "b")})})}).AsScanEntry(); !reflect.DeepEqual(ScanEntry{
 			Cursor:   1,
 			Elements: []string{"a", "b"},
 		}, ret) {
 			t.Fatal("AsScanEntry not get value as expected")
 		}
-		if ret, _ := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{string: "0", typ: '+'}, {typ: '_'}}}}).AsScanEntry(); !reflect.DeepEqual(ScanEntry{}, ret) {
+		if ret, _ := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "0"), {typ: '_'}})}).AsScanEntry(); !reflect.DeepEqual(ScanEntry{}, ret) {
 			t.Fatal("AsScanEntry not get value as expected")
 		}
-		if _, err := (RedisResult{val: RedisMessage{typ: '*', values: []RedisMessage{{string: "0", typ: '+'}}}}).AsScanEntry(); err == nil || !strings.Contains(err.Error(), "a scan response or its length is not at least 2") {
+		if _, err := (RedisResult{val: redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "0")})}).AsScanEntry(); err == nil || !strings.Contains(err.Error(), "a scan response or its length is not at least 2") {
 			t.Fatal("AsScanEntry not get value as expected")
 		}
 	})
 
 	t.Run("ToMap with non-string key", func(t *testing.T) {
-		_, err := (&RedisMessage{typ: '~', values: []RedisMessage{{typ: ':'}, {typ: ':'}}}).ToMap()
+		redisMessageSet := redisMessageContainSlice('~', []RedisMessage{{typ: ':'}, {typ: ':'}})
+		_, err := (&redisMessageSet).ToMap()
 		if err == nil {
 			t.Fatal("ToMap did not fail as expected")
 		}
 		if !strings.Contains(err.Error(), "redis message type set is not a RESP3 map") {
 			t.Fatalf("ToMap failed with unexpected error: %v", err)
 		}
-		_, err = (&RedisMessage{typ: '%', values: []RedisMessage{{typ: ':'}, {typ: ':'}}}).ToMap()
+		redisMessageMap := redisMessageContainSlice('%', []RedisMessage{{typ: ':'}, {typ: ':'}})
+		_, err = (&redisMessageMap).ToMap()
 		if err == nil {
 			t.Fatal("ToMap did not fail as expected")
 		}
@@ -1951,21 +1973,26 @@ func TestRedisMessage(t *testing.T) {
 			expected string
 		}{
 			{
-				input: RedisMessage{typ: '*', values: []RedisMessage{
-					{typ: '*', values: []RedisMessage{
+				input: redisMessageContainSlice('*', []RedisMessage{
+					redisMessageContainSlice('*', []RedisMessage{
 						{typ: ':', integer: 0},
 						{typ: ':', integer: 0},
-						{typ: '*', values: []RedisMessage{
-							{typ: '+', string: "127.0.3.1"},
+						redisMessageContainSlice('*', []RedisMessage{
+							redisMessageContainString('+', "127.0.3.1"),
 							{typ: ':', integer: 3},
-							{typ: '+', string: ""},
-						}},
-					}},
-				}},
+							redisMessageContainString('+', ""),
+						}),
+					}),
+				}),
 				expected: `{"Value":[{"Value":[{"Value":0,"Type":"int64"},{"Value":0,"Type":"int64"},{"Value":[{"Value":"127.0.3.1","Type":"simple string"},{"Value":3,"Type":"int64"},{"Value":"","Type":"simple string"}],"Type":"array"}],"Type":"array"}],"Type":"array"}`,
 			},
 			{
-				input:    RedisMessage{typ: '+', string: "127.0.3.1", ttl: [7]byte{97, 77, 74, 61, 138, 1, 0}},
+				input: RedisMessage{
+					typ:     '+',
+					bytes:   unsafe.StringData("127.0.3.1"),
+					integer: int64(len("127.0.3.1")),
+					ttl:     [7]byte{97, 77, 74, 61, 138, 1, 0},
+				},
 				expected: `{"Value":"127.0.3.1","Type":"simple string","TTL":"2023-08-28 17:56:34.273 +0000 UTC"}`,
 			},
 			{
@@ -1981,11 +2008,11 @@ func TestRedisMessage(t *testing.T) {
 				expected: `{"Type":"null","Error":"redis nil message"}`,
 			},
 			{
-				input:    RedisMessage{typ: typeSimpleErr, string: "ERR foo"},
+				input:    redisMessageContainString(typeSimpleErr, "ERR foo"),
 				expected: `{"Type":"simple error","Error":"foo"}`,
 			},
 			{
-				input:    RedisMessage{typ: typeBlobErr, string: "ERR foo"},
+				input:    redisMessageContainString(typeBlobErr, "ERR foo"),
 				expected: `{"Type":"blob error","Error":"foo"}`,
 			},
 		}
@@ -1999,13 +2026,13 @@ func TestRedisMessage(t *testing.T) {
 
 	t.Run("CacheMarshal and CacheUnmarshalView", func(t *testing.T) {
 		m1 := RedisMessage{typ: '_'}
-		m2 := RedisMessage{typ: '+', string: "random"}
+		m2 := redisMessageContainString('+', "random")
 		m3 := RedisMessage{typ: '#', integer: 1}
 		m4 := RedisMessage{typ: ':', integer: -1234}
-		m5 := RedisMessage{typ: ',', string: "-1.5"}
-		m6 := RedisMessage{typ: '%', values: nil}
-		m7 := RedisMessage{typ: '~', values: []RedisMessage{m1, m2, m3, m4, m5, m6}}
-		m8 := RedisMessage{typ: '*', values: []RedisMessage{m1, m2, m3, m4, m5, m6, m7}}
+		m5 := redisMessageContainString(',', "-1.5")
+		m6 := redisMessageContainSlice('%', nil)
+		m7 := redisMessageContainSlice('~', []RedisMessage{m1, m2, m3, m4, m5, m6})
+		m8 := redisMessageContainSlice('*', []RedisMessage{m1, m2, m3, m4, m5, m6, m7})
 		msgs := []RedisMessage{m1, m2, m3, m4, m5, m6, m7, m8}
 		now := time.Now()
 		for i := range msgs {

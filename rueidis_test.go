@@ -51,13 +51,13 @@ func accept(t *testing.T, ln net.Listener) (*redisMock, error) {
 		conn: conn,
 	}
 	mock.Expect("HELLO", "3").
-		Reply(RedisMessage{
-			typ: '%',
-			values: []RedisMessage{
-				{typ: '+', string: "proto"},
+		Reply(redisMessageContainSlice(
+			'%',
+			[]RedisMessage{
+				redisMessageContainString('+', "proto"),
 				{typ: ':', integer: 3},
 			},
-		})
+		))
 	mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 		ReplyString("OK")
 	return mock, nil
@@ -118,7 +118,7 @@ func TestNewClusterClientError(t *testing.T) {
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
-			mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: "other error"})
+			mock.Expect("CLUSTER", "SLOTS").Reply(redisMessageContainString('-', "other error"))
 			mock.Expect("PING").ReplyString("OK")
 			mock.Close()
 			close(done)
@@ -222,7 +222,7 @@ func TestFallBackSingleClient(t *testing.T) {
 			ReplyError("UNKNOWN COMMAND")
 		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 			ReplyError("UNKNOWN COMMAND")
-		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: "ERR This instance has cluster support disabled"})
+		mock.Expect("CLUSTER", "SLOTS").Reply(redisMessageContainString('-', "ERR This instance has cluster support disabled"))
 		mock.Expect("PING").ReplyString("OK")
 		mock.Close()
 		close(done)
@@ -341,7 +341,7 @@ func TestTLSClient(t *testing.T) {
 			ReplyError("UNKNOWN COMMAND")
 		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 			ReplyError("UNKNOWN COMMAND")
-		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: "ERR This instance has cluster support disabled"})
+		mock.Expect("CLUSTER", "SLOTS").Reply(redisMessageContainString('-', "ERR This instance has cluster support disabled"))
 		mock.Expect("PING").ReplyString("OK")
 		mock.Close()
 		close(done)
