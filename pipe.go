@@ -71,11 +71,11 @@ type pipe struct {
 	close           chan struct{}
 	onInvalidations func([]RedisMessage)
 	r2psFn          func(context.Context) (p *pipe, err error) // func to build pipe for resp2 pubsub
-	r2pipe          *pipe                       // internal pipe for resp2 pubsub only
-	ssubs           *subs                       // pubsub smessage subscriptions
-	nsubs           *subs                       // pubsub  message subscriptions
-	psubs           *subs                       // pubsub pmessage subscriptions
-	pingTimer       *time.Timer					// timer for background ping
+	r2pipe          *pipe                                      // internal pipe for resp2 pubsub only
+	ssubs           *subs                                      // pubsub smessage subscriptions
+	nsubs           *subs                                      // pubsub  message subscriptions
+	psubs           *subs                                      // pubsub pmessage subscriptions
+	pingTimer       *time.Timer                                // timer for background ping
 	info            map[string]RedisMessage
 	timeout         time.Duration
 	pinggap         time.Duration
@@ -90,7 +90,7 @@ type pipe struct {
 	recvs           int32
 	r2ps            bool // identify this pipe is used for resp2 pubsub or not
 	noNoDelay       bool
-	optin           bool
+	optIn           bool
 }
 
 type pipeFn func(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error)
@@ -119,7 +119,7 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 		noNoDelay:     option.DisableTCPNoDelay,
 
 		r2ps:  r2ps,
-		optin: isOptIn(option.ClientTrackingOptions),
+		optIn: isOptIn(option.ClientTrackingOptions),
 	}
 	if !nobg {
 		p.queue = newRing(option.RingScaleEachConn)
@@ -631,14 +631,14 @@ func (p *pipe) _backgroundRead() (err error) {
 
 func (p *pipe) backgroundPing() {
 	var prev, recv int32
-	
+
 	prev = atomic.LoadInt32(&p.recvs)
 	p.pingTimer = time.AfterFunc(p.pinggap, func() {
 		var err error
 		recv = atomic.LoadInt32(&p.recvs)
-		defer func(){
-			prev = atomic.LoadInt32(&p.recvs)
+		defer func() {
 			if err == nil {
+				prev = atomic.LoadInt32(&p.recvs)
 				p.pingTimer.Reset(p.pinggap)
 			}
 		}()
@@ -1302,7 +1302,7 @@ next:
 }
 
 func (p *pipe) optInCmd() cmds.Completed {
-	if p.optin {
+	if p.optIn {
 		return cmds.OptInCmd
 	}
 	return cmds.OptInNopCmd

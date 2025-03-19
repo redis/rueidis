@@ -169,6 +169,7 @@ type pipe struct {
 	ssubs           *any                        // pubsub smessage subscriptions
 	nsubs           *any                        // pubsub  message subscriptions
 	psubs           *any                        // pubsub pmessage subscriptions
+	pingTimer       *time.Timer
 	info            map[string]rueidis.RedisMessage
 	timeout         time.Duration
 	pinggap         time.Duration
@@ -182,6 +183,8 @@ type pipe struct {
 	waits           int32
 	recvs           int32
 	r2ps            bool // identify this pipe is used for resp2 pubsub or not
+	noNoDelay       bool
+	optIn           bool
 }
 
 type stream struct {

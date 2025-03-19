@@ -62,7 +62,7 @@ type mux struct {
 	maxm   int
 
 	usePool bool
-	optin   bool
+	optIn   bool
 }
 
 func makeMux(dst string, option *ClientOption, dialFn dialFn) *mux {
@@ -98,7 +98,7 @@ func newMux(dst string, option *ClientOption, init, dead wire, wireFn wireFn, wi
 		maxm: option.BlockingPipeline,
 
 		usePool: option.DisableAutoPipelining,
-		optin:   isOptIn(option.ClientTrackingOptions),
+		optIn:   isOptIn(option.ClientTrackingOptions),
 	}
 	m.clhks.Store(emptyclhks)
 	for i := 0; i < len(m.wire); i++ {
@@ -120,7 +120,7 @@ func isOptIn(opts []string) bool {
 }
 
 func (m *mux) OptInCmd() cmds.Completed {
-	if m.optin {
+	if m.optIn {
 		return cmds.OptInCmd
 	}
 	return cmds.OptInNopCmd
