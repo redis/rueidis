@@ -75,6 +75,7 @@ type pipe struct {
 	ssubs           *subs                       // pubsub smessage subscriptions
 	nsubs           *subs                       // pubsub  message subscriptions
 	psubs           *subs                       // pubsub pmessage subscriptions
+	pingTimer       *time.Timer					// timer for background ping
 	info            map[string]RedisMessage
 	timeout         time.Duration
 	pinggap         time.Duration
@@ -326,7 +327,7 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 			p.background()
 		}
 		if p.timeout > 0 && p.pinggap > 0 {
-			go p.backgroundPing()
+			p.backgroundPing()
 		}
 	}
 	return p, nil
@@ -629,37 +630,37 @@ func (p *pipe) _backgroundRead() (err error) {
 }
 
 func (p *pipe) backgroundPing() {
-	var err error
 	var prev, recv int32
-
-	ticker := time.NewTicker(p.pinggap)
-	defer ticker.Stop()
-	for ; err == nil; prev = recv {
-		select {
-		case <-ticker.C:
-			recv = atomic.LoadInt32(&p.recvs)
-			if recv != prev || atomic.LoadInt32(&p.blcksig) != 0 || (atomic.LoadInt32(&p.state) == 0 && atomic.LoadInt32(&p.waits) != 0) {
-				continue
+	
+	prev = atomic.LoadInt32(&p.recvs)
+	p.pingTimer = time.AfterFunc(p.pinggap, func() {
+		var err error
+		recv = atomic.LoadInt32(&p.recvs)
+		defer func(){
+			prev = atomic.LoadInt32(&p.recvs)
+			if err == nil {
+				p.pingTimer.Reset(p.pinggap)
 			}
-			ch := make(chan error, 1)
-			tm := time.NewTimer(p.timeout)
-			go func() { ch <- p.Do(context.Background(), cmds.PingCmd).NonRedisError() }()
-			select {
-			case <-tm.C:
-				err = os.ErrDeadlineExceeded
-			case err = <-ch:
-				tm.Stop()
-			}
-			if err != nil && atomic.LoadInt32(&p.blcksig) != 0 {
-				err = nil
-			}
-		case <-p.close:
+		}()
+		if recv != prev || atomic.LoadInt32(&p.blcksig) != 0 || (atomic.LoadInt32(&p.state) == 0 && atomic.LoadInt32(&p.waits) != 0) {
 			return
 		}
-	}
-	if err != ErrClosing {
-		p._exit(err)
-	}
+		ch := make(chan error, 1)
+		tm := time.NewTimer(p.timeout)
+		go func() { ch <- p.Do(context.Background(), cmds.PingCmd).NonRedisError() }()
+		select {
+		case <-tm.C:
+			err = os.ErrDeadlineExceeded
+		case err = <-ch:
+			tm.Stop()
+		}
+		if err != nil && atomic.LoadInt32(&p.blcksig) != 0 {
+			err = nil
+		}
+		if err != nil && err != ErrClosing {
+			p._exit(err)
+		}
+	})
 }
 
 func (p *pipe) handlePush(values []RedisMessage) (reply bool, unsubscribe bool) {
@@ -863,7 +864,6 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	}
 
 	cmds.CompletedCS(cmd).Verify()
-
 	if cmd.IsBlock() {
 		atomic.AddInt32(&p.blcksig, 1)
 		defer func() {
@@ -878,7 +878,6 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 			return p._r2pipe(ctx).Do(ctx, cmd)
 		}
 	}
-
 	waits := atomic.AddInt32(&p.waits, 1) // if this is 1, and background worker is not started, no need to queue
 	state := atomic.LoadInt32(&p.state)
 
@@ -1586,6 +1585,9 @@ func (p *pipe) Close() {
 	}
 	atomic.AddInt32(&p.waits, -1)
 	atomic.AddInt32(&p.blcksig, -1)
+	if p.pingTimer != nil {
+		p.pingTimer.Stop()
+	}
 	if p.conn != nil {
 		p.conn.Close()
 	}
