@@ -377,6 +377,9 @@ func (p *pipe) _background() {
 			}()
 		}
 	}
+	if p.pingTimer != nil {
+		p.pingTimer.Stop()
+	}
 	err := p.Error()
 	p.nsubs.Close()
 	p.psubs.Close()
@@ -637,7 +640,7 @@ func (p *pipe) backgroundPing() {
 		var err error
 		recv = atomic.LoadInt32(&p.recvs)
 		defer func() {
-			if err == nil {
+			if err == nil && p.Error() == nil {
 				prev = atomic.LoadInt32(&p.recvs)
 				p.pingTimer.Reset(p.pinggap)
 			}
