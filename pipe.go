@@ -87,6 +87,7 @@ type pipe struct {
 	state           int32
 	waits           int32
 	recvs           int32
+	bgState         int32
 	r2ps            bool // identify this pipe is used for resp2 pubsub or not
 	noNoDelay       bool
 	optIn           bool
@@ -334,7 +335,8 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 
 func (p *pipe) background() {
 	if p.queue != nil {
-		if atomic.CompareAndSwapInt32(&p.state, 0, 1) {
+		atomic.CompareAndSwapInt32(&p.state, 0, 1)
+		if atomic.CompareAndSwapInt32(&p.bgState, 0, 1) {
 			go p._background()
 		}
 	}

@@ -181,6 +181,7 @@ type pipe struct {
 	state           int32
 	waits           int32
 	recvs           int32
+	bgState         int32
 	r2ps            bool // identify this pipe is used for resp2 pubsub or not
 	noNoDelay       bool
 	optIn           bool
