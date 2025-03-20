@@ -174,7 +174,6 @@ type pipe struct {
 	timeout         time.Duration
 	pinggap         time.Duration
 	maxFlushDelay   time.Duration
-	once            sync.Once
 	r2mu            sync.Mutex
 	version         int32
 	_               [10]int32

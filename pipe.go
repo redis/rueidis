@@ -80,7 +80,6 @@ type pipe struct {
 	timeout         time.Duration
 	pinggap         time.Duration
 	maxFlushDelay   time.Duration
-	once            sync.Once
 	r2mu            sync.Mutex
 	version         int32
 	_               [10]int32
@@ -335,8 +334,9 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 
 func (p *pipe) background() {
 	if p.queue != nil {
-		atomic.CompareAndSwapInt32(&p.state, 0, 1)
-		p.once.Do(func() { go p._background() })
+		if atomic.CompareAndSwapInt32(&p.state, 0, 1) {
+			go p._background()
+		}
 	}
 }
 
