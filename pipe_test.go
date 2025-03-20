@@ -4951,8 +4951,8 @@ func TestOngoingCancelContextInPipelineMode_Do(t *testing.T) {
 		}()
 	}
 
-	for atomic.LoadInt32(&p.waits) != 5 {
-		t.Logf("wait p.waits to be 5 %v", atomic.LoadInt32(&p.waits))
+	for uint32(p.wrCounter.Load()&0xFFFFFFFF) != 5 {
+		t.Logf("wait p.waits to be 5 %v", uint32(p.wrCounter.Load()&0xFFFFFFFF))
 		time.Sleep(time.Millisecond * 100)
 	}
 
@@ -4991,8 +4991,8 @@ func TestOngoingWriteTimeoutInPipelineMode_Do(t *testing.T) {
 			}
 		}()
 	}
-	for atomic.LoadInt32(&p.waits) != 5 {
-		t.Logf("wait p.waits to be 5 %v", atomic.LoadInt32(&p.waits))
+	for uint32(p.wrCounter.Load()&0xFFFFFFFF) != 5 {
+		t.Logf("wait p.waits to be 5 %v", uint32(p.wrCounter.Load()&0xFFFFFFFF))
 		time.Sleep(time.Millisecond * 100)
 	}
 	for atomic.LoadInt32(&timeout) != 5 {
@@ -5025,8 +5025,8 @@ func TestOngoingCancelContextInPipelineMode_DoMulti(t *testing.T) {
 		}()
 	}
 
-	for atomic.LoadInt32(&p.waits) != 5 {
-		t.Logf("wait p.waits to be 5 %v", atomic.LoadInt32(&p.waits))
+	for uint32(p.wrCounter.Load()&0xFFFFFFFF) != 5 {
+		t.Logf("wait p.waits to be 5 %v", uint32(p.wrCounter.Load()&0xFFFFFFFF))
 		time.Sleep(time.Millisecond * 100)
 	}
 
@@ -5065,8 +5065,8 @@ func TestOngoingWriteTimeoutInPipelineMode_DoMulti(t *testing.T) {
 			}
 		}()
 	}
-	for atomic.LoadInt32(&p.waits) != 5 {
-		t.Logf("wait p.waits to be 5 %v", atomic.LoadInt32(&p.waits))
+	for uint32(p.wrCounter.Load()&0xFFFFFFFF) != 5 {
+		t.Logf("wait p.waits to be 5 %v", uint32(p.wrCounter.Load()&0xFFFFFFFF))
 		time.Sleep(time.Millisecond * 100)
 	}
 	for atomic.LoadInt32(&timeout) != 5 {
@@ -5317,21 +5317,21 @@ func TestErrorPipe(t *testing.T) {
 
 func TestBackgroundPing(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
-	timeout := 100*time.Millisecond
+	timeout := 100 * time.Millisecond
 	t.Run("background ping", func(t *testing.T) {
-		opt := ClientOption{ConnWriteTimeout: timeout, 
-							Dialer: net.Dialer{KeepAlive: timeout}, 
-							DisableAutoPipelining: true}
+		opt := ClientOption{ConnWriteTimeout: timeout,
+			Dialer:                net.Dialer{KeepAlive: timeout},
+			DisableAutoPipelining: true}
 		p, mock, cancel, _ := setup(t, opt)
 		defer cancel()
-		time.Sleep(50*time.Millisecond)
-		prev := atomic.LoadInt32(&p.recvs)
-		
+		time.Sleep(50 * time.Millisecond)
+		prev := uint32(p.wrCounter.Load() >> 32)
+
 		for i := range 10 {
 			atomic.AddInt32(&p.blcksig, 1) // block
 			time.Sleep(timeout)
 			atomic.AddInt32(&p.blcksig, -1) // unblock
-			recv := atomic.LoadInt32(&p.recvs)
+			recv := uint32(p.wrCounter.Load() >> 32)
 			if prev != recv {
 				t.Fatalf("round %d unexpect recv %v, need be equal to prev %v", i, recv, prev)
 			}
@@ -5344,7 +5344,7 @@ func TestBackgroundPing(t *testing.T) {
 		}()
 		for i := range 10 {
 			time.Sleep(timeout)
-			recv := atomic.LoadInt32(&p.recvs)		
+			recv := uint32(p.wrCounter.Load() >> 32)
 			if prev == recv {
 				t.Fatalf("round %d unexpect recv %v, need be different from prev %v", i, recv, prev)
 			}
