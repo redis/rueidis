@@ -52,7 +52,7 @@ func IsRedisErr(err error) (ret *RedisError, ok bool) {
 // RedisError is an error response or a nil message from redis instance
 type RedisError RedisMessage
 
-// string retrives the contained string of the RedisMessage
+// string retrives the contained string of the RedisError
 func (m *RedisError) string() string {
 	if m.bytes == nil {
 		return ""
@@ -616,7 +616,6 @@ func (m *RedisMessage) unmarshalView(c int64, buf []byte) (int64, error) {
 		m.integer = size
 	case typeArray, typeMap, typeSet:
 		m.setValues(make([]RedisMessage, size))
-		size = 0
 		for i := range m.values() {
 			if c, err = m.values()[i].unmarshalView(c, buf); err != nil {
 				break
@@ -628,7 +627,6 @@ func (m *RedisMessage) unmarshalView(c int64, buf []byte) (int64, error) {
 		}
 		m.setString(BinaryString(buf[c : c+size]))
 		c += size
-		size = 0
 	}
 	return c, err
 }
