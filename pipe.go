@@ -923,14 +923,12 @@ queue:
 			goto abort
 		}
 	}
-	p.DecrWaits()
-	p.IncrRecvs()
+	p.DecrWaitsAndIncrRecvs()
 	return resp
 abort:
 	go func(ch chan RedisResult) {
 		<-ch
-		p.DecrWaits()
-		p.IncrRecvs()
+		p.DecrWaitsAndIncrRecvs()
 	}(ch)
 	return newErrResult(ctx.Err())
 }
@@ -1565,7 +1563,7 @@ func (p *pipe) IncrWaits() uint32 {
 // DecrWaits decrements the lower 32 bits (waits).
 func (p *pipe) DecrWaits() uint32 {
 	// Decrement the lower 32 bits (waits)
-	return uint32(p.wrCounter.Add(^uint64(1)) & 0xFFFFFFFF)
+	return uint32(p.wrCounter.Add(^uint64(0)) & 0xFFFFFFFF)
 }
 
 // IncrRecvs increments the upper 32 bits (recvs) of wrCounter by 1.
@@ -1576,11 +1574,10 @@ func (p *pipe) IncrRecvs() uint32 {
 	return uint32(p.wrCounter.Load() >> 32)
 }
 
-// DecrWaitsAndRecvs decrements the lower 32 bits (waits) and increments the upper 32 bits (recvs).
-func (p *pipe) DecrWaitsAndRecvs() (uint32, uint32) {
-	p.wrCounter.Add(^uint64(1)) // Decrement waits (lower 32 bits)
-	p.wrCounter.Add(1 << 32)    // Increment recvs (upper 32 bits)
-	return uint32(p.wrCounter.Load() >> 32), uint32(p.wrCounter.Load() & 0xFFFFFFFF)
+func (p *pipe) DecrWaitsAndIncrRecvs() (uint32, uint32) {
+	// Atomically: decrement waits and increment recvs in a single operation
+	newValue := p.wrCounter.Add((1 << 32) - 1)
+	return uint32(newValue >> 32), uint32(newValue & 0xFFFFFFFF)
 }
 
 // LoadRecvs loads the upper 32 bits (recvs).
