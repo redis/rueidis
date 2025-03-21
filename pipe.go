@@ -1030,15 +1030,13 @@ queue:
 			goto abort
 		}
 	}
-	p.decrWaits()
-	p.incrRecvs()
+	p.decrWaitsAndIncrRecvs()
 	return resp
 abort:
 	go func(resp *redisresults, ch chan RedisResult) {
 		<-ch
 		resultsp.Put(resp)
-		p.decrWaits()
-		p.incrRecvs()
+		p.decrWaitsAndIncrRecvs()
 	}(resp, ch)
 	resp = resultsp.Get(len(multi), len(multi))
 	err := newErrResult(ctx.Err())
