@@ -432,6 +432,9 @@ set the `EnableReplicaAZInfo` option and your `ReplicaSelector` function. For ex
 client, err := rueidis.NewClient(rueidis.ClientOption{
 	InitAddress:         []string{"address.example.com:6379"},
 	EnableReplicaAZInfo: true,
+	SendToReplicas: func(cmd rueidis.Completed) bool {
+		return cmd.IsReadOnly()
+	},
 	ReplicaSelector: func(slot uint16, replicas []rueidis.ReplicaInfo) int {
 		for i, replica := range replicas {
 			if replica.AZ == "us-east-1a" {
