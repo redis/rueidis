@@ -25,17 +25,17 @@ func ErrorResult(err error) rueidis.RedisResult {
 }
 
 func RedisString(v string) rueidis.RedisMessage {
-	m := message{typ: '+', string: v}
+	m := strmsg('+', v)
 	return *(*rueidis.RedisMessage)(unsafe.Pointer(&m))
 }
 
 func RedisBlobString(v string) rueidis.RedisMessage {
-	m := message{typ: '$', string: v}
+	m := strmsg('$', v)
 	return *(*rueidis.RedisMessage)(unsafe.Pointer(&m))
 }
 
 func RedisError(v string) rueidis.RedisMessage {
-	m := message{typ: '-', string: v}
+	m := strmsg('-', v)
 	return *(*rueidis.RedisMessage)(unsafe.Pointer(&m))
 }
 
@@ -45,7 +45,7 @@ func RedisInt64(v int64) rueidis.RedisMessage {
 }
 
 func RedisFloat64(v float64) rueidis.RedisMessage {
-	m := message{typ: ',', string: strconv.FormatFloat(v, 'f', -1, 64)}
+	m := strmsg(',', strconv.FormatFloat(v, 'f', -1, 64))
 	return *(*rueidis.RedisMessage)(unsafe.Pointer(&m))
 }
 
@@ -63,7 +63,7 @@ func RedisNil() rueidis.RedisMessage {
 }
 
 func RedisArray(values ...rueidis.RedisMessage) rueidis.RedisMessage {
-	m := message{typ: '*', values: values}
+	m := slicemsg('*', values)
 	return *(*rueidis.RedisMessage)(unsafe.Pointer(&m))
 }
 
@@ -73,29 +73,29 @@ func RedisMap(kv map[string]rueidis.RedisMessage) rueidis.RedisMessage {
 		values = append(values, RedisString(k))
 		values = append(values, v)
 	}
-	m := message{typ: '%', values: values}
+	m := slicemsg('%', values)
 	return *(*rueidis.RedisMessage)(unsafe.Pointer(&m))
 }
 
 func serialize(m message, buf *bytes.Buffer) {
 	switch m.typ {
 	case '$', '!', '=':
-		buf.WriteString(fmt.Sprintf("%s%d\r\n%s\r\n", string(m.typ), len(m.string), m.string))
+		buf.WriteString(fmt.Sprintf("%s%d\r\n%s\r\n", string(m.typ), len(m.string()), m.string()))
 	case '+', '-', ',', '(':
-		buf.WriteString(fmt.Sprintf("%s%s\r\n", string(m.typ), m.string))
+		buf.WriteString(fmt.Sprintf("%s%s\r\n", string(m.typ), m.string()))
 	case ':', '#':
 		buf.WriteString(fmt.Sprintf("%s%d\r\n", string(m.typ), m.integer))
 	case '_':
 		buf.WriteString(fmt.Sprintf("%s\r\n", string(m.typ)))
 	case '*':
-		buf.WriteString(fmt.Sprintf("%s%d\r\n", string(m.typ), len(m.values)))
-		for _, v := range m.values {
+		buf.WriteString(fmt.Sprintf("%s%d\r\n", string(m.typ), len(m.values())))
+		for _, v := range m.values() {
 			pv := *(*message)(unsafe.Pointer(&v))
 			serialize(pv, buf)
 		}
 	case '%':
-		buf.WriteString(fmt.Sprintf("%s%d\r\n", string(m.typ), len(m.values)/2))
-		for _, v := range m.values {
+		buf.WriteString(fmt.Sprintf("%s%d\r\n", string(m.typ), len(m.values())/2))
+		for _, v := range m.values() {
 			pv := *(*message)(unsafe.Pointer(&v))
 			serialize(pv, buf)
 		}
@@ -127,11 +127,41 @@ func MultiRedisResultStreamError(err error) rueidis.RedisResultStream {
 
 type message struct {
 	attrs   *rueidis.RedisMessage
-	string  string
-	values  []rueidis.RedisMessage
+	bytes   *byte
+	array   *rueidis.RedisMessage
 	integer int64
 	typ     byte
 	ttl     [7]byte
+}
+
+func (m *message) string() string {
+	if m.bytes == nil {
+		return ""
+	}
+	return unsafe.String(m.bytes, m.integer)
+}
+
+func (m *message) values() []rueidis.RedisMessage {
+	if m.array == nil {
+		return nil
+	}
+	return unsafe.Slice(m.array, m.integer)
+}
+
+func slicemsg(typ byte, values []rueidis.RedisMessage) message {
+	return message{
+		typ:     typ,
+		array:   unsafe.SliceData(values),
+		integer: int64(len(values)),
+	}
+}
+
+func strmsg(typ byte, value string) message {
+	return message{
+		typ:     typ,
+		bytes:   unsafe.StringData(value),
+		integer: int64(len(value)),
+	}
 }
 
 type result struct {
