@@ -32,7 +32,7 @@ func test(t *testing.T, storeFn func() CacheStore) {
 
 		v = RedisMessage{typ: '+', string: "val"}
 		v.setExpireAt(now.Add(time.Second).UnixMilli())
-		if pttl := store.Update("key", "cmd", v); pttl < now.Add(90*time.Millisecond).UnixMilli() || pttl > now.Add(100*time.Millisecond).UnixMilli() {
+		if pttl := store.Update("key", "cmd", v, now); pttl < now.Add(90*time.Millisecond).UnixMilli() || pttl > now.Add(100*time.Millisecond).UnixMilli() {
 			t.Fatal("Update should return a desired pttl")
 		}
 
@@ -104,8 +104,8 @@ func test(t *testing.T, storeFn func() CacheStore) {
 		} {
 			store.Flight("key", "cmd1", time.Millisecond*100, now)
 			store.Flight("key", "cmd2", time.Millisecond*100, now)
-			store.Update("key", "cmd1", RedisMessage{typ: '+', string: "val"})
-			store.Update("key", "cmd2", RedisMessage{typ: '+', string: "val"})
+			store.Update("key", "cmd1", RedisMessage{typ: '+', string: "val"}, now)
+			store.Update("key", "cmd2", RedisMessage{typ: '+', string: "val"}, now)
 
 			store.Delete(deletions)
 
@@ -130,7 +130,7 @@ func test(t *testing.T, storeFn func() CacheStore) {
 
 		v = RedisMessage{typ: '+', string: "val"}
 		v.setExpireAt(now.Add(time.Millisecond).UnixMilli())
-		store.Update("key", "cmd", v)
+		store.Update("key", "cmd", v, now)
 
 		v, e = store.Flight("key", "cmd", time.Second, now.Add(time.Millisecond))
 		if v.typ != 0 || e != nil {
@@ -181,6 +181,11 @@ func TestCacheStore(t *testing.T) {
 	t.Run("SimpleCache", func(t *testing.T) {
 		test(t, func() CacheStore {
 			return NewSimpleCacheAdapter(&simple{store: map[string]RedisMessage{}})
+		})
+	})
+	t.Run("FlattenCache", func(t *testing.T) {
+		test(t, func() CacheStore {
+			return NewChainedCache(DefaultCacheBytes)
 		})
 	})
 }

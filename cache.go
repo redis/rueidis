@@ -4,6 +4,8 @@ import (
 	"context"
 	"sync"
 	"time"
+
+	"github.com/redis/rueidis/internal/cache"
 )
 
 // NewCacheStoreFn can be provided in ClientOption for using a custom CacheStore implementation
@@ -28,7 +30,7 @@ type CacheStore interface {
 	// Update is called when receiving the response of the request sent by the above Flight Case 1 from redis.
 	// It should not only update the store but also deliver the response to all CacheEntry.Wait and return a desired client side PXAT of the response.
 	// Note that the server side expire time can be retrieved from RedisMessage.CachePXAT.
-	Update(key, cmd string, val RedisMessage) (pxat int64)
+	Update(key, cmd string, val RedisMessage, now time.Time) (pxat int64)
 	// Cancel is called when the request sent by the above Flight Case 1 failed.
 	// It should not only deliver the error to all CacheEntry.Wait but also remove the CacheEntry from the store.
 	Cancel(key, cmd string, err error)
@@ -89,7 +91,7 @@ func (a *adapter) Flight(key, cmd string, ttl time.Duration, now time.Time) (Red
 	return RedisMessage{}, flight
 }
 
-func (a *adapter) Update(key, cmd string, val RedisMessage) (sxat int64) {
+func (a *adapter) Update(key, cmd string, val RedisMessage, _ time.Time) (sxat int64) {
 	a.mu.Lock()
 	entries := a.flights[key]
 	if flight, ok := entries[cmd].(*adapterEntry); ok {
@@ -99,7 +101,7 @@ func (a *adapter) Update(key, cmd string, val RedisMessage) (sxat int64) {
 			val.setExpireAt(sxat)
 		}
 		a.store.Set(key+cmd, val)
-		flight.set(val, nil)
+		flight.setVal(val)
 		entries[cmd] = nil
 	}
 	a.mu.Unlock()
@@ -110,7 +112,7 @@ func (a *adapter) Cancel(key, cmd string, err error) {
 	a.mu.Lock()
 	entries := a.flights[key]
 	if flight, ok := entries[cmd].(*adapterEntry); ok {
-		flight.set(RedisMessage{}, err)
+		flight.setErr(err)
 		entries[cmd] = nil
 	}
 	a.mu.Unlock()
@@ -152,7 +154,7 @@ func (a *adapter) Close(err error) {
 	for _, entries := range flights {
 		for _, e := range entries {
 			if e != nil {
-				e.(*adapterEntry).set(RedisMessage{}, err)
+				e.(*adapterEntry).setErr(err)
 			}
 		}
 	}
@@ -165,16 +167,97 @@ type adapterEntry struct {
 	xat int64
 }
 
-func (a *adapterEntry) set(val RedisMessage, err error) {
-	a.err, a.val = err, val
+func (a *adapterEntry) setVal(val RedisMessage) {
+	a.val = val
+	close(a.ch)
+}
+
+func (a *adapterEntry) setErr(err error) {
+	a.err = err
 	close(a.ch)
 }
 
 func (a *adapterEntry) Wait(ctx context.Context) (RedisMessage, error) {
+	ctxCh := ctx.Done()
+	if ctxCh == nil {
+		<-a.ch
+		return a.val, a.err
+	}
 	select {
-	case <-ctx.Done():
+	case <-ctxCh:
 		return RedisMessage{}, ctx.Err()
 	case <-a.ch:
 		return a.val, a.err
 	}
+}
+
+// NewChainedCache returns a CacheStore optimized for concurrency, memory efficiency and GC, compared to
+// the default client side caching CacheStore. However, it is not yet optimized for DoMultiCache.
+func NewChainedCache(limit int) CacheStore {
+	return &chained{
+		flights: cache.NewDoubleMap[*adapterEntry](64),
+		cache:   cache.NewLRUDoubleMap[[]byte](64, int64(limit)),
+	}
+}
+
+type chained struct {
+	flights *cache.DoubleMap[*adapterEntry]
+	cache   *cache.LRUDoubleMap[[]byte]
+}
+
+func (f *chained) Flight(key, cmd string, ttl time.Duration, now time.Time) (RedisMessage, CacheEntry) {
+	ts := now.UnixMilli()
+	if e, ok := f.cache.Find(key, cmd, ts); ok {
+		var ret RedisMessage
+		_ = ret.CacheUnmarshalView(e)
+		return ret, nil
+	}
+	xat := ts + ttl.Milliseconds()
+	if af, ok := f.flights.FindOrInsert(key, cmd, func() *adapterEntry {
+		return &adapterEntry{ch: make(chan struct{}), xat: xat}
+	}); ok {
+		return RedisMessage{}, af
+	}
+	return RedisMessage{}, nil
+}
+
+func (f *chained) Update(key, cmd string, val RedisMessage, now time.Time) (sxat int64) {
+	if af, ok := f.flights.Find(key, cmd); ok {
+		sxat = val.getExpireAt()
+		if af.xat < sxat || sxat == 0 {
+			sxat = af.xat
+			val.setExpireAt(sxat)
+		}
+		bs := val.CacheMarshal(nil)
+		f.cache.Insert(key, cmd, int64(len(bs)+len(key)+len(cmd))+int64(cache.LRUEntrySize)+64, sxat, now.UnixMilli(), bs)
+		if f.flights.Delete(key, cmd) {
+			af.setVal(val)
+		}
+	}
+	return sxat
+}
+
+func (f *chained) Cancel(key, cmd string, err error) {
+	if af, ok := f.flights.Find(key, cmd); ok {
+		if f.flights.Delete(key, cmd) {
+			af.setErr(err)
+		}
+	}
+}
+
+func (f *chained) Delete(keys []RedisMessage) {
+	if keys == nil {
+		f.cache.Reset()
+	} else {
+		for _, k := range keys {
+			f.cache.Delete(k.string)
+		}
+	}
+}
+
+func (f *chained) Close(err error) {
+	f.cache.DeleteAll()
+	f.flights.Close(func(entry *adapterEntry) {
+		entry.setErr(err)
+	})
 }

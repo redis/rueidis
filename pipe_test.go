@@ -1966,7 +1966,7 @@ func TestClientSideCachingWithSideChannelMGet(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 		m := RedisMessage{typ: '+', string: "OK"}
 		m.setExpireAt(time.Now().Add(10 * time.Millisecond).UnixMilli())
-		p.cache.Update("a1", "GET", m)
+		p.cache.Update("a1", "GET", m, time.Now())
 	}()
 
 	v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1"})), 10*time.Second).AsStrSlice()
@@ -2328,7 +2328,7 @@ func TestClientSideCachingWithSideChannelDoMultiCache(t *testing.T) {
 			time.Sleep(100 * time.Millisecond)
 			m := RedisMessage{typ: '+', string: "OK"}
 			m.setExpireAt(time.Now().Add(10 * time.Millisecond).UnixMilli())
-			p.cache.Update("a1", "GET", m)
+			p.cache.Update("a1", "GET", m, time.Now())
 		}()
 
 		arr := p.DoMultiCache(context.Background(), []CacheableTTL{

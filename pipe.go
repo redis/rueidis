@@ -578,7 +578,7 @@ func (p *pipe) _backgroundRead() (err error) {
 					if pttl := msg.values[i].integer; pttl >= 0 {
 						cp.setExpireAt(now.Add(time.Duration(pttl) * time.Millisecond).UnixMilli())
 					}
-					msgs[i].setExpireAt(p.cache.Update(ck, cc, cp))
+					msgs[i].setExpireAt(p.cache.Update(ck, cc, cp, now))
 				}
 			} else {
 				ck, cc := cmds.CacheKey(cacheable)
@@ -588,7 +588,7 @@ func (p *pipe) _backgroundRead() (err error) {
 				if pttl := msg.values[ci-1].integer; pttl >= 0 {
 					cp.setExpireAt(now.Add(time.Duration(pttl) * time.Millisecond).UnixMilli())
 				}
-				msg.values[ci].setExpireAt(p.cache.Update(ck, cc, cp))
+				msg.values[ci].setExpireAt(p.cache.Update(ck, cc, cp, now))
 			}
 		}
 		if prply {
