@@ -26,10 +26,10 @@ func TestLRU(t *testing.T) {
 			t.Fatalf("got unexpected value from the first Flight: %v %v", v, entry)
 		}
 		m := RedisMessage{
-			typ:     '+',
-			bytes:   unsafe.StringData("0"),
-			array:   unsafe.SliceData([]RedisMessage{{}}),
-			integer: 1,
+			typ:    '+',
+			bytes:  unsafe.StringData("0"),
+			array:  unsafe.SliceData([]RedisMessage{{}}),
+			intlen: 1,
 		}
 		m.setExpireAt(time.Now().Add(PTTL * time.Millisecond).UnixMilli())
 		store.Update("0", "GET", m)

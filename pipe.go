@@ -244,7 +244,7 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 			}
 		}
 	}
-	if proto := p.info["proto"]; proto.integer < 3 {
+	if proto := p.info["proto"]; proto.intlen < 3 {
 		r2 = true
 	}
 	if !r2 && !r2ps {
@@ -575,7 +575,7 @@ func (p *pipe) _backgroundRead() (err error) {
 				for i, cp := range msgs {
 					ck := cmds.MGetCacheKey(cacheable, i)
 					cp.attrs = cacheMark
-					if pttl := msg.values()[i].integer; pttl >= 0 {
+					if pttl := msg.values()[i].intlen; pttl >= 0 {
 						cp.setExpireAt(now.Add(time.Duration(pttl) * time.Millisecond).UnixMilli())
 					}
 					msgs[i].setExpireAt(p.cache.Update(ck, cc, cp))
@@ -585,7 +585,7 @@ func (p *pipe) _backgroundRead() (err error) {
 				ci := len(msg.values()) - 1
 				cp := msg.values()[ci]
 				cp.attrs = cacheMark
-				if pttl := msg.values()[ci-1].integer; pttl >= 0 {
+				if pttl := msg.values()[ci-1].intlen; pttl >= 0 {
 					cp.setExpireAt(now.Add(time.Duration(pttl) * time.Millisecond).UnixMilli())
 				}
 				msg.values()[ci].setExpireAt(p.cache.Update(ck, cc, cp))
@@ -712,24 +712,24 @@ func (p *pipe) handlePush(values []RedisMessage) (reply bool, unsubscribe bool) 
 	case "unsubscribe":
 		p.nsubs.Unsubscribe(values[1].string())
 		if len(values) >= 3 {
-			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].integer})
+			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].intlen})
 		}
 		return true, true
 	case "punsubscribe":
 		p.psubs.Unsubscribe(values[1].string())
 		if len(values) >= 3 {
-			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].integer})
+			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].intlen})
 		}
 		return true, true
 	case "sunsubscribe":
 		p.ssubs.Unsubscribe(values[1].string())
 		if len(values) >= 3 {
-			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].integer})
+			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].intlen})
 		}
 		return true, true
 	case "subscribe", "psubscribe", "ssubscribe":
 		if len(values) >= 3 {
-			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].integer})
+			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].intlen})
 		}
 		return true, false
 	}

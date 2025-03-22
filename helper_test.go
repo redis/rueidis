@@ -292,7 +292,7 @@ func TestMDel(t *testing.T) {
 				if !reflect.DeepEqual(cmd.Commands(), []string{"DEL", "1", "2"}) {
 					t.Fatalf("unexpected command %v", cmd)
 				}
-				return newResult(RedisMessage{typ: ':', integer: 2}, nil)
+				return newResult(RedisMessage{typ: ':', intlen: 2}, nil)
 			}
 			if v := MDel(client, context.Background(), []string{"1", "2"}); v["1"] != nil || v["2"] != nil {
 				t.Fatalf("unexpected response %v %v", v, err)
@@ -340,7 +340,7 @@ func TestMDel(t *testing.T) {
 						t.Fatalf("unexpected command %v", cmd)
 						return nil
 					}
-					result[i] = newResult(RedisMessage{typ: ':', integer: 1}, nil)
+					result[i] = newResult(RedisMessage{typ: ':', intlen: 1}, nil)
 				}
 				return &redisresults{s: result}
 			}
@@ -594,7 +594,7 @@ func TestMSetNXNotSet(t *testing.T) {
 		}
 		t.Run("Delegate Do Not Set", func(t *testing.T) {
 			m.DoFn = func(cmd Completed) RedisResult {
-				return newResult(RedisMessage{typ: ':', integer: 0}, nil)
+				return newResult(RedisMessage{typ: ':', intlen: 0}, nil)
 			}
 			if err := MSetNX(client, context.Background(), map[string]string{"1": "1", "2": "2"}); err["1"] != ErrMSetNXNotSet || err["2"] != ErrMSetNXNotSet {
 				t.Fatalf("unexpected response %v", err)

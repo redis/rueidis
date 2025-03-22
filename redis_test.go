@@ -620,8 +620,8 @@ func testMultiExec(t *testing.T, client Client) {
 			if err != nil {
 				t.Fatalf("unexpected exec response %v", err)
 			}
-			if resps[1].integer != v {
-				t.Fatalf("unexpected ttl response %v %v", v, resps[1].integer)
+			if resps[1].intlen != v {
+				t.Fatalf("unexpected ttl response %v %v", v, resps[1].intlen)
 			}
 			if resps[2].string() != strconv.FormatInt(v, 10) {
 				t.Fatalf("unexpected get response %v %v", v, resps[2].string())

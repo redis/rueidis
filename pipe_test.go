@@ -88,7 +88,7 @@ func (r *redisExpect) ReplyError(replies ...string) *redisExpect {
 func (r *redisExpect) ReplyInteger(replies ...int64) *redisExpect {
 	for _, reply := range replies {
 		if r.err == nil {
-			r.Reply(RedisMessage{typ: ':', integer: reply})
+			r.Reply(RedisMessage{typ: ':', intlen: reply})
 		}
 	}
 	return r
@@ -116,7 +116,7 @@ func write(o io.Writer, m RedisMessage) (err error) {
 	case '+', '-', '_':
 		_, err = o.Write(append([]byte(m.string()), '\r', '\n'))
 	case ':':
-		_, err = o.Write(append([]byte(strconv.FormatInt(m.integer, 10)), '\r', '\n'))
+		_, err = o.Write(append([]byte(strconv.FormatInt(m.intlen, 10)), '\r', '\n'))
 	case '%', '>', '*':
 		size := int64(len(m.values()))
 		if m.typ == '%' {
@@ -153,7 +153,7 @@ func setup(t *testing.T, option ClientOption) (*pipe, *redisMock, func(), func()
 					strmsg('+', "version"),
 					strmsg('+', "6.0.0"),
 					strmsg('+', "proto"),
-					{typ: ':', integer: 3},
+					{typ: ':', intlen: 3},
 				},
 			))
 		if option.ClientTrackingOptions != nil {
@@ -213,7 +213,7 @@ func TestNewPipe(t *testing.T) {
 					'%',
 					[]RedisMessage{
 						strmsg('+', "proto"),
-						RedisMessage{typ: ':', integer: 3},
+						RedisMessage{typ: ':', intlen: 3},
 						strmsg('+', "availability_zone"),
 						strmsg('+', "us-west-1a"),
 					},
@@ -262,7 +262,7 @@ func TestNewPipe(t *testing.T) {
 					'*',
 					[]RedisMessage{
 						strmsg('+', "proto"),
-						{typ: ':', integer: 2},
+						{typ: ':', intlen: 2},
 						strmsg('+', "availability_zone"),
 						strmsg('+', "us-west-1a"),
 					},
@@ -311,7 +311,7 @@ func TestNewPipe(t *testing.T) {
 					'%',
 					[]RedisMessage{
 						strmsg('+', "proto"),
-						{typ: ':', integer: 3},
+						{typ: ':', intlen: 3},
 					},
 				))
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
@@ -350,7 +350,7 @@ func TestNewPipe(t *testing.T) {
 					'%',
 					[]RedisMessage{
 						strmsg('+', "proto"),
-						{typ: ':', integer: 3},
+						{typ: ':', intlen: 3},
 					},
 				))
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
@@ -390,7 +390,7 @@ func TestNewPipe(t *testing.T) {
 					'%',
 					[]RedisMessage{
 						strmsg('+', "proto"),
-						{typ: ':', integer: 3},
+						{typ: ':', intlen: 3},
 					},
 				))
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN", "NOLOOP").
@@ -421,7 +421,7 @@ func TestNewPipe(t *testing.T) {
 					'%',
 					[]RedisMessage{
 						strmsg('+', "proto"),
-						{typ: ':', integer: 3},
+						{typ: ':', intlen: 3},
 					},
 				))
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
@@ -460,7 +460,7 @@ func TestNewPipe(t *testing.T) {
 					'%',
 					[]RedisMessage{
 						strmsg('+', "proto"),
-						{typ: ':', integer: 3},
+						{typ: ':', intlen: 3},
 					},
 				))
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
@@ -525,7 +525,7 @@ func TestNewPipe(t *testing.T) {
 					'%',
 					[]RedisMessage{
 						strmsg('+', "proto"),
-						{typ: ':', integer: 3},
+						{typ: ':', intlen: 3},
 					},
 				))
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
@@ -601,7 +601,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 					strmsg('+', "server"),
 					strmsg('+', "redis"),
 					strmsg('+', "proto"),
-					{typ: ':', integer: 2},
+					{typ: ':', intlen: 2},
 					strmsg('+', "availability_zone"),
 					strmsg('+', "us-west-1a"),
 				}))
@@ -614,7 +614,7 @@ func TestNewRESP2Pipe(t *testing.T) {
 					strmsg('+', "server"),
 					strmsg('+', "redis"),
 					strmsg('+', "proto"),
-					{typ: ':', integer: 2},
+					{typ: ':', intlen: 2},
 					strmsg('+', "availability_zone"),
 					strmsg('+', "us-west-1a"),
 				}))
@@ -1222,7 +1222,7 @@ func TestNoReplyExceedRingSize(t *testing.T) {
 		mock.Expect("UNSUBSCRIBE").Reply(slicemsg('>', []RedisMessage{
 			strmsg('+', "unsubscribe"),
 			strmsg('+', "1"),
-			{typ: ':', integer: 0},
+			{typ: ':', intlen: 0},
 		})).Expect(cmds.PingCmd.Commands()...).Reply(strmsg('+', "PONG"))
 	}
 	<-wait
@@ -1286,7 +1286,7 @@ func TestClientSideCaching(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			Reply(slicemsg('*', []RedisMessage{
-				{typ: ':', integer: ttl},
+				{typ: ':', intlen: ttl},
 				strmsg('+', resp),
 			}))
 	}
@@ -1378,7 +1378,7 @@ func TestClientSideCachingBCAST(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			Reply(slicemsg('*', []RedisMessage{
-				{typ: ':', integer: ttl},
+				{typ: ':', intlen: ttl},
 				strmsg('+', resp),
 			}))
 	}
@@ -1470,7 +1470,7 @@ func TestClientSideCachingOPTOUT(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			Reply(slicemsg('*', []RedisMessage{
-				{typ: ':', integer: ttl},
+				{typ: ':', intlen: ttl},
 				strmsg('+', resp),
 			}))
 	}
@@ -1641,13 +1641,13 @@ func TestClientSideCachingMGet(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			Reply(slicemsg('*', []RedisMessage{
-				{typ: ':', integer: 1000},
-				{typ: ':', integer: 2000},
-				{typ: ':', integer: 3000},
+				{typ: ':', intlen: 1000},
+				{typ: ':', intlen: 2000},
+				{typ: ':', intlen: 3000},
 				slicemsg('*', []RedisMessage{
-					{typ: ':', integer: 1},
-					{typ: ':', integer: 2},
-					{typ: ':', integer: 3},
+					{typ: ':', intlen: 1},
+					{typ: ':', intlen: 2},
+					{typ: ':', intlen: 3},
 				}),
 			}))
 	}()
@@ -1661,8 +1661,8 @@ func TestClientSideCachingMGet(t *testing.T) {
 			t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
 		}
 		for i, v := range arr {
-			if v.integer != int64(i+1) {
-				t.Errorf("unexpected cached mget response, expected %v, got %v", i+1, v.integer)
+			if v.intlen != int64(i+1) {
+				t.Errorf("unexpected cached mget response, expected %v, got %v", i+1, v.intlen)
 			}
 		}
 		if ttl := p.cache.(*lru).GetTTL("a1", "GET"); !roughly(ttl, time.Second) {
@@ -1704,11 +1704,11 @@ func TestClientSideCachingMGet(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			Reply(slicemsg('*', []RedisMessage{
-				{typ: ':', integer: 10000},
-				{typ: ':', integer: 30000},
+				{typ: ':', intlen: 10000},
+				{typ: ':', intlen: 30000},
 				slicemsg('*', []RedisMessage{
-					{typ: ':', integer: 10},
-					{typ: ':', integer: 30},
+					{typ: ':', intlen: 10},
+					{typ: ':', intlen: 30},
 				}),
 			}))
 	}()
@@ -1725,14 +1725,14 @@ func TestClientSideCachingMGet(t *testing.T) {
 	if len(arr) != 3 {
 		t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
 	}
-	if arr[1].integer != 2 {
-		t.Errorf("unexpected cached mget response, expected %v, got %v", 2, arr[1].integer)
+	if arr[1].intlen != 2 {
+		t.Errorf("unexpected cached mget response, expected %v, got %v", 2, arr[1].intlen)
 	}
-	if arr[0].integer != 10 {
-		t.Errorf("unexpected cached mget response, expected %v, got %v", 10, arr[0].integer)
+	if arr[0].intlen != 10 {
+		t.Errorf("unexpected cached mget response, expected %v, got %v", 10, arr[0].intlen)
 	}
-	if arr[2].integer != 30 {
-		t.Errorf("unexpected cached mget response, expected %v, got %v", 30, arr[2].integer)
+	if arr[2].intlen != 30 {
+		t.Errorf("unexpected cached mget response, expected %v, got %v", 30, arr[2].intlen)
 	}
 	if ttl := p.cache.(*lru).GetTTL("a1", "GET"); !roughly(ttl, time.Second*10) {
 		t.Errorf("unexpected ttl %v", ttl)
@@ -1775,13 +1775,13 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			Reply(slicemsg('*', []RedisMessage{
-				{typ: ':', integer: 1000},
-				{typ: ':', integer: 2000},
-				{typ: ':', integer: 3000},
+				{typ: ':', intlen: 1000},
+				{typ: ':', intlen: 2000},
+				{typ: ':', intlen: 3000},
 				slicemsg('*', []RedisMessage{
-					{typ: ':', integer: 1},
-					{typ: ':', integer: 2},
-					{typ: ':', integer: 3},
+					{typ: ':', intlen: 1},
+					{typ: ':', intlen: 2},
+					{typ: ':', intlen: 3},
 				}),
 			}))
 	}()
@@ -1795,8 +1795,8 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 			t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
 		}
 		for i, v := range arr {
-			if v.integer != int64(i+1) {
-				t.Errorf("unexpected cached mget response, expected %v, got %v", i+1, v.integer)
+			if v.intlen != int64(i+1) {
+				t.Errorf("unexpected cached mget response, expected %v, got %v", i+1, v.intlen)
 			}
 		}
 		if ttl := p.cache.(*lru).GetTTL("a1", "JSON.GET$"); !roughly(ttl, time.Second) {
@@ -1838,11 +1838,11 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			Reply(slicemsg('*', []RedisMessage{
-				{typ: ':', integer: 10000},
-				{typ: ':', integer: 30000},
+				{typ: ':', intlen: 10000},
+				{typ: ':', intlen: 30000},
 				slicemsg('*', []RedisMessage{
-					{typ: ':', integer: 10},
-					{typ: ':', integer: 30},
+					{typ: ':', intlen: 10},
+					{typ: ':', intlen: 30},
 				}),
 			}))
 	}()
@@ -1859,14 +1859,14 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 	if len(arr) != 3 {
 		t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
 	}
-	if arr[1].integer != 2 {
-		t.Errorf("unexpected cached mget response, expected %v, got %v", 2, arr[1].integer)
+	if arr[1].intlen != 2 {
+		t.Errorf("unexpected cached mget response, expected %v, got %v", 2, arr[1].intlen)
 	}
-	if arr[0].integer != 10 {
-		t.Errorf("unexpected cached mget response, expected %v, got %v", 10, arr[0].integer)
+	if arr[0].intlen != 10 {
+		t.Errorf("unexpected cached mget response, expected %v, got %v", 10, arr[0].intlen)
 	}
-	if arr[2].integer != 30 {
-		t.Errorf("unexpected cached mget response, expected %v, got %v", 30, arr[2].integer)
+	if arr[2].intlen != 30 {
+		t.Errorf("unexpected cached mget response, expected %v, got %v", 30, arr[2].intlen)
 	}
 	if ttl := p.cache.(*lru).GetTTL("a1", "JSON.GET$"); !roughly(ttl, time.Second*10) {
 		t.Errorf("unexpected ttl %v", ttl)
@@ -2044,24 +2044,24 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 				ReplyString("OK").
 				ReplyString("OK").
 				Reply(slicemsg('*', []RedisMessage{
-					{typ: ':', integer: 1000},
-					{typ: ':', integer: 1},
+					{typ: ':', intlen: 1000},
+					{typ: ':', intlen: 1},
 				})).
 				ReplyString("OK").
 				ReplyString("OK").
 				ReplyString("OK").
 				ReplyString("OK").
 				Reply(slicemsg('*', []RedisMessage{
-					{typ: ':', integer: 2000},
-					{typ: ':', integer: 2},
+					{typ: ':', intlen: 2000},
+					{typ: ':', intlen: 2},
 				})).
 				ReplyString("OK").
 				ReplyString("OK").
 				ReplyString("OK").
 				ReplyString("OK").
 				Reply(slicemsg('*', []RedisMessage{
-					{typ: ':', integer: 3000},
-					{typ: ':', integer: 3},
+					{typ: ':', intlen: 3000},
+					{typ: ':', intlen: 3},
 				}))
 		}()
 		// single flight
@@ -2077,8 +2077,8 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 				t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
 			}
 			for i, v := range arr {
-				if v.val.integer != int64(i+1) {
-					t.Errorf("unexpected cached mget response, expected %v, got %v", i+1, v.val.integer)
+				if v.val.intlen != int64(i+1) {
+					t.Errorf("unexpected cached mget response, expected %v, got %v", i+1, v.val.intlen)
 				}
 				if v.val.IsCacheHit() {
 					atomic.AddUint64(&hits, 1)
@@ -2123,16 +2123,16 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 				ReplyString("OK").
 				ReplyString("OK").
 				Reply(slicemsg('*', []RedisMessage{
-					{typ: ':', integer: 10000},
-					{typ: ':', integer: 10},
+					{typ: ':', intlen: 10000},
+					{typ: ':', intlen: 10},
 				})).
 				ReplyString("OK").
 				ReplyString("OK").
 				ReplyString("OK").
 				ReplyString("OK").
 				Reply(slicemsg('*', []RedisMessage{
-					{typ: ':', integer: 30000},
-					{typ: ':', integer: 30},
+					{typ: ':', intlen: 30000},
+					{typ: ':', intlen: 30},
 				}))
 		}()
 
@@ -2155,14 +2155,14 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 		if len(arr) != 3 {
 			t.Errorf("unexpected cached mget length, expected 3, got %v", len(arr))
 		}
-		if arr[1].val.integer != 2 {
-			t.Errorf("unexpected cached mget response, expected %v, got %v", 2, arr[1].val.integer)
+		if arr[1].val.intlen != 2 {
+			t.Errorf("unexpected cached mget response, expected %v, got %v", 2, arr[1].val.intlen)
 		}
-		if arr[0].val.integer != 10 {
-			t.Errorf("unexpected cached mget response, expected %v, got %v", 10, arr[0].val.integer)
+		if arr[0].val.intlen != 10 {
+			t.Errorf("unexpected cached mget response, expected %v, got %v", 10, arr[0].val.intlen)
 		}
-		if arr[2].val.integer != 30 {
-			t.Errorf("unexpected cached mget response, expected %v, got %v", 30, arr[2].val.integer)
+		if arr[2].val.intlen != 30 {
+			t.Errorf("unexpected cached mget response, expected %v, got %v", 30, arr[2].val.intlen)
 		}
 		if ttl := time.Duration(arr[0].CachePTTL()) * time.Millisecond; !roughly(ttl, time.Second*10) {
 			t.Errorf("unexpected ttl %v", ttl)
@@ -2213,8 +2213,8 @@ func TestClientSideCachingExecAbortDoMultiCache(t *testing.T) {
 				ReplyString("OK").
 				ReplyString("OK").
 				Reply(slicemsg('*', []RedisMessage{
-					{typ: ':', integer: 1000},
-					{typ: ':', integer: 1},
+					{typ: ':', intlen: 1000},
+					{typ: ':', intlen: 1},
 				})).
 				ReplyString("OK").
 				ReplyString("OK").
@@ -2236,8 +2236,8 @@ func TestClientSideCachingExecAbortDoMultiCache(t *testing.T) {
 		for i, resp := range arr {
 			v, err := resp.ToMessage()
 			if i == 0 {
-				if v.integer != 1 {
-					t.Errorf("unexpected cached response, expected %v, got %v", 1, v.integer)
+				if v.intlen != 1 {
+					t.Errorf("unexpected cached response, expected %v, got %v", 1, v.intlen)
 				}
 			} else if i == 1 {
 				if err != ErrDoCacheAborted {
@@ -2257,8 +2257,8 @@ func TestClientSideCachingExecAbortDoMultiCache(t *testing.T) {
 				}
 			}
 		}
-		if v, entry := p.cache.Flight("a1", "GET", time.Second, time.Now()); v.integer != 1 {
-			t.Errorf("unexpected cache value and entry %v %v", v.integer, entry)
+		if v, entry := p.cache.Flight("a1", "GET", time.Second, time.Now()); v.intlen != 1 {
+			t.Errorf("unexpected cache value and entry %v %v", v.intlen, entry)
 		}
 		if ttl := time.Duration(arr[0].CachePTTL()) * time.Millisecond; !roughly(ttl, time.Second) {
 			t.Errorf("unexpected ttl %v", ttl)
@@ -2397,7 +2397,7 @@ func TestClientSideCachingMissCacheTTL(t *testing.T) {
 					ReplyString("OK").
 					ReplyString("OK").
 					Reply(slicemsg('*', []RedisMessage{
-						{typ: ':', integer: pttl},
+						{typ: ':', intlen: pttl},
 						strmsg('+', key),
 					}))
 			}
@@ -2437,9 +2437,9 @@ func TestClientSideCachingMissCacheTTL(t *testing.T) {
 					ReplyString("OK").
 					ReplyString("OK").
 					Reply(slicemsg('*', []RedisMessage{
-						{typ: ':', integer: -1},
-						{typ: ':', integer: 1000},
-						{typ: ':', integer: 20000},
+						{typ: ':', intlen: -1},
+						{typ: ':', intlen: 1000},
+						{typ: ':', intlen: 20000},
 						slicemsg('*', []RedisMessage{
 							strmsg('+', "a"),
 							strmsg('+', "b"),
@@ -2482,24 +2482,24 @@ func TestClientSideCachingMissCacheTTL(t *testing.T) {
 					ReplyString("OK").
 					ReplyString("OK").
 					Reply(slicemsg('*', []RedisMessage{
-						{typ: ':', integer: -1},
-						{typ: ':', integer: 1},
+						{typ: ':', intlen: -1},
+						{typ: ':', intlen: 1},
 					})).
 					ReplyString("OK").
 					ReplyString("OK").
 					ReplyString("OK").
 					ReplyString("OK").
 					Reply(slicemsg('*', []RedisMessage{
-						{typ: ':', integer: 1000},
-						{typ: ':', integer: 2},
+						{typ: ':', intlen: 1000},
+						{typ: ':', intlen: 2},
 					})).
 					ReplyString("OK").
 					ReplyString("OK").
 					ReplyString("OK").
 					ReplyString("OK").
 					Reply(slicemsg('*', []RedisMessage{
-						{typ: ':', integer: 20000},
-						{typ: ':', integer: 3},
+						{typ: ':', intlen: 20000},
+						{typ: ':', intlen: 3},
 					}))
 			}()
 			arr := p.DoMultiCache(context.Background(), []CacheableTTL{
@@ -2554,7 +2554,7 @@ func TestClientSideCachingRedis6InvalidationBug1(t *testing.T) {
 						slicemsg('*', []RedisMessage{strmsg('+', "a")}),
 					},
 				),
-				{typ: ':', integer: -2},
+				{typ: ':', intlen: -2},
 			})).Reply(RedisMessage{typ: '_'})
 	}
 
@@ -2609,7 +2609,7 @@ func TestClientSideCachingRedis6InvalidationBug2(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			Reply(slicemsg('*', []RedisMessage{
-				{typ: ':', integer: -2},
+				{typ: ':', intlen: -2},
 				slicemsg(
 					'>',
 					[]RedisMessage{
@@ -2670,7 +2670,7 @@ func TestClientSideCachingRedis6InvalidationBugErr(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			Reply(slicemsg('*', []RedisMessage{
-				{typ: ':', integer: -2},
+				{typ: ':', intlen: -2},
 				slicemsg(
 					'>',
 					[]RedisMessage{
@@ -2885,7 +2885,7 @@ func TestPubSub(t *testing.T) {
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "subscribe"),
 					strmsg('+', "1"),
-					{typ: ':', integer: 1},
+					{typ: ':', intlen: 1},
 				}),
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "message"),
@@ -2897,7 +2897,7 @@ func TestPubSub(t *testing.T) {
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "unsubscribe"),
 					strmsg('+', "1"),
-					{typ: ':', integer: 0},
+					{typ: ':', intlen: 0},
 				}),
 			).Reply(strmsg('+', "PONG"))
 		}()
@@ -2926,7 +2926,7 @@ func TestPubSub(t *testing.T) {
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "ssubscribe"),
 					strmsg('+', "1"),
-					{typ: ':', integer: 1},
+					{typ: ':', intlen: 1},
 				}),
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "smessage"),
@@ -2938,7 +2938,7 @@ func TestPubSub(t *testing.T) {
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "sunsubscribe"),
 					strmsg('+', "1"),
-					{typ: ':', integer: 0},
+					{typ: ':', intlen: 0},
 				}),
 			).Reply(strmsg('+', "PONG"))
 		}()
@@ -2967,7 +2967,7 @@ func TestPubSub(t *testing.T) {
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "psubscribe"),
 					strmsg('+', "1"),
-					{typ: ':', integer: 1},
+					{typ: ':', intlen: 1},
 				}),
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "pmessage"),
@@ -2980,7 +2980,7 @@ func TestPubSub(t *testing.T) {
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "punsubscribe"),
 					strmsg('+', "1"),
-					{typ: ':', integer: 0},
+					{typ: ':', intlen: 0},
 				}),
 			).Reply(strmsg('+', "PONG"))
 		}()
@@ -3031,7 +3031,7 @@ func TestPubSub(t *testing.T) {
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "subscribe"),
 					strmsg('+', "1"),
-					{typ: ':', integer: 1},
+					{typ: ':', intlen: 1},
 				}),
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "message"),
@@ -3103,17 +3103,17 @@ func TestPubSub(t *testing.T) {
 						slicemsg('>', []RedisMessage{
 							strmsg('+', "unsubscribe"),
 							strmsg('+', "a"),
-							{typ: ':', integer: 1},
+							{typ: ':', intlen: 1},
 						}),
 						slicemsg('>', []RedisMessage{ // skip
 							strmsg('+', "unsubscribe"),
 							strmsg('+', "b"),
-							{typ: ':', integer: 1},
+							{typ: ':', intlen: 1},
 						}),
 						slicemsg('>', []RedisMessage{ // skip
 							strmsg('+', "unsubscribe"),
 							strmsg('+', "c"),
-							{typ: ':', integer: 1},
+							{typ: ':', intlen: 1},
 						}),
 					).Reply(strmsg('+', "PONG")).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
 				} else {
@@ -3121,17 +3121,17 @@ func TestPubSub(t *testing.T) {
 						slicemsg('>', []RedisMessage{
 							strmsg('+', "subscribe"),
 							strmsg('+', "a"),
-							{typ: ':', integer: 1},
+							{typ: ':', intlen: 1},
 						}),
 						slicemsg('>', []RedisMessage{ // skip
 							strmsg('+', "subscribe"),
 							strmsg('+', "b"),
-							{typ: ':', integer: 1},
+							{typ: ':', intlen: 1},
 						}),
 						slicemsg('>', []RedisMessage{ // skip
 							strmsg('+', "subscribe"),
 							strmsg('+', "c"),
-							{typ: ':', integer: 1},
+							{typ: ':', intlen: 1},
 						}),
 					).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
 				}
@@ -3164,7 +3164,7 @@ func TestPubSub(t *testing.T) {
 				[]RedisMessage{
 					strmsg('+', "unsubscribe"),
 					{typ: '_'},
-					{typ: ':', integer: 0},
+					{typ: ':', intlen: 0},
 				},
 			),
 		}, {
@@ -3173,7 +3173,7 @@ func TestPubSub(t *testing.T) {
 				[]RedisMessage{
 					strmsg('+', "punsubscribe"),
 					strmsg('+', "1"),
-					{typ: ':', integer: 0},
+					{typ: ':', intlen: 0},
 				},
 			),
 		}, {
@@ -3182,7 +3182,7 @@ func TestPubSub(t *testing.T) {
 				[]RedisMessage{
 					strmsg('+', "sunsubscribe"),
 					strmsg('+', "2"),
-					{typ: ':', integer: 0},
+					{typ: ':', intlen: 0},
 				},
 			),
 			slicemsg(
@@ -3190,7 +3190,7 @@ func TestPubSub(t *testing.T) {
 				[]RedisMessage{
 					strmsg('+', "sunsubscribe"),
 					strmsg('+', "3"),
-					{typ: ':', integer: 0},
+					{typ: ':', intlen: 0},
 				},
 			),
 		}}
@@ -3234,7 +3234,7 @@ func TestPubSub(t *testing.T) {
 							[]RedisMessage{
 								strmsg('+', command),
 								strmsg('+', "1"),
-								{typ: ':', integer: 0},
+								{typ: ':', intlen: 0},
 							},
 						),
 						slicemsg( // proactive unsubscribe before user unsubscribe
@@ -3242,7 +3242,7 @@ func TestPubSub(t *testing.T) {
 							[]RedisMessage{
 								strmsg('+', command),
 								strmsg('+', "2"),
-								{typ: ':', integer: 0},
+								{typ: ':', intlen: 0},
 							},
 						),
 						slicemsg( // user unsubscribe
@@ -3250,7 +3250,7 @@ func TestPubSub(t *testing.T) {
 							[]RedisMessage{
 								strmsg('+', command),
 								{typ: '_'},
-								{typ: ':', integer: 0},
+								{typ: ':', intlen: 0},
 							},
 						),
 						slicemsg( // proactive unsubscribe after user unsubscribe
@@ -3258,7 +3258,7 @@ func TestPubSub(t *testing.T) {
 							[]RedisMessage{
 								strmsg('+', command),
 								{typ: '_'},
-								{typ: ':', integer: 0},
+								{typ: ':', intlen: 0},
 							},
 						),
 					},
@@ -3268,7 +3268,7 @@ func TestPubSub(t *testing.T) {
 							[]RedisMessage{
 								strmsg('+', "ssubscribe"),
 								strmsg('+', "3"),
-								{typ: ':', integer: 0},
+								{typ: ':', intlen: 0},
 							},
 						),
 						slicemsg( // proactive unsubscribe after user ssubscribe
@@ -3276,7 +3276,7 @@ func TestPubSub(t *testing.T) {
 							[]RedisMessage{
 								strmsg('+', command),
 								strmsg('+', "3"),
-								{typ: ':', integer: 0},
+								{typ: ':', intlen: 0},
 							},
 						),
 					},
@@ -3290,7 +3290,7 @@ func TestPubSub(t *testing.T) {
 					[]RedisMessage{
 						strmsg('+', command),
 						strmsg('+', "0"),
-						{typ: ':', integer: 0},
+						{typ: ':', intlen: 0},
 					},
 				))
 
@@ -3335,7 +3335,7 @@ func TestPubSub(t *testing.T) {
 					[]RedisMessage{
 						strmsg('+', "sunsubscribe"),
 						strmsg('+', "a"),
-						{typ: ':', integer: 0},
+						{typ: ':', intlen: 0},
 					},
 				),
 				slicemsg( // proactive unsubscribe before user unsubscribe
@@ -3343,7 +3343,7 @@ func TestPubSub(t *testing.T) {
 					[]RedisMessage{
 						strmsg('+', "sunsubscribe"),
 						strmsg('+', "b"),
-						{typ: ':', integer: 0},
+						{typ: ':', intlen: 0},
 					},
 				),
 				strmsg( // user unsubscribe, but error
@@ -3361,7 +3361,7 @@ func TestPubSub(t *testing.T) {
 					[]RedisMessage{
 						strmsg('+', "sunsubscribe"),
 						strmsg('+', "c"),
-						{typ: ':', integer: 0},
+						{typ: ':', intlen: 0},
 					},
 				),
 			}, {
@@ -3370,7 +3370,7 @@ func TestPubSub(t *testing.T) {
 					[]RedisMessage{
 						strmsg('+', "sunsubscribe"),
 						{typ: '_'},
-						{typ: ':', integer: 0},
+						{typ: ':', intlen: 0},
 					},
 				),
 				strmsg('+', "mk"),
@@ -3385,7 +3385,7 @@ func TestPubSub(t *testing.T) {
 			[]RedisMessage{
 				strmsg('+', "sunsubscribe"),
 				strmsg('+', "0"),
-				{typ: ':', integer: 0},
+				{typ: ':', intlen: 0},
 			},
 		))
 
@@ -3493,7 +3493,7 @@ func TestPubSub(t *testing.T) {
 					[]RedisMessage{
 						strmsg('+', "sunsubscribe"),
 						strmsg('+', "a"),
-						{typ: ':', integer: 0},
+						{typ: ':', intlen: 0},
 					},
 				),
 				slicemsg( // proactive unsubscribe before user unsubscribe
@@ -3501,7 +3501,7 @@ func TestPubSub(t *testing.T) {
 					[]RedisMessage{
 						strmsg('+', "sunsubscribe"),
 						strmsg('+', "b"),
-						{typ: ':', integer: 0},
+						{typ: ':', intlen: 0},
 					},
 				),
 			}, {
@@ -3512,7 +3512,7 @@ func TestPubSub(t *testing.T) {
 					[]RedisMessage{
 						strmsg('+', "sunsubscribe"),
 						{typ: '_'},
-						{typ: ':', integer: 0},
+						{typ: ':', intlen: 0},
 					},
 				),
 				strmsg('+', "mk"),
@@ -3527,7 +3527,7 @@ func TestPubSub(t *testing.T) {
 			[]RedisMessage{
 				strmsg('+', "sunsubscribe"),
 				strmsg('+', "0"),
-				{typ: ':', integer: 0},
+				{typ: ':', intlen: 0},
 			},
 		))
 
@@ -3580,7 +3580,7 @@ func TestPubSub(t *testing.T) {
 					[]RedisMessage{
 						strmsg('+', "sunsubscribe"),
 						strmsg('+', "a"),
-						{typ: ':', integer: 0},
+						{typ: ':', intlen: 0},
 					},
 				),
 				slicemsg( // proactive unsubscribe before user unsubscribe
@@ -3588,7 +3588,7 @@ func TestPubSub(t *testing.T) {
 					[]RedisMessage{
 						strmsg('+', "sunsubscribe"),
 						strmsg('+', "b"),
-						{typ: ':', integer: 0},
+						{typ: ':', intlen: 0},
 					},
 				),
 			}, {
@@ -3599,7 +3599,7 @@ func TestPubSub(t *testing.T) {
 					[]RedisMessage{
 						strmsg('+', "sunsubscribe"),
 						{typ: '_'},
-						{typ: ':', integer: 0},
+						{typ: ':', intlen: 0},
 					},
 				),
 				strmsg('+', "mk"),
@@ -3614,7 +3614,7 @@ func TestPubSub(t *testing.T) {
 			[]RedisMessage{
 				strmsg('+', "sunsubscribe"),
 				strmsg('+', "0"),
-				{typ: ':', integer: 0},
+				{typ: ':', intlen: 0},
 			},
 		))
 
@@ -3667,7 +3667,7 @@ func TestPubSub(t *testing.T) {
 					[]RedisMessage{
 						strmsg('+', "sunsubscribe"),
 						strmsg('+', "a"),
-						{typ: ':', integer: 0},
+						{typ: ':', intlen: 0},
 					},
 				),
 				slicemsg( // proactive unsubscribe before user unsubscribe
@@ -3675,7 +3675,7 @@ func TestPubSub(t *testing.T) {
 					[]RedisMessage{
 						strmsg('+', "sunsubscribe"),
 						strmsg('+', "b"),
-						{typ: ':', integer: 0},
+						{typ: ':', intlen: 0},
 					},
 				),
 			}, {
@@ -3686,7 +3686,7 @@ func TestPubSub(t *testing.T) {
 					[]RedisMessage{
 						strmsg('+', "sunsubscribe"),
 						{typ: '_'},
-						{typ: ':', integer: 0},
+						{typ: ':', intlen: 0},
 					},
 				),
 				strmsg('+', "mk"),
@@ -3701,7 +3701,7 @@ func TestPubSub(t *testing.T) {
 			[]RedisMessage{
 				strmsg('+', "sunsubscribe"),
 				strmsg('+', "0"),
-				{typ: ':', integer: 0},
+				{typ: ':', intlen: 0},
 			},
 		))
 
@@ -3929,12 +3929,12 @@ func TestPubSubHooks(t *testing.T) {
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "subscribe"),
 					strmsg('+', "1"),
-					{typ: ':', integer: 1},
+					{typ: ':', intlen: 1},
 				}),
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "psubscribe"),
 					strmsg('+', "2"),
-					{typ: ':', integer: 2},
+					{typ: ':', intlen: 2},
 				}),
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "message"),
@@ -3952,13 +3952,13 @@ func TestPubSubHooks(t *testing.T) {
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "unsubscribe"),
 					strmsg('+', "1"),
-					{typ: ':', integer: 1},
+					{typ: ':', intlen: 1},
 				}),
 				strmsg('+', "PONG"),
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "punsubscribe"),
 					strmsg('+', "2"),
-					{typ: ':', integer: 2},
+					{typ: ':', intlen: 2},
 				}),
 				strmsg('+', "PONG"),
 			)
@@ -4018,12 +4018,12 @@ func TestPubSubHooks(t *testing.T) {
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "subscribe"),
 					strmsg('+', "1"),
-					{typ: ':', integer: 1},
+					{typ: ':', intlen: 1},
 				}),
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "psubscribe"),
 					strmsg('+', "2"),
-					{typ: ':', integer: 2},
+					{typ: ':', intlen: 2},
 				}),
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "message"),
@@ -4041,13 +4041,13 @@ func TestPubSubHooks(t *testing.T) {
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "unsubscribe"),
 					strmsg('+', "1"),
-					{typ: ':', integer: 1},
+					{typ: ':', intlen: 1},
 				}),
 				strmsg('+', "PONG"),
 				slicemsg('>', []RedisMessage{
 					strmsg('+', "punsubscribe"),
 					strmsg('+', "2"),
-					{typ: ':', integer: 2},
+					{typ: ':', intlen: 2},
 				}),
 				strmsg('+', "PONG"),
 			)
@@ -5088,13 +5088,13 @@ func TestPipe_CleanSubscriptions_6(t *testing.T) {
 		slicemsg('>', []RedisMessage{
 			strmsg('+', "unsubscribe"),
 			{typ: '_'},
-			{typ: ':', integer: 1},
+			{typ: ':', intlen: 1},
 		}),
 		strmsg('+', "PONG"),
 		slicemsg('>', []RedisMessage{
 			strmsg('+', "punsubscribe"),
 			{typ: '_'},
-			{typ: ':', integer: 2},
+			{typ: ':', intlen: 2},
 		}),
 		strmsg('+', "PONG"),
 		strmsg('+', "OK"),
@@ -5131,19 +5131,19 @@ func TestPipe_CleanSubscriptions_7(t *testing.T) {
 		slicemsg('>', []RedisMessage{
 			strmsg('+', "unsubscribe"),
 			{typ: '_'},
-			{typ: ':', integer: 1},
+			{typ: ':', intlen: 1},
 		}),
 		strmsg('+', "PONG"),
 		slicemsg('>', []RedisMessage{
 			strmsg('+', "punsubscribe"),
 			{typ: '_'},
-			{typ: ':', integer: 2},
+			{typ: ':', intlen: 2},
 		}),
 		strmsg('+', "PONG"),
 		slicemsg('>', []RedisMessage{
 			strmsg('+', "sunsubscribe"),
 			{typ: '_'},
-			{typ: ':', integer: 3},
+			{typ: ':', intlen: 3},
 		}),
 		strmsg('+', "PONG"),
 		strmsg('+', "OK"),

@@ -18,16 +18,16 @@ import (
 
 var slotsResp = newResult(slicemsg('*', []RedisMessage{
 	slicemsg('*', []RedisMessage{
-		{typ: ':', integer: 0},
-		{typ: ':', integer: 16383},
+		{typ: ':', intlen: 0},
+		{typ: ':', intlen: 16383},
 		slicemsg('*', []RedisMessage{ // master
 			strmsg('+', "127.0.0.1"),
-			{typ: ':', integer: 0},
+			{typ: ':', intlen: 0},
 			strmsg('+', ""),
 		}),
 		slicemsg('*', []RedisMessage{ // replica
 			strmsg('+', "127.0.1.1"),
-			{typ: ':', integer: 1},
+			{typ: ':', intlen: 1},
 			strmsg('+', ""),
 		}),
 	}),
@@ -35,30 +35,30 @@ var slotsResp = newResult(slicemsg('*', []RedisMessage{
 
 var slotsMultiResp = newResult(slicemsg('*', []RedisMessage{
 	slicemsg('*', []RedisMessage{
-		{typ: ':', integer: 0},
-		{typ: ':', integer: 8192},
+		{typ: ':', intlen: 0},
+		{typ: ':', intlen: 8192},
 		slicemsg('*', []RedisMessage{ // master
 			strmsg('+', "127.0.0.1"),
-			{typ: ':', integer: 0},
+			{typ: ':', intlen: 0},
 			strmsg('+', ""),
 		}),
 		slicemsg('*', []RedisMessage{ // replica
 			strmsg('+', "127.0.1.1"),
-			{typ: ':', integer: 1},
+			{typ: ':', intlen: 1},
 			strmsg('+', ""),
 		}),
 	}),
 	slicemsg('*', []RedisMessage{
-		{typ: ':', integer: 8193},
-		{typ: ':', integer: 16383},
+		{typ: ':', intlen: 8193},
+		{typ: ':', intlen: 16383},
 		slicemsg('*', []RedisMessage{ // master
 			strmsg('+', "127.0.2.1"),
-			{typ: ':', integer: 0},
+			{typ: ':', intlen: 0},
 			strmsg('+', ""),
 		}),
 		slicemsg('*', []RedisMessage{ // replica
 			strmsg('+', "127.0.3.1"),
-			{typ: ':', integer: 1},
+			{typ: ':', intlen: 1},
 			strmsg('+', ""),
 		}),
 	}),
@@ -66,20 +66,20 @@ var slotsMultiResp = newResult(slicemsg('*', []RedisMessage{
 
 var slotsMultiRespWithoutReplicas = newResult(slicemsg('*', []RedisMessage{
 	slicemsg('*', []RedisMessage{
-		{typ: ':', integer: 0},
-		{typ: ':', integer: 8192},
+		{typ: ':', intlen: 0},
+		{typ: ':', intlen: 8192},
 		slicemsg('*', []RedisMessage{ // master
 			strmsg('+', "127.0.0.1"),
-			{typ: ':', integer: 0},
+			{typ: ':', intlen: 0},
 			strmsg('+', ""),
 		}),
 	}),
 	slicemsg('*', []RedisMessage{
-		{typ: ':', integer: 8193},
-		{typ: ':', integer: 16383},
+		{typ: ':', intlen: 8193},
+		{typ: ':', intlen: 16383},
 		slicemsg('*', []RedisMessage{ // master
 			strmsg('+', "127.0.1.1"),
-			{typ: ':', integer: 0},
+			{typ: ':', intlen: 0},
 			strmsg('+', ""),
 		}),
 	}),
@@ -87,50 +87,50 @@ var slotsMultiRespWithoutReplicas = newResult(slicemsg('*', []RedisMessage{
 
 var slotsMultiRespWithMultiReplicas = newResult(slicemsg('*', []RedisMessage{
 	slicemsg('*', []RedisMessage{
-		{typ: ':', integer: 0},
-		{typ: ':', integer: 8192},
+		{typ: ':', intlen: 0},
+		{typ: ':', intlen: 8192},
 		slicemsg('*', []RedisMessage{ // master
 			strmsg('+', "127.0.0.1"),
-			{typ: ':', integer: 0},
+			{typ: ':', intlen: 0},
 			strmsg('+', ""),
 		}),
 		slicemsg('*', []RedisMessage{ // replica1
 			strmsg('+', "127.0.0.2"),
-			{typ: ':', integer: 1},
+			{typ: ':', intlen: 1},
 			strmsg('+', ""),
 		}),
 		slicemsg('*', []RedisMessage{ // replica2
 			strmsg('+', "127.0.0.3"),
-			{typ: ':', integer: 2},
+			{typ: ':', intlen: 2},
 			strmsg('+', ""),
 		}),
 		slicemsg('*', []RedisMessage{ // replica3
 			strmsg('+', "127.0.0.4"),
-			{typ: ':', integer: 3},
+			{typ: ':', intlen: 3},
 			strmsg('+', ""),
 		}),
 	}),
 	slicemsg('*', []RedisMessage{
-		{typ: ':', integer: 8193},
-		{typ: ':', integer: 16383},
+		{typ: ':', intlen: 8193},
+		{typ: ':', intlen: 16383},
 		slicemsg('*', []RedisMessage{ // master
 			strmsg('+', "127.0.1.1"),
-			{typ: ':', integer: 0},
+			{typ: ':', intlen: 0},
 			strmsg('+', ""),
 		}),
 		slicemsg('*', []RedisMessage{ // replica1
 			strmsg('+', "127.0.1.2"),
-			{typ: ':', integer: 1},
+			{typ: ':', intlen: 1},
 			strmsg('+', ""),
 		}),
 		slicemsg('*', []RedisMessage{ // replica2
 			strmsg('+', "127.0.1.3"),
-			{typ: ':', integer: 2},
+			{typ: ':', intlen: 2},
 			strmsg('+', ""),
 		}),
 		slicemsg('*', []RedisMessage{ // replica3
 			strmsg('+', "127.0.1.4"),
-			{typ: ':', integer: 3},
+			{typ: ':', intlen: 3},
 			strmsg('+', ""),
 		}),
 	}),
@@ -138,11 +138,11 @@ var slotsMultiRespWithMultiReplicas = newResult(slicemsg('*', []RedisMessage{
 
 var singleSlotResp = newResult(slicemsg('*', []RedisMessage{
 	slicemsg('*', []RedisMessage{
-		{typ: ':', integer: 0},
-		{typ: ':', integer: 0},
+		{typ: ':', intlen: 0},
+		{typ: ':', intlen: 0},
 		slicemsg('*', []RedisMessage{ // master
 			strmsg('+', "127.0.0.1"),
-			{typ: ':', integer: 0},
+			{typ: ':', intlen: 0},
 			strmsg('+', ""),
 		}),
 	}),
@@ -150,11 +150,11 @@ var singleSlotResp = newResult(slicemsg('*', []RedisMessage{
 
 var singleSlotResp2 = newResult(slicemsg('*', []RedisMessage{
 	slicemsg('*', []RedisMessage{
-		{typ: ':', integer: 0},
-		{typ: ':', integer: 0},
+		{typ: ':', intlen: 0},
+		{typ: ':', intlen: 0},
 		slicemsg('*', []RedisMessage{ // master
 			strmsg('+', "127.0.3.1"),
-			{typ: ':', integer: 3},
+			{typ: ':', intlen: 3},
 			strmsg('+', ""),
 		}),
 	}),
@@ -162,25 +162,25 @@ var singleSlotResp2 = newResult(slicemsg('*', []RedisMessage{
 
 var singleSlotWithoutIP = newResult(slicemsg('*', []RedisMessage{
 	slicemsg('*', []RedisMessage{
-		{typ: ':', integer: 0},
-		{typ: ':', integer: 0},
+		{typ: ':', intlen: 0},
+		{typ: ':', intlen: 0},
 		slicemsg('*', []RedisMessage{ // master
 			strmsg('+', ""),
-			{typ: ':', integer: 4},
+			{typ: ':', intlen: 4},
 			strmsg('+', ""),
 		}),
 		slicemsg('*', []RedisMessage{ // replica
 			strmsg('+', "?"),
-			{typ: ':', integer: 1},
+			{typ: ':', intlen: 1},
 			strmsg('+', ""),
 		}),
 	}),
 	slicemsg('*', []RedisMessage{
-		{typ: ':', integer: 0},
-		{typ: ':', integer: 0},
+		{typ: ':', intlen: 0},
+		{typ: ':', intlen: 0},
 		slicemsg('*', []RedisMessage{ // master
 			strmsg('+', "?"),
-			{typ: ':', integer: 4},
+			{typ: ':', intlen: 4},
 			strmsg('+', ""),
 		}),
 	}),
@@ -200,7 +200,7 @@ var shardsResp = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, ""),
 
 				strmsg(typeBlobString, "port"),
-				{typ: typeInteger, integer: 0},
+				{typ: typeInteger, intlen: 0},
 
 				strmsg(typeBlobString, "ip"),
 				strmsg(typeBlobString, "127.0.0.99"),
@@ -212,7 +212,7 @@ var shardsResp = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, "master"),
 
 				strmsg(typeBlobString, "replication-offset"),
-				{typ: typeInteger, integer: 72156},
+				{typ: typeInteger, intlen: 72156},
 
 				strmsg(typeBlobString, "health"),
 				strmsg(typeBlobString, "fail"),
@@ -222,7 +222,7 @@ var shardsResp = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, ""),
 
 				strmsg(typeBlobString, "port"),
-				{typ: typeInteger, integer: 0},
+				{typ: typeInteger, intlen: 0},
 
 				strmsg(typeBlobString, "ip"),
 				strmsg(typeBlobString, "127.0.0.1"),
@@ -234,7 +234,7 @@ var shardsResp = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, "master"),
 
 				strmsg(typeBlobString, "replication-offset"),
-				{typ: typeInteger, integer: 72156},
+				{typ: typeInteger, intlen: 72156},
 
 				strmsg(typeBlobString, "health"),
 				strmsg(typeBlobString, "online"),
@@ -244,7 +244,7 @@ var shardsResp = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, ""),
 
 				strmsg(typeBlobString, "port"),
-				{typ: typeInteger, integer: 1},
+				{typ: typeInteger, intlen: 1},
 
 				strmsg(typeBlobString, "ip"),
 				strmsg(typeBlobString, "127.0.1.1"),
@@ -256,7 +256,7 @@ var shardsResp = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, "replica"),
 
 				strmsg(typeBlobString, "replication-offset"),
-				{typ: typeInteger, integer: 72156},
+				{typ: typeInteger, intlen: 72156},
 
 				strmsg(typeBlobString, "health"),
 				strmsg(typeBlobString, "online"),
@@ -279,7 +279,7 @@ var shardsRespTls = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, ""),
 
 				strmsg(typeBlobString, "tls-port"),
-				{typ: typeInteger, integer: 2},
+				{typ: typeInteger, intlen: 2},
 
 				strmsg(typeBlobString, "ip"),
 				strmsg(typeBlobString, "127.0.2.1"),
@@ -291,7 +291,7 @@ var shardsRespTls = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, "replica"),
 
 				strmsg(typeBlobString, "replication-offset"),
-				{typ: typeInteger, integer: 72156},
+				{typ: typeInteger, intlen: 72156},
 
 				strmsg(typeBlobString, "health"),
 				strmsg(typeBlobString, "online"),
@@ -301,10 +301,10 @@ var shardsRespTls = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, ""),
 
 				strmsg(typeBlobString, "port"),
-				{typ: typeInteger, integer: 0},
+				{typ: typeInteger, intlen: 0},
 
 				strmsg(typeBlobString, "tls-port"),
-				{typ: typeInteger, integer: 1},
+				{typ: typeInteger, intlen: 1},
 
 				strmsg(typeBlobString, "ip"),
 				strmsg(typeBlobString, "127.0.1.99"),
@@ -316,7 +316,7 @@ var shardsRespTls = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, "master"),
 
 				strmsg(typeBlobString, "replication-offset"),
-				{typ: typeInteger, integer: 72156},
+				{typ: typeInteger, intlen: 72156},
 
 				strmsg(typeBlobString, "health"),
 				strmsg(typeBlobString, "fail"),
@@ -326,10 +326,10 @@ var shardsRespTls = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, ""),
 
 				strmsg(typeBlobString, "port"),
-				{typ: typeInteger, integer: 0},
+				{typ: typeInteger, intlen: 0},
 
 				strmsg(typeBlobString, "tls-port"),
-				{typ: typeInteger, integer: 1},
+				{typ: typeInteger, intlen: 1},
 
 				strmsg(typeBlobString, "ip"),
 				strmsg(typeBlobString, "127.0.1.1"),
@@ -341,7 +341,7 @@ var shardsRespTls = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, "master"),
 
 				strmsg(typeBlobString, "replication-offset"),
-				{typ: typeInteger, integer: 72156},
+				{typ: typeInteger, intlen: 72156},
 
 				strmsg(typeBlobString, "health"),
 				strmsg(typeBlobString, "online"),
@@ -351,7 +351,7 @@ var shardsRespTls = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, ""),
 
 				strmsg(typeBlobString, "port"),
-				{typ: typeInteger, integer: 3},
+				{typ: typeInteger, intlen: 3},
 
 				strmsg(typeBlobString, "ip"),
 				strmsg(typeBlobString, "127.0.3.1"),
@@ -363,7 +363,7 @@ var shardsRespTls = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, "replica"),
 
 				strmsg(typeBlobString, "replication-offset"),
-				{typ: typeInteger, integer: 72156},
+				{typ: typeInteger, intlen: 72156},
 
 				strmsg(typeBlobString, "health"),
 				strmsg(typeBlobString, "online"),
@@ -386,7 +386,7 @@ var shardsMultiResp = newResult(slicemsg('*', []RedisMessage{
 				strmsg(typeBlobString, ""),
 
 				strmsg(typeBlobString, "port"),
-				{typ: typeInteger, integer: 0},
+				{typ: typeInteger, intlen: 0},
 
 				strmsg(typeBlobString, "ip"),
 				strmsg(typeBlobString, "127.0.0.99"),
@@ -398,7 +398,7 @@ var shardsMultiResp = newResult(slicemsg('*', []RedisMessage{
 				strmsg(typeBlobString, "master"),
 
 				strmsg(typeBlobString, "replication-offset"),
-				{typ: typeInteger, integer: 72156},
+				{typ: typeInteger, intlen: 72156},
 
 				strmsg(typeBlobString, "health"),
 				strmsg(typeBlobString, "fail"),
@@ -408,7 +408,7 @@ var shardsMultiResp = newResult(slicemsg('*', []RedisMessage{
 				strmsg(typeBlobString, ""),
 
 				strmsg(typeBlobString, "port"),
-				{typ: typeInteger, integer: 0},
+				{typ: typeInteger, intlen: 0},
 
 				strmsg(typeBlobString, "ip"),
 				strmsg(typeBlobString, "127.0.0.1"),
@@ -420,7 +420,7 @@ var shardsMultiResp = newResult(slicemsg('*', []RedisMessage{
 				strmsg(typeBlobString, "master"),
 
 				strmsg(typeBlobString, "replication-offset"),
-				{typ: typeInteger, integer: 72156},
+				{typ: typeInteger, intlen: 72156},
 
 				strmsg(typeBlobString, "health"),
 				strmsg(typeBlobString, "online"),
@@ -430,7 +430,7 @@ var shardsMultiResp = newResult(slicemsg('*', []RedisMessage{
 				strmsg(typeBlobString, ""),
 
 				strmsg(typeBlobString, "port"),
-				{typ: typeInteger, integer: 1},
+				{typ: typeInteger, intlen: 1},
 
 				strmsg(typeBlobString, "ip"),
 				strmsg(typeBlobString, "127.0.1.1"),
@@ -442,7 +442,7 @@ var shardsMultiResp = newResult(slicemsg('*', []RedisMessage{
 				strmsg(typeBlobString, "replica"),
 
 				strmsg(typeBlobString, "replication-offset"),
-				{typ: typeInteger, integer: 72156},
+				{typ: typeInteger, intlen: 72156},
 
 				strmsg(typeBlobString, "health"),
 				strmsg(typeBlobString, "online"),
@@ -462,7 +462,7 @@ var shardsMultiResp = newResult(slicemsg('*', []RedisMessage{
 				strmsg(typeBlobString, ""),
 
 				strmsg(typeBlobString, "port"),
-				{typ: typeInteger, integer: 0},
+				{typ: typeInteger, intlen: 0},
 
 				strmsg(typeBlobString, "ip"),
 				strmsg(typeBlobString, "127.0.2.99"),
@@ -474,7 +474,7 @@ var shardsMultiResp = newResult(slicemsg('*', []RedisMessage{
 				strmsg(typeBlobString, "master"),
 
 				strmsg(typeBlobString, "replication-offset"),
-				{typ: typeInteger, integer: 72156},
+				{typ: typeInteger, intlen: 72156},
 
 				strmsg(typeBlobString, "health"),
 				strmsg(typeBlobString, "fail"),
@@ -484,7 +484,7 @@ var shardsMultiResp = newResult(slicemsg('*', []RedisMessage{
 				strmsg(typeBlobString, ""),
 
 				strmsg(typeBlobString, "port"),
-				{typ: typeInteger, integer: 0},
+				{typ: typeInteger, intlen: 0},
 
 				strmsg(typeBlobString, "ip"),
 				strmsg(typeBlobString, "127.0.2.1"),
@@ -496,7 +496,7 @@ var shardsMultiResp = newResult(slicemsg('*', []RedisMessage{
 				strmsg(typeBlobString, "master"),
 
 				strmsg(typeBlobString, "replication-offset"),
-				{typ: typeInteger, integer: 72156},
+				{typ: typeInteger, intlen: 72156},
 
 				strmsg(typeBlobString, "health"),
 				strmsg(typeBlobString, "online"),
@@ -506,7 +506,7 @@ var shardsMultiResp = newResult(slicemsg('*', []RedisMessage{
 				strmsg(typeBlobString, ""),
 
 				strmsg(typeBlobString, "port"),
-				{typ: typeInteger, integer: 1},
+				{typ: typeInteger, intlen: 1},
 
 				strmsg(typeBlobString, "ip"),
 				strmsg(typeBlobString, "127.0.3.1"),
@@ -518,7 +518,7 @@ var shardsMultiResp = newResult(slicemsg('*', []RedisMessage{
 				strmsg(typeBlobString, "replica"),
 
 				strmsg(typeBlobString, "replication-offset"),
-				{typ: typeInteger, integer: 72156},
+				{typ: typeInteger, intlen: 72156},
 
 				strmsg(typeBlobString, "health"),
 				strmsg(typeBlobString, "online"),
@@ -541,7 +541,7 @@ var singleShardResp2 = newResult(slicemsg('*', []RedisMessage{
 				strmsg(typeBlobString, ""),
 
 				strmsg(typeBlobString, "port"),
-				{typ: typeInteger, integer: 3},
+				{typ: typeInteger, intlen: 3},
 
 				strmsg(typeBlobString, "ip"),
 				strmsg(typeBlobString, "127.0.3.99"),
@@ -553,7 +553,7 @@ var singleShardResp2 = newResult(slicemsg('*', []RedisMessage{
 				strmsg(typeBlobString, "master"),
 
 				strmsg(typeBlobString, "replication-offset"),
-				{typ: typeInteger, integer: 72156},
+				{typ: typeInteger, intlen: 72156},
 
 				strmsg(typeBlobString, "health"),
 				strmsg(typeBlobString, "fail"),
@@ -563,7 +563,7 @@ var singleShardResp2 = newResult(slicemsg('*', []RedisMessage{
 				strmsg(typeBlobString, ""),
 
 				strmsg(typeBlobString, "port"),
-				{typ: typeInteger, integer: 3},
+				{typ: typeInteger, intlen: 3},
 
 				strmsg(typeBlobString, "ip"),
 				strmsg(typeBlobString, "127.0.3.1"),
@@ -575,7 +575,7 @@ var singleShardResp2 = newResult(slicemsg('*', []RedisMessage{
 				strmsg(typeBlobString, "master"),
 
 				strmsg(typeBlobString, "replication-offset"),
-				{typ: typeInteger, integer: 72156},
+				{typ: typeInteger, intlen: 72156},
 
 				strmsg(typeBlobString, "health"),
 				strmsg(typeBlobString, "online"),
@@ -598,7 +598,7 @@ var singleShardWithoutIP = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, ""),
 
 				strmsg(typeBlobString, "port"),
-				{typ: typeInteger, integer: 4},
+				{typ: typeInteger, intlen: 4},
 
 				strmsg(typeBlobString, "ip"),
 				strmsg(typeBlobString, ""),
@@ -610,7 +610,7 @@ var singleShardWithoutIP = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, "master"),
 
 				strmsg(typeBlobString, "replication-offset"),
-				{typ: typeInteger, integer: 72156},
+				{typ: typeInteger, intlen: 72156},
 
 				strmsg(typeBlobString, "health"),
 				strmsg(typeBlobString, "fail"),
@@ -620,7 +620,7 @@ var singleShardWithoutIP = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, ""),
 
 				strmsg(typeBlobString, "port"),
-				{typ: typeInteger, integer: 4},
+				{typ: typeInteger, intlen: 4},
 
 				strmsg(typeBlobString, "ip"),
 				strmsg(typeBlobString, ""),
@@ -632,7 +632,7 @@ var singleShardWithoutIP = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, "master"),
 
 				strmsg(typeBlobString, "replication-offset"),
-				{typ: typeInteger, integer: 72156},
+				{typ: typeInteger, intlen: 72156},
 
 				strmsg(typeBlobString, "health"),
 				strmsg(typeBlobString, "online"),
@@ -642,7 +642,7 @@ var singleShardWithoutIP = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, ""),
 
 				strmsg(typeBlobString, "port"),
-				{typ: typeInteger, integer: 1},
+				{typ: typeInteger, intlen: 1},
 
 				strmsg(typeBlobString, "ip"),
 				strmsg(typeBlobString, "?"),
@@ -654,7 +654,7 @@ var singleShardWithoutIP = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, "replica"),
 
 				strmsg(typeBlobString, "replication-offset"),
-				{typ: typeInteger, integer: 72156},
+				{typ: typeInteger, intlen: 72156},
 
 				strmsg(typeBlobString, "health"),
 				strmsg(typeBlobString, "online"),
@@ -674,7 +674,7 @@ var singleShardWithoutIP = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, ""),
 
 				strmsg(typeBlobString, "port"),
-				{typ: typeInteger, integer: 4},
+				{typ: typeInteger, intlen: 4},
 
 				strmsg(typeBlobString, "ip"),
 				strmsg(typeBlobString, "?"),
@@ -686,7 +686,7 @@ var singleShardWithoutIP = newResult(slicemsg(typeArray, []RedisMessage{
 				strmsg(typeBlobString, "master"),
 
 				strmsg(typeBlobString, "replication-offset"),
-				{typ: typeInteger, integer: 72156},
+				{typ: typeInteger, intlen: 72156},
 
 				strmsg(typeBlobString, "health"),
 				strmsg(typeBlobString, "online"),

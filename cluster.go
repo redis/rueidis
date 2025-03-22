@@ -356,7 +356,7 @@ func parseEndpoint(fallback, endpoint string, port int64) string {
 func parseSlots(slots RedisMessage, defaultAddr string) map[string]group {
 	groups := make(map[string]group, len(slots.values()))
 	for _, v := range slots.values() {
-		master := parseEndpoint(defaultAddr, v.values()[2].values()[0].string(), v.values()[2].values()[1].integer)
+		master := parseEndpoint(defaultAddr, v.values()[2].values()[0].string(), v.values()[2].values()[1].intlen)
 		if master == "" {
 			continue
 		}
@@ -365,12 +365,12 @@ func parseSlots(slots RedisMessage, defaultAddr string) map[string]group {
 			g.slots = make([][2]int64, 0)
 			g.nodes = make(nodes, 0, len(v.values())-2)
 			for i := 2; i < len(v.values()); i++ {
-				if dst := parseEndpoint(defaultAddr, v.values()[i].values()[0].string(), v.values()[i].values()[1].integer); dst != "" {
+				if dst := parseEndpoint(defaultAddr, v.values()[i].values()[0].string(), v.values()[i].values()[1].intlen); dst != "" {
 					g.nodes = append(g.nodes, ReplicaInfo{Addr: dst})
 				}
 			}
 		}
-		g.slots = append(g.slots, [2]int64{v.values()[0].integer, v.values()[1].integer})
+		g.slots = append(g.slots, [2]int64{v.values()[0].intlen, v.values()[1].intlen})
 		groups[master] = g
 	}
 	return groups
@@ -400,9 +400,9 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 			if dictHealth := dict["health"]; dictHealth.string() != "online" {
 				continue
 			}
-			port := dict["port"].integer
-			if tls && dict["tls-port"].integer > 0 {
-				port = dict["tls-port"].integer
+			port := dict["port"].intlen
+			if tls && dict["tls-port"].intlen > 0 {
+				port = dict["tls-port"].intlen
 			}
 			dictEndpoint := dict["endpoint"]
 			if dst := parseEndpoint(defaultAddr, dictEndpoint.string(), port); dst != "" {

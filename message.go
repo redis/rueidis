@@ -57,7 +57,7 @@ func (m *RedisError) string() string {
 	if m.bytes == nil {
 		return ""
 	}
-	return unsafe.String(m.bytes, m.integer)
+	return unsafe.String(m.bytes, m.intlen)
 }
 
 func (r *RedisError) Error() string {
@@ -535,35 +535,35 @@ type RedisMessage struct {
 	bytes *byte
 	array *RedisMessage
 
-	// integer is used for a simple number or
+	// intlen is used for a simple number or
 	// in conjunction with array or bytes to store the length of array or string
-	integer int64
-	typ     byte
-	ttl     [7]byte
+	intlen int64
+	typ    byte
+	ttl    [7]byte
 }
 
 func (m *RedisMessage) string() string {
 	if m.bytes == nil {
 		return ""
 	}
-	return unsafe.String(m.bytes, m.integer)
+	return unsafe.String(m.bytes, m.intlen)
 }
 
 func (m *RedisMessage) values() []RedisMessage {
 	if m.array == nil {
 		return nil
 	}
-	return unsafe.Slice(m.array, m.integer)
+	return unsafe.Slice(m.array, m.intlen)
 }
 
 func (m *RedisMessage) setString(s string) {
 	m.bytes = unsafe.StringData(s)
-	m.integer = int64(len(s))
+	m.intlen = int64(len(s))
 }
 
 func (m *RedisMessage) setValues(values []RedisMessage) {
 	m.array = unsafe.SliceData(values)
-	m.integer = int64(len(values))
+	m.intlen = int64(len(values))
 }
 
 func (m *RedisMessage) cachesize() int {
@@ -585,7 +585,7 @@ func (m *RedisMessage) serialize(o *bytes.Buffer) {
 	o.WriteByte(m.typ)
 	switch m.typ {
 	case typeInteger, typeNull, typeBool:
-		binary.BigEndian.PutUint64(buf[:], uint64(m.integer))
+		binary.BigEndian.PutUint64(buf[:], uint64(m.intlen))
 		o.Write(buf[:])
 	case typeArray, typeMap, typeSet:
 		binary.BigEndian.PutUint64(buf[:], uint64(len(m.values())))
@@ -613,7 +613,7 @@ func (m *RedisMessage) unmarshalView(c int64, buf []byte) (int64, error) {
 	c += 8 // TODO: can we use VarInt instead of fixed 8 bytes for length?
 	switch m.typ {
 	case typeInteger, typeNull, typeBool:
-		m.integer = size
+		m.intlen = size
 	case typeArray, typeMap, typeSet:
 		m.setValues(make([]RedisMessage, size))
 		for i := range m.values() {
@@ -755,7 +755,7 @@ func (m *RedisMessage) DecodeJSON(v any) (err error) {
 // AsInt64 check if message is a redis string response, and parse it as int64
 func (m *RedisMessage) AsInt64() (val int64, err error) {
 	if m.IsInt64() {
-		return m.integer, nil
+		return m.intlen, nil
 	}
 	v, err := m.ToString()
 	if err != nil {
@@ -767,7 +767,7 @@ func (m *RedisMessage) AsInt64() (val int64, err error) {
 // AsUint64 check if message is a redis string response, and parse it as uint64
 func (m *RedisMessage) AsUint64() (val uint64, err error) {
 	if m.IsInt64() {
-		return uint64(m.integer), nil
+		return uint64(m.intlen), nil
 	}
 	v, err := m.ToString()
 	if err != nil {
@@ -786,10 +786,10 @@ func (m *RedisMessage) AsBool() (val bool, err error) {
 		val = m.string() == "OK"
 		return
 	case typeInteger:
-		val = m.integer != 0
+		val = m.intlen != 0
 		return
 	case typeBool:
-		val = m.integer == 1
+		val = m.intlen == 1
 		return
 	default:
 		typ := m.typ
@@ -812,7 +812,7 @@ func (m *RedisMessage) AsFloat64() (val float64, err error) {
 // ToInt64 check if message is a redis RESP3 int response, and return it
 func (m *RedisMessage) ToInt64() (val int64, err error) {
 	if m.IsInt64() {
-		return m.integer, nil
+		return m.intlen, nil
 	}
 	if err = m.Error(); err != nil {
 		return 0, err
@@ -824,7 +824,7 @@ func (m *RedisMessage) ToInt64() (val int64, err error) {
 // ToBool check if message is a redis RESP3 bool response, and return it
 func (m *RedisMessage) ToBool() (val bool, err error) {
 	if m.IsBool() {
-		return m.integer == 1, nil
+		return m.intlen == 1, nil
 	}
 	if err = m.Error(); err != nil {
 		return false, err
@@ -885,7 +885,7 @@ func (m *RedisMessage) AsIntSlice() ([]int64, error) {
 				return nil, err
 			}
 		} else {
-			s[i] = v.integer
+			s[i] = v.intlen
 		}
 	}
 	return s, nil
@@ -905,7 +905,7 @@ func (m *RedisMessage) AsFloatSlice() ([]float64, error) {
 				return nil, err
 			}
 		} else {
-			s[i] = float64(v.integer)
+			s[i] = float64(v.intlen)
 		}
 	}
 	return s, nil
@@ -1125,7 +1125,7 @@ func (m *RedisMessage) AsIntMap() (map[string]int64, error) {
 						return nil, err
 					}
 				} else if v.typ == typeInteger || v.typ == typeNull {
-					r[k.string()] = v.integer
+					r[k.string()] = v.intlen
 				}
 			}
 		}
@@ -1185,7 +1185,7 @@ func (m *RedisMessage) AsFtSearch() (total int64, docs []FtSearchDoc, err error)
 		for i := 0; i < len(m.values()); i += 2 {
 			switch m.values()[i].string() {
 			case "total_results":
-				total = m.values()[i+1].integer
+				total = m.values()[i+1].intlen
 			case "results":
 				records := m.values()[i+1].values()
 				docs = make([]FtSearchDoc, len(records))
@@ -1211,7 +1211,7 @@ func (m *RedisMessage) AsFtSearch() (total int64, docs []FtSearchDoc, err error)
 		return
 	}
 	if len(m.values()) > 0 {
-		total = m.values()[0].integer
+		total = m.values()[0].intlen
 		wscore := false
 		wattrs := false
 		offset := 1
@@ -1257,7 +1257,7 @@ func (m *RedisMessage) AsFtAggregate() (total int64, docs []map[string]string, e
 		for i := 0; i < len(m.values()); i += 2 {
 			switch m.values()[i].string() {
 			case "total_results":
-				total = m.values()[i+1].integer
+				total = m.values()[i+1].intlen
 			case "results":
 				records := m.values()[i+1].values()
 				docs = make([]map[string]string, len(records))
@@ -1279,7 +1279,7 @@ func (m *RedisMessage) AsFtAggregate() (total int64, docs []map[string]string, e
 		return
 	}
 	if len(m.values()) > 0 {
-		total = m.values()[0].integer
+		total = m.values()[0].intlen
 		docs = make([]map[string]string, len(m.values())-1)
 		for d, record := range m.values()[1:] {
 			docs[d], _ = record.AsStrMap()
@@ -1293,7 +1293,7 @@ func (m *RedisMessage) AsFtAggregate() (total int64, docs []map[string]string, e
 func (m *RedisMessage) AsFtAggregateCursor() (cursor, total int64, docs []map[string]string, err error) {
 	if m.IsArray() && len(m.values()) == 2 && (m.values()[0].IsArray() || m.values()[0].IsMap()) {
 		total, docs, err = m.values()[0].AsFtAggregate()
-		cursor = m.values()[1].integer
+		cursor = m.values()[1].intlen
 	} else {
 		total, docs, err = m.AsFtAggregate()
 	}
@@ -1333,7 +1333,7 @@ func (m *RedisMessage) AsGeosearch() ([]GeoLocation, error) {
 			}
 			//hash
 			if i < len(info) && info[i].IsInt64() {
-				loc.GeoHash = info[i].integer
+				loc.GeoHash = info[i].intlen
 				i++
 			}
 			//coordinates
@@ -1374,9 +1374,9 @@ func (m *RedisMessage) ToAny() (any, error) {
 	case typeBlobString, typeSimpleString, typeVerbatimString, typeBigNumber:
 		return m.string(), nil
 	case typeBool:
-		return m.integer == 1, nil
+		return m.intlen == 1, nil
 	case typeInteger:
-		return m.integer, nil
+		return m.intlen, nil
 	case typeMap:
 		vs := make(map[string]any, len(m.values())/2)
 		for i := 0; i < len(m.values()); i += 2 {
@@ -1493,14 +1493,14 @@ func (m *prettyRedisMessage) string() string {
 	if m.bytes == nil {
 		return ""
 	}
-	return unsafe.String(m.bytes, m.integer)
+	return unsafe.String(m.bytes, m.intlen)
 }
 
 func (m *prettyRedisMessage) values() []RedisMessage {
 	if m.array == nil {
 		return nil
 	}
-	return unsafe.Slice(m.array, m.integer)
+	return unsafe.Slice(m.array, m.intlen)
 }
 
 // MarshalJSON implements json.Marshaler interface
@@ -1527,9 +1527,9 @@ func (m *prettyRedisMessage) MarshalJSON() ([]byte, error) {
 	case typeFloat, typeBlobString, typeSimpleString, typeVerbatimString, typeBigNumber:
 		obj.Value = m.string()
 	case typeBool:
-		obj.Value = m.integer == 1
+		obj.Value = m.intlen == 1
 	case typeInteger:
-		obj.Value = m.integer
+		obj.Value = m.intlen
 	case typeMap, typeSet, typeArray:
 		values := make([]prettyRedisMessage, len(m.values()))
 		for i, value := range m.values() {
@@ -1542,16 +1542,16 @@ func (m *prettyRedisMessage) MarshalJSON() ([]byte, error) {
 
 func slicemsg(typ byte, values []RedisMessage) RedisMessage {
 	return RedisMessage{
-		typ:     typ,
-		array:   unsafe.SliceData(values),
-		integer: int64(len(values)),
+		typ:    typ,
+		array:  unsafe.SliceData(values),
+		intlen: int64(len(values)),
 	}
 }
 
 func strmsg(typ byte, value string) RedisMessage {
 	return RedisMessage{
-		typ:     typ,
-		bytes:   unsafe.StringData(value),
-		integer: int64(len(value)),
+		typ:    typ,
+		bytes:  unsafe.StringData(value),
+		intlen: int64(len(value)),
 	}
 }

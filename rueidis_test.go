@@ -55,7 +55,7 @@ func accept(t *testing.T, ln net.Listener) (*redisMock, error) {
 			'%',
 			[]RedisMessage{
 				strmsg('+', "proto"),
-				{typ: ':', integer: 3},
+				{typ: ':', intlen: 3},
 			},
 		))
 	mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
