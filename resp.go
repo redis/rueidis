@@ -77,12 +77,16 @@ func init() {
 }
 
 func readSimpleString(i *bufio.Reader) (m RedisMessage, err error) {
-	m.string, err = readS(i)
+	var s string
+	s, err = readS(i)
+	m.setString(s)
 	return
 }
 
 func readBlobString(i *bufio.Reader) (m RedisMessage, err error) {
-	m.string, err = readB(i)
+	var s string
+	s, err = readB(i)
+	m.setString(s)
 	if err == errChunked {
 		sb := strings.Builder{}
 		for {
@@ -94,7 +98,9 @@ func readBlobString(i *bufio.Reader) (m RedisMessage, err error) {
 				return RedisMessage{}, err
 			}
 			if length == 0 {
-				return RedisMessage{string: sb.String()}, nil
+				var ret RedisMessage
+				ret.setString(sb.String())
+				return ret, nil
 			}
 			sb.Grow(int(length))
 			if _, err = io.CopyN(&sb, i, length); err != nil {
@@ -131,24 +137,30 @@ func readNull(i *bufio.Reader) (m RedisMessage, err error) {
 }
 
 func readArray(i *bufio.Reader) (m RedisMessage, err error) {
+	var values []RedisMessage
 	length, err := readI(i)
 	if err == nil {
 		if length == -1 {
 			return m, errOldNull
 		}
-		m.values, err = readA(i, length)
+		values, err = readA(i, length)
+		m.setValues(values)
 	} else if err == errChunked {
-		m.values, err = readE(i)
+		values, err = readE(i)
+		m.setValues(values)
 	}
 	return m, err
 }
 
 func readMap(i *bufio.Reader) (m RedisMessage, err error) {
+	var values []RedisMessage
 	length, err := readI(i)
 	if err == nil {
-		m.values, err = readA(i, length*2)
+		values, err = readA(i, length*2)
+		m.setValues(values)
 	} else if err == errChunked {
-		m.values, err = readE(i)
+		values, err = readE(i)
+		m.setValues(values)
 	}
 	return m, err
 }
@@ -348,7 +360,7 @@ next:
 		}
 		switch m.typ {
 		case typeSimpleString, typeFloat, typeBigNumber:
-			n, err := w.Write([]byte(m.string))
+			n, err := w.Write([]byte(m.string()))
 			return int64(n), err, true
 		case typeNull:
 			return 0, Nil, true
