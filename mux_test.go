@@ -101,10 +101,10 @@ func TestNewMux(t *testing.T) {
 	mock := &redisMock{t: t, buf: bufio.NewReader(n2), conn: n2}
 	go func() {
 		mock.Expect("HELLO", "3").
-			Reply(redisMessageContainSlice(
+			Reply(slicemsg(
 				'%',
 				[]RedisMessage{
-					redisMessageContainString('+', "proto"),
+					strmsg('+', "proto"),
 					{typ: ':', integer: 3},
 				},
 			))
@@ -211,7 +211,7 @@ func TestMuxReuseWire(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
 				DoFn: func(cmd Completed) RedisResult {
-					return newResult(redisMessageContainString('+', "PONG"), nil)
+					return newResult(strmsg('+', "PONG"), nil)
 				},
 			},
 		})
@@ -234,7 +234,7 @@ func TestMuxReuseWire(t *testing.T) {
 			},
 			{
 				DoFn: func(cmd Completed) RedisResult {
-					return newResult(redisMessageContainString('+', "ACQUIRED"), nil)
+					return newResult(strmsg('+', "ACQUIRED"), nil)
 				},
 			},
 			{
@@ -271,7 +271,7 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("unexpected response %v", val)
 		}
 
-		response <- newResult(redisMessageContainString('+', "BLOCK_RESPONSE"), nil)
+		response <- newResult(strmsg('+', "BLOCK_RESPONSE"), nil)
 		<-blocking
 	})
 
@@ -282,12 +282,12 @@ func TestMuxReuseWire(t *testing.T) {
 			{
 				// leave first wire for pipeline calls
 				DoFn: func(cmd Completed) RedisResult {
-					return newResult(redisMessageContainString('+', "PIPELINED"), nil)
+					return newResult(strmsg('+', "PIPELINED"), nil)
 				},
 			},
 			{
 				DoFn: func(cmd Completed) RedisResult {
-					return newResult(redisMessageContainString('+', "ACQUIRED"), nil)
+					return newResult(strmsg('+', "ACQUIRED"), nil)
 				},
 			},
 			{
@@ -332,7 +332,7 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("unexpected response %v", val)
 		}
 
-		response <- newResult(redisMessageContainString('+', "BLOCK_RESPONSE"), nil)
+		response <- newResult(strmsg('+', "BLOCK_RESPONSE"), nil)
 		<-blocking
 	})
 
@@ -343,12 +343,12 @@ func TestMuxReuseWire(t *testing.T) {
 			{
 				// leave first wire for pipeline calls
 				DoMultiFn: func(cmd ...Completed) *redisresults {
-					return &redisresults{s: []RedisResult{newResult(redisMessageContainString('+', "PIPELINED"), nil)}}
+					return &redisresults{s: []RedisResult{newResult(strmsg('+', "PIPELINED"), nil)}}
 				},
 			},
 			{
 				DoMultiFn: func(cmd ...Completed) *redisresults {
-					return &redisresults{s: []RedisResult{newResult(redisMessageContainString('+', "ACQUIRED"), nil)}}
+					return &redisresults{s: []RedisResult{newResult(strmsg('+', "ACQUIRED"), nil)}}
 				},
 			},
 			{
@@ -393,7 +393,7 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("unexpected response %v", val)
 		}
 
-		response <- newResult(redisMessageContainString('+', "BLOCK_RESPONSE"), nil)
+		response <- newResult(strmsg('+', "BLOCK_RESPONSE"), nil)
 		<-blocking
 	})
 
@@ -406,7 +406,7 @@ func TestMuxReuseWire(t *testing.T) {
 			},
 			{
 				DoMultiFn: func(cmd ...Completed) *redisresults {
-					return &redisresults{s: []RedisResult{newResult(redisMessageContainString('+', "ACQUIRED"), nil)}}
+					return &redisresults{s: []RedisResult{newResult(strmsg('+', "ACQUIRED"), nil)}}
 				},
 			},
 			{
@@ -443,7 +443,7 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("unexpected response %v", val)
 		}
 
-		response <- newResult(redisMessageContainString('+', "BLOCK_RESPONSE"), nil)
+		response <- newResult(strmsg('+', "BLOCK_RESPONSE"), nil)
 		<-blocking
 	})
 
@@ -482,7 +482,7 @@ func TestMuxDelegation(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
 				InfoFn: func() map[string]RedisMessage {
-					return map[string]RedisMessage{"key": redisMessageContainString('+', "value")}
+					return map[string]RedisMessage{"key": strmsg('+', "value")}
 				},
 			},
 		})
@@ -556,7 +556,7 @@ func TestMuxDelegation(t *testing.T) {
 					if cmd.Commands()[0] != "READONLY_COMMAND" {
 						t.Fatalf("command should be READONLY_COMMAND")
 					}
-					return newResult(redisMessageContainString('+', "READONLY_COMMAND_RESPONSE"), nil)
+					return newResult(strmsg('+', "READONLY_COMMAND_RESPONSE"), nil)
 				},
 			},
 		})
@@ -599,7 +599,7 @@ func TestMuxDelegation(t *testing.T) {
 			},
 			{
 				DoMultiFn: func(multi ...Completed) *redisresults {
-					return &redisresults{s: []RedisResult{newResult(redisMessageContainString('+', "MULTI_COMMANDS_RESPONSE"), nil)}}
+					return &redisresults{s: []RedisResult{newResult(strmsg('+', "MULTI_COMMANDS_RESPONSE"), nil)}}
 				},
 			},
 		})
@@ -642,7 +642,7 @@ func TestMuxDelegation(t *testing.T) {
 			},
 			{
 				DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
-					return newResult(redisMessageContainString('+', "READONLY_COMMAND_RESPONSE"), nil)
+					return newResult(strmsg('+', "READONLY_COMMAND_RESPONSE"), nil)
 				},
 			},
 		})
@@ -670,7 +670,7 @@ func TestMuxDelegation(t *testing.T) {
 			},
 			{
 				DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
-					return &redisresults{s: []RedisResult{newResult(redisMessageContainString('+', "MULTI_COMMANDS_RESPONSE"), nil)}}
+					return &redisresults{s: []RedisResult{newResult(strmsg('+', "MULTI_COMMANDS_RESPONSE"), nil)}}
 				},
 			},
 		})
@@ -698,7 +698,7 @@ func TestMuxDelegation(t *testing.T) {
 						if s := cmd.Cmd.Slot() & uint16(len(wires)-1); s != idx {
 							result[j] = newErrResult(fmt.Errorf("wrong slot %v %v", s, idx))
 						} else {
-							result[j] = newResult(redisMessageContainString('+', cmd.Cmd.Commands()[1]), nil)
+							result[j] = newResult(strmsg('+', cmd.Cmd.Commands()[1]), nil)
 						}
 					}
 					return &redisresults{s: result}
@@ -838,7 +838,7 @@ func TestMuxDelegation(t *testing.T) {
 			<-blocked
 		}
 		for i := 0; i < 2; i++ {
-			responses <- newResult(redisMessageContainString('+', "BLOCK_COMMANDS_RESPONSE"), nil)
+			responses <- newResult(strmsg('+', "BLOCK_COMMANDS_RESPONSE"), nil)
 		}
 		wg.Wait()
 	})
@@ -862,7 +862,7 @@ func TestMuxDelegation(t *testing.T) {
 			},
 			{
 				DoFn: func(cmd Completed) RedisResult {
-					return newResult(redisMessageContainString('+', "OK"), nil)
+					return newResult(strmsg('+', "OK"), nil)
 				},
 			},
 		})
@@ -930,7 +930,7 @@ func TestMuxDelegation(t *testing.T) {
 			<-blocked
 		}
 		for i := 0; i < 2; i++ {
-			responses <- newResult(redisMessageContainString('+', "BLOCK_COMMANDS_RESPONSE"), nil)
+			responses <- newResult(strmsg('+', "BLOCK_COMMANDS_RESPONSE"), nil)
 		}
 		wg.Wait()
 	})
@@ -983,7 +983,7 @@ func TestMuxDelegation(t *testing.T) {
 			<-blocked
 		}
 		for i := 0; i < 2; i++ {
-			responses <- newResult(redisMessageContainString('+', "BLOCK_COMMANDS_RESPONSE"), nil)
+			responses <- newResult(strmsg('+', "BLOCK_COMMANDS_RESPONSE"), nil)
 		}
 		wg.Wait()
 	})
@@ -1007,7 +1007,7 @@ func TestMuxDelegation(t *testing.T) {
 			},
 			{
 				DoFn: func(cmd Completed) RedisResult {
-					return newResult(redisMessageContainString('+', "OK"), nil)
+					return newResult(strmsg('+', "OK"), nil)
 				},
 			},
 		})
@@ -1040,7 +1040,7 @@ func TestMuxRegisterCloseHook(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
 				DoFn: func(cmd Completed) RedisResult {
-					return newResult(redisMessageContainString('+', "PONG1"), nil)
+					return newResult(strmsg('+', "PONG1"), nil)
 				},
 				SetOnCloseHookFn: func(fn func(error)) {
 					hook.Store(fn)
@@ -1048,7 +1048,7 @@ func TestMuxRegisterCloseHook(t *testing.T) {
 			},
 			{
 				DoFn: func(cmd Completed) RedisResult {
-					return newResult(redisMessageContainString('+', "PONG2"), nil)
+					return newResult(strmsg('+', "PONG2"), nil)
 				},
 			},
 		})
@@ -1067,7 +1067,7 @@ func TestMuxRegisterCloseHook(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
 				DoFn: func(cmd Completed) RedisResult {
-					return newResult(redisMessageContainString('+', "PONG1"), nil)
+					return newResult(strmsg('+', "PONG1"), nil)
 				},
 				SetOnCloseHookFn: func(fn func(error)) {
 					hook.Store(fn)

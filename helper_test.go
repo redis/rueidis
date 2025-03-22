@@ -35,7 +35,7 @@ func TestMGetCache(t *testing.T) {
 				if !reflect.DeepEqual(cmd.Commands(), []string{"MGET", "1", "2"}) {
 					t.Fatalf("unexpected command %v", cmd)
 				}
-				return newResult(redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "1"), redisMessageContainString('+', "2")}), nil)
+				return newResult(slicemsg('*', []RedisMessage{strmsg('+', "1"), strmsg('+', "2")}), nil)
 			}
 			if v, err := MGetCache(disabledCacheClient, context.Background(), 100, []string{"1", "2"}); err != nil || v == nil {
 				t.Fatalf("unexpected response %v %v", v, err)
@@ -46,8 +46,8 @@ func TestMGetCache(t *testing.T) {
 				if reflect.DeepEqual(multi[0].Cmd.Commands(), []string{"GET", "1"}) && multi[0].TTL == 100 &&
 					reflect.DeepEqual(multi[1].Cmd.Commands(), []string{"GET", "2"}) && multi[1].TTL == 100 {
 					return &redisresults{s: []RedisResult{
-						newResult(redisMessageContainString('+', "1"), nil),
-						newResult(redisMessageContainString('+', "2"), nil),
+						newResult(strmsg('+', "1"), nil),
+						newResult(strmsg('+', "2"), nil),
 					}}
 				}
 				t.Fatalf("unexpected command %v", multi)
@@ -109,7 +109,7 @@ func TestMGetCache(t *testing.T) {
 						t.Fatalf("unexpected command %v", cmd)
 						return nil
 					}
-					result[i] = newResult(redisMessageContainString('+', key), nil)
+					result[i] = newResult(strmsg('+', key), nil)
 				}
 				return &redisresults{s: result}
 			}
@@ -136,7 +136,7 @@ func TestMGetCache(t *testing.T) {
 						t.Fatalf("unexpected command %v", multi)
 						return nil
 					}
-					result[i] = newResult(redisMessageContainString('+', key), nil)
+					result[i] = newResult(strmsg('+', key), nil)
 				}
 				return &redisresults{s: result}
 			}
@@ -191,7 +191,7 @@ func TestMGet(t *testing.T) {
 				if !reflect.DeepEqual(cmd.Commands(), []string{"MGET", "1", "2"}) {
 					t.Fatalf("unexpected command %v", cmd)
 				}
-				return newResult(redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "1"), redisMessageContainString('+', "2")}), nil)
+				return newResult(slicemsg('*', []RedisMessage{strmsg('+', "1"), strmsg('+', "2")}), nil)
 			}
 			if v, err := MGet(client, context.Background(), []string{"1", "2"}); err != nil {
 				t.Fatalf("unexpected response %v %v", v, err)
@@ -241,7 +241,7 @@ func TestMGet(t *testing.T) {
 						t.Fatalf("unexpected command %v", cmd)
 						return nil
 					}
-					result[i] = newResult(redisMessageContainString('+', key), nil)
+					result[i] = newResult(strmsg('+', key), nil)
 				}
 				return &redisresults{s: result}
 			}
@@ -388,7 +388,7 @@ func TestMSet(t *testing.T) {
 					!reflect.DeepEqual(cmd.Commands(), []string{"MSET", "2", "2", "1", "1"}) {
 					t.Fatalf("unexpected command %v", cmd)
 				}
-				return newResult(redisMessageContainString('+', "OK"), nil)
+				return newResult(strmsg('+', "OK"), nil)
 			}
 			if err := MSet(client, context.Background(), map[string]string{"1": "1", "2": "2"}); err["1"] != nil || err["2"] != nil {
 				t.Fatalf("unexpected response %v", err)
@@ -441,7 +441,7 @@ func TestMSet(t *testing.T) {
 						t.Fatalf("unexpected command %v", cmd)
 						return nil
 					}
-					result[i] = newResult(redisMessageContainString('+', "OK"), nil)
+					result[i] = newResult(strmsg('+', "OK"), nil)
 				}
 				if len(cpy) != 0 {
 					t.Fatalf("unexpected command %v", cmd)
@@ -493,7 +493,7 @@ func TestMSetNX(t *testing.T) {
 					!reflect.DeepEqual(cmd.Commands(), []string{"MSETNX", "2", "2", "1", "1"}) {
 					t.Fatalf("unexpected command %v", cmd)
 				}
-				return newResult(redisMessageContainString('+', "OK"), nil)
+				return newResult(strmsg('+', "OK"), nil)
 			}
 			if err := MSetNX(client, context.Background(), map[string]string{"1": "1", "2": "2"}); err["1"] != nil || err["2"] != nil {
 				t.Fatalf("unexpected response %v", err)
@@ -546,7 +546,7 @@ func TestMSetNX(t *testing.T) {
 						t.Fatalf("unexpected command %v", cmd)
 						return nil
 					}
-					result[i] = newResult(redisMessageContainString('+', "OK"), nil)
+					result[i] = newResult(strmsg('+', "OK"), nil)
 				}
 				if len(cpy) != 0 {
 					t.Fatalf("unexpected command %v", cmd)
@@ -622,8 +622,8 @@ func TestJsonMGetCache(t *testing.T) {
 				if reflect.DeepEqual(multi[0].Cmd.Commands(), []string{"JSON.GET", "1", "$"}) && multi[0].TTL == 100 &&
 					reflect.DeepEqual(multi[1].Cmd.Commands(), []string{"JSON.GET", "2", "$"}) && multi[1].TTL == 100 {
 					return &redisresults{s: []RedisResult{
-						newResult(redisMessageContainString('+', "1"), nil),
-						newResult(redisMessageContainString('+', "2"), nil),
+						newResult(strmsg('+', "1"), nil),
+						newResult(strmsg('+', "2"), nil),
 					}}
 				}
 				t.Fatalf("unexpected command %v", multi)
@@ -677,7 +677,7 @@ func TestJsonMGetCache(t *testing.T) {
 						t.Fatalf("unexpected command %v", multi)
 						return nil
 					}
-					result[i] = newResult(redisMessageContainString('+', key), nil)
+					result[i] = newResult(strmsg('+', key), nil)
 				}
 				return &redisresults{s: result}
 			}
@@ -732,7 +732,7 @@ func TestJsonMGet(t *testing.T) {
 				if !reflect.DeepEqual(cmd.Commands(), []string{"JSON.MGET", "1", "2", "$"}) {
 					t.Fatalf("unexpected command %v", cmd)
 				}
-				return newResult(redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "1"), redisMessageContainString('+', "2")}), nil)
+				return newResult(slicemsg('*', []RedisMessage{strmsg('+', "1"), strmsg('+', "2")}), nil)
 			}
 			if v, err := JsonMGet(client, context.Background(), []string{"1", "2"}, "$"); err != nil {
 				t.Fatalf("unexpected response %v %v", v, err)
@@ -782,7 +782,7 @@ func TestJsonMGet(t *testing.T) {
 						t.Fatalf("unexpected command %v", cmd)
 						return nil
 					}
-					result[i] = newResult(redisMessageContainString('+', key), nil)
+					result[i] = newResult(strmsg('+', key), nil)
 				}
 				return &redisresults{s: result}
 			}
@@ -833,7 +833,7 @@ func TestJsonMSet(t *testing.T) {
 					!reflect.DeepEqual(cmd.Commands(), []string{"JSON.MSET", "2", "$", "2", "1", "$", "1"}) {
 					t.Fatalf("unexpected command %v", cmd)
 				}
-				return newResult(redisMessageContainString('+', "OK"), nil)
+				return newResult(strmsg('+', "OK"), nil)
 			}
 			if err := JsonMSet(client, context.Background(), map[string]string{"1": "1", "2": "2"}, "$"); err["1"] != nil || err["2"] != nil {
 				t.Fatalf("unexpected response %v", err)
@@ -886,7 +886,7 @@ func TestJsonMSet(t *testing.T) {
 						t.Fatalf("unexpected command %v", cmd)
 						return nil
 					}
-					result[i] = newResult(redisMessageContainString('+', "OK"), nil)
+					result[i] = newResult(strmsg('+', "OK"), nil)
 				}
 				if len(cpy) != 0 {
 					t.Fatalf("unexpected command %v", cmd)
@@ -929,10 +929,10 @@ func TestDecodeSliceOfJSON(t *testing.T) {
 		Inners []*Inner
 	}
 	values := []RedisMessage{
-		redisMessageContainString('+', `{"ID":1, "Name": "n1", "Inners": [{"Field": "f1"}]}`),
-		redisMessageContainString('+', `{"ID":2, "Name": "n2", "Inners": [{"Field": "f2"}]}`),
+		strmsg('+', `{"ID":1, "Name": "n1", "Inners": [{"Field": "f1"}]}`),
+		strmsg('+', `{"ID":2, "Name": "n2", "Inners": [{"Field": "f2"}]}`),
 	}
-	result := RedisResult{val: redisMessageContainSlice('*', values)}
+	result := RedisResult{val: slicemsg('*', values)}
 
 	t.Run("Scan []*T", func(t *testing.T) {
 		got := make([]*T, 0)
@@ -964,11 +964,11 @@ func TestDecodeSliceOfJSON(t *testing.T) {
 
 	t.Run("Scan []*T: has nil error message", func(t *testing.T) {
 		hasNilValues := []RedisMessage{
-			redisMessageContainString('+', `{"ID":1, "Name": "n1", "Inners": [{"Field": "f1"}]}`),
+			strmsg('+', `{"ID":1, "Name": "n1", "Inners": [{"Field": "f1"}]}`),
 			{typ: '_'},
-			redisMessageContainString('+', `{"ID":2, "Name": "n2", "Inners": [{"Field": "f2"}]}`),
+			strmsg('+', `{"ID":2, "Name": "n2", "Inners": [{"Field": "f2"}]}`),
 		}
-		hasNilResult := RedisResult{val: redisMessageContainSlice('*', hasNilValues)}
+		hasNilResult := RedisResult{val: slicemsg('*', hasNilValues)}
 
 		got := make([]*T, 0)
 		want := []*T{
@@ -986,11 +986,11 @@ func TestDecodeSliceOfJSON(t *testing.T) {
 
 	t.Run("Scan []T: has nil error message", func(t *testing.T) {
 		hasNilValues := []RedisMessage{
-			redisMessageContainString('+', `{"ID":1, "Name": "n1", "Inners": [{"Field": "f1"}]}`),
+			strmsg('+', `{"ID":1, "Name": "n1", "Inners": [{"Field": "f1"}]}`),
 			{typ: '_'},
-			redisMessageContainString('+', `{"ID":2, "Name": "n2", "Inners": [{"Field": "f2"}]}`),
+			strmsg('+', `{"ID":2, "Name": "n2", "Inners": [{"Field": "f2"}]}`),
 		}
-		hasNilResult := RedisResult{val: redisMessageContainSlice('*', hasNilValues)}
+		hasNilResult := RedisResult{val: slicemsg('*', hasNilValues)}
 
 		got := make([]T, 0)
 		want := []T{
@@ -1014,10 +1014,10 @@ func TestDecodeSliceOfJSON(t *testing.T) {
 
 	t.Run("has non-nil error message in result", func(t *testing.T) {
 		hasErrValues := []RedisMessage{
-			redisMessageContainString('+', `{"ID":1, "Name": "n1", "Inners": [{"Field": "f1"}]}`),
-			redisMessageContainString('-', `invalid`),
+			strmsg('+', `{"ID":1, "Name": "n1", "Inners": [{"Field": "f1"}]}`),
+			strmsg('-', `invalid`),
 		}
-		hasErrResult := RedisResult{val: redisMessageContainSlice('*', hasErrValues)}
+		hasErrResult := RedisResult{val: slicemsg('*', hasErrValues)}
 
 		got := make([]*T, 0)
 		if err := DecodeSliceOfJSON(hasErrResult, &got); err == nil {

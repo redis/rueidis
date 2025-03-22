@@ -61,7 +61,7 @@ func (r *redisMock) Expect(expected ...string) *redisExpect {
 func (r *redisExpect) ReplyString(replies ...string) *redisExpect {
 	for _, reply := range replies {
 		if r.err == nil {
-			r.Reply(redisMessageContainString('+', reply))
+			r.Reply(strmsg('+', reply))
 		}
 	}
 	return r
@@ -70,7 +70,7 @@ func (r *redisExpect) ReplyString(replies ...string) *redisExpect {
 func (r *redisExpect) ReplyBlobString(replies ...string) *redisExpect {
 	for _, reply := range replies {
 		if r.err == nil {
-			r.Reply(redisMessageContainString('$', reply))
+			r.Reply(strmsg('$', reply))
 		}
 	}
 	return r
@@ -79,7 +79,7 @@ func (r *redisExpect) ReplyBlobString(replies ...string) *redisExpect {
 func (r *redisExpect) ReplyError(replies ...string) *redisExpect {
 	for _, reply := range replies {
 		if r.err == nil {
-			r.Reply(redisMessageContainString('-', reply))
+			r.Reply(strmsg('-', reply))
 		}
 	}
 	return r
@@ -147,12 +147,12 @@ func setup(t *testing.T, option ClientOption) (*pipe, *redisMock, func(), func()
 	}
 	go func() {
 		mock.Expect("HELLO", "3").
-			Reply(redisMessageContainSlice(
+			Reply(slicemsg(
 				'%',
 				[]RedisMessage{
-					redisMessageContainString('+', "version"),
-					redisMessageContainString('+', "6.0.0"),
-					redisMessageContainString('+', "proto"),
+					strmsg('+', "version"),
+					strmsg('+', "6.0.0"),
+					strmsg('+', "proto"),
 					{typ: ':', integer: 3},
 				},
 			))
@@ -209,13 +209,13 @@ func TestNewPipe(t *testing.T) {
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
 			mock.Expect("HELLO", "3", "AUTH", "default", "pa", "SETNAME", "cn").
-				Reply(redisMessageContainSlice(
+				Reply(slicemsg(
 					'%',
 					[]RedisMessage{
-						redisMessageContainString('+', "proto"),
+						strmsg('+', "proto"),
 						RedisMessage{typ: ':', integer: 3},
-						redisMessageContainString('+', "availability_zone"),
-						redisMessageContainString('+', "us-west-1a"),
+						strmsg('+', "availability_zone"),
+						strmsg('+', "us-west-1a"),
 					},
 				))
 			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
@@ -258,13 +258,13 @@ func TestNewPipe(t *testing.T) {
 			mock.Expect("AUTH", "pa").
 				ReplyString("OK")
 			mock.Expect("HELLO", "2").
-				Reply(redisMessageContainSlice(
+				Reply(slicemsg(
 					'*',
 					[]RedisMessage{
-						redisMessageContainString('+', "proto"),
+						strmsg('+', "proto"),
 						{typ: ':', integer: 2},
-						redisMessageContainString('+', "availability_zone"),
-						redisMessageContainString('+', "us-west-1a"),
+						strmsg('+', "availability_zone"),
+						strmsg('+', "us-west-1a"),
 					},
 				))
 			mock.Expect("CLIENT", "SETNAME", "cn").
@@ -307,10 +307,10 @@ func TestNewPipe(t *testing.T) {
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
 			mock.Expect("HELLO", "3", "AUTH", "ua", "pa", "SETNAME", "cn").
-				Reply(redisMessageContainSlice(
+				Reply(slicemsg(
 					'%',
 					[]RedisMessage{
-						redisMessageContainString('+', "proto"),
+						strmsg('+', "proto"),
 						{typ: ':', integer: 3},
 					},
 				))
@@ -346,10 +346,10 @@ func TestNewPipe(t *testing.T) {
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
 			mock.Expect("HELLO", "3", "AUTH", "ua", "pa", "SETNAME", "cn").
-				Reply(redisMessageContainSlice(
+				Reply(slicemsg(
 					'%',
 					[]RedisMessage{
-						redisMessageContainString('+', "proto"),
+						strmsg('+', "proto"),
 						{typ: ':', integer: 3},
 					},
 				))
@@ -386,10 +386,10 @@ func TestNewPipe(t *testing.T) {
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
 			mock.Expect("HELLO", "3").
-				Reply(redisMessageContainSlice(
+				Reply(slicemsg(
 					'%',
 					[]RedisMessage{
-						redisMessageContainString('+', "proto"),
+						strmsg('+', "proto"),
 						{typ: ':', integer: 3},
 					},
 				))
@@ -417,10 +417,10 @@ func TestNewPipe(t *testing.T) {
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
 			mock.Expect("HELLO", "3", "AUTH", "ua", "pa", "SETNAME", "cn").
-				Reply(redisMessageContainSlice(
+				Reply(slicemsg(
 					'%',
 					[]RedisMessage{
-						redisMessageContainString('+', "proto"),
+						strmsg('+', "proto"),
 						{typ: ':', integer: 3},
 					},
 				))
@@ -456,10 +456,10 @@ func TestNewPipe(t *testing.T) {
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
 			mock.Expect("HELLO", "3", "AUTH", "ua", "pa", "SETNAME", "cn").
-				Reply(redisMessageContainSlice(
+				Reply(slicemsg(
 					'%',
 					[]RedisMessage{
-						redisMessageContainString('+', "proto"),
+						strmsg('+', "proto"),
 						{typ: ':', integer: 3},
 					},
 				))
@@ -521,10 +521,10 @@ func TestNewPipe(t *testing.T) {
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
 			mock.Expect("HELLO", "3").
-				Reply(redisMessageContainSlice(
+				Reply(slicemsg(
 					'%',
 					[]RedisMessage{
-						redisMessageContainString('+', "proto"),
+						strmsg('+', "proto"),
 						{typ: ':', integer: 3},
 					},
 				))
@@ -597,26 +597,26 @@ func TestNewRESP2Pipe(t *testing.T) {
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		go func() {
 			mock.Expect("HELLO", "3").
-				Reply(redisMessageContainSlice('*', []RedisMessage{
-					redisMessageContainString('+', "server"),
-					redisMessageContainString('+', "redis"),
-					redisMessageContainString('+', "proto"),
+				Reply(slicemsg('*', []RedisMessage{
+					strmsg('+', "server"),
+					strmsg('+', "redis"),
+					strmsg('+', "proto"),
 					{typ: ':', integer: 2},
-					redisMessageContainString('+', "availability_zone"),
-					redisMessageContainString('+', "us-west-1a"),
+					strmsg('+', "availability_zone"),
+					strmsg('+', "us-west-1a"),
 				}))
 			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("HELLO", "2").
-				Reply(redisMessageContainSlice('*', []RedisMessage{
-					redisMessageContainString('+', "server"),
-					redisMessageContainString('+', "redis"),
-					redisMessageContainString('+', "proto"),
+				Reply(slicemsg('*', []RedisMessage{
+					strmsg('+', "server"),
+					strmsg('+', "redis"),
+					strmsg('+', "proto"),
 					{typ: ':', integer: 2},
-					redisMessageContainString('+', "availability_zone"),
-					redisMessageContainString('+', "us-west-1a"),
+					strmsg('+', "availability_zone"),
+					strmsg('+', "us-west-1a"),
 				}))
 			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
 				ReplyError("UNKNOWN COMMAND")
@@ -890,7 +890,7 @@ func TestIgnoreOutOfBandDataDuringSyncMode(t *testing.T) {
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 	go func() {
-		mock.Expect("PING").Reply(redisMessageContainString('>', "This should be ignore")).ReplyString("OK")
+		mock.Expect("PING").Reply(strmsg('>', "This should be ignore")).ReplyString("OK")
 	}()
 	ExpectOK(t, p.Do(context.Background(), cmds.NewCompleted([]string{"PING"})))
 }
@@ -1219,11 +1219,11 @@ func TestNoReplyExceedRingSize(t *testing.T) {
 	}()
 
 	for i := 0; i < times; i++ {
-		mock.Expect("UNSUBSCRIBE").Reply(redisMessageContainSlice('>', []RedisMessage{
-			redisMessageContainString('+', "unsubscribe"),
-			redisMessageContainString('+', "1"),
+		mock.Expect("UNSUBSCRIBE").Reply(slicemsg('>', []RedisMessage{
+			strmsg('+', "unsubscribe"),
+			strmsg('+', "1"),
 			{typ: ':', integer: 0},
-		})).Expect(cmds.PingCmd.Commands()...).Reply(redisMessageContainString('+', "PONG"))
+		})).Expect(cmds.PingCmd.Commands()...).Reply(strmsg('+', "PONG"))
 	}
 	<-wait
 }
@@ -1265,7 +1265,7 @@ func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
 	for i := 0; i < times; i++ {
 		m, _ := mock.ReadMessage()
 		mock.Expect().ReplyString(m.values()[1].string()).
-			Reply(redisMessageContainSlice('>', []RedisMessage{redisMessageContainString('+', "should be ignore")}))
+			Reply(slicemsg('>', []RedisMessage{strmsg('+', "should be ignore")}))
 	}
 	wg.Wait()
 }
@@ -1285,16 +1285,16 @@ func TestClientSideCaching(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			ReplyString("OK").
-			Reply(redisMessageContainSlice('*', []RedisMessage{
+			Reply(slicemsg('*', []RedisMessage{
 				{typ: ':', integer: ttl},
-				redisMessageContainString('+', resp),
+				strmsg('+', resp),
 			}))
 	}
 	invalidateCSC := func(keys RedisMessage) {
-		mock.Expect().Reply(redisMessageContainSlice(
+		mock.Expect().Reply(slicemsg(
 			'>',
 			[]RedisMessage{
-				redisMessageContainString('+', "invalidate"),
+				strmsg('+', "invalidate"),
 				keys,
 			},
 		))
@@ -1334,7 +1334,7 @@ func TestClientSideCaching(t *testing.T) {
 	}
 
 	// cache invalidation
-	invalidateCSC(redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "a")}))
+	invalidateCSC(slicemsg('*', []RedisMessage{strmsg('+', "a")}))
 	go func() {
 		expectCSC(-1, "2")
 	}()
@@ -1377,16 +1377,16 @@ func TestClientSideCachingBCAST(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			ReplyString("OK").
-			Reply(redisMessageContainSlice('*', []RedisMessage{
+			Reply(slicemsg('*', []RedisMessage{
 				{typ: ':', integer: ttl},
-				redisMessageContainString('+', resp),
+				strmsg('+', resp),
 			}))
 	}
 	invalidateCSC := func(keys RedisMessage) {
-		mock.Expect().Reply(redisMessageContainSlice(
+		mock.Expect().Reply(slicemsg(
 			'>',
 			[]RedisMessage{
-				redisMessageContainString('+', "invalidate"),
+				strmsg('+', "invalidate"),
 				keys,
 			},
 		))
@@ -1426,7 +1426,7 @@ func TestClientSideCachingBCAST(t *testing.T) {
 	}
 
 	// cache invalidation
-	invalidateCSC(redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "a")}))
+	invalidateCSC(slicemsg('*', []RedisMessage{strmsg('+', "a")}))
 	go func() {
 		expectCSC(-1, "2")
 	}()
@@ -1469,16 +1469,16 @@ func TestClientSideCachingOPTOUT(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			ReplyString("OK").
-			Reply(redisMessageContainSlice('*', []RedisMessage{
+			Reply(slicemsg('*', []RedisMessage{
 				{typ: ':', integer: ttl},
-				redisMessageContainString('+', resp),
+				strmsg('+', resp),
 			}))
 	}
 	invalidateCSC := func(keys RedisMessage) {
-		mock.Expect().Reply(redisMessageContainSlice(
+		mock.Expect().Reply(slicemsg(
 			'>',
 			[]RedisMessage{
-				redisMessageContainString('+', "invalidate"),
+				strmsg('+', "invalidate"),
 				keys,
 			},
 		))
@@ -1518,7 +1518,7 @@ func TestClientSideCachingOPTOUT(t *testing.T) {
 	}
 
 	// cache invalidation
-	invalidateCSC(redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "a")}))
+	invalidateCSC(slicemsg('*', []RedisMessage{strmsg('+', "a")}))
 	go func() {
 		expectCSC(-1, "2")
 	}()
@@ -1617,10 +1617,10 @@ func TestClientSideCachingMGet(t *testing.T) {
 	defer cancel()
 
 	invalidateCSC := func(keys RedisMessage) {
-		mock.Expect().Reply(redisMessageContainSlice(
+		mock.Expect().Reply(slicemsg(
 			'>',
 			[]RedisMessage{
-				redisMessageContainString('+', "invalidate"),
+				strmsg('+', "invalidate"),
 				keys,
 			},
 		))
@@ -1640,11 +1640,11 @@ func TestClientSideCachingMGet(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			ReplyString("OK").
-			Reply(redisMessageContainSlice('*', []RedisMessage{
+			Reply(slicemsg('*', []RedisMessage{
 				{typ: ':', integer: 1000},
 				{typ: ':', integer: 2000},
 				{typ: ':', integer: 3000},
-				redisMessageContainSlice('*', []RedisMessage{
+				slicemsg('*', []RedisMessage{
 					{typ: ':', integer: 1},
 					{typ: ':', integer: 2},
 					{typ: ':', integer: 3},
@@ -1690,7 +1690,7 @@ func TestClientSideCachingMGet(t *testing.T) {
 	}
 
 	// partial cache invalidation
-	invalidateCSC(redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "a1"), redisMessageContainString('+', "a3")}))
+	invalidateCSC(slicemsg('*', []RedisMessage{strmsg('+', "a1"), strmsg('+', "a3")}))
 	go func() {
 		mock.Expect("CLIENT", "CACHING", "YES").
 			Expect("MULTI").
@@ -1703,10 +1703,10 @@ func TestClientSideCachingMGet(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			ReplyString("OK").
-			Reply(redisMessageContainSlice('*', []RedisMessage{
+			Reply(slicemsg('*', []RedisMessage{
 				{typ: ':', integer: 10000},
 				{typ: ':', integer: 30000},
-				redisMessageContainSlice('*', []RedisMessage{
+				slicemsg('*', []RedisMessage{
 					{typ: ':', integer: 10},
 					{typ: ':', integer: 30},
 				}),
@@ -1751,10 +1751,10 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 	defer cancel()
 
 	invalidateCSC := func(keys RedisMessage) {
-		mock.Expect().Reply(redisMessageContainSlice(
+		mock.Expect().Reply(slicemsg(
 			'>',
 			[]RedisMessage{
-				redisMessageContainString('+', "invalidate"),
+				strmsg('+', "invalidate"),
 				keys,
 			},
 		))
@@ -1774,11 +1774,11 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			ReplyString("OK").
-			Reply(redisMessageContainSlice('*', []RedisMessage{
+			Reply(slicemsg('*', []RedisMessage{
 				{typ: ':', integer: 1000},
 				{typ: ':', integer: 2000},
 				{typ: ':', integer: 3000},
-				redisMessageContainSlice('*', []RedisMessage{
+				slicemsg('*', []RedisMessage{
 					{typ: ':', integer: 1},
 					{typ: ':', integer: 2},
 					{typ: ':', integer: 3},
@@ -1824,7 +1824,7 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 	}
 
 	// partial cache invalidation
-	invalidateCSC(redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "a1"), redisMessageContainString('+', "a3")}))
+	invalidateCSC(slicemsg('*', []RedisMessage{strmsg('+', "a1"), strmsg('+', "a3")}))
 	go func() {
 		mock.Expect("CLIENT", "CACHING", "YES").
 			Expect("MULTI").
@@ -1837,10 +1837,10 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			ReplyString("OK").
-			Reply(redisMessageContainSlice('*', []RedisMessage{
+			Reply(slicemsg('*', []RedisMessage{
 				{typ: ':', integer: 10000},
 				{typ: ':', integer: 30000},
-				redisMessageContainSlice('*', []RedisMessage{
+				slicemsg('*', []RedisMessage{
 					{typ: ':', integer: 10},
 					{typ: ':', integer: 30},
 				}),
@@ -1964,7 +1964,7 @@ func TestClientSideCachingWithSideChannelMGet(t *testing.T) {
 	p.cache.Flight("a1", "GET", 10*time.Second, time.Now())
 	go func() {
 		time.Sleep(100 * time.Millisecond)
-		m := redisMessageContainString('+', "OK")
+		m := strmsg('+', "OK")
 		m.setExpireAt(time.Now().Add(10 * time.Millisecond).UnixMilli())
 		p.cache.Update("a1", "GET", m)
 	}()
@@ -2014,10 +2014,10 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 		defer cancel()
 
 		invalidateCSC := func(keys RedisMessage) {
-			mock.Expect().Reply(redisMessageContainSlice(
+			mock.Expect().Reply(slicemsg(
 				'>',
 				[]RedisMessage{
-					redisMessageContainString('+', "invalidate"),
+					strmsg('+', "invalidate"),
 					keys,
 				},
 			))
@@ -2043,7 +2043,7 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 				ReplyString("OK").
 				ReplyString("OK").
 				ReplyString("OK").
-				Reply(redisMessageContainSlice('*', []RedisMessage{
+				Reply(slicemsg('*', []RedisMessage{
 					{typ: ':', integer: 1000},
 					{typ: ':', integer: 1},
 				})).
@@ -2051,7 +2051,7 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 				ReplyString("OK").
 				ReplyString("OK").
 				ReplyString("OK").
-				Reply(redisMessageContainSlice('*', []RedisMessage{
+				Reply(slicemsg('*', []RedisMessage{
 					{typ: ':', integer: 2000},
 					{typ: ':', integer: 2},
 				})).
@@ -2059,7 +2059,7 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 				ReplyString("OK").
 				ReplyString("OK").
 				ReplyString("OK").
-				Reply(redisMessageContainSlice('*', []RedisMessage{
+				Reply(slicemsg('*', []RedisMessage{
 					{typ: ':', integer: 3000},
 					{typ: ':', integer: 3},
 				}))
@@ -2106,7 +2106,7 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 		}
 
 		// partial cache invalidation
-		invalidateCSC(redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "a1"), redisMessageContainString('+', "a3")}))
+		invalidateCSC(slicemsg('*', []RedisMessage{strmsg('+', "a1"), strmsg('+', "a3")}))
 		go func() {
 			mock.Expect("CLIENT", "CACHING", "YES").
 				Expect("MULTI").
@@ -2122,7 +2122,7 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 				ReplyString("OK").
 				ReplyString("OK").
 				ReplyString("OK").
-				Reply(redisMessageContainSlice('*', []RedisMessage{
+				Reply(slicemsg('*', []RedisMessage{
 					{typ: ':', integer: 10000},
 					{typ: ':', integer: 10},
 				})).
@@ -2130,7 +2130,7 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 				ReplyString("OK").
 				ReplyString("OK").
 				ReplyString("OK").
-				Reply(redisMessageContainSlice('*', []RedisMessage{
+				Reply(slicemsg('*', []RedisMessage{
 					{typ: ':', integer: 30000},
 					{typ: ':', integer: 30},
 				}))
@@ -2212,7 +2212,7 @@ func TestClientSideCachingExecAbortDoMultiCache(t *testing.T) {
 				ReplyString("OK").
 				ReplyString("OK").
 				ReplyString("OK").
-				Reply(redisMessageContainSlice('*', []RedisMessage{
+				Reply(slicemsg('*', []RedisMessage{
 					{typ: ':', integer: 1000},
 					{typ: ':', integer: 1},
 				})).
@@ -2326,7 +2326,7 @@ func TestClientSideCachingWithSideChannelDoMultiCache(t *testing.T) {
 		p.cache.Flight("a1", "GET", 10*time.Second, time.Now())
 		go func() {
 			time.Sleep(100 * time.Millisecond)
-			m := redisMessageContainString('+', "OK")
+			m := strmsg('+', "OK")
 			m.setExpireAt(time.Now().Add(10 * time.Millisecond).UnixMilli())
 			p.cache.Update("a1", "GET", m)
 		}()
@@ -2396,9 +2396,9 @@ func TestClientSideCachingMissCacheTTL(t *testing.T) {
 					ReplyString("OK").
 					ReplyString("OK").
 					ReplyString("OK").
-					Reply(redisMessageContainSlice('*', []RedisMessage{
+					Reply(slicemsg('*', []RedisMessage{
 						{typ: ':', integer: pttl},
-						redisMessageContainString('+', key),
+						strmsg('+', key),
 					}))
 			}
 			go func() {
@@ -2436,14 +2436,14 @@ func TestClientSideCachingMissCacheTTL(t *testing.T) {
 					ReplyString("OK").
 					ReplyString("OK").
 					ReplyString("OK").
-					Reply(redisMessageContainSlice('*', []RedisMessage{
+					Reply(slicemsg('*', []RedisMessage{
 						{typ: ':', integer: -1},
 						{typ: ':', integer: 1000},
 						{typ: ':', integer: 20000},
-						redisMessageContainSlice('*', []RedisMessage{
-							redisMessageContainString('+', "a"),
-							redisMessageContainString('+', "b"),
-							redisMessageContainString('+', "c"),
+						slicemsg('*', []RedisMessage{
+							strmsg('+', "a"),
+							strmsg('+', "b"),
+							strmsg('+', "c"),
 						}),
 					}))
 			}()
@@ -2481,7 +2481,7 @@ func TestClientSideCachingMissCacheTTL(t *testing.T) {
 					ReplyString("OK").
 					ReplyString("OK").
 					ReplyString("OK").
-					Reply(redisMessageContainSlice('*', []RedisMessage{
+					Reply(slicemsg('*', []RedisMessage{
 						{typ: ':', integer: -1},
 						{typ: ':', integer: 1},
 					})).
@@ -2489,7 +2489,7 @@ func TestClientSideCachingMissCacheTTL(t *testing.T) {
 					ReplyString("OK").
 					ReplyString("OK").
 					ReplyString("OK").
-					Reply(redisMessageContainSlice('*', []RedisMessage{
+					Reply(slicemsg('*', []RedisMessage{
 						{typ: ':', integer: 1000},
 						{typ: ':', integer: 2},
 					})).
@@ -2497,7 +2497,7 @@ func TestClientSideCachingMissCacheTTL(t *testing.T) {
 					ReplyString("OK").
 					ReplyString("OK").
 					ReplyString("OK").
-					Reply(redisMessageContainSlice('*', []RedisMessage{
+					Reply(slicemsg('*', []RedisMessage{
 						{typ: ':', integer: 20000},
 						{typ: ':', integer: 3},
 					}))
@@ -2546,12 +2546,12 @@ func TestClientSideCachingRedis6InvalidationBug1(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			ReplyString("OK").
-			Reply(redisMessageContainSlice('*', []RedisMessage{
-				redisMessageContainSlice(
+			Reply(slicemsg('*', []RedisMessage{
+				slicemsg(
 					'>',
 					[]RedisMessage{
-						redisMessageContainString('+', "invalidate"),
-						redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "a")}),
+						strmsg('+', "invalidate"),
+						slicemsg('*', []RedisMessage{strmsg('+', "a")}),
 					},
 				),
 				{typ: ':', integer: -2},
@@ -2608,13 +2608,13 @@ func TestClientSideCachingRedis6InvalidationBug2(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			ReplyString("OK").
-			Reply(redisMessageContainSlice('*', []RedisMessage{
+			Reply(slicemsg('*', []RedisMessage{
 				{typ: ':', integer: -2},
-				redisMessageContainSlice(
+				slicemsg(
 					'>',
 					[]RedisMessage{
-						redisMessageContainString('+', "invalidate"),
-						redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "a")}),
+						strmsg('+', "invalidate"),
+						slicemsg('*', []RedisMessage{strmsg('+', "a")}),
 					},
 				),
 			})).Reply(RedisMessage{typ: '_'})
@@ -2669,13 +2669,13 @@ func TestClientSideCachingRedis6InvalidationBugErr(t *testing.T) {
 			ReplyString("OK").
 			ReplyString("OK").
 			ReplyString("OK").
-			Reply(redisMessageContainSlice('*', []RedisMessage{
+			Reply(slicemsg('*', []RedisMessage{
 				{typ: ':', integer: -2},
-				redisMessageContainSlice(
+				slicemsg(
 					'>',
 					[]RedisMessage{
-						redisMessageContainString('+', "invalidate"),
-						redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "a")}),
+						strmsg('+', "invalidate"),
+						slicemsg('*', []RedisMessage{strmsg('+', "a")}),
 					},
 				),
 			}))
@@ -2699,11 +2699,11 @@ func TestDisableClientSideCaching(t *testing.T) {
 	p.background()
 
 	go func() {
-		mock.Expect().Reply(redisMessageContainSlice(
+		mock.Expect().Reply(slicemsg(
 			'>',
 			[]RedisMessage{
-				redisMessageContainString('+', "invalidate"),
-				redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "a")}),
+				strmsg('+', "invalidate"),
+				slicemsg('*', []RedisMessage{strmsg('+', "a")}),
 			},
 		))
 		mock.Expect("GET", "a").ReplyString("1").
@@ -2739,11 +2739,11 @@ func TestOnInvalidations(t *testing.T) {
 	})
 
 	go func() {
-		mock.Expect().Reply(redisMessageContainSlice(
+		mock.Expect().Reply(slicemsg(
 			'>',
 			[]RedisMessage{
-				redisMessageContainString('+', "invalidate"),
-				redisMessageContainSlice('*', []RedisMessage{redisMessageContainString('+', "a")}),
+				strmsg('+', "invalidate"),
+				slicemsg('*', []RedisMessage{strmsg('+', "a")}),
 			},
 		))
 	}()
@@ -2753,10 +2753,10 @@ func TestOnInvalidations(t *testing.T) {
 	}
 
 	go func() {
-		mock.Expect().Reply(redisMessageContainSlice(
+		mock.Expect().Reply(slicemsg(
 			'>',
 			[]RedisMessage{
-				redisMessageContainString('+', "invalidate"),
+				strmsg('+', "invalidate"),
 				{typ: '_'},
 			},
 		))
@@ -2818,14 +2818,14 @@ func TestPubSub(t *testing.T) {
 		go func() {
 			for _, c := range commands {
 				if c.IsUnsub() {
-					mock.Expect(c.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(redisMessageContainSlice('>', []RedisMessage{
-						redisMessageContainString('+', strings.ToLower(c.Commands()[0])),
-						redisMessageContainString('+', strings.ToLower(c.Commands()[1])),
-					})).Reply(redisMessageContainString('+', "PONG"))
+					mock.Expect(c.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(slicemsg('>', []RedisMessage{
+						strmsg('+', strings.ToLower(c.Commands()[0])),
+						strmsg('+', strings.ToLower(c.Commands()[1])),
+					})).Reply(strmsg('+', "PONG"))
 				} else {
-					mock.Expect(c.Commands()...).Reply(redisMessageContainSlice('>', []RedisMessage{
-						redisMessageContainString('+', strings.ToLower(c.Commands()[0])),
-						redisMessageContainString('+', strings.ToLower(c.Commands()[1])),
+					mock.Expect(c.Commands()...).Reply(slicemsg('>', []RedisMessage{
+						strmsg('+', strings.ToLower(c.Commands()[0])),
+						strmsg('+', strings.ToLower(c.Commands()[1])),
 					}))
 				}
 				mock.Expect("GET", "k").ReplyString("v")
@@ -2854,14 +2854,14 @@ func TestPubSub(t *testing.T) {
 		go func() {
 			for _, c := range commands {
 				if c.IsUnsub() {
-					mock.Expect(c.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(redisMessageContainSlice('>', []RedisMessage{
-						redisMessageContainString('+', strings.ToLower(c.Commands()[0])),
-						redisMessageContainString('+', strings.ToLower(c.Commands()[1])),
-					})).Reply(redisMessageContainString('+', "PONG"))
+					mock.Expect(c.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(slicemsg('>', []RedisMessage{
+						strmsg('+', strings.ToLower(c.Commands()[0])),
+						strmsg('+', strings.ToLower(c.Commands()[1])),
+					})).Reply(strmsg('+', "PONG"))
 				} else {
-					mock.Expect(c.Commands()...).Reply(redisMessageContainSlice('>', []RedisMessage{
-						redisMessageContainString('+', strings.ToLower(c.Commands()[0])),
-						redisMessageContainString('+', strings.ToLower(c.Commands()[1])),
+					mock.Expect(c.Commands()...).Reply(slicemsg('>', []RedisMessage{
+						strmsg('+', strings.ToLower(c.Commands()[0])),
+						strmsg('+', strings.ToLower(c.Commands()[1])),
 					}))
 				}
 			}
@@ -2882,24 +2882,24 @@ func TestPubSub(t *testing.T) {
 		deactivate := builder.Unsubscribe().Channel("1").Build()
 		go func() {
 			mock.Expect(activate.Commands()...).Reply(
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "subscribe"),
-					redisMessageContainString('+', "1"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "subscribe"),
+					strmsg('+', "1"),
 					{typ: ':', integer: 1},
 				}),
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "message"),
-					redisMessageContainString('+', "1"),
-					redisMessageContainString('+', "2"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "message"),
+					strmsg('+', "1"),
+					strmsg('+', "2"),
 				}),
 			)
 			mock.Expect(deactivate.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "unsubscribe"),
-					redisMessageContainString('+', "1"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "unsubscribe"),
+					strmsg('+', "1"),
 					{typ: ':', integer: 0},
 				}),
-			).Reply(redisMessageContainString('+', "PONG"))
+			).Reply(strmsg('+', "PONG"))
 		}()
 
 		if err := p.Receive(ctx, activate, func(msg PubSubMessage) {
@@ -2923,24 +2923,24 @@ func TestPubSub(t *testing.T) {
 		deactivate := builder.Sunsubscribe().Channel("1").Build()
 		go func() {
 			mock.Expect(activate.Commands()...).Reply(
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "ssubscribe"),
-					redisMessageContainString('+', "1"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "ssubscribe"),
+					strmsg('+', "1"),
 					{typ: ':', integer: 1},
 				}),
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "smessage"),
-					redisMessageContainString('+', "1"),
-					redisMessageContainString('+', "2"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "smessage"),
+					strmsg('+', "1"),
+					strmsg('+', "2"),
 				}),
 			)
 			mock.Expect(deactivate.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "sunsubscribe"),
-					redisMessageContainString('+', "1"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "sunsubscribe"),
+					strmsg('+', "1"),
 					{typ: ':', integer: 0},
 				}),
-			).Reply(redisMessageContainString('+', "PONG"))
+			).Reply(strmsg('+', "PONG"))
 		}()
 
 		if err := p.Receive(ctx, activate, func(msg PubSubMessage) {
@@ -2964,25 +2964,25 @@ func TestPubSub(t *testing.T) {
 		deactivate := builder.Punsubscribe().Pattern("1").Build()
 		go func() {
 			mock.Expect(activate.Commands()...).Reply(
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "psubscribe"),
-					redisMessageContainString('+', "1"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "psubscribe"),
+					strmsg('+', "1"),
 					{typ: ':', integer: 1},
 				}),
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "pmessage"),
-					redisMessageContainString('+', "1"),
-					redisMessageContainString('+', "2"),
-					redisMessageContainString('+', "3"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "pmessage"),
+					strmsg('+', "1"),
+					strmsg('+', "2"),
+					strmsg('+', "3"),
 				}),
 			)
 			mock.Expect(deactivate.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "punsubscribe"),
-					redisMessageContainString('+', "1"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "punsubscribe"),
+					strmsg('+', "1"),
 					{typ: ':', integer: 0},
 				}),
-			).Reply(redisMessageContainString('+', "PONG"))
+			).Reply(strmsg('+', "PONG"))
 		}()
 
 		if err := p.Receive(ctx, activate, func(msg PubSubMessage) {
@@ -3028,15 +3028,15 @@ func TestPubSub(t *testing.T) {
 		activate := builder.Subscribe().Channel("1").Build()
 		go func() {
 			mock.Expect(activate.Commands()...).Reply(
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "subscribe"),
-					redisMessageContainString('+', "1"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "subscribe"),
+					strmsg('+', "1"),
 					{typ: ':', integer: 1},
 				}),
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "message"),
-					redisMessageContainString('+', "1"),
-					redisMessageContainString('+', "2"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "message"),
+					strmsg('+', "1"),
+					strmsg('+', "2"),
 				}),
 			)
 		}()
@@ -3067,9 +3067,9 @@ func TestPubSub(t *testing.T) {
 		go func() {
 			for _, cmd := range commands {
 				if cmd.IsUnsub() {
-					mock.Expect(cmd.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(redisMessageContainString('-', cmd.Commands()[0])).Reply(redisMessageContainString('+', "PONG"))
+					mock.Expect(cmd.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(strmsg('-', cmd.Commands()[0])).Reply(strmsg('+', "PONG"))
 				} else {
-					mock.Expect(cmd.Commands()...).Reply(redisMessageContainString('-', cmd.Commands()[0]))
+					mock.Expect(cmd.Commands()...).Reply(strmsg('-', cmd.Commands()[0]))
 				}
 			}
 		}()
@@ -3100,37 +3100,37 @@ func TestPubSub(t *testing.T) {
 			go func() {
 				if cmd1.IsUnsub() {
 					mock.Expect(cmd1.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(
-						redisMessageContainSlice('>', []RedisMessage{
-							redisMessageContainString('+', "unsubscribe"),
-							redisMessageContainString('+', "a"),
+						slicemsg('>', []RedisMessage{
+							strmsg('+', "unsubscribe"),
+							strmsg('+', "a"),
 							{typ: ':', integer: 1},
 						}),
-						redisMessageContainSlice('>', []RedisMessage{ // skip
-							redisMessageContainString('+', "unsubscribe"),
-							redisMessageContainString('+', "b"),
+						slicemsg('>', []RedisMessage{ // skip
+							strmsg('+', "unsubscribe"),
+							strmsg('+', "b"),
 							{typ: ':', integer: 1},
 						}),
-						redisMessageContainSlice('>', []RedisMessage{ // skip
-							redisMessageContainString('+', "unsubscribe"),
-							redisMessageContainString('+', "c"),
+						slicemsg('>', []RedisMessage{ // skip
+							strmsg('+', "unsubscribe"),
+							strmsg('+', "c"),
 							{typ: ':', integer: 1},
 						}),
-					).Reply(redisMessageContainString('+', "PONG")).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+					).Reply(strmsg('+', "PONG")).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
 				} else {
 					mock.Expect(cmd1.Commands()...).Reply(
-						redisMessageContainSlice('>', []RedisMessage{
-							redisMessageContainString('+', "subscribe"),
-							redisMessageContainString('+', "a"),
+						slicemsg('>', []RedisMessage{
+							strmsg('+', "subscribe"),
+							strmsg('+', "a"),
 							{typ: ':', integer: 1},
 						}),
-						redisMessageContainSlice('>', []RedisMessage{ // skip
-							redisMessageContainString('+', "subscribe"),
-							redisMessageContainString('+', "b"),
+						slicemsg('>', []RedisMessage{ // skip
+							strmsg('+', "subscribe"),
+							strmsg('+', "b"),
 							{typ: ':', integer: 1},
 						}),
-						redisMessageContainSlice('>', []RedisMessage{ // skip
-							redisMessageContainString('+', "subscribe"),
-							redisMessageContainString('+', "c"),
+						slicemsg('>', []RedisMessage{ // skip
+							strmsg('+', "subscribe"),
+							strmsg('+', "c"),
 							{typ: ':', integer: 1},
 						}),
 					).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
@@ -3159,37 +3159,37 @@ func TestPubSub(t *testing.T) {
 		}
 
 		replies := [][]RedisMessage{{
-			redisMessageContainSlice(
+			slicemsg(
 				'>',
 				[]RedisMessage{
-					redisMessageContainString('+', "unsubscribe"),
+					strmsg('+', "unsubscribe"),
 					{typ: '_'},
 					{typ: ':', integer: 0},
 				},
 			),
 		}, {
-			redisMessageContainSlice(
+			slicemsg(
 				'>',
 				[]RedisMessage{
-					redisMessageContainString('+', "punsubscribe"),
-					redisMessageContainString('+', "1"),
+					strmsg('+', "punsubscribe"),
+					strmsg('+', "1"),
 					{typ: ':', integer: 0},
 				},
 			),
 		}, {
-			redisMessageContainSlice(
+			slicemsg(
 				'>',
 				[]RedisMessage{
-					redisMessageContainString('+', "sunsubscribe"),
-					redisMessageContainString('+', "2"),
+					strmsg('+', "sunsubscribe"),
+					strmsg('+', "2"),
 					{typ: ':', integer: 0},
 				},
 			),
-			redisMessageContainSlice(
+			slicemsg(
 				'>',
 				[]RedisMessage{
-					redisMessageContainString('+', "sunsubscribe"),
-					redisMessageContainString('+', "3"),
+					strmsg('+', "sunsubscribe"),
+					strmsg('+', "3"),
 					{typ: ':', integer: 0},
 				},
 			),
@@ -3198,7 +3198,7 @@ func TestPubSub(t *testing.T) {
 		for i, cmd1 := range commands {
 			cmd2 := builder.Get().Key(strconv.Itoa(i)).Build()
 			go func() {
-				mock.Expect(cmd1.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(replies[i]...).Reply(redisMessageContainString('+', "PONG")).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+				mock.Expect(cmd1.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(replies[i]...).Reply(strmsg('+', "PONG")).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
 			}()
 
 			if err := p.Do(ctx, cmd1).Error(); err != nil {
@@ -3229,53 +3229,53 @@ func TestPubSub(t *testing.T) {
 
 				replies := [][]RedisMessage{
 					{
-						redisMessageContainSlice( // proactive unsubscribe before user unsubscribe
+						slicemsg( // proactive unsubscribe before user unsubscribe
 							'>',
 							[]RedisMessage{
-								redisMessageContainString('+', command),
-								redisMessageContainString('+', "1"),
+								strmsg('+', command),
+								strmsg('+', "1"),
 								{typ: ':', integer: 0},
 							},
 						),
-						redisMessageContainSlice( // proactive unsubscribe before user unsubscribe
+						slicemsg( // proactive unsubscribe before user unsubscribe
 							'>',
 							[]RedisMessage{
-								redisMessageContainString('+', command),
-								redisMessageContainString('+', "2"),
+								strmsg('+', command),
+								strmsg('+', "2"),
 								{typ: ':', integer: 0},
 							},
 						),
-						redisMessageContainSlice( // user unsubscribe
+						slicemsg( // user unsubscribe
 							'>',
 							[]RedisMessage{
-								redisMessageContainString('+', command),
+								strmsg('+', command),
 								{typ: '_'},
 								{typ: ':', integer: 0},
 							},
 						),
-						redisMessageContainSlice( // proactive unsubscribe after user unsubscribe
+						slicemsg( // proactive unsubscribe after user unsubscribe
 							'>',
 							[]RedisMessage{
-								redisMessageContainString('+', command),
+								strmsg('+', command),
 								{typ: '_'},
 								{typ: ':', integer: 0},
 							},
 						),
 					},
 					{
-						redisMessageContainSlice( // user ssubscribe
+						slicemsg( // user ssubscribe
 							'>',
 							[]RedisMessage{
-								redisMessageContainString('+', "ssubscribe"),
-								redisMessageContainString('+', "3"),
+								strmsg('+', "ssubscribe"),
+								strmsg('+', "3"),
 								{typ: ':', integer: 0},
 							},
 						),
-						redisMessageContainSlice( // proactive unsubscribe after user ssubscribe
+						slicemsg( // proactive unsubscribe after user ssubscribe
 							'>',
 							[]RedisMessage{
-								redisMessageContainString('+', command),
-								redisMessageContainString('+', "3"),
+								strmsg('+', command),
+								strmsg('+', "3"),
 								{typ: ':', integer: 0},
 							},
 						),
@@ -3285,11 +3285,11 @@ func TestPubSub(t *testing.T) {
 				p.background()
 
 				// proactive unsubscribe before other commands
-				mock.Expect().Reply(redisMessageContainSlice( // proactive unsubscribe before user unsubscribe
+				mock.Expect().Reply(slicemsg( // proactive unsubscribe before user unsubscribe
 					'>',
 					[]RedisMessage{
-						redisMessageContainString('+', command),
-						redisMessageContainString('+', "0"),
+						strmsg('+', command),
+						strmsg('+', "0"),
 						{typ: ':', integer: 0},
 					},
 				))
@@ -3300,7 +3300,7 @@ func TestPubSub(t *testing.T) {
 					cmd2 := builder.Get().Key(strconv.Itoa(i)).Build()
 					go func() {
 						if cmd1.IsUnsub() {
-							mock.Expect(cmd1.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(replies[i]...).Reply(redisMessageContainString('+', "PONG")).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+							mock.Expect(cmd1.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(replies[i]...).Reply(strmsg('+', "PONG")).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
 						} else {
 							mock.Expect(cmd1.Commands()...).Reply(replies[i]...).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
 						}
@@ -3330,61 +3330,61 @@ func TestPubSub(t *testing.T) {
 
 		replies := [][]RedisMessage{
 			{
-				redisMessageContainSlice( // proactive unsubscribe before user unsubscribe
+				slicemsg( // proactive unsubscribe before user unsubscribe
 					'>',
 					[]RedisMessage{
-						redisMessageContainString('+', "sunsubscribe"),
-						redisMessageContainString('+', "a"),
+						strmsg('+', "sunsubscribe"),
+						strmsg('+', "a"),
 						{typ: ':', integer: 0},
 					},
 				),
-				redisMessageContainSlice( // proactive unsubscribe before user unsubscribe
+				slicemsg( // proactive unsubscribe before user unsubscribe
 					'>',
 					[]RedisMessage{
-						redisMessageContainString('+', "sunsubscribe"),
-						redisMessageContainString('+', "b"),
+						strmsg('+', "sunsubscribe"),
+						strmsg('+', "b"),
 						{typ: ':', integer: 0},
 					},
 				),
-				redisMessageContainString( // user unsubscribe, but error
+				strmsg( // user unsubscribe, but error
 					'-',
 					"MOVED 1111",
 				),
 			}, {
-				redisMessageContainString( // user unsubscribe, but error
+				strmsg( // user unsubscribe, but error
 					'-',
 					"MOVED 222",
 				),
 			}, {
-				redisMessageContainSlice( // user unsubscribe success
+				slicemsg( // user unsubscribe success
 					'>',
 					[]RedisMessage{
-						redisMessageContainString('+', "sunsubscribe"),
-						redisMessageContainString('+', "c"),
+						strmsg('+', "sunsubscribe"),
+						strmsg('+', "c"),
 						{typ: ':', integer: 0},
 					},
 				),
 			}, {
-				redisMessageContainSlice( // proactive unsubscribe after user unsubscribe
+				slicemsg( // proactive unsubscribe after user unsubscribe
 					'>',
 					[]RedisMessage{
-						redisMessageContainString('+', "sunsubscribe"),
+						strmsg('+', "sunsubscribe"),
 						{typ: '_'},
 						{typ: ':', integer: 0},
 					},
 				),
-				redisMessageContainString('+', "mk"),
+				strmsg('+', "mk"),
 			},
 		}
 
 		p.background()
 
 		// proactive unsubscribe before other commands
-		mock.Expect().Reply(redisMessageContainSlice( // proactive unsubscribe before user unsubscribe
+		mock.Expect().Reply(slicemsg( // proactive unsubscribe before user unsubscribe
 			'>',
 			[]RedisMessage{
-				redisMessageContainString('+', "sunsubscribe"),
-				redisMessageContainString('+', "0"),
+				strmsg('+', "sunsubscribe"),
+				strmsg('+', "0"),
 				{typ: ':', integer: 0},
 			},
 		))
@@ -3395,7 +3395,7 @@ func TestPubSub(t *testing.T) {
 			cmd2 := builder.Get().Key(strconv.Itoa(i)).Build()
 			go func() {
 				if cmd1.IsUnsub() {
-					mock.Expect(cmd1.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(replies[i]...).Reply(redisMessageContainString('+', "PONG")).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
+					mock.Expect(cmd1.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(replies[i]...).Reply(strmsg('+', "PONG")).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
 				} else {
 					mock.Expect(cmd1.Commands()...).Reply(replies[i]...).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
 				}
@@ -3423,9 +3423,9 @@ func TestPubSub(t *testing.T) {
 			p.queue.PutOne(push)
 			_, _, ch := p.queue.NextWriteCmd()
 			go func() {
-				mock.Expect().Reply(redisMessageContainString(
+				mock.Expect().Reply(strmsg(
 					'-', "MOVED",
-				)).Reply(redisMessageContainString(
+				)).Reply(strmsg(
 					'-', "MOVED",
 				))
 			}()
@@ -3455,9 +3455,9 @@ func TestPubSub(t *testing.T) {
 			_, _, ch := p.queue.NextWriteCmd()
 			_, _, _ = p.queue.NextWriteCmd()
 			go func() {
-				mock.Expect().Reply(redisMessageContainString(
+				mock.Expect().Reply(strmsg(
 					'-', "MOVED",
-				)).Reply(redisMessageContainString(
+				)).Reply(strmsg(
 					'-', "MOVED",
 				))
 			}()
@@ -3488,45 +3488,45 @@ func TestPubSub(t *testing.T) {
 
 		replies := [][]RedisMessage{
 			{
-				redisMessageContainSlice( // proactive unsubscribe before user unsubscribe
+				slicemsg( // proactive unsubscribe before user unsubscribe
 					'>',
 					[]RedisMessage{
-						redisMessageContainString('+', "sunsubscribe"),
-						redisMessageContainString('+', "a"),
+						strmsg('+', "sunsubscribe"),
+						strmsg('+', "a"),
 						{typ: ':', integer: 0},
 					},
 				),
-				redisMessageContainSlice( // proactive unsubscribe before user unsubscribe
+				slicemsg( // proactive unsubscribe before user unsubscribe
 					'>',
 					[]RedisMessage{
-						redisMessageContainString('+', "sunsubscribe"),
-						redisMessageContainString('+', "b"),
+						strmsg('+', "sunsubscribe"),
+						strmsg('+', "b"),
 						{typ: ':', integer: 0},
 					},
 				),
 			}, {
 				// empty
 			}, {
-				redisMessageContainSlice( // proactive unsubscribe after user unsubscribe
+				slicemsg( // proactive unsubscribe after user unsubscribe
 					'>',
 					[]RedisMessage{
-						redisMessageContainString('+', "sunsubscribe"),
+						strmsg('+', "sunsubscribe"),
 						{typ: '_'},
 						{typ: ':', integer: 0},
 					},
 				),
-				redisMessageContainString('+', "mk"),
+				strmsg('+', "mk"),
 			},
 		}
 
 		p.background()
 
 		// proactive unsubscribe before other commands
-		mock.Expect().Reply(redisMessageContainSlice( // proactive unsubscribe before user unsubscribe
+		mock.Expect().Reply(slicemsg( // proactive unsubscribe before user unsubscribe
 			'>',
 			[]RedisMessage{
-				redisMessageContainString('+', "sunsubscribe"),
-				redisMessageContainString('+', "0"),
+				strmsg('+', "sunsubscribe"),
+				strmsg('+', "0"),
 				{typ: ':', integer: 0},
 			},
 		))
@@ -3539,7 +3539,7 @@ func TestPubSub(t *testing.T) {
 				if cmd1.IsUnsub() {
 					mock.Expect(cmd1.Commands()...).Expect(cmds.PingCmd.Commands()...).
 						Reply(replies[i]...).
-						Reply(redisMessageContainString( // failed unsubReply
+						Reply(strmsg( // failed unsubReply
 							'-',
 							"NOPERM User u has no permissions to run the 'ping' command",
 						)).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
@@ -3575,45 +3575,45 @@ func TestPubSub(t *testing.T) {
 
 		replies := [][]RedisMessage{
 			{
-				redisMessageContainSlice( // proactive unsubscribe before user unsubscribe
+				slicemsg( // proactive unsubscribe before user unsubscribe
 					'>',
 					[]RedisMessage{
-						redisMessageContainString('+', "sunsubscribe"),
-						redisMessageContainString('+', "a"),
+						strmsg('+', "sunsubscribe"),
+						strmsg('+', "a"),
 						{typ: ':', integer: 0},
 					},
 				),
-				redisMessageContainSlice( // proactive unsubscribe before user unsubscribe
+				slicemsg( // proactive unsubscribe before user unsubscribe
 					'>',
 					[]RedisMessage{
-						redisMessageContainString('+', "sunsubscribe"),
-						redisMessageContainString('+', "b"),
+						strmsg('+', "sunsubscribe"),
+						strmsg('+', "b"),
 						{typ: ':', integer: 0},
 					},
 				),
 			}, {
 				// empty
 			}, {
-				redisMessageContainSlice( // proactive unsubscribe after user unsubscribe
+				slicemsg( // proactive unsubscribe after user unsubscribe
 					'>',
 					[]RedisMessage{
-						redisMessageContainString('+', "sunsubscribe"),
+						strmsg('+', "sunsubscribe"),
 						{typ: '_'},
 						{typ: ':', integer: 0},
 					},
 				),
-				redisMessageContainString('+', "mk"),
+				strmsg('+', "mk"),
 			},
 		}
 
 		p.background()
 
 		// proactive unsubscribe before other commands
-		mock.Expect().Reply(redisMessageContainSlice( // proactive unsubscribe before user unsubscribe
+		mock.Expect().Reply(slicemsg( // proactive unsubscribe before user unsubscribe
 			'>',
 			[]RedisMessage{
-				redisMessageContainString('+', "sunsubscribe"),
-				redisMessageContainString('+', "0"),
+				strmsg('+', "sunsubscribe"),
+				strmsg('+', "0"),
 				{typ: ':', integer: 0},
 			},
 		))
@@ -3626,7 +3626,7 @@ func TestPubSub(t *testing.T) {
 				if cmd1.IsUnsub() {
 					mock.Expect(cmd1.Commands()...).Expect(cmds.PingCmd.Commands()...).
 						Reply(replies[i]...).
-						Reply(redisMessageContainString( // failed unsubReply
+						Reply(strmsg( // failed unsubReply
 							'-',
 							"LOADING server is loading the dataset in memory",
 						)).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
@@ -3662,45 +3662,45 @@ func TestPubSub(t *testing.T) {
 
 		replies := [][]RedisMessage{
 			{
-				redisMessageContainSlice( // proactive unsubscribe before user unsubscribe
+				slicemsg( // proactive unsubscribe before user unsubscribe
 					'>',
 					[]RedisMessage{
-						redisMessageContainString('+', "sunsubscribe"),
-						redisMessageContainString('+', "a"),
+						strmsg('+', "sunsubscribe"),
+						strmsg('+', "a"),
 						{typ: ':', integer: 0},
 					},
 				),
-				redisMessageContainSlice( // proactive unsubscribe before user unsubscribe
+				slicemsg( // proactive unsubscribe before user unsubscribe
 					'>',
 					[]RedisMessage{
-						redisMessageContainString('+', "sunsubscribe"),
-						redisMessageContainString('+', "b"),
+						strmsg('+', "sunsubscribe"),
+						strmsg('+', "b"),
 						{typ: ':', integer: 0},
 					},
 				),
 			}, {
 				// empty
 			}, {
-				redisMessageContainSlice( // proactive unsubscribe after user unsubscribe
+				slicemsg( // proactive unsubscribe after user unsubscribe
 					'>',
 					[]RedisMessage{
-						redisMessageContainString('+', "sunsubscribe"),
+						strmsg('+', "sunsubscribe"),
 						{typ: '_'},
 						{typ: ':', integer: 0},
 					},
 				),
-				redisMessageContainString('+', "mk"),
+				strmsg('+', "mk"),
 			},
 		}
 
 		p.background()
 
 		// proactive unsubscribe before other commands
-		mock.Expect().Reply(redisMessageContainSlice( // proactive unsubscribe before user unsubscribe
+		mock.Expect().Reply(slicemsg( // proactive unsubscribe before user unsubscribe
 			'>',
 			[]RedisMessage{
-				redisMessageContainString('+', "sunsubscribe"),
-				redisMessageContainString('+', "0"),
+				strmsg('+', "sunsubscribe"),
+				strmsg('+', "0"),
 				{typ: ':', integer: 0},
 			},
 		))
@@ -3713,7 +3713,7 @@ func TestPubSub(t *testing.T) {
 				if cmd1.IsUnsub() {
 					mock.Expect(cmd1.Commands()...).Expect(cmds.PingCmd.Commands()...).
 						Reply(replies[i]...).
-						Reply(redisMessageContainString( // failed unsubReply
+						Reply(strmsg( // failed unsubReply
 							'-',
 							"BUSY",
 						)).Expect(cmd2.Commands()...).ReplyString(strconv.Itoa(i))
@@ -3746,10 +3746,10 @@ func TestPubSub(t *testing.T) {
 			p.queue.PutOne(builder.Get().Key("a").Build())
 			p.queue.NextWriteCmd()
 			go func() {
-				mock.Expect().Reply(redisMessageContainSlice(
+				mock.Expect().Reply(slicemsg(
 					'>', []RedisMessage{
-						redisMessageContainString('+', push),
-						redisMessageContainString('+', ""),
+						strmsg('+', push),
+						strmsg('+', ""),
 					},
 				))
 			}()
@@ -3776,7 +3776,7 @@ func TestPubSub(t *testing.T) {
 			p.queue.PutOne(cmd)
 			p.queue.NextWriteCmd()
 			go func() {
-				mock.Expect().Reply(redisMessageContainString('+', "QUEUED"))
+				mock.Expect().Reply(strmsg('+', "QUEUED"))
 			}()
 			p._backgroundRead()
 			return
@@ -3926,41 +3926,41 @@ func TestPubSubHooks(t *testing.T) {
 		deactivate2 := builder.Punsubscribe().Pattern("2").Build()
 		go func() {
 			mock.Expect(activate1.Commands()...).Expect(activate2.Commands()...).Reply(
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "subscribe"),
-					redisMessageContainString('+', "1"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "subscribe"),
+					strmsg('+', "1"),
 					{typ: ':', integer: 1},
 				}),
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "psubscribe"),
-					redisMessageContainString('+', "2"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "psubscribe"),
+					strmsg('+', "2"),
 					{typ: ':', integer: 2},
 				}),
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "message"),
-					redisMessageContainString('+', "1"),
-					redisMessageContainString('+', "11"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "message"),
+					strmsg('+', "1"),
+					strmsg('+', "11"),
 				}),
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "pmessage"),
-					redisMessageContainString('+', "2"),
-					redisMessageContainString('+', "22"),
-					redisMessageContainString('+', "222"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "pmessage"),
+					strmsg('+', "2"),
+					strmsg('+', "22"),
+					strmsg('+', "222"),
 				}),
 			)
 			mock.Expect(deactivate1.Commands()...).Expect(cmds.PingCmd.Commands()...).Expect(deactivate2.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "unsubscribe"),
-					redisMessageContainString('+', "1"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "unsubscribe"),
+					strmsg('+', "1"),
 					{typ: ':', integer: 1},
 				}),
-				redisMessageContainString('+', "PONG"),
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "punsubscribe"),
-					redisMessageContainString('+', "2"),
+				strmsg('+', "PONG"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "punsubscribe"),
+					strmsg('+', "2"),
 					{typ: ':', integer: 2},
 				}),
-				redisMessageContainString('+', "PONG"),
+				strmsg('+', "PONG"),
 			)
 			cancel()
 		}()
@@ -4015,41 +4015,41 @@ func TestPubSubHooks(t *testing.T) {
 		deactivate2 := builder.Punsubscribe().Pattern("2").Build()
 		go func() {
 			mock.Expect(activate1.Commands()...).Expect(activate2.Commands()...).Reply(
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "subscribe"),
-					redisMessageContainString('+', "1"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "subscribe"),
+					strmsg('+', "1"),
 					{typ: ':', integer: 1},
 				}),
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "psubscribe"),
-					redisMessageContainString('+', "2"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "psubscribe"),
+					strmsg('+', "2"),
 					{typ: ':', integer: 2},
 				}),
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "message"),
-					redisMessageContainString('+', "1"),
-					redisMessageContainString('+', "11"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "message"),
+					strmsg('+', "1"),
+					strmsg('+', "11"),
 				}),
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "pmessage"),
-					redisMessageContainString('+', "2"),
-					redisMessageContainString('+', "22"),
-					redisMessageContainString('+', "222"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "pmessage"),
+					strmsg('+', "2"),
+					strmsg('+', "22"),
+					strmsg('+', "222"),
 				}),
 			)
 			mock.Expect(deactivate1.Commands()...).Expect(cmds.PingCmd.Commands()...).Expect(deactivate2.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "unsubscribe"),
-					redisMessageContainString('+', "1"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "unsubscribe"),
+					strmsg('+', "1"),
 					{typ: ':', integer: 1},
 				}),
-				redisMessageContainString('+', "PONG"),
-				redisMessageContainSlice('>', []RedisMessage{
-					redisMessageContainString('+', "punsubscribe"),
-					redisMessageContainString('+', "2"),
+				strmsg('+', "PONG"),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "punsubscribe"),
+					strmsg('+', "2"),
 					{typ: ':', integer: 2},
 				}),
-				redisMessageContainString('+', "PONG"),
+				strmsg('+', "PONG"),
 			)
 			cancel()
 		}()
@@ -5085,19 +5085,19 @@ func TestPipe_CleanSubscriptions_6(t *testing.T) {
 		p.CleanSubscriptions()
 	}()
 	mock.Expect("UNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("PUNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("DISCARD").Reply(
-		redisMessageContainSlice('>', []RedisMessage{
-			redisMessageContainString('+', "unsubscribe"),
+		slicemsg('>', []RedisMessage{
+			strmsg('+', "unsubscribe"),
 			{typ: '_'},
 			{typ: ':', integer: 1},
 		}),
-		redisMessageContainString('+', "PONG"),
-		redisMessageContainSlice('>', []RedisMessage{
-			redisMessageContainString('+', "punsubscribe"),
+		strmsg('+', "PONG"),
+		slicemsg('>', []RedisMessage{
+			strmsg('+', "punsubscribe"),
 			{typ: '_'},
 			{typ: ':', integer: 2},
 		}),
-		redisMessageContainString('+', "PONG"),
-		redisMessageContainString('+', "OK"),
+		strmsg('+', "PONG"),
+		strmsg('+', "OK"),
 	)
 }
 
@@ -5128,25 +5128,25 @@ func TestPipe_CleanSubscriptions_7(t *testing.T) {
 		p.CleanSubscriptions()
 	}()
 	mock.Expect("UNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("PUNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("SUNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("DISCARD").Reply(
-		redisMessageContainSlice('>', []RedisMessage{
-			redisMessageContainString('+', "unsubscribe"),
+		slicemsg('>', []RedisMessage{
+			strmsg('+', "unsubscribe"),
 			{typ: '_'},
 			{typ: ':', integer: 1},
 		}),
-		redisMessageContainString('+', "PONG"),
-		redisMessageContainSlice('>', []RedisMessage{
-			redisMessageContainString('+', "punsubscribe"),
+		strmsg('+', "PONG"),
+		slicemsg('>', []RedisMessage{
+			strmsg('+', "punsubscribe"),
 			{typ: '_'},
 			{typ: ':', integer: 2},
 		}),
-		redisMessageContainString('+', "PONG"),
-		redisMessageContainSlice('>', []RedisMessage{
-			redisMessageContainString('+', "sunsubscribe"),
+		strmsg('+', "PONG"),
+		slicemsg('>', []RedisMessage{
+			strmsg('+', "sunsubscribe"),
 			{typ: '_'},
 			{typ: ':', integer: 3},
 		}),
-		redisMessageContainString('+', "PONG"),
-		redisMessageContainString('+', "OK"),
+		strmsg('+', "PONG"),
+		strmsg('+', "OK"),
 	)
 }
 
@@ -5317,16 +5317,16 @@ func TestErrorPipe(t *testing.T) {
 
 func TestBackgroundPing(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
-	timeout := 100*time.Millisecond
+	timeout := 100 * time.Millisecond
 	t.Run("background ping", func(t *testing.T) {
-		opt := ClientOption{ConnWriteTimeout: timeout, 
-							Dialer: net.Dialer{KeepAlive: timeout}, 
-							DisableAutoPipelining: true}
+		opt := ClientOption{ConnWriteTimeout: timeout,
+			Dialer:                net.Dialer{KeepAlive: timeout},
+			DisableAutoPipelining: true}
 		p, mock, cancel, _ := setup(t, opt)
 		defer cancel()
-		time.Sleep(50*time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 		prev := atomic.LoadInt32(&p.recvs)
-		
+
 		for i := range 10 {
 			atomic.AddInt32(&p.blcksig, 1) // block
 			time.Sleep(timeout)
@@ -5344,7 +5344,7 @@ func TestBackgroundPing(t *testing.T) {
 		}()
 		for i := range 10 {
 			time.Sleep(timeout)
-			recv := atomic.LoadInt32(&p.recvs)		
+			recv := atomic.LoadInt32(&p.recvs)
 			if prev == recv {
 				t.Fatalf("round %d unexpect recv %v, need be different from prev %v", i, recv, prev)
 			}

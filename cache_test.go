@@ -23,14 +23,14 @@ func test(t *testing.T, storeFn func() CacheStore) {
 			t.Fatal("flights before Update should return empty RedisMessage and non-nil CacheEntry")
 		}
 
-		store.Delete([]RedisMessage{redisMessageContainString('+', "key")}) // Delete should not affect pending CacheEntry
+		store.Delete([]RedisMessage{strmsg('+', "key")}) // Delete should not affect pending CacheEntry
 
 		v2, e2 := store.Flight("key", "cmd", time.Millisecond*100, now)
 		if v2.typ != 0 || e != e2 {
 			t.Fatal("flights before Update should return empty RedisMessage and the same CacheEntry, not be affected by Delete")
 		}
 
-		v = redisMessageContainString('+', "val")
+		v = strmsg('+', "val")
 		v.setExpireAt(now.Add(time.Second).UnixMilli())
 		if pttl := store.Update("key", "cmd", v); pttl < now.Add(90*time.Millisecond).UnixMilli() || pttl > now.Add(100*time.Millisecond).UnixMilli() {
 			t.Fatal("Update should return a desired pttl")
@@ -52,7 +52,7 @@ func test(t *testing.T, storeFn func() CacheStore) {
 			t.Fatal("CachePXAT should return a desired pttl")
 		}
 
-		store.Delete([]RedisMessage{redisMessageContainString('+', "key")})
+		store.Delete([]RedisMessage{strmsg('+', "key")})
 		v, e = store.Flight("key", "cmd", time.Millisecond*100, now)
 		if v.typ != 0 || e != nil {
 			t.Fatal("flights after Delete should return empty RedisMessage and nil CacheEntry")
@@ -74,7 +74,7 @@ func test(t *testing.T, storeFn func() CacheStore) {
 			t.Fatal("flights before Update should return empty RedisMessage and non-nil CacheEntry")
 		}
 
-		store.Delete([]RedisMessage{redisMessageContainString('+', "key")}) // Delete should not affect pending CacheEntry
+		store.Delete([]RedisMessage{strmsg('+', "key")}) // Delete should not affect pending CacheEntry
 
 		v2, e2 := store.Flight("key", "cmd", time.Millisecond*100, now)
 		if v2.typ != 0 || e != e2 {
@@ -99,13 +99,13 @@ func test(t *testing.T, storeFn func() CacheStore) {
 		var store = storeFn()
 
 		for _, deletions := range [][]RedisMessage{
-			{redisMessageContainString('+', "key")},
+			{strmsg('+', "key")},
 			nil,
 		} {
 			store.Flight("key", "cmd1", time.Millisecond*100, now)
 			store.Flight("key", "cmd2", time.Millisecond*100, now)
-			store.Update("key", "cmd1", redisMessageContainString('+', "val"))
-			store.Update("key", "cmd2", redisMessageContainString('+', "val"))
+			store.Update("key", "cmd1", strmsg('+', "val"))
+			store.Update("key", "cmd2", strmsg('+', "val"))
 
 			store.Delete(deletions)
 
@@ -128,7 +128,7 @@ func test(t *testing.T, storeFn func() CacheStore) {
 			t.Fatal("first flight should return empty RedisMessage and nil CacheEntry")
 		}
 
-		v = redisMessageContainString('+', "val")
+		v = strmsg('+', "val")
 		v.setExpireAt(now.Add(time.Millisecond).UnixMilli())
 		store.Update("key", "cmd", v)
 

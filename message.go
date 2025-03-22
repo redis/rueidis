@@ -1540,7 +1540,7 @@ func (m *prettyRedisMessage) MarshalJSON() ([]byte, error) {
 	return json.Marshal(obj)
 }
 
-func redisMessageContainSlice(typ byte, values []RedisMessage) RedisMessage {
+func slicemsg(typ byte, values []RedisMessage) RedisMessage {
 	return RedisMessage{
 		typ:     typ,
 		array:   unsafe.SliceData(values),
@@ -1548,7 +1548,7 @@ func redisMessageContainSlice(typ byte, values []RedisMessage) RedisMessage {
 	}
 }
 
-func redisMessageContainString(typ byte, value string) RedisMessage {
+func strmsg(typ byte, value string) RedisMessage {
 	return RedisMessage{
 		typ:     typ,
 		bytes:   unsafe.StringData(value),

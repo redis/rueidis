@@ -475,13 +475,13 @@ func TestReadAttr(t *testing.T) {
 			if m.values()[1].integer != 9543892 {
 				t.Fatalf("unexpected msg values[0] %v", m.values()[1])
 			}
-			if !reflect.DeepEqual(*m.attrs, redisMessageContainSlice('|', []RedisMessage{
-				redisMessageContainString('+', "key-popularity"),
-				redisMessageContainSlice('%', []RedisMessage{
-					redisMessageContainString('$', "a"),
-					redisMessageContainString(',', "0.1923"),
-					redisMessageContainString('$', "b"),
-					redisMessageContainString(',', "0.0012"),
+			if !reflect.DeepEqual(*m.attrs, slicemsg('|', []RedisMessage{
+				strmsg('+', "key-popularity"),
+				slicemsg('%', []RedisMessage{
+					strmsg('$', "a"),
+					strmsg(',', "0.1923"),
+					strmsg('$', "b"),
+					strmsg(',', "0.0012"),
 				}),
 			})) {
 				t.Fatalf("unexpected msg attr %v", m.attrs)
@@ -571,12 +571,12 @@ func TestReadRESP2NullStringInArray(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if !reflect.DeepEqual(m, redisMessageContainSlice(
+			if !reflect.DeepEqual(m, slicemsg(
 				'*',
 				[]RedisMessage{
-					redisMessageContainString('$', "hello"),
+					strmsg('$', "hello"),
 					{typ: '_'},
-					redisMessageContainString('$', "world"),
+					strmsg('$', "world"),
 				},
 			)) {
 				t.Fatalf("unexpected msg %v", m)
