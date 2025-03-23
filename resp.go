@@ -95,9 +95,8 @@ func readBlobString(i *bufio.Reader) (m RedisMessage, err error) {
 				return RedisMessage{}, err
 			}
 			if length == 0 {
-				var ret RedisMessage
-				ret.setString(sb.String())
-				return ret, nil
+				m.setString(sb.String())
+				return m, nil
 			}
 			sb.Grow(int(length))
 			if _, err = io.CopyN(&sb, i, length); err != nil {
