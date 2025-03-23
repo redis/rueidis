@@ -717,7 +717,7 @@ func (m *RedisMessage) ToString() (val string, err error) {
 	if m.IsString() {
 		return m.string(), nil
 	}
-	if m.IsInt64() || m.values() != nil {
+	if m.IsInt64() || m.array != nil {
 		typ := m.typ
 		return "", fmt.Errorf("%w: redis message type %s is not a string", errParse, typeNames[typ])
 	}
@@ -1337,7 +1337,7 @@ func (m *RedisMessage) AsGeosearch() ([]GeoLocation, error) {
 				i++
 			}
 			//coordinates
-			if i < len(info) && info[i].values() != nil {
+			if i < len(info) && info[i].array != nil {
 				cord := info[i].values()
 				if len(cord) < 2 {
 					return nil, fmt.Errorf("got %d, expected 2", len(info))

@@ -168,10 +168,10 @@ func readS(i *bufio.Reader) (*byte, int64, error) {
 	}
 	bs, err := i.ReadBytes('\n')
 	if err != nil {
-		return unsafe.StringData(""), 0, err
+		return nil, 0, err
 	}
 	if trim := len(bs) - 2; trim < 0 {
-		return unsafe.StringData(""), 0, errors.New(unexpectedNoCRLF)
+		return nil, 0, errors.New(unexpectedNoCRLF)
 	} else {
 		bs = bs[:trim]
 	}
@@ -207,23 +207,23 @@ func readI(i *bufio.Reader) (v int64, err error) {
 func readB(i *bufio.Reader) (*byte, int64, error) {
 	length, err := readI(i)
 	if err != nil {
-		return unsafe.StringData(""), 0, err
+		return nil, 0, err
 	}
 	if length == -1 {
-		return unsafe.StringData(""), 0, errOldNull
+		return nil, 0, errOldNull
 	}
 	bs := make([]byte, length)
 	if _, err = io.ReadFull(i, bs); err != nil {
-		return unsafe.StringData(""), 0, err
+		return nil, 0, err
 	}
 	if _, err = i.Discard(2); err != nil {
-		return unsafe.StringData(""), 0, err
+		return nil, 0, err
 	}
 	return unsafe.SliceData(bs), int64(len(bs)), nil
 }
 
 func readE(i *bufio.Reader) (*RedisMessage, int64, error) {
-	v := unsafe.SliceData(make([]RedisMessage, 0))
+	v := make([]RedisMessage, 0)
 	length := 0
 	for {
 		n, err := readNextMessage(i)
@@ -231,21 +231,23 @@ func readE(i *bufio.Reader) (*RedisMessage, int64, error) {
 			return nil, 0, err
 		}
 		if n.typ == '.' {
-			return v, int64(length), err
+			return unsafe.SliceData(v), int64(length), err
 		}
-		v = unsafe.SliceData(append(unsafe.Slice(v, length), n))
+		v = append(v, n)
 		length++
 	}
 }
 
-func readA(i *bufio.Reader, length int64) (v *RedisMessage, l int64, err error) {
-	v = unsafe.SliceData(make([]RedisMessage, length))
+func readA(i *bufio.Reader, length int64) (*RedisMessage, int64, error) {
+	var err error
+
+	msgs := make([]RedisMessage, length)
 	for n := int64(0); n < length; n++ {
-		if unsafe.Slice(v, length)[n], err = readNextMessage(i); err != nil {
+		if msgs[n], err = readNextMessage(i); err != nil {
 			return nil, 0, err
 		}
 	}
-	return v, length, nil
+	return unsafe.SliceData(msgs), length, nil
 }
 
 func writeB(o *bufio.Writer, id byte, str string) (err error) {
