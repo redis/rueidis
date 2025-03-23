@@ -213,7 +213,7 @@ func TestNewPipe(t *testing.T) {
 					'%',
 					[]RedisMessage{
 						strmsg('+', "proto"),
-						RedisMessage{typ: ':', intlen: 3},
+						{typ: ':', intlen: 3},
 						strmsg('+', "availability_zone"),
 						strmsg('+', "us-west-1a"),
 					},

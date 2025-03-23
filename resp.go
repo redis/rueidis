@@ -224,17 +224,15 @@ func readB(i *bufio.Reader) (*byte, int64, error) {
 
 func readE(i *bufio.Reader) (*RedisMessage, int64, error) {
 	v := make([]RedisMessage, 0)
-	length := 0
 	for {
 		n, err := readNextMessage(i)
 		if err != nil {
 			return nil, 0, err
 		}
 		if n.typ == '.' {
-			return unsafe.SliceData(v), int64(length), err
+			return unsafe.SliceData(v), int64(len(v)), err
 		}
 		v = append(v, n)
-		length++
 	}
 }
 
