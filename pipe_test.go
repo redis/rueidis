@@ -5386,8 +5386,8 @@ func TestNoHelloRegex(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	tests := []struct {
 		name  string
-		match bool
 		resp  string
+		match bool
 	}{
 		{
 			name:  "lowercase hello",

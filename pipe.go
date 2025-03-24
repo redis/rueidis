@@ -61,11 +61,11 @@ var _ wire = (*pipe)(nil)
 
 type pipe struct {
 	conn            net.Conn
-	error           atomic.Pointer[errs]
 	clhks           atomic.Value // closed hook, invoked after the conn is closed
 	pshks           atomic.Value // pubsub hook, registered by the SetPubSubHooks
 	queue           queue
 	cache           CacheStore
+	error           atomic.Pointer[errs]
 	r               *bufio.Reader
 	w               *bufio.Writer
 	close           chan struct{}
@@ -81,11 +81,10 @@ type pipe struct {
 	pinggap         time.Duration
 	maxFlushDelay   time.Duration
 	r2mu            sync.Mutex
+	wrCounter       atomic.Uint64
 	version         int32
-	_               [10]int32
 	blcksig         int32
 	state           int32
-	wrCounter       atomic.Uint64
 	bgState         int32
 	r2ps            bool // identify this pipe is used for resp2 pubsub or not
 	noNoDelay       bool
@@ -908,7 +907,7 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 		resp = newErrResult(p.Error())
 	}
 
-	if _, left := p.decrWaitsAndIncrRecvs(); state == 0 && left != 0 {
+	if left := p.decrWaitsAndIncrRecvs(); state == 0 && left != 0 {
 		p.background()
 	}
 	return resp
@@ -1014,7 +1013,7 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 			resp.s[i] = err
 		}
 	}
-	if _, left := p.decrWaitsAndIncrRecvs(); state == 0 && left != 0 {
+	if left := p.decrWaitsAndIncrRecvs(); state == 0 && left != 0 {
 		p.background()
 	}
 	return resp
@@ -1559,16 +1558,21 @@ func (p *pipe) incrWaits() uint32 {
 	return uint32(p.wrCounter.Add(1))
 }
 
+const (
+	decrLo       = ^uint64(0)
+	decrLoIncrHi = uint64(1<<32) - 1
+)
+
 // decrWaits decrements the lower 32 bits (waits).
 func (p *pipe) decrWaits() uint32 {
 	// Decrement the lower 32 bits (waits)
-	return uint32(p.wrCounter.Add(^uint64(0)) & 0xFFFFFFFF)
+	return uint32(p.wrCounter.Add(decrLo))
 }
 
 // decrWaitsAndIncrRecvs decrements the lower 32 bits (waits) and increments the upper 32 bits (recvs).
-func (p *pipe) decrWaitsAndIncrRecvs() (uint32, uint32) {
-	newValue := p.wrCounter.Add((1 << 32) - 1)
-	return uint32(newValue >> 32), uint32(newValue & 0xFFFFFFFF)
+func (p *pipe) decrWaitsAndIncrRecvs() uint32 {
+	newValue := p.wrCounter.Add(decrLoIncrHi)
+	return uint32(newValue)
 }
 
 // loadRecvs loads the upper 32 bits (recvs).
@@ -1580,7 +1584,7 @@ func (p *pipe) loadRecvs() int32 {
 // loadWaits loads the lower 32 bits (waits).
 func (p *pipe) loadWaits() uint32 {
 	// Load the lower 32 bits (waits)
-	return uint32(p.wrCounter.Load() & 0xFFFFFFFF)
+	return uint32(p.wrCounter.Load())
 }
 
 func (p *pipe) Error() error {

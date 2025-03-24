@@ -924,9 +924,9 @@ func TestDecodeSliceOfJSON(t *testing.T) {
 		Field string
 	}
 	type T struct {
-		ID     int
 		Name   string
 		Inners []*Inner
+		ID     int
 	}
 	values := []RedisMessage{
 		strmsg('+', `{"ID":1, "Name": "n1", "Inners": [{"Field": "f1"}]}`),

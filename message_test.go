@@ -15,8 +15,8 @@ import (
 )
 
 type wrapped struct {
-	msg string
 	err error
+	msg string
 }
 
 func (e wrapped) Error() string { return e.msg }
@@ -1257,8 +1257,8 @@ func TestRedisResult(t *testing.T) {
 
 	t.Run("Stringer", func(t *testing.T) {
 		tests := []struct {
-			input    RedisResult
 			expected string
+			input    RedisResult
 		}{
 			{
 				input: RedisResult{
@@ -1969,8 +1969,8 @@ func TestRedisMessage(t *testing.T) {
 
 	t.Run("Stringer", func(t *testing.T) {
 		tests := []struct {
-			input    RedisMessage
 			expected string
+			input    RedisMessage
 		}{
 			{
 				input: slicemsg('*', []RedisMessage{
