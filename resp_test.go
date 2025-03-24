@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"unsafe"
 )
 
 const iteration = 100
@@ -134,15 +135,15 @@ func TestWriteCmdAndRead(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		} else if m.typ != '*' {
 			t.Fatalf("unexpected m.typ: expected *, got %v", m.typ)
-		} else if len(m.values) != len(cmd) {
-			t.Fatalf("unexpected m.values: expected %v, got %v", len(cmd), len(m.values))
+		} else if len(m.values()) != len(cmd) {
+			t.Fatalf("unexpected m.values: expected %v, got %v", len(cmd), len(m.values()))
 		} else {
-			for i, v := range m.values {
+			for i, v := range m.values() {
 				if v.typ != '$' {
 					t.Fatalf("unexpected v.values: expected $, got %v", v.typ)
 				}
-				if v.string != cmd[i] {
-					t.Fatalf("unexpected v.string\n expected %v \n got %v", cmd[i], v.string)
+				if v.string() != cmd[i] {
+					t.Fatalf("unexpected v.string\n expected %v \n got %v", cmd[i], v.string())
 				}
 			}
 		}
@@ -177,8 +178,8 @@ func TestReadBoolean(t *testing.T) {
 			if m.typ != '#' {
 				t.Fatalf("unexpected msg type %v", m.typ)
 			}
-			if m.integer != 1 {
-				t.Fatalf("unexpected msg integer %v", m.integer)
+			if m.intlen != 1 {
+				t.Fatalf("unexpected msg integer %v", m.intlen)
 			}
 		}
 	}
@@ -199,8 +200,8 @@ func TestReadString(t *testing.T) {
 			if m.typ != '+' {
 				t.Fatalf("unexpected msg type %v", m.typ)
 			}
-			if m.string != "Hello word" {
-				t.Fatalf("unexpected msg string %v", m.string)
+			if m.string() != "Hello word" {
+				t.Fatalf("unexpected msg string %v", m.string())
 			}
 		}
 	}
@@ -363,8 +364,8 @@ func TestReadChunkedString(t *testing.T) {
 			if m.typ != '$' {
 				t.Fatalf("unexpected msg type %v", m.typ)
 			}
-			if m.string != "Hello word" {
-				t.Fatalf("unexpected msg string %v", m.string)
+			if m.string() != "Hello word" {
+				t.Fatalf("unexpected msg string %v", m.string())
 			}
 		}
 	}
@@ -412,12 +413,12 @@ func TestReadChunkedArray(t *testing.T) {
 			if m.typ != '*' {
 				t.Fatalf("unexpected msg type %v", m.typ)
 			}
-			if len(m.values) != 3 {
-				t.Fatalf("unexpected msg values length %v", len(m.values))
+			if len(m.values()) != 3 {
+				t.Fatalf("unexpected msg values length %v", len(m.values()))
 			}
-			for i, v := range m.values {
-				if v.typ != ':' || v.integer != int64(i+1) {
-					t.Fatalf("unexpected msg values %v", m.values)
+			for i, v := range m.values() {
+				if v.typ != ':' || v.intlen != int64(i+1) {
+					t.Fatalf("unexpected msg values %v", m.values())
 				}
 			}
 		}
@@ -440,12 +441,12 @@ func TestReadChunkedMap(t *testing.T) {
 			if m.typ != '%' {
 				t.Fatalf("unexpected msg type %v", m.typ)
 			}
-			if len(m.values) != 4 {
-				t.Fatalf("unexpected msg values length %v", len(m.values))
+			if len(m.values()) != 4 {
+				t.Fatalf("unexpected msg values length %v", len(m.values()))
 			}
-			for i, v := range m.values {
-				if v.typ != ':' || v.integer != int64(i+1) {
-					t.Fatalf("unexpected msg values %v", m.values)
+			for i, v := range m.values() {
+				if v.typ != ':' || v.intlen != int64(i+1) {
+					t.Fatalf("unexpected msg values %v", m.values())
 				}
 			}
 		}
@@ -469,21 +470,21 @@ func TestReadAttr(t *testing.T) {
 			if m.typ != '*' {
 				t.Fatalf("unexpected msg type %v", m.typ)
 			}
-			if m.values[0].integer != 2039123 {
-				t.Fatalf("unexpected msg values[0] %v", m.values[0])
+			if m.values()[0].intlen != 2039123 {
+				t.Fatalf("unexpected msg values[0] %v", m.values()[0])
 			}
-			if m.values[1].integer != 9543892 {
-				t.Fatalf("unexpected msg values[0] %v", m.values[1])
+			if m.values()[1].intlen != 9543892 {
+				t.Fatalf("unexpected msg values[0] %v", m.values()[1])
 			}
-			if !reflect.DeepEqual(*m.attrs, RedisMessage{typ: '|', values: []RedisMessage{
-				{typ: '+', string: "key-popularity"},
-				{typ: '%', values: []RedisMessage{
-					{typ: '$', string: "a"},
-					{typ: ',', string: "0.1923"},
-					{typ: '$', string: "b"},
-					{typ: ',', string: "0.0012"},
-				}},
-			}}) {
+			if !reflect.DeepEqual(*m.attrs, slicemsg('|', []RedisMessage{
+				strmsg('+', "key-popularity"),
+				slicemsg('%', []RedisMessage{
+					strmsg('$', "a"),
+					strmsg(',', "0.1923"),
+					strmsg('$', "b"),
+					strmsg(',', "0.0012"),
+				}),
+			})) {
 				t.Fatalf("unexpected msg attr %v", m.attrs)
 			}
 		}
@@ -571,14 +572,14 @@ func TestReadRESP2NullStringInArray(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if !reflect.DeepEqual(m, RedisMessage{
-				typ: '*',
-				values: []RedisMessage{
-					{typ: '$', string: "hello"},
+			if !reflect.DeepEqual(m, slicemsg(
+				'*',
+				[]RedisMessage{
+					strmsg('$', "hello"),
 					{typ: '_'},
-					{typ: '$', string: "world"},
+					strmsg('$', "world"),
 				},
-			}) {
+			)) {
 				t.Fatalf("unexpected msg %v", m)
 			}
 		}
@@ -612,7 +613,7 @@ func TestWriteSReadS(t *testing.T) {
 	TWriterAndReader(t, writeS, readS, true)
 }
 
-func TWriterAndReader(t *testing.T, writer func(*bufio.Writer, byte, string) error, reader func(*bufio.Reader) (string, error), trim bool) {
+func TWriterAndReader(t *testing.T, writer func(*bufio.Writer, byte, string) error, reader func(*bufio.Reader) (*byte, int64, error), trim bool) {
 	for i := 0; i < iteration; i++ {
 		b := bytes.NewBuffer(nil)
 		o := bufio.NewWriter(b)
@@ -627,10 +628,10 @@ func TWriterAndReader(t *testing.T, writer func(*bufio.Writer, byte, string) err
 		} else if id != str1[0] {
 			t.Fatalf("unexpected id: expected %v, got %v", str1[0], id)
 		}
-		if str2, err := reader(r); err != nil {
+		if str2bytes, str2len, err := reader(r); err != nil {
 			t.Fatalf("unexpected err: %v", err)
-		} else if str1 != str2 {
-			t.Fatalf("fail to read the string: \n expected: %v \n got: %v", str1, str2)
+		} else if str1 != unsafe.String(str2bytes, str2len) {
+			t.Fatalf("fail to read the string: \n expected: %v \n got: %v", str1, unsafe.String(str2bytes, str2len))
 		}
 	}
 }
