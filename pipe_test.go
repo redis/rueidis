@@ -4951,8 +4951,8 @@ func TestOngoingCancelContextInPipelineMode_Do(t *testing.T) {
 		}()
 	}
 
-	for atomic.LoadInt32(&p.waits) != 5 {
-		t.Logf("wait p.waits to be 5 %v", atomic.LoadInt32(&p.waits))
+	for p.loadWaits() != 5 {
+		t.Logf("wait p.waits to be 5 %v", p.loadWaits())
 		time.Sleep(time.Millisecond * 100)
 	}
 
@@ -4991,8 +4991,8 @@ func TestOngoingWriteTimeoutInPipelineMode_Do(t *testing.T) {
 			}
 		}()
 	}
-	for atomic.LoadInt32(&p.waits) != 5 {
-		t.Logf("wait p.waits to be 5 %v", atomic.LoadInt32(&p.waits))
+	for p.loadWaits() != 5 {
+		t.Logf("wait p.waits to be 5 %v", p.loadWaits())
 		time.Sleep(time.Millisecond * 100)
 	}
 	for atomic.LoadInt32(&timeout) != 5 {
@@ -5025,8 +5025,8 @@ func TestOngoingCancelContextInPipelineMode_DoMulti(t *testing.T) {
 		}()
 	}
 
-	for atomic.LoadInt32(&p.waits) != 5 {
-		t.Logf("wait p.waits to be 5 %v", atomic.LoadInt32(&p.waits))
+	for p.loadWaits() != 5 {
+		t.Logf("wait p.waits to be 5 %v", p.loadWaits())
 		time.Sleep(time.Millisecond * 100)
 	}
 
@@ -5065,8 +5065,8 @@ func TestOngoingWriteTimeoutInPipelineMode_DoMulti(t *testing.T) {
 			}
 		}()
 	}
-	for atomic.LoadInt32(&p.waits) != 5 {
-		t.Logf("wait p.waits to be 5 %v", atomic.LoadInt32(&p.waits))
+	for p.loadWaits() != 5 {
+		t.Logf("wait p.waits to be 5 %v", p.loadWaits())
 		time.Sleep(time.Millisecond * 100)
 	}
 	for atomic.LoadInt32(&timeout) != 5 {
@@ -5325,13 +5325,13 @@ func TestBackgroundPing(t *testing.T) {
 		p, mock, cancel, _ := setup(t, opt)
 		defer cancel()
 		time.Sleep(50 * time.Millisecond)
-		prev := atomic.LoadInt32(&p.recvs)
+		prev := p.loadRecvs()
 
 		for i := range 10 {
 			atomic.AddInt32(&p.blcksig, 1) // block
 			time.Sleep(timeout)
 			atomic.AddInt32(&p.blcksig, -1) // unblock
-			recv := atomic.LoadInt32(&p.recvs)
+			recv := p.loadRecvs()
 			if prev != recv {
 				t.Fatalf("round %d unexpect recv %v, need be equal to prev %v", i, recv, prev)
 			}
@@ -5344,7 +5344,8 @@ func TestBackgroundPing(t *testing.T) {
 		}()
 		for i := range 10 {
 			time.Sleep(timeout)
-			recv := atomic.LoadInt32(&p.recvs)
+			recv := p.loadRecvs()
+
 			if prev == recv {
 				t.Fatalf("round %d unexpect recv %v, need be different from prev %v", i, recv, prev)
 			}

@@ -85,8 +85,7 @@ type pipe struct {
 	_               [10]int32
 	blcksig         int32
 	state           int32
-	waits           int32
-	recvs           int32
+	wrCounter       atomic.Uint64
 	bgState         int32
 	r2ps            bool // identify this pipe is used for resp2 pubsub or not
 	noNoDelay       bool
@@ -372,10 +371,10 @@ func (p *pipe) _background() {
 		select {
 		case <-p.close:
 		default:
-			atomic.AddInt32(&p.waits, 1)
+			p.incrWaits()
 			go func() {
 				<-p.queue.PutOne(cmds.PingCmd) // avoid _backgroundWrite hanging at p.queue.WaitForWrite()
-				atomic.AddInt32(&p.waits, -1)
+				p.decrWaits()
 			}()
 		}
 	}
@@ -406,7 +405,7 @@ func (p *pipe) _background() {
 	}
 
 	resp := newErrResult(err)
-	for atomic.LoadInt32(&p.waits) != 0 {
+	for p.loadWaits() != 0 {
 		select {
 		case <-p.close: // p.queue.NextWriteCmd() can only be called after _backgroundWrite
 			_, _, _ = p.queue.NextWriteCmd()
@@ -450,7 +449,7 @@ func (p *pipe) _backgroundWrite() (err error) {
 				}
 			}
 			ones[0], multi, ch = p.queue.WaitForWrite()
-			if flushDelay != 0 && atomic.LoadInt32(&p.waits) > 1 { // do not delay for sequential usage
+			if flushDelay != 0 && p.loadWaits() > 1 { // do not delay for sequential usage
 				// Blocking commands are executed in dedicated client which is acquired from pool.
 				// So, there is no sense to wait other commands to be written.
 				// https://github.com/redis/rueidis/issues/379
@@ -637,17 +636,17 @@ func (p *pipe) _backgroundRead() (err error) {
 func (p *pipe) backgroundPing() {
 	var prev, recv int32
 
-	prev = atomic.LoadInt32(&p.recvs)
+	prev = p.loadRecvs()
 	p.pingTimer = time.AfterFunc(p.pinggap, func() {
 		var err error
-		recv = atomic.LoadInt32(&p.recvs)
+		recv = p.loadRecvs()
 		defer func() {
 			if err == nil && p.Error() == nil {
-				prev = atomic.LoadInt32(&p.recvs)
+				prev = p.loadRecvs()
 				p.pingTimer.Reset(p.pinggap)
 			}
 		}()
-		if recv != prev || atomic.LoadInt32(&p.blcksig) != 0 || (atomic.LoadInt32(&p.state) == 0 && atomic.LoadInt32(&p.waits) != 0) {
+		if recv != prev || atomic.LoadInt32(&p.blcksig) != 0 || (atomic.LoadInt32(&p.state) == 0 && p.loadWaits() != 0) {
 			return
 		}
 		ch := make(chan error, 1)
@@ -840,10 +839,10 @@ func (p *pipe) SetPubSubHooks(hooks PubSubHooks) <-chan error {
 			close(old.close)
 		}
 	}
-	if atomic.AddInt32(&p.waits, 1) == 1 && atomic.LoadInt32(&p.state) == 0 {
+	if p.incrWaits() == 1 && atomic.LoadInt32(&p.state) == 0 {
 		p.background()
 	}
-	atomic.AddInt32(&p.waits, -1)
+	p.decrWaits()
 	return ch
 }
 
@@ -884,7 +883,7 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 			return p._r2pipe(ctx).Do(ctx, cmd)
 		}
 	}
-	waits := atomic.AddInt32(&p.waits, 1) // if this is 1, and background worker is not started, no need to queue
+	waits := p.incrWaits() // if this is 1, and background worker is not started, no need to queue
 	state := atomic.LoadInt32(&p.state)
 
 	if state == 1 {
@@ -908,10 +907,10 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	} else {
 		resp = newErrResult(p.Error())
 	}
-	if left := atomic.AddInt32(&p.waits, -1); state == 0 && left != 0 {
+
+	if _, left := p.decrWaitsAndIncrRecvs(); state == 0 && left != 0 {
 		p.background()
 	}
-	atomic.AddInt32(&p.recvs, 1)
 	return resp
 
 queue:
@@ -925,14 +924,12 @@ queue:
 			goto abort
 		}
 	}
-	atomic.AddInt32(&p.waits, -1)
-	atomic.AddInt32(&p.recvs, 1)
+	p.decrWaitsAndIncrRecvs()
 	return resp
 abort:
 	go func(ch chan RedisResult) {
 		<-ch
-		atomic.AddInt32(&p.waits, -1)
-		atomic.AddInt32(&p.recvs, 1)
+		p.decrWaitsAndIncrRecvs()
 	}(ch)
 	return newErrResult(ctx.Err())
 }
@@ -990,7 +987,7 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 		}
 	}
 
-	waits := atomic.AddInt32(&p.waits, 1) // if this is 1, and background worker is not started, no need to queue
+	waits := p.incrWaits() // if this is 1, and background worker is not started, no need to queue
 	state := atomic.LoadInt32(&p.state)
 
 	if state == 1 {
@@ -1017,10 +1014,9 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 			resp.s[i] = err
 		}
 	}
-	if left := atomic.AddInt32(&p.waits, -1); state == 0 && left != 0 {
+	if _, left := p.decrWaitsAndIncrRecvs(); state == 0 && left != 0 {
 		p.background()
 	}
-	atomic.AddInt32(&p.recvs, 1)
 	return resp
 
 queue:
@@ -1034,15 +1030,13 @@ queue:
 			goto abort
 		}
 	}
-	atomic.AddInt32(&p.waits, -1)
-	atomic.AddInt32(&p.recvs, 1)
+	p.decrWaitsAndIncrRecvs()
 	return resp
 abort:
 	go func(resp *redisresults, ch chan RedisResult) {
 		<-ch
 		resultsp.Put(resp)
-		atomic.AddInt32(&p.waits, -1)
-		atomic.AddInt32(&p.recvs, 1)
+		p.decrWaitsAndIncrRecvs()
 	}(resp, ch)
 	resp = resultsp.Get(len(multi), len(multi))
 	err := newErrResult(ctx.Err())
@@ -1084,7 +1078,7 @@ func (s *RedisResultStream) WriteTo(w io.Writer) (n int64, err error) {
 		}
 		if s.n--; s.n == 0 {
 			atomic.AddInt32(&s.w.blcksig, -1)
-			atomic.AddInt32(&s.w.waits, -1)
+			s.w.decrWaits()
 			if s.e == nil {
 				s.e = io.EOF
 			} else {
@@ -1111,7 +1105,7 @@ func (p *pipe) DoStream(ctx context.Context, pool *pool, cmd Completed) RedisRes
 
 	if state == 0 {
 		atomic.AddInt32(&p.blcksig, 1)
-		waits := atomic.AddInt32(&p.waits, 1)
+		waits := p.incrWaits()
 		if waits != 1 {
 			panic("DoStream with racing is a bug")
 		}
@@ -1139,7 +1133,7 @@ func (p *pipe) DoStream(ctx context.Context, pool *pool, cmd Completed) RedisRes
 		}
 	}
 	atomic.AddInt32(&p.blcksig, -1)
-	atomic.AddInt32(&p.waits, -1)
+	p.decrWaits()
 	pool.Store(p)
 	return RedisResultStream{e: p.Error()}
 }
@@ -1161,7 +1155,7 @@ func (p *pipe) DoMultiStream(ctx context.Context, pool *pool, multi ...Completed
 
 	if state == 0 {
 		atomic.AddInt32(&p.blcksig, 1)
-		waits := atomic.AddInt32(&p.waits, 1)
+		waits := p.incrWaits()
 		if waits != 1 {
 			panic("DoMultiStream with racing is a bug")
 		}
@@ -1204,7 +1198,7 @@ func (p *pipe) DoMultiStream(ctx context.Context, pool *pool, multi ...Completed
 		}
 	}
 	atomic.AddInt32(&p.blcksig, -1)
-	atomic.AddInt32(&p.waits, -1)
+	p.decrWaits()
 	pool.Store(p)
 	return RedisResultStream{e: p.Error()}
 }
@@ -1559,6 +1553,36 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 	return results
 }
 
+// incrWaits increments the lower 32 bits (waits).
+func (p *pipe) incrWaits() uint32 {
+	// Increment the lower 32 bits (waits)
+	return uint32(p.wrCounter.Add(1))
+}
+
+// decrWaits decrements the lower 32 bits (waits).
+func (p *pipe) decrWaits() uint32 {
+	// Decrement the lower 32 bits (waits)
+	return uint32(p.wrCounter.Add(^uint64(0)) & 0xFFFFFFFF)
+}
+
+// decrWaitsAndIncrRecvs decrements the lower 32 bits (waits) and increments the upper 32 bits (recvs).
+func (p *pipe) decrWaitsAndIncrRecvs() (uint32, uint32) {
+	newValue := p.wrCounter.Add((1 << 32) - 1)
+	return uint32(newValue >> 32), uint32(newValue & 0xFFFFFFFF)
+}
+
+// loadRecvs loads the upper 32 bits (recvs).
+func (p *pipe) loadRecvs() int32 {
+	// Load the upper 32 bits (recvs)
+	return int32(p.wrCounter.Load() >> 32)
+}
+
+// loadWaits loads the lower 32 bits (waits).
+func (p *pipe) loadWaits() uint32 {
+	// Load the lower 32 bits (waits)
+	return uint32(p.wrCounter.Load() & 0xFFFFFFFF)
+}
+
 func (p *pipe) Error() error {
 	if err := p.error.Load(); err != nil {
 		return err.error
@@ -1569,7 +1593,7 @@ func (p *pipe) Error() error {
 func (p *pipe) Close() {
 	p.error.CompareAndSwap(nil, errClosing)
 	block := atomic.AddInt32(&p.blcksig, 1)
-	waits := atomic.AddInt32(&p.waits, 1)
+	waits := p.incrWaits()
 	stopping1 := atomic.CompareAndSwapInt32(&p.state, 0, 2)
 	stopping2 := atomic.CompareAndSwapInt32(&p.state, 1, 2)
 	if p.queue != nil {
@@ -1577,20 +1601,20 @@ func (p *pipe) Close() {
 			p.background()
 		}
 		if block == 1 && (stopping1 || stopping2) { // make sure there is no block cmd
-			atomic.AddInt32(&p.waits, 1)
+			p.incrWaits()
 			ch := p.queue.PutOne(cmds.PingCmd)
 			select {
 			case <-ch:
-				atomic.AddInt32(&p.waits, -1)
+				p.decrWaits()
 			case <-time.After(time.Second):
 				go func(ch chan RedisResult) {
 					<-ch
-					atomic.AddInt32(&p.waits, -1)
+					p.decrWaits()
 				}(ch)
 			}
 		}
 	}
-	atomic.AddInt32(&p.waits, -1)
+	p.decrWaits()
 	atomic.AddInt32(&p.blcksig, -1)
 	if p.pingTimer != nil {
 		p.pingTimer.Stop()
