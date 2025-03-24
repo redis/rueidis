@@ -1556,7 +1556,7 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 // incrWaits increments the lower 32 bits (waits).
 func (p *pipe) incrWaits() uint32 {
 	// Increment the lower 32 bits (waits)
-	return uint32(p.wrCounter.Add(1) & 0xFFFFFFFF)
+	return uint32(p.wrCounter.Add(1))
 }
 
 // decrWaits decrements the lower 32 bits (waits).
