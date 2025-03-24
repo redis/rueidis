@@ -532,7 +532,7 @@ func testMultiSETGETHelpers(t *testing.T, client Client, csc bool) {
 				t.Fatalf("unexpected result %v not found\n", key)
 			}
 			if exp, ok := kvs[key]; ok {
-				if exp != ret.string {
+				if exp != ret.string() {
 					t.Fatalf("unexpected result %v wrong value %v\n", key, exp)
 				}
 			} else {
@@ -620,11 +620,11 @@ func testMultiExec(t *testing.T, client Client) {
 			if err != nil {
 				t.Fatalf("unexpected exec response %v", err)
 			}
-			if resps[1].integer != v {
-				t.Fatalf("unexpected ttl response %v %v", v, resps[1].integer)
+			if resps[1].intlen != v {
+				t.Fatalf("unexpected ttl response %v %v", v, resps[1].intlen)
 			}
-			if resps[2].string != strconv.FormatInt(v, 10) {
-				t.Fatalf("unexpected get response %v %v", v, resps[2].string)
+			if resps[2].string() != strconv.FormatInt(v, 10) {
+				t.Fatalf("unexpected get response %v %v", v, resps[2].string())
 			}
 		}
 	}

@@ -292,10 +292,10 @@ func (c *sentinelClient) _switchTarget(addr string) (err error) {
 		return err
 	}
 
-	if c.replica && resp[0].string != "slave" {
+	if c.replica && resp[0].string() != "slave" {
 		target.Close()
 		return errNotSlave
-	} else if !c.replica && resp[0].string != "master" {
+	} else if !c.replica && resp[0].string() != "master" {
 		target.Close()
 		return errNotMaster
 	}
