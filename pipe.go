@@ -906,10 +906,10 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	} else {
 		resp = newErrResult(p.Error())
 	}
-	if left := p.decrWaits(); state == 0 && left != 0 {
+
+	if _, left := p.decrWaitsAndIncrRecvs(); state == 0 && left != 0 {
 		p.background()
 	}
-	p.incrRecvs()
 	return resp
 
 queue:
@@ -1013,10 +1013,9 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 			resp.s[i] = err
 		}
 	}
-	if left := p.decrWaits(); state == 0 && left != 0 {
+	if _, left := p.decrWaitsAndIncrRecvs(); state == 0 && left != 0 {
 		p.background()
 	}
-	p.incrRecvs()
 	return resp
 
 queue:
@@ -1562,14 +1561,6 @@ func (p *pipe) incrWaits() uint32 {
 func (p *pipe) decrWaits() uint32 {
 	// Decrement the lower 32 bits (waits)
 	return uint32(p.wrCounter.Add(^uint64(0)) & 0xFFFFFFFF)
-}
-
-// incrRecvs increments the upper 32 bits (recvs) of wrCounter by 1.
-func (p *pipe) incrRecvs() uint32 {
-	// Increment the upper 32 bits (recvs)
-	p.wrCounter.Add(1 << 32)
-	// Return the updated value of recvs (upper 32 bits)
-	return uint32(p.wrCounter.Load() >> 32)
 }
 
 // decrWaitsAndIncrRecvs decrements the lower 32 bits (waits) and increments the upper 32 bits (recvs).
