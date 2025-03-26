@@ -145,6 +145,30 @@ func (r *JSONRepository[T]) CreateIndex(ctx context.Context, cmdFn func(schema F
 	return r.client.Do(ctx, cmdFn(r.client.B().FtCreate().Index(r.idx).OnJson().Prefix(1).Prefix(r.prefix+":").Schema())).Error()
 }
 
+// CreateAndAliasIndex creates a new index, aliases it, and drops the old index if needed.
+func (r *JSONRepository[T]) CreateAndAliasIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) rueidis.Completed, alias string) error {
+	// Create a new index
+	newIndex := r.idx + "_new"
+	if err := r.client.Do(ctx, cmdFn(r.client.B().FtCreate().Index(newIndex).OnJson().Prefix(1).Prefix(r.prefix+":").Schema())).Error(); err != nil {
+		return err
+	}
+
+	// Alias the new index
+	if err := r.client.Do(ctx, r.client.B().FtAliasadd().Alias(alias).Index(newIndex).Build()).Error(); err != nil {
+		return err
+	}
+
+	// Drop the old index
+	if err := r.DropIndex(ctx); err != nil {
+		return err
+	}
+
+	// Update the repository index name
+	r.idx = newIndex
+
+	return nil
+}
+
 // DropIndex uses FT.DROPINDEX from the RediSearch module to drop index whose name is `jsonidx:{prefix}`
 func (r *JSONRepository[T]) DropIndex(ctx context.Context) error {
 	return r.client.Do(ctx, r.client.B().FtDropindex().Index(r.idx).Build()).Error()

@@ -146,6 +146,26 @@ func (r *HashRepository[T]) CreateIndex(ctx context.Context, cmdFn func(schema F
 	return r.client.Do(ctx, cmdFn(r.client.B().FtCreate().Index(r.idx).OnHash().Prefix(1).Prefix(r.prefix+":").Schema())).Error()
 }
 
+// CreateAndAliasIndex creates a new index, aliases it, and drops the old index if needed.
+func (r *HashRepository[T]) CreateAndAliasIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) rueidis.Completed, alias string) error {
+	newIndex := r.idx + "_new"
+	if err := r.client.Do(ctx, cmdFn(r.client.B().FtCreate().Index(newIndex).OnHash().Prefix(1).Prefix(r.prefix+":").Schema())).Error(); err != nil {
+		return err
+	}
+
+	if err := r.client.Do(ctx, r.client.B().FtAliasadd().Alias(alias).Index(newIndex).Build()).Error(); err != nil {
+		return err
+	}
+
+	if err := r.DropIndex(ctx); err != nil {
+		return err
+	}
+
+	r.idx = newIndex
+
+	return nil
+}
+
 // DropIndex uses FT.DROPINDEX from the RediSearch module to drop index whose name is `hashidx:{prefix}`
 func (r *HashRepository[T]) DropIndex(ctx context.Context) error {
 	return r.client.Do(ctx, r.client.B().FtDropindex().Index(r.idx).Build()).Error()
