@@ -1204,6 +1204,12 @@
         ]
       },
       {
+        "name": "scorer",
+        "type": "string",
+        "optional": true,
+        "command": "SCORER"
+      },
+      {
         "name": "timeout",
         "type": "integer",
         "optional": true,
@@ -1238,6 +1244,24 @@
                 "name": "field",
                 "type": "string",
                 "multiple": true
+              }
+            ]
+          },
+          {
+            "name": "apply",
+            "type": "block",
+            "optional": true,
+            "multiple": true,
+            "block": [
+              {
+                "name": "expression",
+                "type": "string",
+                "command": "APPLY"
+              },
+              {
+                "name": "name",
+                "type": "string",
+                "command": "AS"
               }
             ]
           },
@@ -1348,24 +1372,6 @@
                   "WITHCOUNT"
                 ],
                 "optional": true
-              }
-            ]
-          },
-          {
-            "name": "apply",
-            "type": "block",
-            "optional": true,
-            "multiple": true,
-            "block": [
-              {
-                "name": "expression",
-                "type": "string",
-                "command": "APPLY"
-              },
-              {
-                "name": "name",
-                "type": "string",
-                "command": "AS"
               }
             ]
           },

@@ -5004,22 +5004,42 @@ func (c *Compat) FTAggregateWithArgs(ctx context.Context, index string, query st
 		if options.Verbatim {
 			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Verbatim())
 		}
+		// [SCORER]
+		if options.Scorer != "" {
+			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Scorer(options.Scorer))
+		}
+		// [ADDSCORES]
+		if options.AddScores {
+			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Addscores())
+		}
 		// [LOAD count field [field ...]]
 		if options.LoadAll {
 			// LOAD *
 			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).LoadAll())
 		} else {
-			// LOAD
-			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Load(int64(len(options.Load))))
-			fields := make([]string, 0, len(options.Load))
-			for _, l := range options.Load {
-				fields = append(fields, l.Field)
+			totalFields := []string{}
+			for _, load := range options.Load {
+				totalFields = append(totalFields, load.Field)
+				if load.As != "" {
+					totalFields = append(totalFields, "AS", load.As)
+				}
 			}
-			_cmd = cmds.Incomplete(cmds.FtAggregateOpLoadLoad(_cmd).Field(fields...))
+
+			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Load(int64(len(totalFields))))
+			_cmd = cmds.Incomplete(cmds.FtAggregateOpLoadLoad(_cmd).Field(totalFields...))
 		}
 		// [TIMEOUT timeout]
 		if options.Timeout > 0 {
 			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Timeout(int64(options.Timeout)))
+		}
+		// [ APPLY expression AS name [ APPLY expression AS name ...]]
+		if options.Apply != nil {
+			for _, apply := range options.Apply {
+				_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Apply(apply.Field))
+				if apply.As != "" {
+					_cmd = cmds.Incomplete(cmds.FtAggregateOpApplyApply(_cmd).As(apply.As))
+				}
+			}
 		}
 		// [ GROUPBY nargs property [property ...] [ REDUCE function nargs arg [arg ...] [AS name] [ REDUCE function nargs arg [arg ...] [AS name] ...]] ...]]
 		if options.GroupBy != nil {
@@ -5071,13 +5091,6 @@ func (c *Compat) FTAggregateWithArgs(ctx context.Context, index string, query st
 			_cmd = cmds.Incomplete(cmds.FtAggregateOpSortbySortby(_cmd).Max(int64(options.SortByMax)))
 		}
 		// FIXME: go-redis doesn't provide WITHCOUNT option
-
-		// [ APPLY expression AS name [ APPLY expression AS name ...]]
-		if options.Apply != nil {
-			for _, apply := range options.Apply {
-				_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Apply(apply.Field).As(apply.As))
-			}
-		}
 		// [ LIMIT offset num]
 		if options.LimitOffset >= 0 && options.Limit > 0 {
 			_cmd = cmds.Incomplete(cmds.FtAggregateQuery(_cmd).Limit().OffsetNum(int64(options.LimitOffset), int64(options.Limit)))
