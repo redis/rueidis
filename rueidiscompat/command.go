@@ -3454,6 +3454,7 @@ type FTAggregateOptions struct {
 	WithCursorOptions *FTAggregateWithCursor
 	Params            map[string]interface{}
 	Filter            string
+	Scorer            string
 	Load              []FTAggregateLoad
 	GroupBy           []FTAggregateGroupBy
 	SortBy            []FTAggregateSortBy
@@ -3466,6 +3467,7 @@ type FTAggregateOptions struct {
 	Verbatim          bool
 	LoadAll           bool
 	WithCursor        bool
+	AddScores         bool
 }
 
 type AggregateCmd struct {
