@@ -17,6 +17,58 @@ func (c FtAggregate) Index(index string) FtAggregateIndex {
 	return (FtAggregateIndex)(c)
 }
 
+type FtAggregateScorer Incomplete
+
+func (c FtAggregateScorer) Addscores() FtAggregateAddscores {
+	c.cs.s = append(c.cs.s, "ADDSCORES")
+	return (FtAggregateAddscores)(c)
+}
+
+func (c FtAggregateScorer) Apply(expression string) FtAggregateOpApplyApply {
+	c.cs.s = append(c.cs.s, "APPLY", expression)
+	return (FtAggregateOpApplyApply)(c)
+}
+
+func (c FtAggregateScorer) Dialect(dialect int64) FtAggregateDialect {
+	c.cs.s = append(c.cs.s, "DIALECT", strconv.FormatInt(dialect, 10))
+	return (FtAggregateDialect)(c)
+}
+
+func (c FtAggregateScorer) Filter(filter string) FtAggregateOpFilter {
+	c.cs.s = append(c.cs.s, "FILTER", filter)
+	return (FtAggregateOpFilter)(c)
+}
+
+func (c FtAggregateScorer) Groupby(nargs int64) FtAggregateOpGroupbyGroupby {
+	c.cs.s = append(c.cs.s, "GROUPBY", strconv.FormatInt(nargs, 10))
+	return (FtAggregateOpGroupbyGroupby)(c)
+}
+
+func (c FtAggregateScorer) Limit() FtAggregateOpLimitLimit {
+	c.cs.s = append(c.cs.s, "LIMIT")
+	return (FtAggregateOpLimitLimit)(c)
+}
+
+func (c FtAggregateScorer) Params() FtAggregateParamsParams {
+	c.cs.s = append(c.cs.s, "PARAMS")
+	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateScorer) Sortby(nargs int64) FtAggregateOpSortbySortby {
+	c.cs.s = append(c.cs.s, "SORTBY", strconv.FormatInt(nargs, 10))
+	return (FtAggregateOpSortbySortby)(c)
+}
+
+func (c FtAggregateScorer) Withcursor() FtAggregateCursorWithcursor {
+	c.cs.s = append(c.cs.s, "WITHCURSOR")
+	return (FtAggregateCursorWithcursor)(c)
+}
+
+func (c FtAggregateScorer) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
 type FtAggregateAddscores Incomplete
 
 func (c FtAggregateAddscores) Dialect(dialect int64) FtAggregateDialect {
@@ -93,6 +145,11 @@ func (c FtAggregateCursorWithcursor) Maxidle(idleTime int64) FtAggregateCursorMa
 func (c FtAggregateCursorWithcursor) Params() FtAggregateParamsParams {
 	c.cs.s = append(c.cs.s, "PARAMS")
 	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateCursorWithcursor) Scorer(scorer string) FtAggregateScorer {
+    c.cs.s = append(c.cs.s, "SCORER", scorer)
+    return FtAggregateScorer(c)
 }
 
 func (c FtAggregateCursorWithcursor) Addscores() FtAggregateAddscores {
@@ -1627,6 +1684,11 @@ func (c FtAggregateQuery) Params() FtAggregateParamsParams {
 	return (FtAggregateParamsParams)(c)
 }
 
+func (c FtAggregateQuery) Scorer(scorer string) FtAggregateScorer {
+    c.cs.s = append(c.cs.s, "SCORER", scorer)
+    return (FtAggregateScorer)(c)
+}
+
 func (c FtAggregateQuery) Addscores() FtAggregateAddscores {
 	c.cs.s = append(c.cs.s, "ADDSCORES")
 	return (FtAggregateAddscores)(c)
@@ -1687,6 +1749,11 @@ func (c FtAggregateTimeout) Withcursor() FtAggregateCursorWithcursor {
 func (c FtAggregateTimeout) Params() FtAggregateParamsParams {
 	c.cs.s = append(c.cs.s, "PARAMS")
 	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateTimeout) Scorer(scorer string) FtAggregateScorer {
+    c.cs.s = append(c.cs.s, "SCORER", scorer)
+    return FtAggregateScorer(c)
 }
 
 func (c FtAggregateTimeout) Addscores() FtAggregateAddscores {
@@ -1754,6 +1821,11 @@ func (c FtAggregateVerbatim) Withcursor() FtAggregateCursorWithcursor {
 func (c FtAggregateVerbatim) Params() FtAggregateParamsParams {
 	c.cs.s = append(c.cs.s, "PARAMS")
 	return (FtAggregateParamsParams)(c)
+}
+
+func (c FtAggregateVerbatim) Scorer(scorer string) FtAggregateScorer {
+    c.cs.s = append(c.cs.s, "SCORER", scorer)
+    return FtAggregateScorer(c)
 }
 
 func (c FtAggregateVerbatim) Addscores() FtAggregateAddscores {

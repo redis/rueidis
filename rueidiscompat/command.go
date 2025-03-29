@@ -3466,6 +3466,8 @@ type FTAggregateOptions struct {
 	Verbatim          bool
 	LoadAll           bool
 	WithCursor        bool
+	Scorer            string
+	AddScores         bool
 }
 
 type AggregateCmd struct {
