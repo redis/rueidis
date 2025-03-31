@@ -45,7 +45,7 @@ type Repository[T any] interface {
 	SaveMulti(ctx context.Context, entity ...*T) (errs []error)
 	Remove(ctx context.Context, id string) error
 	CreateIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) rueidis.Completed) error
-	CreateAndAliasIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) rueidis.Completed, alias string) error
+	CreateAndAliasIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) rueidis.Completed) error
 	AlterIndex(ctx context.Context, cmdFn func(alter FtAlterIndex) rueidis.Completed) error
 	DropIndex(ctx context.Context) error
 	IndexName() string
