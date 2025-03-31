@@ -57,6 +57,8 @@ var (
 	// ErrReplicaOnlyNotSupported means ReplicaOnly flag is not supported by
 	// current client
 	ErrReplicaOnlyNotSupported = errors.New("ReplicaOnly is not supported for single client")
+	// ErrNoSendToReplicas means SendToReplicas function must be provided for standalone client with replicas.
+	ErrNoSendToReplicas = errors.New("no SendToReplicas provided for standalone client with replicas")
 	// ErrWrongPipelineMultiplex means wrong value for ClientOption.PipelineMultiplex
 	ErrWrongPipelineMultiplex = errors.New("ClientOption.PipelineMultiplex must not be bigger than MaxPipelineMultiplex")
 	// ErrDedicatedClientRecycled means the caller attempted to use the dedicated client which has been already recycled (after canceled/closed).
@@ -141,6 +143,9 @@ type ClientOption struct {
 	// ClientTrackingOptions will be appended to CLIENT TRACKING ON command when the connection is established.
 	// The default is []string{"OPTIN"}
 	ClientTrackingOptions []string
+
+	// Standalone is the option for the standalone client.
+	Standalone StandaloneOption
 
 	SelectDB int
 
@@ -258,6 +263,14 @@ type ClusterOption struct {
 	// If the value is zero, refreshment will be disabled.
 	// Cluster topology cache refresh happens always in the background after successful scan.
 	ShardsRefreshInterval time.Duration
+}
+
+// StandaloneOption is the options for the standalone client.
+type StandaloneOption struct {
+	// ReplicaAddress is the list of replicas for the primary node.
+	// Note that these addresses must be online and can not be promoted.
+	// An example use case is the reader endpoint provided by cloud vendors.
+	ReplicaAddress []string
 }
 
 // ReplicaInfo is the information of a replica node in a redis cluster.
@@ -432,6 +445,13 @@ func NewClient(option ClientOption) (client Client, err error) {
 	if option.Sentinel.MasterSet != "" {
 		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
 		return newSentinelClient(&option, makeConn, newRetryer(option.RetryDelay))
+	}
+	if len(option.Standalone.ReplicaAddress) > 0 {
+		if option.SendToReplicas == nil {
+			return nil, ErrNoSendToReplicas
+		}
+		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
+		return newStandaloneClient(&option, makeConn, newRetryer(option.RetryDelay))
 	}
 	if option.ForceSingleClient {
 		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
