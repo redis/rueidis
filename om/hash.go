@@ -2,9 +2,11 @@ package om
 
 import (
 	"context"
+	"fmt"
 	"github.com/oklog/ulid/v2"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/redis/rueidis"
@@ -148,18 +150,52 @@ func (r *HashRepository[T]) CreateIndex(ctx context.Context, cmdFn func(schema F
 
 // CreateAndAliasIndex creates a new index, aliases it, and drops the old index if needed.
 func (r *HashRepository[T]) CreateAndAliasIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) rueidis.Completed) error {
-	newIndex := r.idx + "_new"
 	alias := r.idx + "_alias"
+
+	aliasExists := true
+	if err := r.client.Do(ctx, r.client.B().FtInfo().Index(alias).Build()).Error(); err != nil {
+		aliasExists = false
+	}
+
+	var currentIndex string
+	if aliasExists {
+		infoCmd := r.client.B().FtInfo().Index(alias).Build()
+		infoResp, err := r.client.Do(ctx, infoCmd).ToMap()
+		if err != nil {
+			return err
+		}
+		message := infoResp["index_name"]
+		currentIndex = message.String()
+	}
+
+	newIndex := r.idx + "_v1"
+	if aliasExists {
+		parts := strings.Split(currentIndex, "_v")
+		if len(parts) == 2 {
+			if version, err := strconv.Atoi(parts[1]); err == nil {
+				newIndex = fmt.Sprintf("%s_v%d", r.idx, version+1)
+			}
+		}
+	}
+
 	if err := r.client.Do(ctx, cmdFn(r.client.B().FtCreate().Index(newIndex).OnHash().Prefix(1).Prefix(r.prefix+":").Schema())).Error(); err != nil {
 		return err
 	}
 
-	if err := r.client.Do(ctx, r.client.B().FtAliasadd().Alias(alias).Index(newIndex).Build()).Error(); err != nil {
-		return err
+	if aliasExists {
+		if err := r.client.Do(ctx, r.client.B().FtAliasupdate().Alias(alias).Index(newIndex).Build()).Error(); err != nil {
+			return err
+		}
+	} else {
+		if err := r.client.Do(ctx, r.client.B().FtAliasadd().Alias(alias).Index(newIndex).Build()).Error(); err != nil {
+			return err
+		}
 	}
 
-	if err := r.DropIndex(ctx); err != nil {
-		return err
+	if aliasExists && currentIndex != "" {
+		if err := r.client.Do(ctx, r.client.B().FtDropindex().Index(currentIndex).Build()).Error(); err != nil {
+			return err
+		}
 	}
 
 	r.idx = newIndex
