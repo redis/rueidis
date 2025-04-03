@@ -28,6 +28,8 @@ func isCacheDisabled(client Client) bool {
 	switch c := client.(type) {
 	case *singleClient:
 		return c.DisableCache
+	case *standalone:
+		return c.primary.DisableCache
 	case *sentinelClient:
 		return c.mOpt != nil && c.mOpt.DisableCache
 	case *clusterClient:
@@ -43,7 +45,7 @@ func MGet(client Client, ctx context.Context, keys []string) (ret map[string]Red
 	}
 
 	switch client.(type) {
-	case *singleClient, *sentinelClient:
+	case *singleClient, *standalone, *sentinelClient:
 		return clientMGet(client, ctx, client.B().Mget().Key(keys...).Build(), keys)
 	}
 
@@ -62,7 +64,7 @@ func MSet(client Client, ctx context.Context, kvs map[string]string) map[string]
 	}
 
 	switch client.(type) {
-	case *singleClient, *sentinelClient:
+	case *singleClient, *standalone, *sentinelClient:
 		return clientMSet(client, ctx, "MSET", kvs, make(map[string]error, len(kvs)))
 	}
 
@@ -81,7 +83,7 @@ func MDel(client Client, ctx context.Context, keys []string) map[string]error {
 	}
 
 	switch client.(type) {
-	case *singleClient, *sentinelClient:
+	case *singleClient, *standalone, *sentinelClient:
 		return clientMDel(client, ctx, keys)
 	}
 
@@ -100,7 +102,7 @@ func MSetNX(client Client, ctx context.Context, kvs map[string]string) map[strin
 	}
 
 	switch client.(type) {
-	case *singleClient, *sentinelClient:
+	case *singleClient, *standalone, *sentinelClient:
 		return clientMSet(client, ctx, "MSETNX", kvs, make(map[string]error, len(kvs)))
 	}
 
@@ -132,7 +134,7 @@ func JsonMGet(client Client, ctx context.Context, keys []string, path string) (r
 	}
 
 	switch client.(type) {
-	case *singleClient, *sentinelClient:
+	case *singleClient, *standalone, *sentinelClient:
 		return clientMGet(client, ctx, client.B().JsonMget().Key(keys...).Path(path).Build(), keys)
 	}
 
@@ -151,7 +153,7 @@ func JsonMSet(client Client, ctx context.Context, kvs map[string]string, path st
 	}
 
 	switch client.(type) {
-	case *singleClient, *sentinelClient:
+	case *singleClient, *standalone, *sentinelClient:
 		return clientJSONMSet(client, ctx, kvs, path, make(map[string]error, len(kvs)))
 	}
 
