@@ -75,6 +75,86 @@ func TestMGetCache(t *testing.T) {
 			}
 		})
 	})
+	t.Run("standalone client", func(t *testing.T) {
+		m := &mockConn{}
+		client, err := newStandaloneClient(
+			&ClientOption{
+				InitAddress: []string{""},
+				Standalone: StandaloneOption{
+					ReplicaAddress: []string{""},
+				},
+				SendToReplicas: func(cmd Completed) bool {
+					return cmd.IsReadOnly()
+				},
+			},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		disabledCacheClient, err := newStandaloneClient(
+			&ClientOption{
+				InitAddress: []string{""},
+				Standalone: StandaloneOption{
+					ReplicaAddress: []string{""},
+				},
+				SendToReplicas: func(cmd Completed) bool {
+					return cmd.IsReadOnly()
+				},
+				DisableCache: true,
+			},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate DisabledCache MGetCache", func(t *testing.T) {
+			m.DoFn = func(cmd Completed) RedisResult {
+				if !reflect.DeepEqual(cmd.Commands(), []string{"MGET", "1", "2"}) {
+					t.Fatalf("unexpected command %v", cmd)
+				}
+				return newResult(slicemsg('*', []RedisMessage{strmsg('+', "1"), strmsg('+', "2")}), nil)
+			}
+			if v, err := MGetCache(disabledCacheClient, context.Background(), 100, []string{"1", "2"}); err != nil || v == nil {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+		t.Run("Delegate DoCache", func(t *testing.T) {
+			m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
+				if reflect.DeepEqual(multi[0].Cmd.Commands(), []string{"GET", "1"}) && multi[0].TTL == 100 &&
+					reflect.DeepEqual(multi[1].Cmd.Commands(), []string{"GET", "2"}) && multi[1].TTL == 100 {
+					return &redisresults{s: []RedisResult{
+						newResult(strmsg('+', "1"), nil),
+						newResult(strmsg('+', "2"), nil),
+					}}
+				}
+				t.Fatalf("unexpected command %v", multi)
+				return nil
+			}
+			if v, err := MGetCache(client, context.Background(), 100, []string{"1", "2"}); err != nil {
+				t.Fatalf("unexpected response %v %v", v, err)
+			} else if v1, v2 := v["1"], v["2"]; v1.string() != "1" || v2.string() != "2" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+		t.Run("Delegate DoCache Empty", func(t *testing.T) {
+			if v, err := MGetCache(client, context.Background(), 100, []string{}); err != nil || v == nil {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+		t.Run("Delegate DoCache Err", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
+				return &redisresults{s: []RedisResult{newResult(RedisMessage{}, context.Canceled), newResult(RedisMessage{}, context.Canceled)}}
+			}
+			if v, err := MGetCache(client, ctx, 100, []string{"1", "2"}); err != context.Canceled {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+	})
 	t.Run("cluster client", func(t *testing.T) {
 		m := &mockConn{
 			DoFn: func(cmd Completed) RedisResult {
@@ -215,6 +295,53 @@ func TestMGet(t *testing.T) {
 			}
 		})
 	})
+	t.Run("standalone client", func(t *testing.T) {
+		m := &mockConn{}
+		client, err := newStandaloneClient(
+			&ClientOption{
+				InitAddress: []string{""},
+				Standalone: StandaloneOption{
+					ReplicaAddress: []string{""},
+				},
+				SendToReplicas: func(cmd Completed) bool {
+					return cmd.IsReadOnly()
+				},
+			},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate Do", func(t *testing.T) {
+			m.DoFn = func(cmd Completed) RedisResult {
+				if !reflect.DeepEqual(cmd.Commands(), []string{"MGET", "1", "2"}) {
+					t.Fatalf("unexpected command %v", cmd)
+				}
+				return newResult(slicemsg('*', []RedisMessage{strmsg('+', "1"), strmsg('+', "2")}), nil)
+			}
+			if v, err := MGet(client, context.Background(), []string{"1", "2"}); err != nil {
+				t.Fatalf("unexpected response %v %v", v, err)
+			} else if v1, v2 := v["1"], v["2"]; v1.string() != "1" || v2.string() != "2" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+		t.Run("Delegate Do Empty", func(t *testing.T) {
+			if v, err := MGet(client, context.Background(), []string{}); err != nil || v == nil {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+		t.Run("Delegate Do Err", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			m.DoFn = func(cmd Completed) RedisResult {
+				return newResult(RedisMessage{}, context.Canceled)
+			}
+			if v, err := MGet(client, ctx, []string{"1", "2"}); err != context.Canceled {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+	})
 	t.Run("cluster client", func(t *testing.T) {
 		m := &mockConn{
 			DoFn: func(cmd Completed) RedisResult {
@@ -314,6 +441,51 @@ func TestMDel(t *testing.T) {
 			}
 		})
 	})
+	t.Run("standalone client", func(t *testing.T) {
+		m := &mockConn{}
+		client, err := newStandaloneClient(
+			&ClientOption{
+				InitAddress: []string{""},
+				Standalone: StandaloneOption{
+					ReplicaAddress: []string{""},
+				},
+				SendToReplicas: func(cmd Completed) bool {
+					return cmd.IsReadOnly()
+				},
+			},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate Do", func(t *testing.T) {
+			m.DoFn = func(cmd Completed) RedisResult {
+				if !reflect.DeepEqual(cmd.Commands(), []string{"DEL", "1", "2"}) {
+					t.Fatalf("unexpected command %v", cmd)
+				}
+				return newResult(RedisMessage{typ: ':', intlen: 2}, nil)
+			}
+			if v := MDel(client, context.Background(), []string{"1", "2"}); v["1"] != nil || v["2"] != nil {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+		t.Run("Delegate Do Empty", func(t *testing.T) {
+			if v := MDel(client, context.Background(), []string{}); len(v) != 0 {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+		t.Run("Delegate Do Err", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			m.DoFn = func(cmd Completed) RedisResult {
+				return newResult(RedisMessage{}, context.Canceled)
+			}
+			if v := MDel(client, ctx, []string{"1", "2"}); v["1"] != context.Canceled || v["2"] != context.Canceled {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+	})
 	t.Run("cluster client", func(t *testing.T) {
 		m := &mockConn{
 			DoFn: func(cmd Completed) RedisResult {
@@ -376,6 +548,52 @@ func TestMSet(t *testing.T) {
 		client, err := newSingleClient(
 			&ClientOption{InitAddress: []string{""}},
 			m,
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate Do", func(t *testing.T) {
+			m.DoFn = func(cmd Completed) RedisResult {
+				if !reflect.DeepEqual(cmd.Commands(), []string{"MSET", "1", "1", "2", "2"}) &&
+					!reflect.DeepEqual(cmd.Commands(), []string{"MSET", "2", "2", "1", "1"}) {
+					t.Fatalf("unexpected command %v", cmd)
+				}
+				return newResult(strmsg('+', "OK"), nil)
+			}
+			if err := MSet(client, context.Background(), map[string]string{"1": "1", "2": "2"}); err["1"] != nil || err["2"] != nil {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+		t.Run("Delegate Do Empty", func(t *testing.T) {
+			if err := MSet(client, context.Background(), map[string]string{}); len(err) != 0 {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+		t.Run("Delegate Do Err", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			m.DoFn = func(cmd Completed) RedisResult {
+				return newResult(RedisMessage{}, context.Canceled)
+			}
+			if err := MSet(client, ctx, map[string]string{"1": "1", "2": "2"}); err["1"] != context.Canceled || err["2"] != context.Canceled {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+	})
+	t.Run("standalone client", func(t *testing.T) {
+		m := &mockConn{}
+		client, err := newStandaloneClient(
+			&ClientOption{
+				InitAddress: []string{""},
+				Standalone: StandaloneOption{
+					ReplicaAddress: []string{""},
+				},
+				SendToReplicas: func(cmd Completed) bool {
+					return cmd.IsReadOnly()
+				},
+			},
 			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
@@ -515,6 +733,52 @@ func TestMSetNX(t *testing.T) {
 			}
 		})
 	})
+	t.Run("standalone client", func(t *testing.T) {
+		m := &mockConn{}
+		client, err := newStandaloneClient(
+			&ClientOption{
+				InitAddress: []string{""},
+				Standalone: StandaloneOption{
+					ReplicaAddress: []string{""},
+				},
+				SendToReplicas: func(cmd Completed) bool {
+					return cmd.IsReadOnly()
+				},
+			},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate Do", func(t *testing.T) {
+			m.DoFn = func(cmd Completed) RedisResult {
+				if !reflect.DeepEqual(cmd.Commands(), []string{"MSETNX", "1", "1", "2", "2"}) &&
+					!reflect.DeepEqual(cmd.Commands(), []string{"MSETNX", "2", "2", "1", "1"}) {
+					t.Fatalf("unexpected command %v", cmd)
+				}
+				return newResult(strmsg('+', "OK"), nil)
+			}
+			if err := MSetNX(client, context.Background(), map[string]string{"1": "1", "2": "2"}); err["1"] != nil || err["2"] != nil {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+		t.Run("Delegate Do Empty", func(t *testing.T) {
+			if err := MSetNX(client, context.Background(), map[string]string{}); len(err) != 0 {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+		t.Run("Delegate Do Err", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			m.DoFn = func(cmd Completed) RedisResult {
+				return newResult(RedisMessage{}, context.Canceled)
+			}
+			if err := MSetNX(client, ctx, map[string]string{"1": "1", "2": "2"}); err["1"] != context.Canceled || err["2"] != context.Canceled {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+	})
 	t.Run("cluster client", func(t *testing.T) {
 		m := &mockConn{
 			DoFn: func(cmd Completed) RedisResult {
@@ -601,6 +865,33 @@ func TestMSetNXNotSet(t *testing.T) {
 			}
 		})
 	})
+	t.Run("standalone client", func(t *testing.T) {
+		m := &mockConn{}
+		client, err := newStandaloneClient(
+			&ClientOption{
+				InitAddress: []string{""},
+				Standalone: StandaloneOption{
+					ReplicaAddress: []string{""},
+				},
+				SendToReplicas: func(cmd Completed) bool {
+					return cmd.IsReadOnly()
+				},
+			},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate Do Not Set", func(t *testing.T) {
+			m.DoFn = func(cmd Completed) RedisResult {
+				return newResult(RedisMessage{typ: ':', intlen: 0}, nil)
+			}
+			if err := MSetNX(client, context.Background(), map[string]string{"1": "1", "2": "2"}); err["1"] != ErrMSetNXNotSet || err["2"] != ErrMSetNXNotSet {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+	})
 }
 
 //gocyclo:ignore
@@ -611,6 +902,58 @@ func TestJsonMGetCache(t *testing.T) {
 		client, err := newSingleClient(
 			&ClientOption{InitAddress: []string{""}},
 			m,
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate DoCache", func(t *testing.T) {
+			m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
+				if reflect.DeepEqual(multi[0].Cmd.Commands(), []string{"JSON.GET", "1", "$"}) && multi[0].TTL == 100 &&
+					reflect.DeepEqual(multi[1].Cmd.Commands(), []string{"JSON.GET", "2", "$"}) && multi[1].TTL == 100 {
+					return &redisresults{s: []RedisResult{
+						newResult(strmsg('+', "1"), nil),
+						newResult(strmsg('+', "2"), nil),
+					}}
+				}
+				t.Fatalf("unexpected command %v", multi)
+				return nil
+			}
+			if v, err := JsonMGetCache(client, context.Background(), 100, []string{"1", "2"}, "$"); err != nil {
+				t.Fatalf("unexpected response %v %v", v, err)
+			} else if v1, v2 := v["1"], v["2"]; v1.string() != "1" || v2.string() != "2" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+		t.Run("Delegate DoCache Empty", func(t *testing.T) {
+			if v, err := JsonMGetCache(client, context.Background(), 100, []string{}, "$"); err != nil || v == nil {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+		t.Run("Delegate DoCache Err", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
+				return &redisresults{s: []RedisResult{newResult(RedisMessage{}, context.Canceled), newResult(RedisMessage{}, context.Canceled)}}
+			}
+			if v, err := JsonMGetCache(client, ctx, 100, []string{"1", "2"}, "$"); err != context.Canceled {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+	})
+	t.Run("standalone client", func(t *testing.T) {
+		m := &mockConn{}
+		client, err := newStandaloneClient(
+			&ClientOption{
+				InitAddress: []string{""},
+				Standalone: StandaloneOption{
+					ReplicaAddress: []string{""},
+				},
+				SendToReplicas: func(cmd Completed) bool {
+					return cmd.IsReadOnly()
+				},
+			},
 			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
@@ -756,6 +1099,53 @@ func TestJsonMGet(t *testing.T) {
 			}
 		})
 	})
+	t.Run("standalone client", func(t *testing.T) {
+		m := &mockConn{}
+		client, err := newStandaloneClient(
+			&ClientOption{
+				InitAddress: []string{""},
+				Standalone: StandaloneOption{
+					ReplicaAddress: []string{""},
+				},
+				SendToReplicas: func(cmd Completed) bool {
+					return cmd.IsReadOnly()
+				},
+			},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate Do", func(t *testing.T) {
+			m.DoFn = func(cmd Completed) RedisResult {
+				if !reflect.DeepEqual(cmd.Commands(), []string{"JSON.MGET", "1", "2", "$"}) {
+					t.Fatalf("unexpected command %v", cmd)
+				}
+				return newResult(slicemsg('*', []RedisMessage{strmsg('+', "1"), strmsg('+', "2")}), nil)
+			}
+			if v, err := JsonMGet(client, context.Background(), []string{"1", "2"}, "$"); err != nil {
+				t.Fatalf("unexpected response %v %v", v, err)
+			} else if v1, v2 := v["1"], v["2"]; v1.string() != "1" || v2.string() != "2" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+		t.Run("Delegate Do Empty", func(t *testing.T) {
+			if v, err := JsonMGet(client, context.Background(), []string{}, "$"); err != nil || v == nil {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+		t.Run("Delegate Do Err", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			m.DoFn = func(cmd Completed) RedisResult {
+				return newResult(RedisMessage{}, context.Canceled)
+			}
+			if v, err := JsonMGet(client, ctx, []string{"1", "2"}, "$"); err != context.Canceled {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		})
+	})
 	t.Run("cluster client", func(t *testing.T) {
 		m := &mockConn{
 			DoFn: func(cmd Completed) RedisResult {
@@ -821,6 +1211,52 @@ func TestJsonMSet(t *testing.T) {
 		client, err := newSingleClient(
 			&ClientOption{InitAddress: []string{""}},
 			m,
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate Do", func(t *testing.T) {
+			m.DoFn = func(cmd Completed) RedisResult {
+				if !reflect.DeepEqual(cmd.Commands(), []string{"JSON.MSET", "1", "$", "1", "2", "$", "2"}) &&
+					!reflect.DeepEqual(cmd.Commands(), []string{"JSON.MSET", "2", "$", "2", "1", "$", "1"}) {
+					t.Fatalf("unexpected command %v", cmd)
+				}
+				return newResult(strmsg('+', "OK"), nil)
+			}
+			if err := JsonMSet(client, context.Background(), map[string]string{"1": "1", "2": "2"}, "$"); err["1"] != nil || err["2"] != nil {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+		t.Run("Delegate Do Empty", func(t *testing.T) {
+			if err := JsonMSet(client, context.Background(), map[string]string{}, "$"); len(err) != 0 {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+		t.Run("Delegate Do Err", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			m.DoFn = func(cmd Completed) RedisResult {
+				return newResult(RedisMessage{}, context.Canceled)
+			}
+			if err := JsonMSet(client, ctx, map[string]string{"1": "1", "2": "2"}, "$"); err["1"] != context.Canceled || err["2"] != context.Canceled {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+	})
+	t.Run("standalone client", func(t *testing.T) {
+		m := &mockConn{}
+		client, err := newStandaloneClient(
+			&ClientOption{
+				InitAddress: []string{""},
+				Standalone: StandaloneOption{
+					ReplicaAddress: []string{""},
+				},
+				SendToReplicas: func(cmd Completed) bool {
+					return cmd.IsReadOnly()
+				},
+			},
 			func(dst string, opt *ClientOption) conn { return m },
 			newRetryer(defaultRetryDelayFn),
 		)
