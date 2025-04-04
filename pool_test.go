@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"runtime"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -335,7 +336,7 @@ func TestPoolWithAcquireCtx(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	setup := func(size int, delay time.Duration) *pool {
 		return newPool(size, dead, 0, 0, func(ctx context.Context) wire {
-			var err error 
+			var err error
 			closed := false
 			timer := time.NewTimer(delay)
 			defer timer.Stop()
@@ -346,7 +347,7 @@ func TestPoolWithAcquireCtx(t *testing.T) {
 			case <-timer.C:
 				// noop
 			}
-			
+
 			return &mockWire{
 				CloseFn: func() {
 					closed = true
@@ -401,7 +402,7 @@ func TestPoolWithAcquireCtx(t *testing.T) {
 		// size = 5
 		for i := range conns {
 			d := time.Millisecond
-			if i % 2 == 0 {
+			if i%2 == 0 {
 				d = time.Millisecond * 8
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), d)
@@ -426,7 +427,7 @@ func TestPoolWithAcquireCtx(t *testing.T) {
 
 		// size = 10
 		for i := range conns {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond * 8)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*8)
 			w := p.Acquire(ctx)
 			conns[i] = w
 			cancel()
@@ -445,7 +446,137 @@ func TestPoolWithAcquireCtx(t *testing.T) {
 			t.Fatalf("pool len must equal to %d, actual: %d", len(conns), len(p.list))
 		}
 		p.cond.L.Unlock()
-		
+
 		p.Close()
 	})
+}
+
+func TestPoolWithCtxTimeout(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	setup := func(size int, delay time.Duration) *pool {
+		return newPool(size, dead, 0, 0, func(ctx context.Context) wire {
+
+			var err error
+			closed := false
+			timer := time.NewTimer(delay)
+			defer timer.Stop()
+			select {
+			case <-ctx.Done():
+				err = ctx.Err()
+				closed = true
+			case <-timer.C:
+				// noop
+			}
+
+			return &mockWire{
+				CloseFn: func() {
+					closed = true
+				},
+				ErrorFn: func() error {
+					if err != nil {
+						return err
+					} else if closed {
+						return ErrClosing
+					}
+					return nil
+				},
+			}
+		})
+	}
+
+	t.Run("some connections exceed context deadline, acquire duration should be around ctx timeout duration", func(t *testing.T) {
+		p := setup(5, time.Millisecond*20)
+		acquireTime := make([]int64, 5)
+
+		var wg sync.WaitGroup
+		// acquire 5 connections with a higher deadline
+		for i := 0; i < 5; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				ctx, cancel := context.WithTimeout(context.Background(), 40*time.Millisecond)
+				defer cancel()
+				defer func() {
+				}()
+				p.Acquire(ctx)
+			}()
+		}
+
+		// sleep for 1ms so that the above go routines can acquire the connections
+		time.Sleep(1 * time.Millisecond)
+
+		ctxTimeout := 4 * time.Millisecond
+		// acquire 5 more connections with a shorter deadline
+		for i := 0; i < 5; i++ {
+			wg.Add(1)
+			go func(index int) {
+				defer wg.Done()
+				start := time.Now()
+				ctx, cancel := context.WithTimeout(context.Background(), ctxTimeout)
+				defer cancel()
+				p.Acquire(ctx)
+				acquireTime[index] = time.Since(start).Milliseconds()
+			}(i)
+		}
+
+		wg.Wait()
+
+		// Assert that acquire time is close to ctx deadline
+		for i := 0; i < 5; i++ {
+			if acquireTime[i] < ctxTimeout.Milliseconds()-1 || acquireTime[i] > ctxTimeout.Milliseconds()+1 {
+				t.Fatalf("Acquire time for request %d is not within the expected range: %d seconds, got: %d", i, ctxTimeout.Milliseconds(), acquireTime[i])
+			}
+		}
+
+	})
+
+	t.Run("context cancelled after some timeout, pool should not wait for the connection", func(t *testing.T) {
+		p := setup(5, time.Millisecond*20)
+		acquireTime := make([]int64, 5)
+
+		var wg sync.WaitGroup
+		// acquire 5 connections with a higher deadline
+		for i := 0; i < 5; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				ctx, cancel := context.WithTimeout(context.Background(), 40*time.Millisecond)
+				defer cancel()
+				defer func() {
+				}()
+				p.Acquire(ctx)
+			}()
+		}
+
+		// sleep for 1ms so that the above go routines can acquire the connections
+		time.Sleep(1 * time.Millisecond)
+
+		cancelTimeout := 4 * time.Millisecond
+		// acquire 5 more connections with premature cancellation
+		for i := 0; i < 5; i++ {
+			wg.Add(1)
+			go func(index int) {
+				defer wg.Done()
+				start := time.Now()
+				ctx, cancel := context.WithCancel(context.Background())
+				go func() {
+					time.Sleep(cancelTimeout)
+					cancel()
+				}()
+
+				p.Acquire(ctx)
+				acquireTime[index] = time.Since(start).Milliseconds()
+			}(i)
+		}
+
+		wg.Wait()
+
+		// Assert that acquire time is close to cancel timeout
+		for i := 0; i < 5; i++ {
+			if acquireTime[i] < cancelTimeout.Milliseconds()-1 || acquireTime[i] > cancelTimeout.Milliseconds()+1 {
+				t.Fatalf("Acquire time for request %d is not within the expected range: %d seconds, got: %d", i, cancelTimeout.Milliseconds(), acquireTime[i])
+			}
+		}
+	})
+
 }
