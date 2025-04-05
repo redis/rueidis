@@ -382,6 +382,19 @@ client, err := rueidis.NewClient(rueidis.ClientOption{
     InitAddress: []string{"127.0.0.1:6379"},
 })
 
+// Connect to a standalone redis with replicas
+client, err := rueidis.NewClient(rueidis.ClientOption{
+    InitAddress: []string{"127.0.0.1:6379"},
+    Standalone: rueidis.StandaloneOption{
+        // Note that these addresses must be online and can not be promoted.
+        // An example use case is the reader endpoint provided by cloud vendors.
+        ReplicaAddress: []string{"reader_endpoint:port"},
+    },
+    SendToReplicas: func(cmd rueidis.Completed) bool {
+        return cmd.IsReadOnly()
+    },
+})
+
 // Connect to a redis cluster
 client, err := rueidis.NewClient(rueidis.ClientOption{
     InitAddress: []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"},
