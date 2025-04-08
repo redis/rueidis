@@ -1035,7 +1035,7 @@ func (c SetValue) Xx() SetConditionXx {
 }
 
 func (c SetValue) Ifeq(ifeq string) SetConditionIfeq {
-	c.cs.s = append(c.cs.s, ifeq)
+	c.cs.s = append(c.cs.s, "IFEQ", ifeq)
 	return (SetConditionIfeq)(c)
 }
 

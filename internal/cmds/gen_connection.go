@@ -867,12 +867,12 @@ func (b Builder) ClientSetinfo() (c ClientSetinfo) {
 }
 
 func (c ClientSetinfo) Libname(libname string) ClientSetinfoAttrLibname {
-	c.cs.s = append(c.cs.s, libname)
+	c.cs.s = append(c.cs.s, "LIB-NAME", libname)
 	return (ClientSetinfoAttrLibname)(c)
 }
 
 func (c ClientSetinfo) Libver(libver string) ClientSetinfoAttrLibver {
-	c.cs.s = append(c.cs.s, libver)
+	c.cs.s = append(c.cs.s, "LIB-VER", libver)
 	return (ClientSetinfoAttrLibver)(c)
 }
 

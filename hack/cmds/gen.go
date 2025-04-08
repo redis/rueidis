@@ -216,6 +216,9 @@ func (n *node) GoStructs() (out []goStruct) {
 		if len(n.Arg.Command) != 0 {
 			s.BuildDef.Command = strings.Split(n.Arg.Command, " ")
 		}
+		if len(n.Arg.Token) != 0 {
+			s.BuildDef.Command = strings.Split(n.Arg.Token, " ")
+		}
 
 		switch nm := n.Arg.Name.(type) {
 		case string:

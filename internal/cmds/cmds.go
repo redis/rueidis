@@ -185,6 +185,8 @@ func (c Completed) SetSlot(key string) Completed {
 	return c
 }
 
+var Slot = slot
+
 // Cacheable represents a completed Redis command which supports server-assisted client side caching,
 // and it should be created by the Cache() of command builder.
 type Cacheable Completed
