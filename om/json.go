@@ -148,7 +148,7 @@ func (r *JSONRepository[T]) CreateIndex(ctx context.Context, cmdFn func(schema F
 
 // CreateAndAliasIndex creates a new index, aliases it, and drops the old index if needed.
 func (r *JSONRepository[T]) CreateAndAliasIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) rueidis.Completed) error {
-	alias := r.idx + "_alias"
+	alias := r.idx
 
 	aliasExists := true
 	var currentIndex string
