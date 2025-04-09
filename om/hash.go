@@ -153,9 +153,20 @@ func (r *HashRepository[T]) CreateAndAliasIndex(ctx context.Context, cmdFn func(
 	alias := r.idx
 
 	var currentIndex string
+	aliasExists := false
 	infoCmd := r.client.B().FtInfo().Index(alias).Build()
 	infoResp, err := r.client.Do(ctx, infoCmd).ToMap()
-	aliasExists := err == nil
+	if err != nil {
+		if strings.Contains(err.Error(), "Unknown index name") {
+			// This is expected when the alias doesn't exist yet
+			aliasExists = false
+		} else {
+			// This is an unexpected error (network, connection, etc.)
+			return fmt.Errorf("failed to check if index exists: %w", err)
+		}
+	} else {
+		aliasExists = true
+	}
 
 	if aliasExists {
 		message, ok := infoResp["index_name"]
