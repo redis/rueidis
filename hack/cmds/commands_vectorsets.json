@@ -1,236 +1,254 @@
 {
-  "commands": [
-    {
-      "name": "VADD",
-      "summary": "Adds an element to a vector set, creating a new set if it doesn't already exist.",
-      "since": "Redis CE 8.0.0",
-      "group": "vector_set",
-      "complexity": "O(log(N)) for each element added, where N is the number of elements in the vector set.",
-      "arguments": [
-        { "name": "key", "type": "string" },
-        { "name": "REDUCE dim", "type": "integer", "optional": true },
-        { "name": "FP32 | VALUES num", "type": "string" },
-        { "name": "vector", "type": "string" },
-        { "name": "element", "type": "string" },
-        { "name": "CAS", "type": "string", "optional": true },
-        { "name": "NOQUANT | Q8 | BIN", "type": "string", "optional": true },
-        { "name": "EF build-exploration-factor", "type": "integer", "optional": true },
-        { "name": "SETATTR attributes", "type": "string", "optional": true },
-        { "name": "M numlinks", "type": "integer", "optional": true }
-      ],
-      "examples": [
-        {
-          "command": "VADD vset VALUES 3 1 0 0 elem1",
-          "description": "Adds an element 'elem1' with a 3D vector [1, 0, 0] to 'vset'."
-        }
-      ],
-      "references": [
-        { "title": "VADD Command", "url": "https://redis.io/docs/latest/commands/vadd/" }
-      ]
-    },
-    {
-      "name": "VCARD",
-      "summary": "Returns the number of elements in the specified vector set.",
-      "since": "Redis CE 8.0.0",
-      "group": "vector_set",
-      "complexity": "O(1)",
-      "arguments": [
-        { "name": "key", "type": "string" }
-      ],
-      "examples": [
-        {
-          "command": "VCARD my_vectorset",
-          "description": "Returns the number of elements in 'my_vectorset'."
-        }
-      ],
-      "references": [
-        { "title": "VCARD Command", "url": "https://redis.io/docs/latest/commands/vcard/" }
-      ]
-    },
-    {
-      "name": "VDIM",
-      "summary": "Returns the number of dimensions of vectors in a vector set.",
-      "since": "Redis CE 8.0.0",
-      "group": "vector_set",
-      "complexity": "O(1)",
-      "arguments": [
-        { "name": "key", "type": "string" }
-      ],
-      "examples": [
-        {
-          "command": "VDIM my_vectorset",
-          "description": "Returns the dimension count of vectors in 'my_vectorset'."
-        }
-      ],
-      "references": [
-        { "title": "VDIM Command", "url": "https://redis.io/docs/latest/commands/vdim/" }
-      ]
-    },
-    {
-      "name": "VEMB",
-      "summary": "Returns the approximate vector of a specified element.",
-      "since": "Redis CE 8.0.0",
-      "group": "vector_set",
-      "complexity": "O(1)",
-      "arguments": [
-        { "name": "key", "type": "string" },
-        { "name": "element", "type": "string" },
-        { "name": "RAW", "type": "string", "optional": true }
-      ],
-      "examples": [
-        {
-          "command": "VEMB my_vectorset elem1 RAW",
-          "description": "Retrieves the raw vector for 'elem1'."
-        }
-      ],
-      "references": [
-        { "title": "VEMB Command", "url": "https://redis.io/docs/latest/commands/vemb/" }
-      ]
-    },
-    {
-      "name": "VGETATTR",
-      "summary": "Returns JSON attributes of a vector set element.",
-      "since": "Redis CE 8.0.0",
-      "group": "vector_set",
-      "complexity": "O(1)",
-      "arguments": [
-        { "name": "key", "type": "string" },
-        { "name": "element", "type": "string" }
-      ],
-      "examples": [
-        {
-          "command": "VGETATTR my_vectorset elem1",
-          "description": "Gets the attributes of 'elem1'."
-        }
-      ],
-      "references": [
-        { "title": "VGETATTR Command", "url": "https://redis.io/docs/latest/commands/vgetattr/" }
-      ]
-    },
-    {
-      "name": "VINFO",
-      "summary": "Returns metadata about a vector set.",
-      "since": "Redis CE 8.0.0",
-      "group": "vector_set",
-      "complexity": "O(1)",
-      "arguments": [
-        { "name": "key", "type": "string" }
-      ],
-      "examples": [
-        {
-          "command": "VINFO my_vectorset",
-          "description": "Retrieves metadata for 'my_vectorset'."
-        }
-      ],
-      "references": [
-        { "title": "VINFO Command", "url": "https://redis.io/docs/latest/commands/vinfo/" }
-      ]
-    },
-    {
-      "name": "VLINKS",
-      "summary": "Returns the neighbor links of a node in a vector set.",
-      "since": "Redis CE 8.0.0",
-      "group": "vector_set",
-      "complexity": "O(log(N))",
-      "arguments": [
-        { "name": "key", "type": "string" },
-        { "name": "element", "type": "string" }
-      ],
-      "examples": [
-        {
-          "command": "VLINKS my_vectorset elem1",
-          "description": "Returns neighbors of 'elem1'."
-        }
-      ],
-      "references": [
-        { "title": "VLINKS Command", "url": "https://redis.io/docs/latest/commands/vlinks/" }
-      ]
-    },
-    {
-      "name": "VRANDMEMBER",
-      "summary": "Returns a random element from a vector set.",
-      "since": "Redis CE 8.0.0",
-      "group": "vector_set",
-      "complexity": "O(1)",
-      "arguments": [
-        { "name": "key", "type": "string" },
-        { "name": "count", "type": "integer", "optional": true }
-      ],
-      "examples": [
-        {
-          "command": "VRANDMEMBER my_vectorset 2",
-          "description": "Returns 2 random elements from 'my_vectorset'."
-        }
-      ],
-      "references": [
-        { "title": "VRANDMEMBER Command", "url": "https://redis.io/docs/latest/commands/vrandmember/" }
-      ]
-    },
-    {
-      "name": "VREM",
-      "summary": "Removes one or more elements from a vector set.",
-      "since": "Redis CE 8.0.0",
-      "group": "vector_set",
-      "complexity": "O(K log(N)) where K is the number of elements removed.",
-      "arguments": [
-        { "name": "key", "type": "string" },
-        { "name": "element", "type": "string", "multiple": true }
-      ],
-      "examples": [
-        {
-          "command": "VREM my_vectorset elem1 elem2",
-          "description": "Removes 'elem1' and 'elem2' from 'my_vectorset'."
-        }
-      ],
-      "references": [
-        { "title": "VREM Command", "url": "https://redis.io/docs/latest/commands/vrem/" }
-      ]
-    },
-    {
-      "name": "VSETATTR",
-      "summary": "Sets or updates JSON attributes of a vector set element.",
-      "since": "Redis CE 8.0.0",
-      "group": "vector_set",
-      "complexity": "O(1)",
-      "arguments": [
-        { "name": "key", "type": "string" },
-        { "name": "element", "type": "string" },
-        { "name": "attributes", "type": "string" }
-      ],
-      "examples": [
-        {
-          "command": "VSETATTR my_vectorset elem1 {\"label\":\"fruit\"}",
-          "description": "Sets the attribute of 'elem1' to {\"label\":\"fruit\"}."
-        }
-      ],
-      "references": [
-        { "title": "VSETATTR Command", "url": "https://redis.io/docs/latest/commands/vsetattr/" }
-      ]
-    },
-    {
-      "name": "VSIM",
-      "summary": "Performs a vector similarity search within a vector set.",
-      "since": "Redis CE 8.0.0",
-      "group": "vector_set",
-      "complexity": "O(log(N) + K) where K is the number of results requested.",
-      "arguments": [
-        { "name": "key", "type": "string" },
-        { "name": "K", "type": "integer" },
-        { "name": "FP32 | VALUES", "type": "string" },
-        { "name": "vector", "type": "string" },
-        { "name": "WITHDIST", "type": "string", "optional": true },
-        { "name": "EF search-exploration-factor", "type": "integer", "optional": true },
-        { "name": "FILTER attribute_filter", "type": "string", "optional": true }
-      ],
-      "examples": [
-        {
-          "command": "VSIM my_vectorset 5 VALUES 3 1 0 0 WITHDIST",
-          "description": "Searches for top 5 vectors similar to [1, 0, 0] with distances."
-        }
-      ],
-      "references": [
-        { "title": "VSIM Command", "url": "https://redis.io/docs/latest/commands/vsim/" }
-      ]
-    }
-  ]
+  "VADD": {
+    "summary": "Adds an element to a vector set, creating a new set if it doesn't already exist.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(log(N)) for each element added, where N is the number of elements in the vector set.",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "dim",
+        "type": "integer",
+        "command": "REDUCE",
+        "optional": true
+      },
+      {
+        "type": "enum",
+        "command": "FP32",
+        "enum": ["FP32", "VALUES"],
+        "optional": true
+      },
+      {
+        "name": "num",
+        "type": "integer",
+        "optional": true
+      },
+      {
+        "name": "vector",
+        "type": "string"
+      },
+      {
+        "name": "element",
+        "type": "string"
+      },
+      {
+        "name": "CAS",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "type": "enum",
+        "command": "NOQUANT",
+        "enum": ["NOQUANT", "Q8", "BIN"],
+        "optional": true
+      },
+      {
+        "name": "build-exploration-factor",
+        "type": "integer",
+        "command": "EF",
+        "optional": true
+      },
+      {
+        "name": "attributes",
+        "type": "string",
+        "command": "SETATTR",
+        "optional": true
+      },
+      {
+        "name": "numlinks",
+        "type": "integer",
+        "command": "M",
+        "optional": true
+      }
+    ]
+  },
+  "VCARD": {
+    "summary": "Returns the number of elements in the specified vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      }
+    ]
+  },
+  "VDIM": {
+    "summary": "Returns the number of dimensions of vectors in a vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      }
+    ]
+  },
+  "VEMB": {
+    "summary": "Returns the approximate vector of a specified element.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "element",
+        "type": "string"
+      },
+      {
+        "name": "RAW",
+        "type": "string",
+        "optional": true
+      }
+    ]
+  },
+  "VGETATTR": {
+    "summary": "Returns JSON attributes of a vector set element.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "element",
+        "type": "string"
+      }
+    ]
+  },
+  "VINFO": {
+    "summary": "Returns metadata about a vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      }
+    ]
+  },
+  "VLINKS": {
+    "summary": "Returns the neighbor links of a node in a vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(log(N))",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "element",
+        "type": "string"
+      }
+    ]
+  },
+  "VRANDMEMBER": {
+    "summary": "Returns a random element from a vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "count",
+        "type": "integer",
+        "optional": true
+      }
+    ]
+  },
+  "VREM": {
+    "summary": "Removes one or more elements from a vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(K log(N)) where K is the number of elements removed.",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "element",
+        "type": "string",
+        "multiple": true
+      }
+    ]
+  },
+  "VSETATTR": {
+    "summary": "Sets or updates JSON attributes of a vector set element.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "element",
+        "type": "string"
+      },
+      {
+        "name": "attributes",
+        "type": "string"
+      }
+    ]
+  },
+  "VSIM": {
+    "summary": "Performs a vector similarity search within a vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(log(N) + K) where K is the number of results requested.",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "K",
+        "type": "integer"
+      },
+      {
+        "type": "enum",
+        "command": "FP32",
+        "enum": ["FP32", "VALUES"],
+        "optional": true
+      },
+      {
+        "name": "vector",
+        "type": "string"
+      },
+      {
+        "name": "WITHDIST",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "search-exploration-factor",
+        "type": "integer",
+        "command": "EF",
+        "optional": true
+      },
+      {
+        "name": "attribute_filter",
+        "type": "string",
+        "command": "FILTER",
+        "optional": true
+      }
+    ]
+  }
 }
