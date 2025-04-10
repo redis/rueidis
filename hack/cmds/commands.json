@@ -725,7 +725,7 @@
         "optional": true
       },
       {
-        "name": "MAXAGE",
+        "name": "maxage",
         "type": "integer",
         "token": "MAXAGE",
         "optional": true

@@ -6,10 +6,11 @@ const (
 	optInTag = uint16(1 << 15)
 	blockTag = uint16(1 << 14)
 	readonly = uint16(1 << 13)
-	noRetTag = uint16(1<<12) | readonly // make noRetTag can also be retried
-	mtGetTag = uint16(1<<11) | readonly // make mtGetTag can also be retried
-	scrRoTag = uint16(1<<10) | readonly // make scrRoTag can also be retried
+	noRetTag = uint16(1<<12) | readonly | pipeTag // make noRetTag can also be retried and auto pipelining
+	mtGetTag = uint16(1<<11) | readonly           // make mtGetTag can also be retried
+	scrRoTag = uint16(1<<10) | readonly           // make scrRoTag can also be retried
 	unsubTag = uint16(1<<9) | noRetTag
+	pipeTag  = uint16(1 << 8) // make blocking mode request can use auto pipelining
 	// InitSlot indicates that the command be sent to any redis node in cluster
 	InitSlot = uint16(1 << 14)
 	// NoSlot indicates that the command has no key slot specified
@@ -20,6 +21,11 @@ var (
 	// OptInCmd is predefined CLIENT CACHING YES
 	OptInCmd = Completed{
 		cs: newCommandSlice([]string{"CLIENT", "CACHING", "YES"}),
+		cf: optInTag,
+	}
+	// OptInNopCmd is a predefined alternative for CLIENT CACHING YES in BCAST/OPTOUT mode.
+	OptInNopCmd = Completed{
+		cs: newCommandSlice([]string{"ECHO", ""}),
 		cf: optInTag,
 	}
 	// MultiCmd is predefined MULTI
@@ -33,6 +39,7 @@ var (
 	// RoleCmd is predefined ROLE
 	RoleCmd = Completed{
 		cs: newCommandSlice([]string{"ROLE"}),
+		cf: pipeTag,
 	}
 
 	// UnsubscribeCmd is predefined UNSUBSCRIBE
@@ -57,10 +64,12 @@ var (
 	// SlotCmd is predefined CLUSTER SLOTS
 	SlotCmd = Completed{
 		cs: newCommandSlice([]string{"CLUSTER", "SLOTS"}),
+		cf: pipeTag,
 	}
 	// ShardsCmd is predefined CLUSTER SHARDS
 	ShardsCmd = Completed{
 		cs: newCommandSlice([]string{"CLUSTER", "SHARDS"}),
+		cf: pipeTag,
 	}
 	// AskingCmd is predefined CLUSTER ASKING
 	AskingCmd = Completed{
@@ -108,6 +117,12 @@ func (c Completed) Pin() Completed {
 	return c
 }
 
+// ToPipe returns a new command with pipeTag
+func (c Completed) ToPipe() Completed {
+	c.cf |= pipeTag
+	return c
+}
+
 // IsEmpty checks if it is an empty command.
 func (c *Completed) IsEmpty() bool {
 	return c.cs == nil || len(c.cs.s) == 0
@@ -143,6 +158,11 @@ func (c *Completed) IsWrite() bool {
 	return !c.IsReadOnly()
 }
 
+// IsPipe checks if it is set pipeTag which prefers auto pipelining
+func (c *Completed) IsPipe() bool {
+	return c.cf&pipeTag == pipeTag
+}
+
 // Commands returns the commands as []string.
 // Note that the returned []string should not be modified
 // and should not be read after passing into the Client interface, because it will be recycled.
@@ -164,6 +184,8 @@ func (c Completed) SetSlot(key string) Completed {
 	}
 	return c
 }
+
+var Slot = slot
 
 // Cacheable represents a completed Redis command which supports server-assisted client side caching,
 // and it should be created by the Cache() of command builder.

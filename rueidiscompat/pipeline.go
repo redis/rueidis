@@ -775,6 +775,12 @@ func (c *Pipeline) BRPopLPush(ctx context.Context, source, destination string, t
 	return ret
 }
 
+func (c *Pipeline) LCS(ctx context.Context, q *LCSQuery) *LCSCmd {
+	ret := c.comp.LCS(ctx, q)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) LIndex(ctx context.Context, key string, index int64) *StringCmd {
 	ret := c.comp.LIndex(ctx, key, index)
 	c.rets = append(c.rets, ret)
@@ -1705,6 +1711,18 @@ func (c *Pipeline) SlaveOf(ctx context.Context, host, port string) *StatusCmd {
 	return ret
 }
 
+func (c *Pipeline) SlowLogGet(ctx context.Context, num int64) *SlowLogCmd {
+	ret := c.comp.SlowLogGet(ctx, num)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) SlowLogReset(ctx context.Context) *StatusCmd {
+	ret := c.comp.SlowLogReset(ctx)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) Time(ctx context.Context) *TimeCmd {
 	ret := c.comp.Time(ctx)
 	c.rets = append(c.rets, ret)
@@ -1915,6 +1933,12 @@ func (c *Pipeline) ClusterNodes(ctx context.Context) *StringCmd {
 	return ret
 }
 
+func (c *Pipeline) ClusterLinks(ctx context.Context) *ClusterLinksCmd {
+	ret := c.comp.ClusterLinks(ctx)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) ClusterMeet(ctx context.Context, host string, port int64) *StatusCmd {
 	ret := c.comp.ClusterMeet(ctx, host, port)
 	c.rets = append(c.rets, ret)
@@ -2083,8 +2107,56 @@ func (c *Pipeline) GeoHash(ctx context.Context, key string, members ...string) *
 	return ret
 }
 
+func (c *Pipeline) FunctionStats(ctx context.Context) *FunctionStatsCmd {
+	ret := c.comp.FunctionStats(ctx)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) ACLDryRun(ctx context.Context, username string, command ...any) *StringCmd {
 	ret := c.comp.ACLDryRun(ctx, username, command...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) ACLLog(ctx context.Context, count int64) *ACLLogCmd {
+	ret := c.comp.ACLLog(ctx, count)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) ACLSetUser(ctx context.Context, username string, rules ...string) *StatusCmd {
+	ret := c.comp.ACLSetUser(ctx, username, rules...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) ACLDelUser(ctx context.Context, username string) *IntCmd {
+	ret := c.comp.ACLDelUser(ctx, username)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) ACLLogReset(ctx context.Context) *StatusCmd {
+	ret := c.comp.ACLLogReset(ctx)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) ACLCat(ctx context.Context) *StringSliceCmd {
+	ret := c.comp.ACLCat(ctx)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) ACLList(ctx context.Context) *StringSliceCmd {
+	ret := c.comp.ACLList(ctx)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) ACLCatArgs(ctx context.Context, options *ACLCatArgs) *StringSliceCmd {
+	ret := c.comp.ACLCatArgs(ctx, options)
 	c.rets = append(c.rets, ret)
 	return ret
 }

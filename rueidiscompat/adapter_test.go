@@ -157,6 +157,22 @@ func testCluster(resp3 bool) {
 				}
 				Expect(m).To(HaveLen(16384))
 			})
+			It("ClusterLinks", func() {
+				links, err := adapter.ClusterLinks(ctx).Result()
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(links).NotTo(BeEmpty())
+
+				for _, link := range links {
+					Expect(link.Direction).NotTo(BeEmpty())
+					Expect(link.Node).NotTo(BeEmpty())
+					Expect(link.CreateTime).To(BeNumerically(">", 0))
+					Expect(link.Events).NotTo(BeEmpty())
+					Expect(link.SendBufferAllocated).To(BeNumerically(">=", 0))
+					Expect(link.SendBufferUsed).To(BeNumerically(">=", 0))
+				}
+			})
+
 		}
 		It("ClusterSlots", func() {
 			slots, err := adapter.ClusterSlots(ctx).Result()
@@ -2120,11 +2136,127 @@ func testAdapter(resp3 bool) {
 				replace := adapter.Copy(ctx, "newKey", "key", 0, true)
 				Expect(replace.Val()).To(Equal(int64(1)))
 			})
+		}
+	})
+
+	Describe("ACL", func() {
+		if resp3 {
+			TestUserName := "test"
+			It("should ACL LOG", func() {
+				Expect(adapter.ACLLogReset(ctx).Err()).NotTo(HaveOccurred())
+				err := adapter.ACLSetUser(ctx, "test", ">test", "on", "allkeys", "+get").Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				for addr := range clientresp3.Nodes() {
+					clientAcl, err := rueidis.NewClient(rueidis.ClientOption{
+						InitAddress:  []string{addr},
+						Username:     "test",
+						Password:     "test",
+						DisableCache: true,
+					})
+					Expect(err).NotTo(HaveOccurred())
+					adapterACL := NewAdapter(clientAcl)
+					_ = adapterACL.Set(ctx, "mystring", "foo", 0).Err()
+					_ = adapterACL.HSet(ctx, "myhash", "foo", "bar").Err()
+					_ = adapterACL.SAdd(ctx, "myset", "foo", "bar").Err()
+					clientAcl.Close()
+					break
+				}
+
+				logEntries, err := adapter.ACLLog(ctx, 10).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(logEntries)).To(Equal(6))
+
+				for _, entry := range logEntries {
+					Expect(entry.Reason).To(Equal("command"))
+					Expect(entry.Context).To(Equal("toplevel"))
+					Expect(entry.Object).NotTo(BeEmpty())
+					Expect(entry.Username).To(Equal("test"))
+					Expect(entry.AgeSeconds).To(BeNumerically(">=", 0))
+					Expect(entry.ClientInfo).NotTo(BeNil())
+					Expect(entry.EntryID).To(BeNumerically(">=", 0))
+					Expect(entry.TimestampCreated).To(BeNumerically(">=", 0))
+					Expect(entry.TimestampLastUpdated).To(BeNumerically(">=", 0))
+				}
+
+				limitedLogEntries, err := adapter.ACLLog(ctx, 2).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(limitedLogEntries)).To(Equal(2))
+
+				// cleanup after creating the user
+				err = adapter.ACLDelUser(ctx, "test").Err()
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("should ACL LOG RESET", func() {
+				// Call ACL LOG RESET
+				resetCmd := adapter.ACLLogReset(ctx)
+				Expect(resetCmd.Err()).NotTo(HaveOccurred())
+				Expect(resetCmd.Val()).To(Equal("OK"))
+
+				// Verify that the log is empty after the reset
+				logEntries, err := adapter.ACLLog(ctx, 10).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(logEntries)).To(Equal(0))
+			})
+
+			It("list only default user", func() {
+				res, err := adapter.ACLList(ctx).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(HaveLen(1))
+				Expect(res[0]).To(ContainSubstring("default"))
+			})
+
+			It("setuser and deluser", func() {
+				res, err := adapter.ACLList(ctx).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(HaveLen(1))
+				Expect(res[0]).To(ContainSubstring("default"))
+
+				add, err := adapter.ACLSetUser(ctx, TestUserName, "nopass", "on", "allkeys", "+set", "+get").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(add).To(Equal("OK"))
+
+				resAfter, err := adapter.ACLList(ctx).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(resAfter).To(HaveLen(2))
+				Expect(resAfter[1]).To(ContainSubstring(TestUserName))
+
+				deletedN, err := adapter.ACLDelUser(ctx, TestUserName).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(deletedN).To(BeNumerically("==", 1))
+
+				resAfterDeletion, err := adapter.ACLList(ctx).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(resAfterDeletion).To(HaveLen(1))
+				Expect(resAfterDeletion[0]).To(BeEquivalentTo(res[0]))
+			})
 
 			It("should acl dryrun", func() {
 				dryRun := adapter.ACLDryRun(ctx, "default", "get", "randomKey")
 				Expect(dryRun.Err()).NotTo(HaveOccurred())
 				Expect(dryRun.Val()).To(Equal("OK"))
+			})
+
+			It("lists acl categories and subcategories", func() {
+				res, err := adapter.ACLCat(ctx).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(res)).To(BeNumerically(">", 20))
+				Expect(res).To(ContainElements(
+					"read",
+					"write",
+					"keyspace",
+					"dangerous",
+					"slow",
+					"set",
+					"sortedset",
+					"list",
+					"hash",
+				))
+
+				res, err = adapter.ACLCatArgs(ctx, &ACLCatArgs{Category: "read"}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(ContainElement("get"))
 			})
 		}
 	})
@@ -2721,6 +2853,88 @@ func testAdapter(resp3 bool) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(v).To(Equal("c"))
 		})
+
+		if resp3 {
+			It("should LCS", func() {
+				err := adapter.MSet(ctx, "LCSkey1{1}", "ohmytext", "LCSkey2{1}", "mynewtext").Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				lcs, err := adapter.LCS(ctx, &LCSQuery{
+					Key1: "LCSkey1{1}",
+					Key2: "LCSkey2{1}",
+				}).Result()
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lcs.MatchString).To(Equal("mytext"))
+
+				lcs, err = adapter.LCS(ctx, &LCSQuery{
+					Key1: "LCSnonexistent_key1{1}",
+					Key2: "LCSkey2{1}",
+				}).Result()
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lcs.MatchString).To(Equal(""))
+
+				lcs, err = adapter.LCS(ctx, &LCSQuery{
+					Key1: "LCSkey1{1}",
+					Key2: "LCSkey2{1}",
+					Len:  true,
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lcs.MatchString).To(Equal(""))
+				Expect(lcs.Len).To(Equal(int64(6)))
+
+				lcs, err = adapter.LCS(ctx, &LCSQuery{
+					Key1: "LCSkey1{1}",
+					Key2: "LCSkey2{1}",
+					Idx:  true,
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lcs.MatchString).To(Equal(""))
+				Expect(lcs.Len).To(Equal(int64(6)))
+				Expect(lcs.Matches).To(Equal([]LCSMatchedPosition{
+					{
+						Key1:     LCSPosition{Start: 4, End: 7},
+						Key2:     LCSPosition{Start: 5, End: 8},
+						MatchLen: 0,
+					},
+					{
+						Key1:     LCSPosition{Start: 2, End: 3},
+						Key2:     LCSPosition{Start: 0, End: 1},
+						MatchLen: 0,
+					},
+				}))
+
+				lcs, err = adapter.LCS(ctx, &LCSQuery{
+					Key1:         "LCSkey1{1}",
+					Key2:         "LCSkey2{1}",
+					Idx:          true,
+					MinMatchLen:  3,
+					WithMatchLen: true,
+				}).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(lcs.MatchString).To(Equal(""))
+				Expect(lcs.Len).To(Equal(int64(6)))
+				Expect(lcs.Matches).To(Equal([]LCSMatchedPosition{
+					{
+						Key1:     LCSPosition{Start: 4, End: 7},
+						Key2:     LCSPosition{Start: 5, End: 8},
+						MatchLen: 4,
+					},
+				}))
+
+				_, err = adapter.Set(ctx, "keywithstringvalue{1}", "golang", 0).Result()
+				Expect(err).NotTo(HaveOccurred())
+				_, err = adapter.LPush(ctx, "keywithnonstringvalue{1}", "somevalue").Result()
+				Expect(err).NotTo(HaveOccurred())
+				_, err = adapter.LCS(ctx, &LCSQuery{
+					Key1: "keywithstringvalue{1}",
+					Key2: "keywithnonstringvalue{1}",
+				}).Result()
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal("The specified keys must contain string values"))
+			})
+		}
 
 		It("should LIndex", func() {
 			lPush := adapter.LPush(ctx, "list", "World")
@@ -7091,6 +7305,98 @@ func testAdapterCache(resp3 bool) {
 
 				Expect(x.Err()).NotTo(HaveOccurred())
 				Expect(x.Text()).To(Equal("Function 2"))
+			})
+
+			It("Shows function stats", func() {
+				defer func() {
+					for i := 0; i < 30; i++ {
+						adapter.FunctionKill(ctx)
+					}
+				}()
+
+				// We can not run blocking commands in Redis functions, so we're using an infinite loop,
+				// but we're killing the function after calling FUNCTION STATS
+				lib := Library{
+					Name:   "mylib1",
+					Engine: "LUA",
+					Functions: []Function{
+						{
+							Name:        "lib1_func1",
+							Description: "This is the func-1 of lib 1",
+							Flags:       []string{"no-writes"},
+						},
+					},
+					Code: `#!lua name=%s
+					local function f1(keys, args)
+						local i = 0
+					   	while true do
+							i = i + 1
+					   	end
+					end
+
+					redis.register_function{
+						function_name='%s',
+						description ='%s',
+						callback=f1,
+						flags={'%s'}
+					}`,
+				}
+				libCode := fmt.Sprintf(lib.Code, lib.Name, lib.Functions[0].Name,
+					lib.Functions[0].Description, lib.Functions[0].Flags[0])
+				err := adapter.FunctionLoad(ctx, libCode).Err()
+
+				Expect(err).NotTo(HaveOccurred())
+
+				r, err := adapter.FunctionStats(ctx).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(r.Engines)).To(Equal(1))
+				Expect(r.Running()).To(BeFalse())
+
+				started := make(chan bool, 1)
+				go func() {
+					defer GinkgoRecover()
+
+					for addr := range clientresp3.Nodes() {
+						client2, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{addr}})
+						Expect(err).NotTo(HaveOccurred())
+						adapter2 := NewAdapter(client2)
+						started <- true
+						adapter2.FCall(ctx, lib.Functions[0].Name, nil).Result()
+						break
+					}
+				}()
+
+				<-started
+				time.Sleep(1 * time.Second)
+				r, err = adapter.FunctionStats(ctx).Result()
+
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(r.Engines)).To(Equal(1))
+				rs, isRunning := r.RunningScript()
+				Expect(isRunning).To(BeTrue())
+				Expect(rs.Name).To(Equal(lib.Functions[0].Name))
+				Expect(rs.Duration > 0).To(BeTrue())
+
+				close(started)
+			})
+		})
+
+		Describe("SlowLogGet", func() {
+			It("returns slow query result", func() {
+				const key = "slowlog-log-slower-than"
+
+				old := adapter.ConfigGet(ctx, key).Val()
+				adapter.ConfigSet(ctx, key, "0")
+				defer adapter.ConfigSet(ctx, key, old[key])
+
+				err := adapter.SlowLogReset(ctx).Err()
+				Expect(err).NotTo(HaveOccurred())
+
+				adapter.Set(ctx, "test", "true", 0)
+
+				result, err := adapter.SlowLogGet(ctx, -1).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(result)).NotTo(BeZero())
 			})
 		})
 	}
@@ -12363,6 +12669,12 @@ func testAdapterSearchRESP2() {
 			res, err = adapter.FTAggregateWithArgs(ctx, "idx1", "*", options).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.Rows[0].Fields["t1"]).To(BeEquivalentTo("b"))
+
+			options = &FTAggregateOptions{SortBy: []FTAggregateSortBy{{FieldName: "@t1"}}, Limit: 1, LimitOffset: 0}
+			res, err = adapter.FTAggregateWithArgs(ctx, "idx1", "*", options).Result()
+			Expect(err).NotTo(HaveOccurred())
+			fmt.Println(res)
+			Expect(res.Rows[0].Fields["t1"]).To(BeEquivalentTo("a"))
 		})
 
 		It("should FTAggregate load ", Label("search", "ftaggregate"), func() {

@@ -1,6 +1,7 @@
 package rueidis
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"net"
@@ -37,8 +38,8 @@ func ParseURL(str string) (opt ClientOption, err error) {
 	}
 	switch u.Scheme {
 	case "unix":
-		opt.DialFn = func(s string, dialer *net.Dialer, config *tls.Config) (conn net.Conn, err error) {
-			return dialer.Dial("unix", s)
+		opt.DialCtxFn = func(ctx context.Context, s string, dialer *net.Dialer, config *tls.Config) (conn net.Conn, err error) {
+			return dialer.DialContext(ctx, "unix", s)
 		}
 		opt.InitAddress = []string{strings.TrimSpace(u.Path)}
 	case "rediss", "valkeys":

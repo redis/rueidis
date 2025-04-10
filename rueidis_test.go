@@ -51,13 +51,13 @@ func accept(t *testing.T, ln net.Listener) (*redisMock, error) {
 		conn: conn,
 	}
 	mock.Expect("HELLO", "3").
-		Reply(RedisMessage{
-			typ: '%',
-			values: []RedisMessage{
-				{typ: '+', string: "proto"},
-				{typ: ':', integer: 3},
+		Reply(slicemsg(
+			'%',
+			[]RedisMessage{
+				strmsg('+', "proto"),
+				{typ: ':', intlen: 3},
 			},
-		})
+		))
 	mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 		ReplyString("OK")
 	return mock, nil
@@ -118,7 +118,7 @@ func TestNewClusterClientError(t *testing.T) {
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
-			mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: "other error"})
+			mock.Expect("CLUSTER", "SLOTS").Reply(strmsg('-', "other error"))
 			mock.Expect("PING").ReplyString("OK")
 			mock.Close()
 			close(done)
@@ -222,7 +222,7 @@ func TestFallBackSingleClient(t *testing.T) {
 			ReplyError("UNKNOWN COMMAND")
 		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 			ReplyError("UNKNOWN COMMAND")
-		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: "ERR This instance has cluster support disabled"})
+		mock.Expect("CLUSTER", "SLOTS").Reply(strmsg('-', "ERR This instance has cluster support disabled"))
 		mock.Expect("PING").ReplyString("OK")
 		mock.Close()
 		close(done)
@@ -276,6 +276,82 @@ func TestForceSingleClient(t *testing.T) {
 	}
 	client.Close()
 	<-done
+}
+
+func TestStandaloneClientWithNoSendToReplicas(t *testing.T) {
+	_, err := NewClient(ClientOption{
+		InitAddress: []string{"127.0.0.1:6379"},
+		Standalone: StandaloneOption{
+			ReplicaAddress: []string{"127.0.0.1:6378"},
+		},
+	})
+	if err != ErrNoSendToReplicas {
+		t.Fatal(err)
+	}
+}
+
+func TestStandaloneClient(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	pln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pln.Close()
+	rln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rln.Close()
+	pdone := make(chan struct{})
+	rdone := make(chan struct{})
+	go func() {
+		mock, err := accept(t, pln)
+		if err != nil {
+			return
+		}
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+			ReplyError("UNKNOWN COMMAND")
+		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+			ReplyError("UNKNOWN COMMAND")
+		mock.Expect("PING").ReplyString("OK")
+		mock.Close()
+		close(pdone)
+	}()
+	go func() {
+		mock, err := accept(t, rln)
+		if err != nil {
+			return
+		}
+		mock.Expect("READONLY").
+			ReplyError("OK")
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+			ReplyError("UNKNOWN COMMAND")
+		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+			ReplyError("UNKNOWN COMMAND")
+		mock.Expect("PING").ReplyString("OK")
+		mock.Close()
+		close(rdone)
+	}()
+	_, pport, _ := net.SplitHostPort(pln.Addr().String())
+	_, rport, _ := net.SplitHostPort(rln.Addr().String())
+	client, err := NewClient(ClientOption{
+		InitAddress: []string{"127.0.0.1:" + pport},
+		Standalone: StandaloneOption{
+			ReplicaAddress: []string{"127.0.0.1:" + rport},
+		},
+		SendToReplicas: func(cmd Completed) bool {
+			return cmd.IsReadOnly()
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := client.(*standalone); !ok {
+		t.Fatal("client should be a standalone")
+	}
+	client.Close()
+	<-pdone
+	<-rdone
 }
 
 func TestTLSClient(t *testing.T) {
@@ -341,7 +417,7 @@ func TestTLSClient(t *testing.T) {
 			ReplyError("UNKNOWN COMMAND")
 		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 			ReplyError("UNKNOWN COMMAND")
-		mock.Expect("CLUSTER", "SLOTS").Reply(RedisMessage{typ: '-', string: "ERR This instance has cluster support disabled"})
+		mock.Expect("CLUSTER", "SLOTS").Reply(strmsg('-', "ERR This instance has cluster support disabled"))
 		mock.Expect("PING").ReplyString("OK")
 		mock.Close()
 		close(done)
@@ -392,6 +468,27 @@ func TestCustomDialFnIsCalled(t *testing.T) {
 	option := ClientOption{
 		InitAddress: []string{"127.0.0.1:0"},
 		DialFn: func(s string, dialer *net.Dialer, config *tls.Config) (conn net.Conn, err error) {
+			isFnCalled = true
+			return nil, errors.New("dial error")
+		},
+	}
+
+	_, err := NewClient(option)
+
+	if !isFnCalled {
+		t.Fatalf("excepted ClientOption.DialFn to be called")
+	}
+	if err == nil {
+		t.Fatalf("expected dial error")
+	}
+}
+
+func TestCustomDialCtxFnIsCalled(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	isFnCalled := false
+	option := ClientOption{
+		InitAddress: []string{"127.0.0.1:0"},
+		DialCtxFn: func(ctx context.Context, s string, dialer *net.Dialer, config *tls.Config) (conn net.Conn, err error) {
 			isFnCalled = true
 			return nil, errors.New("dial error")
 		},

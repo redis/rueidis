@@ -11,9 +11,9 @@ import (
 
 type singleClient struct {
 	conn         conn
-	cmd          Builder
 	retryHandler retryHandler
 	stop         uint32
+	cmd          Builder
 	retry        bool
 	DisableCache bool
 }
@@ -187,7 +187,7 @@ retry:
 }
 
 func (c *singleClient) Dedicated(fn func(DedicatedClient) error) (err error) {
-	wire := c.conn.Acquire()
+	wire := c.conn.Acquire(context.Background())
 	dsc := &dedicatedSingleClient{cmd: c.cmd, conn: c.conn, wire: wire, retry: c.retry, retryHandler: c.retryHandler}
 	err = fn(dsc)
 	dsc.release()
@@ -195,13 +195,17 @@ func (c *singleClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 }
 
 func (c *singleClient) Dedicate() (DedicatedClient, func()) {
-	wire := c.conn.Acquire()
+	wire := c.conn.Acquire(context.Background())
 	dsc := &dedicatedSingleClient{cmd: c.cmd, conn: c.conn, wire: wire, retry: c.retry, retryHandler: c.retryHandler}
 	return dsc, dsc.release
 }
 
 func (c *singleClient) Nodes() map[string]Client {
 	return map[string]Client{c.conn.Addr(): c}
+}
+
+func (c *singleClient) Mode() ClientMode {
+	return ClientModeStandalone
 }
 
 func (c *singleClient) Close() {
@@ -212,9 +216,9 @@ func (c *singleClient) Close() {
 type dedicatedSingleClient struct {
 	conn         conn
 	wire         wire
-	cmd          Builder
 	retryHandler retryHandler
 	mark         uint32
+	cmd          Builder
 	retry        bool
 }
 

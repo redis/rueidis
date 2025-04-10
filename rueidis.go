@@ -35,6 +35,10 @@ const (
 	DefaultWriteBuffer = 1 << 19
 	// MaxPipelineMultiplex is the maximum meaningful value for ClientOption.PipelineMultiplex
 	MaxPipelineMultiplex = 8
+	// https://github.com/valkey-io/valkey/blob/1a34a4ff7f101bb6b17a0b5e9aa3bf7d6bd29f68/src/networking.c#L4118-L4124
+	ClientModeCluster    ClientMode = "cluster"
+	ClientModeSentinel   ClientMode = "sentinel"
+	ClientModeStandalone ClientMode = "standalone"
 )
 
 var (
@@ -53,6 +57,8 @@ var (
 	// ErrReplicaOnlyNotSupported means ReplicaOnly flag is not supported by
 	// current client
 	ErrReplicaOnlyNotSupported = errors.New("ReplicaOnly is not supported for single client")
+	// ErrNoSendToReplicas means SendToReplicas function must be provided for standalone client with replicas.
+	ErrNoSendToReplicas = errors.New("no SendToReplicas provided for standalone client with replicas")
 	// ErrWrongPipelineMultiplex means wrong value for ClientOption.PipelineMultiplex
 	ErrWrongPipelineMultiplex = errors.New("ClientOption.PipelineMultiplex must not be bigger than MaxPipelineMultiplex")
 	// ErrDedicatedClientRecycled means the caller attempted to use the dedicated client which has been already recycled (after canceled/closed).
@@ -63,19 +69,14 @@ var (
 
 // ClientOption should be passed to NewClient to construct a Client
 type ClientOption struct {
-	// TCP & TLS
-	// Dialer can be used to customized how rueidis connect to a redis instance via TCP, including:
-	// - Timeout, the default is DefaultDialTimeout
-	// - KeepAlive, the default is DefaultTCPKeepAlive
-	// The Dialer.KeepAlive interval is used to detect an unresponsive idle tcp connection.
-	// OS takes at least (tcp_keepalive_probes+1)*Dialer.KeepAlive time to conclude an idle connection to be unresponsive.
-	// For example: DefaultTCPKeepAlive = 1s and the default of tcp_keepalive_probes on Linux is 9.
-	// Therefore, it takes at least 10s to kill an idle and unresponsive tcp connection on Linux by default.
-	Dialer    net.Dialer
 	TLSConfig *tls.Config
 
 	// DialFn allows for a custom function to be used to create net.Conn connections
+	// Deprecated: use DialCtxFn instead.
 	DialFn func(string, *net.Dialer, *tls.Config) (conn net.Conn, err error)
+
+	// DialCtxFn allows for a custom function to be used to create net.Conn connections
+	DialCtxFn func(context.Context, string, *net.Dialer, *tls.Config) (conn net.Conn, err error)
 
 	// NewCacheStoreFn allows a custom client side caching store for each connection
 	NewCacheStoreFn NewCacheStoreFn
@@ -89,17 +90,44 @@ type ClientOption struct {
 	// NOTE: This function can't be used with ReplicaOnly option.
 	SendToReplicas func(cmd Completed) bool
 
+	// AuthCredentialsFn allows for setting the AUTH username and password dynamically on each connection attempt to
+	// support rotating credentials
+	AuthCredentialsFn func(AuthCredentialsContext) (AuthCredentials, error)
+
+	// RetryDelay is the function that returns the delay that should be used before retrying the attempt.
+	// The default is an exponential backoff with a maximum delay of 1 second.
+	// Only used when DisableRetry is false.
+	RetryDelay RetryDelayFn
+
+	// ReplicaSelector selects a replica node when `SendToReplicas` returns true.
+	// If the function is set, the client will send selected command to the replica node.
+	// Returned value is the index of the replica node in the replicas slice.
+	// If the returned value is out of range, the primary node will be selected.
+	// If primary node does not have any replica, the primary node will be selected
+	// and function will not be called.
+	// Currently only used for cluster client.
+	// Each ReplicaInfo must not be modified.
+	// NOTE: This function can't be used with ReplicaOnly option.
+	// NOTE: This function must be used with SendToReplicas function.
+	ReplicaSelector func(slot uint16, replicas []ReplicaInfo) int
+
 	// Sentinel options, including MasterSet and Auth options
 	Sentinel SentinelOption
+
+	// TCP & TLS
+	// Dialer can be used to customized how rueidis connect to a redis instance via TCP, including:
+	// - Timeout, the default is DefaultDialTimeout
+	// - KeepAlive, the default is DefaultTCPKeepAlive
+	// The Dialer.KeepAlive interval is used to detect an unresponsive idle tcp connection.
+	// OS takes at least (tcp_keepalive_probes+1)*Dialer.KeepAlive time to conclude an idle connection to be unresponsive.
+	// For example: DefaultTCPKeepAlive = 1s and the default of tcp_keepalive_probes on Linux is 9.
+	// Therefore, it takes at least 10s to kill an idle and unresponsive tcp connection on Linux by default.
+	Dialer net.Dialer
 
 	// Redis AUTH parameters
 	Username   string
 	Password   string
 	ClientName string
-
-	// AuthCredentialsFn allows for setting the AUTH username and password dynamically on each connection attempt to
-	// support rotating credentials
-	AuthCredentialsFn func(AuthCredentialsContext) (AuthCredentials, error)
 
 	// ClientSetInfo will assign various info attributes to the current connection.
 	// Note that ClientSetInfo should have exactly 2 values, the lib name and the lib version respectively.
@@ -115,6 +143,9 @@ type ClientOption struct {
 	// ClientTrackingOptions will be appended to CLIENT TRACKING ON command when the connection is established.
 	// The default is []string{"OPTIN"}
 	ClientTrackingOptions []string
+
+	// Standalone is the option for the standalone client.
+	Standalone StandaloneOption
 
 	SelectDB int
 
@@ -174,6 +205,9 @@ type ClientOption struct {
 	// produce notable CPU usage reduction under load. Ref: https://github.com/redis/rueidis/issues/156
 	MaxFlushDelay time.Duration
 
+	// ClusterOption is the options for the redis cluster client.
+	ClusterOption ClusterOption
+
 	// DisableTCPNoDelay turns on Nagle's algorithm in pipelining mode by using conn.SetNoDelay(false).
 	// Turning this on can result in lower p99 latencies and lower CPU usages if all your requests are small.
 	// But if you have large requests or fast network, this might degrade the performance. Ref: https://github.com/redis/rueidis/pull/650
@@ -185,10 +219,6 @@ type ClientOption struct {
 	ClientNoTouch bool
 	// DisableRetry disables retrying read-only commands under network errors
 	DisableRetry bool
-	// RetryDelay is the function that returns the delay that should be used before retrying the attempt.
-	// The default is an exponential backoff with a maximum delay of 1 second.
-	// Only used when DisableRetry is false.
-	RetryDelay RetryDelayFn
 	// DisableCache falls back Client.DoCache/Client.DoMultiCache to Client.Do/Client.DoMulti
 	DisableCache bool
 	// DisableAutoPipelining makes rueidis.Client always pick a connection from the BlockingPool to serve each request.
@@ -209,21 +239,6 @@ type ClientOption struct {
 	// the current connection will be excluded from the client eviction process
 	// even if we're above the configured client eviction threshold.
 	ClientNoEvict bool
-
-	// ClusterOption is the options for the redis cluster client.
-	ClusterOption ClusterOption
-
-	// ReplicaSelector selects a replica node when `SendToReplicas` returns true.
-	// If the function is set, the client will send selected command to the replica node.
-	// Returned value is the index of the replica node in the replicas slice.
-	// If the returned value is out of range, the primary node will be selected.
-	// If primary node does not have any replica, the primary node will be selected
-	// and function will not be called.
-	// Currently only used for cluster client.
-	// Each ReplicaInfo must not be modified.
-	// NOTE: This function can't be used with ReplicaOnly option.
-	// NOTE: This function must be used with SendToReplicas function.
-	ReplicaSelector func(slot uint16, replicas []ReplicaInfo) int
 
 	// EnableReplicaAZInfo enables the client to load the replica node's availability zone.
 	// If true, the client will set the `AZ` field in `ReplicaInfo`.
@@ -254,11 +269,21 @@ type ClusterOption struct {
 	ShardsRefreshInterval time.Duration
 }
 
+// StandaloneOption is the options for the standalone client.
+type StandaloneOption struct {
+	// ReplicaAddress is the list of replicas for the primary node.
+	// Note that these addresses must be online and can not be promoted.
+	// An example use case is the reader endpoint provided by cloud vendors.
+	ReplicaAddress []string
+}
+
 // ReplicaInfo is the information of a replica node in a redis cluster.
 type ReplicaInfo struct {
 	Addr string
 	AZ   string
 }
+
+type ClientMode string
 
 // Client is the redis client interface for both single redis instance and redis cluster. It should be created from the NewClient()
 type Client interface {
@@ -309,6 +334,11 @@ type Client interface {
 	// Nodes returns each redis node this client known as rueidis.Client. This is useful if you want to
 	// send commands to some specific redis nodes in the cluster.
 	Nodes() map[string]Client
+	// Mode returns the current mode of the client, which indicates whether the client is operating
+	// in standalone, sentinel, or cluster mode.
+	// This can be useful for determining the type of Redis deployment the client is connected to
+	// and for making decisions based on the deployment type.
+	Mode() ClientMode
 }
 
 // DedicatedClient is obtained from Client.Dedicated() and it will be bound to single redis connection and
@@ -420,6 +450,13 @@ func NewClient(option ClientOption) (client Client, err error) {
 		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
 		return newSentinelClient(&option, makeConn, newRetryer(option.RetryDelay))
 	}
+	if len(option.Standalone.ReplicaAddress) > 0 {
+		if option.SendToReplicas == nil {
+			return nil, ErrNoSendToReplicas
+		}
+		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
+		return newStandaloneClient(&option, makeConn, newRetryer(option.RetryDelay))
+	}
 	if option.ForceSingleClient {
 		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
 		return newSingleClient(&option, nil, makeConn, newRetryer(option.RetryDelay))
@@ -455,14 +492,18 @@ func makeConn(dst string, opt *ClientOption) conn {
 	return makeMux(dst, opt, dial)
 }
 
-func dial(dst string, opt *ClientOption) (conn net.Conn, err error) {
+func dial(ctx context.Context, dst string, opt *ClientOption) (conn net.Conn, err error) {
+	if opt.DialCtxFn != nil {
+		return opt.DialCtxFn(ctx, dst, &opt.Dialer, opt.TLSConfig)
+	}
 	if opt.DialFn != nil {
 		return opt.DialFn(dst, &opt.Dialer, opt.TLSConfig)
 	}
 	if opt.TLSConfig != nil {
-		conn, err = tls.DialWithDialer(&opt.Dialer, "tcp", dst, opt.TLSConfig)
+		dialer := tls.Dialer{NetDialer: &opt.Dialer, Config: opt.TLSConfig}
+		conn, err = dialer.DialContext(ctx, "tcp", dst)
 	} else {
-		conn, err = opt.Dialer.Dial("tcp", dst)
+		conn, err = opt.Dialer.DialContext(ctx, "tcp", dst)
 	}
 	return conn, err
 }

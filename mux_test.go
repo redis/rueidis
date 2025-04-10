@@ -23,7 +23,7 @@ func setupMux(wires []*mockWire) (conn *mux, checkClean func(t *testing.T)) {
 func setupMuxWithOption(wires []*mockWire, option *ClientOption) (conn *mux, checkClean func(t *testing.T)) {
 	var mu sync.Mutex
 	var count = -1
-	wfn := func() wire {
+	wfn := func(_ context.Context) wire {
 		mu.Lock()
 		defer mu.Unlock()
 		count++
@@ -43,26 +43,54 @@ func TestNewMuxDailErr(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	c := 0
 	e := errors.New("any")
-	m := makeMux("", &ClientOption{}, func(dst string, opt *ClientOption) (net.Conn, error) {
+	m := makeMux("", &ClientOption{}, func(ctx context.Context, dst string, opt *ClientOption) (net.Conn, error) {
+		timer := time.NewTimer(time.Millisecond * 10) // delay time
+		defer timer.Stop()
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-timer.C:
+			// noop
+		}
 		c++
 		return nil, e
 	})
 	if err := m.Dial(); err != e {
 		t.Fatalf("unexpected return %v", err)
 	}
+	ctx1, cancel1 := context.WithTimeout(context.Background(), time.Millisecond)
+	defer cancel1()
+	if _, err := m._pipe(ctx1, 0); err != context.DeadlineExceeded {
+		t.Fatalf("unexpected return %v", err)
+	}
 	if c != 1 {
 		t.Fatalf("dialFn not called")
 	}
-	if w := m.pipe(0); w != m.dead { // c = 2
+	if w := m.pipe(context.Background(), 0); w != m.dead { // c = 2
+		t.Fatalf("unexpected wire %v", w)
+	}
+	ctx2, cancel2 := context.WithTimeout(context.Background(), time.Millisecond)
+	defer cancel2()
+	if w := m.pipe(ctx2, 0); w != m.dead {
 		t.Fatalf("unexpected wire %v", w)
 	}
 	if err := m.Dial(); err != e { // c = 3
 		t.Fatalf("unexpected return %v", err)
 	}
-	if w := m.Acquire(); w != m.dead {
+	if w := m.Acquire(context.Background()); w != m.dead {
 		t.Fatalf("unexpected wire %v", w)
 	}
-	if c != 4 {
+	ctx3, cancel3 := context.WithTimeout(context.Background(), time.Millisecond)
+	defer cancel3()
+	if w := m.Acquire(ctx3); w != m.dead {
+		t.Fatalf("unexpected wire %v", w)
+	}
+	ctx4, cancel4 := context.WithTimeout(context.Background(), 20*time.Millisecond)
+	defer cancel4()
+	if w := m.Acquire(ctx4); w != m.dead {
+		t.Fatalf("unexpected wire %v", w)
+	}
+	if c != 5 {
 		t.Fatalf("dialFn not called %v", c)
 	}
 }
@@ -73,13 +101,13 @@ func TestNewMux(t *testing.T) {
 	mock := &redisMock{t: t, buf: bufio.NewReader(n2), conn: n2}
 	go func() {
 		mock.Expect("HELLO", "3").
-			Reply(RedisMessage{
-				typ: '%',
-				values: []RedisMessage{
-					{typ: '+', string: "proto"},
-					{typ: ':', integer: 3},
+			Reply(slicemsg(
+				'%',
+				[]RedisMessage{
+					strmsg('+', "proto"),
+					{typ: ':', intlen: 3},
 				},
-			})
+			))
 		mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
 			ReplyString("OK")
 		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
@@ -89,7 +117,7 @@ func TestNewMux(t *testing.T) {
 		mock.Expect("PING").ReplyString("OK")
 		mock.Close()
 	}()
-	m := makeMux("", &ClientOption{}, func(dst string, opt *ClientOption) (net.Conn, error) {
+	m := makeMux("", &ClientOption{}, func(_ context.Context, dst string, opt *ClientOption) (net.Conn, error) {
 		return n1, nil
 	})
 	if err := m.Dial(); err != nil {
@@ -97,7 +125,7 @@ func TestNewMux(t *testing.T) {
 	}
 
 	t.Run("Override with previous mux", func(t *testing.T) {
-		m2 := makeMux("", &ClientOption{}, func(dst string, opt *ClientOption) (net.Conn, error) {
+		m2 := makeMux("", &ClientOption{}, func(_ context.Context, dst string, opt *ClientOption) (net.Conn, error) {
 			return n1, nil
 		})
 		m2.Override(m)
@@ -111,7 +139,7 @@ func TestNewMux(t *testing.T) {
 func TestNewMuxPipelineMultiplex(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	for _, v := range []int{-1, 0, 1, 2} {
-		m := makeMux("", &ClientOption{PipelineMultiplex: v}, func(dst string, opt *ClientOption) (net.Conn, error) { return nil, nil })
+		m := makeMux("", &ClientOption{PipelineMultiplex: v}, func(_ context.Context, dst string, opt *ClientOption) (net.Conn, error) { return nil, nil })
 		if (v < 0 && len(m.wire) != 1) || (v >= 0 && len(m.wire) != 1<<v) {
 			t.Fatalf("unexpected len(m.wire): %v", len(m.wire))
 		}
@@ -126,15 +154,35 @@ func TestMuxAddr(t *testing.T) {
 	}
 }
 
+func TestMuxOptInCmd(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+
+	if m := makeMux("dst1", &ClientOption{
+		ClientTrackingOptions: []string{"OPTOUT"},
+	}, nil); m.OptInCmd() != cmds.OptInNopCmd {
+		t.Fatalf("unexpected OptInCmd")
+	}
+	if m := makeMux("dst1", &ClientOption{
+		ClientTrackingOptions: []string{"PREFIX", "a", "BCAST"},
+	}, nil); m.OptInCmd() != cmds.OptInNopCmd {
+		t.Fatalf("unexpected OptInCmd")
+	}
+	if m := makeMux("dst1", &ClientOption{
+		ClientTrackingOptions: nil,
+	}, nil); m.OptInCmd() != cmds.OptInCmd {
+		t.Fatalf("unexpected OptInCmd")
+	}
+}
+
 func TestMuxDialSuppress(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	var wires, waits, done int64
 	blocking := make(chan struct{})
-	m := newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func() wire {
+	m := newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func(_ context.Context) wire {
 		atomic.AddInt64(&wires, 1)
 		<-blocking
 		return &mockWire{}
-	}, func() wire {
+	}, func(_ context.Context) wire {
 		return &mockWire{}
 	})
 	for i := 0; i < 1000; i++ {
@@ -163,7 +211,7 @@ func TestMuxReuseWire(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
 				DoFn: func(cmd Completed) RedisResult {
-					return newResult(RedisMessage{typ: '+', string: "PONG"}, nil)
+					return newResult(strmsg('+', "PONG"), nil)
 				},
 			},
 		})
@@ -186,7 +234,7 @@ func TestMuxReuseWire(t *testing.T) {
 			},
 			{
 				DoFn: func(cmd Completed) RedisResult {
-					return newResult(RedisMessage{typ: '+', string: "ACQUIRED"}, nil)
+					return newResult(strmsg('+', "ACQUIRED"), nil)
 				},
 			},
 			{
@@ -202,7 +250,7 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 
-		wire1 := m.dpool.Acquire()
+		wire1 := m.dpool.Acquire(context.Background())
 
 		go func() {
 			// this should use the second wire
@@ -223,7 +271,7 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("unexpected response %v", val)
 		}
 
-		response <- newResult(RedisMessage{typ: '+', string: "BLOCK_RESPONSE"}, nil)
+		response <- newResult(strmsg('+', "BLOCK_RESPONSE"), nil)
 		<-blocking
 	})
 
@@ -233,10 +281,13 @@ func TestMuxReuseWire(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
 				// leave first wire for pipeline calls
+				DoFn: func(cmd Completed) RedisResult {
+					return newResult(strmsg('+', "PIPELINED"), nil)
+				},
 			},
 			{
 				DoFn: func(cmd Completed) RedisResult {
-					return newResult(RedisMessage{typ: '+', string: "ACQUIRED"}, nil)
+					return newResult(strmsg('+', "ACQUIRED"), nil)
 				},
 			},
 			{
@@ -253,7 +304,7 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 
-		wire1 := m.spool.Acquire()
+		wire1 := m.spool.Acquire(context.Background())
 
 		go func() {
 			// this should use the second wire
@@ -274,7 +325,14 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("unexpected response %v", val)
 		}
 
-		response <- newResult(RedisMessage{typ: '+', string: "BLOCK_RESPONSE"}, nil)
+		// this should use auto pipeline
+		if val, err := m.Do(context.Background(), cmds.NewCompleted([]string{"PING"}).ToPipe()).ToString(); err != nil {
+			t.Fatalf("unexpected error %v", err)
+		} else if val != "PIPELINED" {
+			t.Fatalf("unexpected response %v", val)
+		}
+
+		response <- newResult(strmsg('+', "BLOCK_RESPONSE"), nil)
 		<-blocking
 	})
 
@@ -284,10 +342,13 @@ func TestMuxReuseWire(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
 				// leave first wire for pipeline calls
+				DoMultiFn: func(cmd ...Completed) *redisresults {
+					return &redisresults{s: []RedisResult{newResult(strmsg('+', "PIPELINED"), nil)}}
+				},
 			},
 			{
 				DoMultiFn: func(cmd ...Completed) *redisresults {
-					return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "ACQUIRED"}, nil)}}
+					return &redisresults{s: []RedisResult{newResult(strmsg('+', "ACQUIRED"), nil)}}
 				},
 			},
 			{
@@ -304,7 +365,7 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 
-		wire1 := m.spool.Acquire()
+		wire1 := m.spool.Acquire(context.Background())
 
 		go func() {
 			// this should use the second wire
@@ -325,7 +386,14 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("unexpected response %v", val)
 		}
 
-		response <- newResult(RedisMessage{typ: '+', string: "BLOCK_RESPONSE"}, nil)
+		// this should use auto pipeline
+		if val, err := m.DoMulti(context.Background(), cmds.NewCompleted([]string{"PING"}).ToPipe()).s[0].ToString(); err != nil {
+			t.Fatalf("unexpected error %v", err)
+		} else if val != "PIPELINED" {
+			t.Fatalf("unexpected response %v", val)
+		}
+
+		response <- newResult(strmsg('+', "BLOCK_RESPONSE"), nil)
 		<-blocking
 	})
 
@@ -338,7 +406,7 @@ func TestMuxReuseWire(t *testing.T) {
 			},
 			{
 				DoMultiFn: func(cmd ...Completed) *redisresults {
-					return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "ACQUIRED"}, nil)}}
+					return &redisresults{s: []RedisResult{newResult(strmsg('+', "ACQUIRED"), nil)}}
 				},
 			},
 			{
@@ -354,7 +422,7 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 
-		wire1 := m.dpool.Acquire()
+		wire1 := m.dpool.Acquire(context.Background())
 
 		go func() {
 			// this should use the second wire
@@ -375,7 +443,7 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("unexpected response %v", val)
 		}
 
-		response <- newResult(RedisMessage{typ: '+', string: "BLOCK_RESPONSE"}, nil)
+		response <- newResult(strmsg('+', "BLOCK_RESPONSE"), nil)
 		<-blocking
 	})
 
@@ -398,7 +466,7 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("unexpected dial error %v", err)
 		}
 
-		wire1 := m.Acquire()
+		wire1 := m.Acquire(context.Background())
 		m.Store(wire1)
 
 		if !cleaned {
@@ -414,13 +482,15 @@ func TestMuxDelegation(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
 				InfoFn: func() map[string]RedisMessage {
-					return map[string]RedisMessage{"key": {typ: '+', string: "value"}}
+					return map[string]RedisMessage{"key": strmsg('+', "value")}
 				},
 			},
 		})
 		defer checkClean(t)
 		defer m.Close()
-		if info := m.Info(); info == nil || info["key"].string != "value" {
+		if info := m.Info(); info == nil {
+			t.Fatalf("unexpected info %v", info)
+		} else if infoKey := info["key"]; infoKey.string() != "value" {
 			t.Fatalf("unexpected info %v", info)
 		}
 	})
@@ -486,7 +556,7 @@ func TestMuxDelegation(t *testing.T) {
 					if cmd.Commands()[0] != "READONLY_COMMAND" {
 						t.Fatalf("command should be READONLY_COMMAND")
 					}
-					return newResult(RedisMessage{typ: '+', string: "READONLY_COMMAND_RESPONSE"}, nil)
+					return newResult(strmsg('+', "READONLY_COMMAND_RESPONSE"), nil)
 				},
 			},
 		})
@@ -529,7 +599,7 @@ func TestMuxDelegation(t *testing.T) {
 			},
 			{
 				DoMultiFn: func(multi ...Completed) *redisresults {
-					return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "MULTI_COMMANDS_RESPONSE"}, nil)}}
+					return &redisresults{s: []RedisResult{newResult(strmsg('+', "MULTI_COMMANDS_RESPONSE"), nil)}}
 				},
 			},
 		})
@@ -572,7 +642,7 @@ func TestMuxDelegation(t *testing.T) {
 			},
 			{
 				DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
-					return newResult(RedisMessage{typ: '+', string: "READONLY_COMMAND_RESPONSE"}, nil)
+					return newResult(strmsg('+', "READONLY_COMMAND_RESPONSE"), nil)
 				},
 			},
 		})
@@ -600,7 +670,7 @@ func TestMuxDelegation(t *testing.T) {
 			},
 			{
 				DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
-					return &redisresults{s: []RedisResult{newResult(RedisMessage{typ: '+', string: "MULTI_COMMANDS_RESPONSE"}, nil)}}
+					return &redisresults{s: []RedisResult{newResult(strmsg('+', "MULTI_COMMANDS_RESPONSE"), nil)}}
 				},
 			},
 		})
@@ -628,7 +698,7 @@ func TestMuxDelegation(t *testing.T) {
 						if s := cmd.Cmd.Slot() & uint16(len(wires)-1); s != idx {
 							result[j] = newErrResult(fmt.Errorf("wrong slot %v %v", s, idx))
 						} else {
-							result[j] = newResult(RedisMessage{typ: '+', string: cmd.Cmd.Commands()[1]}, nil)
+							result[j] = newResult(strmsg('+', cmd.Cmd.Commands()[1]), nil)
 						}
 					}
 					return &redisresults{s: result}
@@ -640,7 +710,7 @@ func TestMuxDelegation(t *testing.T) {
 		defer m.Close()
 
 		for i := range wires {
-			m._pipe(uint16(i))
+			m._pipe(context.Background(), uint16(i))
 		}
 
 		builder := cmds.NewBuilder(cmds.NoSlot)
@@ -682,7 +752,7 @@ func TestMuxDelegation(t *testing.T) {
 		defer m.Close()
 
 		for i := range wires {
-			m._pipe(uint16(i))
+			m._pipe(context.Background(), uint16(i))
 		}
 
 		builder := cmds.NewBuilder(cmds.NoSlot)
@@ -768,7 +838,7 @@ func TestMuxDelegation(t *testing.T) {
 			<-blocked
 		}
 		for i := 0; i < 2; i++ {
-			responses <- newResult(RedisMessage{typ: '+', string: "BLOCK_COMMANDS_RESPONSE"}, nil)
+			responses <- newResult(strmsg('+', "BLOCK_COMMANDS_RESPONSE"), nil)
 		}
 		wg.Wait()
 	})
@@ -792,7 +862,7 @@ func TestMuxDelegation(t *testing.T) {
 			},
 			{
 				DoFn: func(cmd Completed) RedisResult {
-					return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+					return newResult(strmsg('+', "OK"), nil)
 				},
 			},
 		})
@@ -860,7 +930,7 @@ func TestMuxDelegation(t *testing.T) {
 			<-blocked
 		}
 		for i := 0; i < 2; i++ {
-			responses <- newResult(RedisMessage{typ: '+', string: "BLOCK_COMMANDS_RESPONSE"}, nil)
+			responses <- newResult(strmsg('+', "BLOCK_COMMANDS_RESPONSE"), nil)
 		}
 		wg.Wait()
 	})
@@ -913,7 +983,7 @@ func TestMuxDelegation(t *testing.T) {
 			<-blocked
 		}
 		for i := 0; i < 2; i++ {
-			responses <- newResult(RedisMessage{typ: '+', string: "BLOCK_COMMANDS_RESPONSE"}, nil)
+			responses <- newResult(strmsg('+', "BLOCK_COMMANDS_RESPONSE"), nil)
 		}
 		wg.Wait()
 	})
@@ -937,7 +1007,7 @@ func TestMuxDelegation(t *testing.T) {
 			},
 			{
 				DoFn: func(cmd Completed) RedisResult {
-					return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+					return newResult(strmsg('+', "OK"), nil)
 				},
 			},
 		})
@@ -970,7 +1040,7 @@ func TestMuxRegisterCloseHook(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
 				DoFn: func(cmd Completed) RedisResult {
-					return newResult(RedisMessage{typ: '+', string: "PONG1"}, nil)
+					return newResult(strmsg('+', "PONG1"), nil)
 				},
 				SetOnCloseHookFn: func(fn func(error)) {
 					hook.Store(fn)
@@ -978,7 +1048,7 @@ func TestMuxRegisterCloseHook(t *testing.T) {
 			},
 			{
 				DoFn: func(cmd Completed) RedisResult {
-					return newResult(RedisMessage{typ: '+', string: "PONG2"}, nil)
+					return newResult(strmsg('+', "PONG2"), nil)
 				},
 			},
 		})
@@ -997,7 +1067,7 @@ func TestMuxRegisterCloseHook(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
 				DoFn: func(cmd Completed) RedisResult {
-					return newResult(RedisMessage{typ: '+', string: "PONG1"}, nil)
+					return newResult(strmsg('+', "PONG1"), nil)
 				},
 				SetOnCloseHookFn: func(fn func(error)) {
 					hook.Store(fn)
@@ -1018,7 +1088,7 @@ func TestMuxRegisterCloseHook(t *testing.T) {
 
 func BenchmarkClientSideCaching(b *testing.B) {
 	setup := func(b *testing.B) *mux {
-		c := makeMux("127.0.0.1:6379", &ClientOption{CacheSizeEachConn: DefaultCacheBytes}, func(dst string, opt *ClientOption) (conn net.Conn, err error) {
+		c := makeMux("127.0.0.1:6379", &ClientOption{CacheSizeEachConn: DefaultCacheBytes}, func(_ context.Context, dst string, opt *ClientOption) (conn net.Conn, err error) {
 			return net.Dial("tcp", dst)
 		})
 		if err := c.Dial(); err != nil {

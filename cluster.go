@@ -23,17 +23,17 @@ var ErrSendToReplicasNotSet = errors.New("SendToReplicas must be set when Replic
 
 type clusterClient struct {
 	pslots       [16384]conn
-	rslots       []conn
-	sc           call
+	retryHandler retryHandler
+	opt          *ClientOption
 	rOpt         *ClientOption
 	conns        map[string]connrole
 	connFn       connFn
-	opt          *ClientOption
-	retryHandler retryHandler
 	stopCh       chan struct{}
-	cmd          Builder
+	sc           call
+	rslots       []conn
 	mu           sync.RWMutex
 	stop         uint32
+	cmd          Builder
 	retry        bool
 }
 
@@ -196,7 +196,7 @@ func (c *clusterClient) _refresh() (err error) {
 		}
 		result = <-results
 		err = result.reply.Error()
-		if len(result.reply.val.values) != 0 {
+		if len(result.reply.val.values()) != 0 {
 			break
 		}
 	}
@@ -354,23 +354,23 @@ func parseEndpoint(fallback, endpoint string, port int64) string {
 // parseSlots - map redis slots for each redis nodes/addresses
 // defaultAddr is needed in case the node does not know its own IP
 func parseSlots(slots RedisMessage, defaultAddr string) map[string]group {
-	groups := make(map[string]group, len(slots.values))
-	for _, v := range slots.values {
-		master := parseEndpoint(defaultAddr, v.values[2].values[0].string, v.values[2].values[1].integer)
+	groups := make(map[string]group, len(slots.values()))
+	for _, v := range slots.values() {
+		master := parseEndpoint(defaultAddr, v.values()[2].values()[0].string(), v.values()[2].values()[1].intlen)
 		if master == "" {
 			continue
 		}
 		g, ok := groups[master]
 		if !ok {
 			g.slots = make([][2]int64, 0)
-			g.nodes = make(nodes, 0, len(v.values)-2)
-			for i := 2; i < len(v.values); i++ {
-				if dst := parseEndpoint(defaultAddr, v.values[i].values[0].string, v.values[i].values[1].integer); dst != "" {
+			g.nodes = make(nodes, 0, len(v.values())-2)
+			for i := 2; i < len(v.values()); i++ {
+				if dst := parseEndpoint(defaultAddr, v.values()[i].values()[0].string(), v.values()[i].values()[1].intlen); dst != "" {
 					g.nodes = append(g.nodes, ReplicaInfo{Addr: dst})
 				}
 			}
 		}
-		g.slots = append(g.slots, [2]int64{v.values[0].integer, v.values[1].integer})
+		g.slots = append(g.slots, [2]int64{v.values()[0].intlen, v.values()[1].intlen})
 		groups[master] = g
 	}
 	return groups
@@ -379,12 +379,14 @@ func parseSlots(slots RedisMessage, defaultAddr string) map[string]group {
 // parseShards - map redis shards for each redis nodes/addresses
 // defaultAddr is needed in case the node does not know its own IP
 func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]group {
-	groups := make(map[string]group, len(shards.values))
-	for _, v := range shards.values {
+	groups := make(map[string]group, len(shards.values()))
+	for _, v := range shards.values() {
 		m := -1
 		shard, _ := v.AsMap()
-		slots := shard["slots"].values
-		_nodes := shard["nodes"].values
+		shardSlots := shard["slots"]
+		shardNodes := shard["nodes"]
+		slots := shardSlots.values()
+		_nodes := shardNodes.values()
 		g := group{
 			nodes: make(nodes, 0, len(_nodes)),
 			slots: make([][2]int64, len(slots)/2),
@@ -395,15 +397,16 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 		}
 		for _, n := range _nodes {
 			dict, _ := n.AsMap()
-			if dict["health"].string != "online" {
+			if dictHealth := dict["health"]; dictHealth.string() != "online" {
 				continue
 			}
-			port := dict["port"].integer
-			if tls && dict["tls-port"].integer > 0 {
-				port = dict["tls-port"].integer
+			port := dict["port"].intlen
+			if tls && dict["tls-port"].intlen > 0 {
+				port = dict["tls-port"].intlen
 			}
-			if dst := parseEndpoint(defaultAddr, dict["endpoint"].string, port); dst != "" {
-				if dict["role"].string == "master" {
+			dictEndpoint := dict["endpoint"]
+			if dst := parseEndpoint(defaultAddr, dictEndpoint.string(), port); dst != "" {
+				if dictRole := dict["role"]; dictRole.string() == "master" {
 					m = len(g.nodes)
 				}
 				g.nodes = append(g.nodes, ReplicaInfo{Addr: dst})
@@ -695,7 +698,7 @@ func (c *clusterClient) doresultfn(
 				}
 				for ei = i; ei < len(commands) && !isMulti(commands[ei]) && !isExec(commands[ei]); ei++ {
 				}
-				if mi >= 0 && ei < len(commands) && isMulti(commands[mi]) && isExec(commands[ei]) && resps[mi].val.string == ok { // a transaction is found.
+				if mi >= 0 && ei < len(commands) && isMulti(commands[mi]) && isExec(commands[ei]) && resps[mi].val.string() == ok { // a transaction is found.
 					mu.Lock()
 					retries.Redirects++
 					nr := retries.m[nc]
@@ -899,7 +902,7 @@ func askingMultiCache(cc conn, ctx context.Context, multi []CacheableTTL) *redis
 	commands := make([]Completed, 0, len(multi)*6)
 	for _, cmd := range multi {
 		ck, _ := cmds.CacheKey(cmd.Cmd)
-		commands = append(commands, cmds.OptInCmd, cmds.AskingCmd, cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(cmd.Cmd), cmds.ExecCmd)
+		commands = append(commands, cc.OptInCmd(), cmds.AskingCmd, cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(cmd.Cmd), cmds.ExecCmd)
 	}
 	results := resultsp.Get(0, len(multi))
 	resps := cc.DoMulti(ctx, commands...)
@@ -1203,6 +1206,10 @@ func (c *clusterClient) Nodes() map[string]Client {
 	return _nodes
 }
 
+func (c *clusterClient) Mode() ClientMode {
+	return ClientModeCluster
+}
+
 func (c *clusterClient) Close() {
 	if atomic.CompareAndSwapUint32(&c.stop, 0, 1) {
 		close(c.stopCh)
@@ -1236,15 +1243,15 @@ func (c *clusterClient) shouldRefreshRetry(err error, ctx context.Context) (addr
 }
 
 type dedicatedClusterClient struct {
-	client       *clusterClient
 	conn         conn
 	wire         wire
+	retryHandler retryHandler
+	client       *clusterClient
 	pshks        *pshks
 	mu           sync.Mutex
 	cmd          Builder
-	retryHandler retryHandler
-	retry        bool
 	slot         uint16
+	retry        bool
 	mark         bool
 }
 
@@ -1270,7 +1277,7 @@ func (c *dedicatedClusterClient) acquire(ctx context.Context, slot uint16) (wire
 		}
 		return nil, err
 	}
-	c.wire = c.conn.Acquire()
+	c.wire = c.conn.Acquire(ctx)
 	if p := c.pshks; p != nil {
 		c.pshks = nil
 		ch := c.wire.SetPubSubHooks(p.hooks)

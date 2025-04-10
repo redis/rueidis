@@ -42,12 +42,12 @@ type HistogramOption struct {
 }
 
 type dialMetrics struct {
-	addOpts    []metric.AddOption
-	recordOpts []metric.RecordOption
 	attempt    metric.Int64Counter
 	success    metric.Int64Counter
 	counts     metric.Int64UpDownCounter
 	latency    metric.Float64Histogram
+	addOpts    []metric.AddOption
+	recordOpts []metric.RecordOption
 }
 
 // WithHistogramOption sets the HistogramOption.
@@ -70,8 +70,13 @@ func NewClient(clientOption rueidis.ClientOption, opts ...Option) (rueidis.Clien
 		return nil, err
 	}
 
-	if clientOption.DialFn == nil {
-		clientOption.DialFn = defaultDialFn
+	if clientOption.DialCtxFn == nil {
+		clientOption.DialCtxFn = defaultDialFn
+		if clientOption.DialFn != nil {
+			clientOption.DialCtxFn = func(_ context.Context, s string, dialer *net.Dialer, config *tls.Config) (conn net.Conn, err error) {
+				return clientOption.DialFn(s, dialer, config)
+			}
+		}
 	}
 
 	metrics := dialMetrics{
@@ -103,7 +108,8 @@ func NewClient(clientOption rueidis.ClientOption, opts ...Option) (rueidis.Clien
 		return nil, err
 	}
 
-	clientOption.DialFn = trackDialing(metrics, clientOption.DialFn)
+	clientOption.DialCtxFn = trackDialing(metrics, clientOption.DialCtxFn)
+
 	cli, err := rueidis.NewClient(clientOption)
 	if err != nil {
 		return nil, err
@@ -146,14 +152,13 @@ func newClient(opts ...Option) (*otelclient, error) {
 	return cli, nil
 }
 
-func trackDialing(m dialMetrics, dialFn func(string, *net.Dialer, *tls.Config) (conn net.Conn, err error)) func(string, *net.Dialer, *tls.Config) (conn net.Conn, err error) {
-	return func(network string, dialer *net.Dialer, tlsConfig *tls.Config) (conn net.Conn, err error) {
-		ctx := context.Background()
+func trackDialing(m dialMetrics, dialFn func(context.Context, string, *net.Dialer, *tls.Config) (conn net.Conn, err error)) func(context.Context, string, *net.Dialer, *tls.Config) (conn net.Conn, err error) {
+	return func(ctx context.Context, network string, dialer *net.Dialer, tlsConfig *tls.Config) (conn net.Conn, err error) {
 		m.attempt.Add(ctx, 1, m.addOpts...)
 
 		start := time.Now()
 
-		conn, err = dialFn(network, dialer, tlsConfig)
+		conn, err = dialFn(ctx, network, dialer, tlsConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -187,9 +192,10 @@ func (t *connTracker) Close() error {
 	return t.Conn.Close()
 }
 
-func defaultDialFn(dst string, dialer *net.Dialer, cfg *tls.Config) (conn net.Conn, err error) {
+func defaultDialFn(ctx context.Context, dst string, dialer *net.Dialer, cfg *tls.Config) (conn net.Conn, err error) {
 	if cfg != nil {
-		return tls.DialWithDialer(dialer, "tcp", dst, cfg)
+		td := tls.Dialer{NetDialer: dialer, Config: cfg}
+		return td.DialContext(ctx, "tcp", dst)
 	}
-	return dialer.Dial("tcp", dst)
+	return dialer.DialContext(ctx, "tcp", dst)
 }

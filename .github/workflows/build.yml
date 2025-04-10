@@ -12,7 +12,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  validate-modules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Required Modules
+        run: |
+          # Find all module directories: rueidis* (except rueidislock), om, and mock
+          # These directories should contain go.mod files
+          modules=$(find . -maxdepth 1 -type d \( -name "rueidis*" -o -name "om" -o -name "mock" \) | grep -v "./rueidislock")
+          
+          # Check each module directory
+          for module in $modules; do
+            if [ ! -f "$module/go.mod" ]; then
+              echo "Error: Module directory '$module' is missing go.mod"
+              exit 1
+            fi
+          done
+
   prepare-matrix:
+    needs: validate-modules
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -29,7 +48,7 @@ jobs:
       fail-fast: false
       matrix:
         module: ${{fromJson(needs.prepare-matrix.outputs.matrix)}}
-        go-version: ['1.21.0', '1.22.0', '1.23.0']
+        go-version: ['1.22.0', '1.23.0', '1.24.0']
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

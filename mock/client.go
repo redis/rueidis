@@ -60,6 +60,20 @@ func (m *Client) B() rueidis.Builder {
 	return cmds.NewBuilder(m.slot)
 }
 
+// Mode mocks base method.
+func (m *Client) Mode() rueidis.ClientMode {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Mode")
+	ret0, _ := ret[0].(rueidis.ClientMode)
+	return ret0
+}
+
+// Mode indicates an expected call of Mode.
+func (mr *ClientMockRecorder) Mode() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Mode", reflect.TypeOf((*Client)(nil).Mode))
+}
+
 // Close mocks base method.
 func (m *Client) Close() {
 	m.ctrl.T.Helper()

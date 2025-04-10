@@ -42,18 +42,18 @@ func newSentinelClient(opt *ClientOption, connFn connFn, retryer retryHandler) (
 
 type sentinelClient struct {
 	mConn        atomic.Value
-	mAddr        string
-	sAddr        string
+	sConn        conn
+	retryHandler retryHandler
 	connFn       connFn
 	mOpt         *ClientOption
 	sOpt         *ClientOption
-	sConn        conn
 	sentinels    *list.List
+	mAddr        string
+	sAddr        string
 	sc           call
-	retryHandler retryHandler
-	cmd          Builder
 	mu           sync.Mutex
 	stop         uint32
+	cmd          Builder
 	retry        bool
 	replica      bool
 }
@@ -198,7 +198,7 @@ func (c *sentinelClient) DoMultiStream(ctx context.Context, multi ...Completed) 
 
 func (c *sentinelClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 	master := c.mConn.Load().(conn)
-	wire := master.Acquire()
+	wire := master.Acquire(context.Background())
 	dsc := &dedicatedSingleClient{cmd: c.cmd, conn: master, wire: wire, retry: c.retry, retryHandler: c.retryHandler}
 	err = fn(dsc)
 	dsc.release()
@@ -207,7 +207,7 @@ func (c *sentinelClient) Dedicated(fn func(DedicatedClient) error) (err error) {
 
 func (c *sentinelClient) Dedicate() (DedicatedClient, func()) {
 	master := c.mConn.Load().(conn)
-	wire := master.Acquire()
+	wire := master.Acquire(context.Background())
 	dsc := &dedicatedSingleClient{cmd: c.cmd, conn: master, wire: wire, retry: c.retry, retryHandler: c.retryHandler}
 	return dsc, dsc.release
 }
@@ -216,6 +216,10 @@ func (c *sentinelClient) Nodes() map[string]Client {
 	conn := c.mConn.Load().(conn)
 	disableCache := c.mOpt != nil && c.mOpt.DisableCache
 	return map[string]Client{conn.Addr(): newSingleClientWithConn(conn, c.cmd, c.retry, disableCache, c.retryHandler)}
+}
+
+func (c *sentinelClient) Mode() ClientMode {
+	return ClientModeSentinel
 }
 
 func (c *sentinelClient) Close() {
@@ -288,10 +292,10 @@ func (c *sentinelClient) _switchTarget(addr string) (err error) {
 		return err
 	}
 
-	if c.replica && resp[0].string != "slave" {
+	if c.replica && resp[0].string() != "slave" {
 		target.Close()
 		return errNotSlave
-	} else if !c.replica && resp[0].string != "master" {
+	} else if !c.replica && resp[0].string() != "master" {
 		target.Close()
 		return errNotMaster
 	}

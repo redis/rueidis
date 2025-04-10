@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/redis/rueidis"
@@ -13,6 +12,9 @@ import (
 var (
 	ErrInvalidTokens   = errors.New("number of tokens must be non-negative")
 	ErrInvalidResponse = errors.New("invalid response from Redis")
+	ErrInvalidLimit    = errors.New("limit must be positive")
+	ErrInvalidWindow   = errors.New("window must be positive")
+	ErrNilBuilder      = errors.New("client builder is required")
 )
 
 type Result struct {
@@ -25,9 +27,14 @@ type RateLimiterClient interface {
 	Check(ctx context.Context, identifier string, options ...RateLimitOption) (Result, error)
 	Allow(ctx context.Context, identifier string, options ...RateLimitOption) (Result, error)
 	AllowN(ctx context.Context, identifier string, n int64, options ...RateLimitOption) (Result, error)
+	Limit() int
 }
 
-const PlaceholderPrefix = "rueidislimiter"
+const (
+	PlaceholderPrefix = "rueidislimiter"
+	keyDelimOpen      = ":{"
+	keyDelimClose     = "}"
+)
 
 type rateLimiter struct {
 	client           rueidis.Client
@@ -37,18 +44,18 @@ type rateLimiter struct {
 
 type RateLimiterOption struct {
 	ClientBuilder func(option rueidis.ClientOption) (rueidis.Client, error)
-	ClientOption  rueidis.ClientOption
 	KeyPrefix     string
+	ClientOption  rueidis.ClientOption
 	Limit         int
 	Window        time.Duration
 }
 
 func NewRateLimiter(option RateLimiterOption) (RateLimiterClient, error) {
-	if option.Window < time.Millisecond {
-		option.Window = time.Millisecond
+	if option.Window <= 0 {
+		return nil, ErrInvalidWindow
 	}
 	if option.Limit <= 0 {
-		option.Limit = 1
+		return nil, ErrInvalidLimit
 	}
 	if option.KeyPrefix == "" {
 		option.KeyPrefix = PlaceholderPrefix
@@ -95,50 +102,58 @@ func (l *rateLimiter) AllowN(ctx context.Context, identifier string, n int64, op
 		rl = options[len(options)-1]
 	}
 
-	now := time.Now().UTC()
-	keys := []string{l.getKey(identifier)}
-	args := []string{
-		strconv.FormatInt(n, 10),
-		strconv.FormatInt(now.Add(rl.window).UnixMilli(), 10),
-		strconv.FormatInt(now.UnixMilli(), 10),
-	}
+	bufs := rateBuffersPool.Get(0, 128)
+	defer rateBuffersPool.Put(bufs)
 
-	resp := rateLimitScript.Exec(ctx, l.client, keys, args)
+	now := time.Now().UTC()
+
+	offset := len(bufs.keyBuf)
+	bufs.keyBuf = append(bufs.keyBuf, l.keyPrefix...)
+	bufs.keyBuf = append(bufs.keyBuf, keyDelimOpen...)
+	bufs.keyBuf = append(bufs.keyBuf, identifier...)
+	bufs.keyBuf = append(bufs.keyBuf, keyDelimClose...)
+	key := rueidis.BinaryString(bufs.keyBuf[offset:])
+
+	offset = len(bufs.keyBuf)
+	bufs.keyBuf = strconv.AppendInt(bufs.keyBuf, n, 10)
+	arg1 := rueidis.BinaryString(bufs.keyBuf[offset:])
+
+	offset = len(bufs.keyBuf)
+	bufs.keyBuf = strconv.AppendInt(bufs.keyBuf, now.Add(rl.window).UnixMilli(), 10)
+	arg2 := rueidis.BinaryString(bufs.keyBuf[offset:])
+
+	offset = len(bufs.keyBuf)
+	bufs.keyBuf = strconv.AppendInt(bufs.keyBuf, now.UnixMilli(), 10)
+	arg3 := rueidis.BinaryString(bufs.keyBuf[offset:])
+
+	resp := rateLimitScript.Exec(ctx, l.client, []string{key}, []string{arg1, arg2, arg3})
 	if err := resp.Error(); err != nil {
 		return Result{}, err
 	}
 
-	data, err := resp.AsIntSlice()
-	if err != nil || len(data) != 2 {
+	arr, err := resp.ToArray()
+	if err != nil || len(arr) != 2 {
 		return Result{}, ErrInvalidResponse
 	}
 
-	current := data[0]
-	remaining := rl.limit - current
-	if remaining < 0 {
-		remaining = 0
+	current, err := arr[0].ToInt64()
+	if err != nil {
+		return Result{}, ErrInvalidResponse
 	}
 
-	allowed := current <= rl.limit
-	if n == 0 {
-		allowed = current < rl.limit
+	resetAt, err := arr[1].ToInt64()
+	if err != nil {
+		return Result{}, ErrInvalidResponse
 	}
+
+	remaining := max(rl.limit-current, 0)
+	allowed := current <= rl.limit && (n > 0 || current < rl.limit)
 
 	return Result{
 		Allowed:   allowed,
 		Remaining: remaining,
-		ResetAtMs: data[1],
+		ResetAtMs: resetAt,
 	}, nil
-}
-
-func (l *rateLimiter) getKey(identifier string) string {
-	sb := strings.Builder{}
-	sb.Grow(len(l.keyPrefix) + len(identifier) + 3)
-	sb.WriteString(l.keyPrefix)
-	sb.WriteString(":{")
-	sb.WriteString(identifier)
-	sb.WriteString("}")
-	return sb.String()
 }
 
 var rateLimitScript = rueidis.NewLuaScript(`

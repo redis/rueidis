@@ -28,9 +28,9 @@ func TestNewLuaScriptOnePass(t *testing.T) {
 		},
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
 			if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA", sha, "2", "1", "2", "3", "4"}) {
-				return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+				return newResult(strmsg('+', "OK"), nil)
 			}
-			return newResult(RedisMessage{typ: '+', string: "unexpected"}, nil)
+			return newResult(strmsg('+', "unexpected"), nil)
 		},
 	}
 
@@ -59,12 +59,12 @@ func TestNewLuaScript(t *testing.T) {
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
 			if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA", sha, "2", "1", "2", "3", "4"}) {
 				eval = true
-				return newResult(RedisMessage{typ: '-', string: "NOSCRIPT"}, nil)
+				return newResult(strmsg('-', "NOSCRIPT"), nil)
 			}
 			if eval && reflect.DeepEqual(cmd.Commands(), []string{"EVAL", body, "2", "1", "2", "3", "4"}) {
 				return newResult(RedisMessage{typ: '_'}, nil)
 			}
-			return newResult(RedisMessage{typ: '+', string: "unexpected"}, nil)
+			return newResult(strmsg('+', "unexpected"), nil)
 		},
 	}
 
@@ -93,12 +93,12 @@ func TestNewLuaScriptReadOnly(t *testing.T) {
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
 			if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA_RO", sha, "2", "1", "2", "3", "4"}) {
 				eval = true
-				return newResult(RedisMessage{typ: '-', string: "NOSCRIPT"}, nil)
+				return newResult(strmsg('-', "NOSCRIPT"), nil)
 			}
 			if eval && reflect.DeepEqual(cmd.Commands(), []string{"EVAL_RO", body, "2", "1", "2", "3", "4"}) {
 				return newResult(RedisMessage{typ: '_'}, nil)
 			}
-			return newResult(RedisMessage{typ: '+', string: "unexpected"}, nil)
+			return newResult(strmsg('+', "unexpected"), nil)
 		},
 	}
 
@@ -121,7 +121,7 @@ func TestNewLuaScriptExecMultiError(t *testing.T) {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
-			return newResult(RedisMessage{typ: '-', string: "ANY ERR"}, nil)
+			return newResult(strmsg('-', "ANY ERR"), nil)
 		},
 	}
 
@@ -145,12 +145,12 @@ func TestNewLuaScriptExecMulti(t *testing.T) {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
-			return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+			return newResult(strmsg('+', "OK"), nil)
 		},
 		DoMultiFn: func(ctx context.Context, multi ...Completed) (resp []RedisResult) {
 			for _, cmd := range multi {
 				if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA", sha, "2", "1", "2", "3", "4"}) {
-					resp = append(resp, newResult(RedisMessage{typ: '+', string: "OK"}, nil))
+					resp = append(resp, newResult(strmsg('+', "OK"), nil))
 				}
 			}
 			return resp
@@ -177,12 +177,12 @@ func TestNewLuaScriptExecMultiRo(t *testing.T) {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
-			return newResult(RedisMessage{typ: '+', string: "OK"}, nil)
+			return newResult(strmsg('+', "OK"), nil)
 		},
 		DoMultiFn: func(ctx context.Context, multi ...Completed) (resp []RedisResult) {
 			for _, cmd := range multi {
 				if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA_RO", sha, "2", "1", "2", "3", "4"}) {
-					resp = append(resp, newResult(RedisMessage{typ: '+', string: "OK"}, nil))
+					resp = append(resp, newResult(strmsg('+', "OK"), nil))
 				}
 			}
 			return resp
@@ -204,6 +204,7 @@ type client struct {
 	DedicatedFn    func(fn func(DedicatedClient) error) (err error)
 	DedicateFn     func() (DedicatedClient, func())
 	CloseFn        func()
+	ModeFn         func() ClientMode
 }
 
 func (c *client) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) error {
@@ -269,6 +270,10 @@ func (c *client) Dedicate() (DedicatedClient, func()) {
 
 func (c *client) Nodes() map[string]Client {
 	return map[string]Client{"addr": c}
+}
+
+func (c *client) Mode() ClientMode {
+	return c.ModeFn()
 }
 
 func (c *client) Close() {

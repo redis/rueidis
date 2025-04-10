@@ -110,7 +110,6 @@
         "name": "library-name",
         "type": "string",
         "display_text": "library name",
-        "token": "LIBRARYNAME",
         "optional": true
       },
       {

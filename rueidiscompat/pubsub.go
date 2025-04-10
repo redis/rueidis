@@ -114,8 +114,6 @@ func newPubSub(client rueidis.Client) *pubsub {
 }
 
 type pubsub struct {
-	mu sync.Mutex
-
 	rc      rueidis.Client
 	mc      rueidis.DedicatedClient
 	mcancel func()
@@ -126,6 +124,7 @@ type pubsub struct {
 
 	allCh chan any
 	msgCh chan *Message
+	mu    sync.Mutex
 }
 
 func (p *pubsub) mconn() rueidis.DedicatedClient {

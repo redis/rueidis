@@ -107,6 +107,10 @@ func (p *txproxy) Nodes() map[string]rueidis.Client {
 	panic("not implemented")
 }
 
+func (p *txproxy) Mode() rueidis.ClientMode {
+	panic("not implemented")
+}
+
 type Tx interface {
 	CoreCmdable
 	Watch(ctx context.Context, keys ...string) *StatusCmd
