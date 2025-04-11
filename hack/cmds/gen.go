@@ -681,7 +681,7 @@ func toGoType(paramType string) string {
 		return "string"
 	case "double":
 		return "float64"
-	case "integer", "posix time":
+	case "integer", "posix time", "unix-time":
 		return "int64"
 	case "unsigned integer":
 		return "uint64"

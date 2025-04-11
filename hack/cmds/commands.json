@@ -3087,6 +3087,172 @@
     "since": "2.0.0",
     "group": "hash"
   },
+  "HGETDEL": {
+    "summary": "Returns the value of a field and deletes it from the hash",
+    "complexity": "O(N) where N is the number of specified fields",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "fields",
+        "type": "enum",
+        "enum": ["FIELDS"]
+      },
+      {
+        "name": "numfields",
+        "type": "integer"
+      },
+      {
+        "name": "field",
+        "type": "string",
+        "multiple": true
+      }
+    ],
+    "since": "8.0.0",
+    "group": "hash"
+  },
+  "HGETEX": {
+    "summary": "Get the value of one or more fields of a given hash key, and optionally set their expiration.",
+    "complexity": "O(N) where N is the number of specified fields",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "expiration",
+        "type": "oneof",
+        "optional": true,
+        "arguments": [
+          {
+            "name": "EX",
+            "type": "integer",
+            "token": "EX"
+          },
+          {
+            "name": "PX",
+            "type": "integer",
+            "token": "PX"
+          },
+          {
+            "name": "EXAT",
+            "type": "unix-time",
+            "token": "EXAT"
+          },
+          {
+            "name": "PXAT",
+            "type": "unix-time",
+            "token": "PXAT"
+          },
+          {
+            "name": "PERSIST",
+            "type": "pure-token",
+            "token": "PERSIST"
+          }
+        ]
+      },
+      {
+        "name": "fields",
+        "type": "enum",
+        "enum": ["FIELDS"]
+      },
+      {
+        "name": "numfields",
+        "type": "integer"
+      },
+      {
+        "name": "field",
+        "type": "string",
+        "multiple": true
+      }
+    ],
+    "since": "8.0.0",
+    "group": "hash"
+  },
+  "HSETEX": {
+    "summary": "Set the value of one or more fields of a given hash key, and optionally set their expiration.",
+    "complexity": "O(N) where N is the number of fields being set.",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key",
+        "key_spec_index": 0
+      },
+      {
+        "name": "condition",
+        "type": "oneof",
+        "optional": true,
+        "arguments": [
+          {
+            "name": "fnx",
+            "type": "pure-token",
+            "token": "FNX"
+          },
+          {
+            "name": "fxx",
+            "type": "pure-token",
+            "token": "FXX"
+          }
+        ]
+      },
+      {
+        "name": "expiration",
+        "type": "oneof",
+        "optional": true,
+        "arguments": [
+          {
+            "name": "EX",
+            "type": "integer",
+            "token": "EX"
+          },
+          {
+            "name": "PX",
+            "type": "integer",
+            "token": "PX"
+          },
+          {
+            "name": "EXAT",
+            "type": "unix-time",
+            "token": "EXAT"
+          },
+          {
+            "name": "PXAT",
+            "type": "unix-time",
+            "token": "PXAT"
+          },
+          {
+            "name": "KEEPTTL",
+            "type": "pure-token",
+            "token": "KEEPTTL"
+          }
+        ]
+      },
+      {
+        "name": "fields",
+        "type": "enum",
+        "enum": ["FIELDS"]
+      },
+      {
+        "name": "numfields",
+        "type": "integer"
+      },
+      {
+        "name": [
+          "field",
+          "value"
+        ],
+        "type": [
+          "string",
+          "string"
+        ],
+        "multiple": true
+      }
+    ],
+    "since": "8.0.0",
+    "group": "hash"
+  },
   "HINCRBY": {
     "summary": "Increment the integer value of a hash field by the given number",
     "complexity": "O(1)",
