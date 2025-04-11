@@ -1,0 +1,254 @@
+{
+  "VADD": {
+    "summary": "Adds an element to a vector set, creating a new set if it doesn't already exist.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(log(N)) for each element added, where N is the number of elements in the vector set.",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "dim",
+        "type": "integer",
+        "command": "REDUCE",
+        "optional": true
+      },
+      {
+        "type": "enum",
+        "command": "FP32",
+        "enum": ["FP32", "VALUES"],
+        "optional": true
+      },
+      {
+        "name": "num",
+        "type": "integer",
+        "optional": true
+      },
+      {
+        "name": "vector",
+        "type": "string"
+      },
+      {
+        "name": "element",
+        "type": "string"
+      },
+      {
+        "name": "CAS",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "type": "enum",
+        "command": "NOQUANT",
+        "enum": ["NOQUANT", "Q8", "BIN"],
+        "optional": true
+      },
+      {
+        "name": "build-exploration-factor",
+        "type": "integer",
+        "command": "EF",
+        "optional": true
+      },
+      {
+        "name": "attributes",
+        "type": "string",
+        "command": "SETATTR",
+        "optional": true
+      },
+      {
+        "name": "numlinks",
+        "type": "integer",
+        "command": "M",
+        "optional": true
+      }
+    ]
+  },
+  "VCARD": {
+    "summary": "Returns the number of elements in the specified vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      }
+    ]
+  },
+  "VDIM": {
+    "summary": "Returns the number of dimensions of vectors in a vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      }
+    ]
+  },
+  "VEMB": {
+    "summary": "Returns the approximate vector of a specified element.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "element",
+        "type": "string"
+      },
+      {
+        "name": "RAW",
+        "type": "string",
+        "optional": true
+      }
+    ]
+  },
+  "VGETATTR": {
+    "summary": "Returns JSON attributes of a vector set element.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "element",
+        "type": "string"
+      }
+    ]
+  },
+  "VINFO": {
+    "summary": "Returns metadata about a vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      }
+    ]
+  },
+  "VLINKS": {
+    "summary": "Returns the neighbor links of a node in a vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(log(N))",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "element",
+        "type": "string"
+      }
+    ]
+  },
+  "VRANDMEMBER": {
+    "summary": "Returns a random element from a vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "count",
+        "type": "integer",
+        "optional": true
+      }
+    ]
+  },
+  "VREM": {
+    "summary": "Removes one or more elements from a vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(K log(N)) where K is the number of elements removed.",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "element",
+        "type": "string",
+        "multiple": true
+      }
+    ]
+  },
+  "VSETATTR": {
+    "summary": "Sets or updates JSON attributes of a vector set element.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "element",
+        "type": "string"
+      },
+      {
+        "name": "attributes",
+        "type": "string"
+      }
+    ]
+  },
+  "VSIM": {
+    "summary": "Performs a vector similarity search within a vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(log(N) + K) where K is the number of results requested.",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "K",
+        "type": "integer"
+      },
+      {
+        "type": "enum",
+        "command": "FP32",
+        "enum": ["FP32", "VALUES"],
+        "optional": true
+      },
+      {
+        "name": "vector",
+        "type": "string"
+      },
+      {
+        "name": "WITHDIST",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "search-exploration-factor",
+        "type": "integer",
+        "command": "EF",
+        "optional": true
+      },
+      {
+        "name": "attribute_filter",
+        "type": "string",
+        "command": "FILTER",
+        "optional": true
+      }
+    ]
+  }
+}
