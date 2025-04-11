@@ -3087,6 +3087,184 @@
     "since": "2.0.0",
     "group": "hash"
   },
+  "HGETDEL": {
+    "summary": "Returns the value of a field and deletes it from the hash",
+    "complexity": "O(N) where N is the number of specified fields",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key",
+        "key_spec_index": 0
+      },
+      {
+        "name": "fields",
+        "token": "FIELDS",
+        "type": "block",
+        "arguments": [
+          {
+            "name": "numfields",
+            "type": "integer"
+          },
+          {
+            "name": "field",
+            "type": "string",
+            "multiple": true
+          }
+        ]
+      }
+    ],
+    "since": "8.0.0",
+    "group": "hash"
+  },
+  "HGETEX": {
+    "summary": "Get the value of one or more fields of a given hash key, and optionally set their expiration.",
+    "complexity": "O(N) where N is the number of specified fields",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key",
+        "key_spec_index": 0
+      },
+      {
+        "name": "expiration",
+        "type": "oneof",
+        "optional": true,
+        "arguments": [
+          {
+            "name": "seconds",
+            "type": "integer",
+            "token": "EX"
+          },
+          {
+            "name": "milliseconds",
+            "type": "integer",
+            "token": "PX"
+          },
+          {
+            "name": "unix-time-seconds",
+            "type": "unix-time",
+            "token": "EXAT"
+          },
+          {
+            "name": "unix-time-milliseconds",
+            "type": "unix-time",
+            "token": "PXAT"
+          },
+          {
+            "name": "persist",
+            "type": "pure-token",
+            "token": "PERSIST"
+          }
+        ]
+      },
+      {
+        "name": "fields",
+        "token": "FIELDS",
+        "type": "block",
+        "arguments": [
+          {
+            "name": "numfields",
+            "type": "integer"
+          },
+          {
+            "name": "field",
+            "type": "string",
+            "multiple": true
+          }
+        ]
+      }
+    ],
+    "since": "8.0.0",
+    "group": "hash"
+  },
+  "HSETEX": {
+    "summary": "Set the value of one or more fields of a given hash key, and optionally set their expiration.",
+    "complexity": "O(N) where N is the number of fields being set.",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key",
+        "key_spec_index": 0
+      },
+      {
+        "name": "condition",
+        "type": "oneof",
+        "optional": true,
+        "arguments": [
+          {
+            "name": "fnx",
+            "type": "pure-token",
+            "token": "FNX"
+          },
+          {
+            "name": "fxx",
+            "type": "pure-token",
+            "token": "FXX"
+          }
+        ]
+      },
+      {
+        "name": "expiration",
+        "type": "oneof",
+        "optional": true,
+        "arguments": [
+          {
+            "name": "seconds",
+            "type": "integer",
+            "token": "EX"
+          },
+          {
+            "name": "milliseconds",
+            "type": "integer",
+            "token": "PX"
+          },
+          {
+            "name": "unix-time-seconds",
+            "type": "unix-time",
+            "token": "EXAT"
+          },
+          {
+            "name": "unix-time-milliseconds",
+            "type": "unix-time",
+            "token": "PXAT"
+          },
+          {
+            "name": "keepttl",
+            "type": "pure-token",
+            "token": "KEEPTTL"
+          }
+        ]
+      },
+      {
+        "name": "fields",
+        "token": "FIELDS",
+        "type": "block",
+        "arguments": [
+          {
+            "name": "numfields",
+            "type": "integer"
+          },
+          {
+            "name": "data",
+            "type": "block",
+            "multiple": true,
+            "arguments": [
+              {
+                "name": "field",
+                "type": "string"
+              },
+              {
+                "name": "value",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "since": "8.0.0",
+    "group": "hash"
+  },
   "HINCRBY": {
     "summary": "Increment the integer value of a hash field by the given number",
     "complexity": "O(1)",
