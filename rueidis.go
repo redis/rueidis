@@ -192,6 +192,10 @@ type ClientOption struct {
 	// This default is ClientOption.Dialer.KeepAlive * (9+1), where 9 is the default of tcp_keepalive_probes on Linux.
 	ConnWriteTimeout time.Duration
 
+	// ConnLiftime is lifetime for each connection. If specified,
+	// connections will close after passing lifetime. Note that the connection which dedicated client and blocking use is not closed.
+	ConnLifetime time.Duration
+
 	// MaxFlushDelay when greater than zero pauses pipeline write loop for some time (not larger than MaxFlushDelay)
 	// after each flushing of data to the connection. This gives pipeline a chance to collect more commands to send
 	// to Redis. Adding this delay increases latency, reduces throughput – but in most cases may significantly reduce
@@ -505,3 +509,8 @@ func dial(ctx context.Context, dst string, opt *ClientOption) (conn net.Conn, er
 }
 
 const redisErrMsgCommandNotAllow = "command is not allowed"
+
+var (
+	// errConnExpired means wrong connection that ClientOption.ConnLifetime had passed since connecting
+	errConnExpired = errors.New("connection is expired")
+)

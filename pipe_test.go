@@ -2773,6 +2773,66 @@ func TestOnInvalidations(t *testing.T) {
 	}
 }
 
+func TestConnLifetime(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+
+	t.Run("Enabled ConnLifetime", func(t *testing.T) {
+		p, _, _, closeConn := setup(t, ClientOption{
+			ConnLifetime: 50 * time.Millisecond,
+		})
+		defer closeConn()
+
+		if p.Error() != nil {
+			t.Fatalf("unexpected error %v", p.Error())
+		}
+		time.Sleep(60 * time.Millisecond)
+		if p.Error() != errConnExpired {
+			t.Fatalf("unexpected error, expected: %v, got: %v", errConnExpired, p.Error())
+		}
+	})
+
+	t.Run("Disabled ConnLifetime", func(t *testing.T) {
+		p, _, _, closeConn := setup(t, ClientOption{})
+		defer closeConn()
+
+		time.Sleep(60 * time.Millisecond)
+		if p.Error() != nil {
+			t.Fatalf("unexpected error %v", p.Error())
+		}
+	})
+
+	t.Run("StopTimer", func(t *testing.T) {
+		p, _, _, closeConn := setup(t, ClientOption{
+			ConnLifetime: 50 * time.Millisecond,
+		})
+		defer closeConn()
+
+		p.StopTimer()
+		time.Sleep(60 * time.Millisecond)
+		if p.Error() != nil {
+			t.Fatalf("unexpected error %v", p.Error())
+		}
+	})
+
+	t.Run("ResetTimer", func(t *testing.T) {
+		p, _, _, closeConn := setup(t, ClientOption{
+			ConnLifetime: 50 * time.Millisecond,
+		})
+		defer closeConn()
+
+		time.Sleep(20 * time.Millisecond)
+		p.ResetTimer()
+		time.Sleep(40 * time.Millisecond)
+		if p.Error() != nil {
+			t.Fatalf("unexpected error %v", p.Error())
+		}
+		time.Sleep(20 * time.Millisecond)
+		if p.Error() != errConnExpired {
+			t.Fatalf("unexpected error, expected: %v, got: %v", errConnExpired, p.Error())
+		}
+	})
+}
+
 func TestMultiHalfErr(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	p, mock, _, closeConn := setup(t, ClientOption{})
