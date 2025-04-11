@@ -426,30 +426,37 @@ func (c Hgetdel) Key(key string) HgetdelKey {
 	return (HgetdelKey)(c)
 }
 
-type HgetdelFieldsField Incomplete
+type HgetdelField Incomplete
 
-func (c HgetdelFieldsField) Field(field ...string) HgetdelFieldsField {
+func (c HgetdelField) Field(field ...string) HgetdelField {
 	c.cs.s = append(c.cs.s, field...)
 	return c
 }
 
-func (c HgetdelFieldsField) Build() Completed {
+func (c HgetdelField) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type HgetdelFieldsNumfields Incomplete
+type HgetdelFields Incomplete
 
-func (c HgetdelFieldsNumfields) Field(field ...string) HgetdelFieldsField {
-	c.cs.s = append(c.cs.s, field...)
-	return (HgetdelFieldsField)(c)
+func (c HgetdelFields) Numfields(numfields int64) HgetdelNumfields {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
+	return (HgetdelNumfields)(c)
 }
 
 type HgetdelKey Incomplete
 
-func (c HgetdelKey) Numfields(numfields int64) HgetdelFieldsNumfields {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
-	return (HgetdelFieldsNumfields)(c)
+func (c HgetdelKey) Fields() HgetdelFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
+	return (HgetdelFields)(c)
+}
+
+type HgetdelNumfields Incomplete
+
+func (c HgetdelNumfields) Field(field ...string) HgetdelField {
+	c.cs.s = append(c.cs.s, field...)
+	return (HgetdelField)(c)
 }
 
 type Hgetex Incomplete
@@ -470,80 +477,80 @@ func (c Hgetex) Key(key string) HgetexKey {
 	return (HgetexKey)(c)
 }
 
-type HgetexExpirationMilliseconds Incomplete
+type HgetexExpirationEx Incomplete
 
-func (c HgetexExpirationMilliseconds) Numfields(numfields int64) HgetexFieldsNumfields {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
-	return (HgetexFieldsNumfields)(c)
+func (c HgetexExpirationEx) Fields() HgetexFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
+	return (HgetexFields)(c)
+}
+
+type HgetexExpirationExat Incomplete
+
+func (c HgetexExpirationExat) Fields() HgetexFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
+	return (HgetexFields)(c)
 }
 
 type HgetexExpirationPersist Incomplete
 
-func (c HgetexExpirationPersist) Numfields(numfields int64) HgetexFieldsNumfields {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
-	return (HgetexFieldsNumfields)(c)
+func (c HgetexExpirationPersist) Fields() HgetexFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
+	return (HgetexFields)(c)
 }
 
-type HgetexExpirationSeconds Incomplete
+type HgetexExpirationPx Incomplete
 
-func (c HgetexExpirationSeconds) Numfields(numfields int64) HgetexFieldsNumfields {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
-	return (HgetexFieldsNumfields)(c)
+func (c HgetexExpirationPx) Fields() HgetexFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
+	return (HgetexFields)(c)
 }
 
-type HgetexExpirationUnixTimeMilliseconds Incomplete
+type HgetexExpirationPxat Incomplete
 
-func (c HgetexExpirationUnixTimeMilliseconds) Numfields(numfields int64) HgetexFieldsNumfields {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
-	return (HgetexFieldsNumfields)(c)
+func (c HgetexExpirationPxat) Fields() HgetexFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
+	return (HgetexFields)(c)
 }
 
-type HgetexExpirationUnixTimeSeconds Incomplete
+type HgetexField Incomplete
 
-func (c HgetexExpirationUnixTimeSeconds) Numfields(numfields int64) HgetexFieldsNumfields {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
-	return (HgetexFieldsNumfields)(c)
-}
-
-type HgetexFieldsField Incomplete
-
-func (c HgetexFieldsField) Field(field ...string) HgetexFieldsField {
+func (c HgetexField) Field(field ...string) HgetexField {
 	c.cs.s = append(c.cs.s, field...)
 	return c
 }
 
-func (c HgetexFieldsField) Build() Completed {
+func (c HgetexField) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type HgetexFieldsNumfields Incomplete
+type HgetexFields Incomplete
 
-func (c HgetexFieldsNumfields) Field(field ...string) HgetexFieldsField {
-	c.cs.s = append(c.cs.s, field...)
-	return (HgetexFieldsField)(c)
+func (c HgetexFields) Numfields(numfields int64) HgetexNumfields {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
+	return (HgetexNumfields)(c)
 }
 
 type HgetexKey Incomplete
 
-func (c HgetexKey) Seconds(seconds int64) HgetexExpirationSeconds {
-	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(seconds, 10))
-	return (HgetexExpirationSeconds)(c)
+func (c HgetexKey) Ex(ex int64) HgetexExpirationEx {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(ex, 10))
+	return (HgetexExpirationEx)(c)
 }
 
-func (c HgetexKey) Milliseconds(milliseconds int64) HgetexExpirationMilliseconds {
-	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(milliseconds, 10))
-	return (HgetexExpirationMilliseconds)(c)
+func (c HgetexKey) Px(px int64) HgetexExpirationPx {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(px, 10))
+	return (HgetexExpirationPx)(c)
 }
 
-func (c HgetexKey) UnixTimeSeconds(unixTimeSeconds int64) HgetexExpirationUnixTimeSeconds {
-	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(unixTimeSeconds, 10))
-	return (HgetexExpirationUnixTimeSeconds)(c)
+func (c HgetexKey) Exat(exat int64) HgetexExpirationExat {
+	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(exat, 10))
+	return (HgetexExpirationExat)(c)
 }
 
-func (c HgetexKey) UnixTimeMilliseconds(unixTimeMilliseconds int64) HgetexExpirationUnixTimeMilliseconds {
-	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(unixTimeMilliseconds, 10))
-	return (HgetexExpirationUnixTimeMilliseconds)(c)
+func (c HgetexKey) Pxat(pxat int64) HgetexExpirationPxat {
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(pxat, 10))
+	return (HgetexExpirationPxat)(c)
 }
 
 func (c HgetexKey) Persist() HgetexExpirationPersist {
@@ -551,9 +558,16 @@ func (c HgetexKey) Persist() HgetexExpirationPersist {
 	return (HgetexExpirationPersist)(c)
 }
 
-func (c HgetexKey) Numfields(numfields int64) HgetexFieldsNumfields {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
-	return (HgetexFieldsNumfields)(c)
+func (c HgetexKey) Fields() HgetexFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
+	return (HgetexFields)(c)
+}
+
+type HgetexNumfields Incomplete
+
+func (c HgetexNumfields) Field(field ...string) HgetexField {
+	c.cs.s = append(c.cs.s, field...)
+	return (HgetexField)(c)
 }
 
 type Hincrby Incomplete
@@ -1325,24 +1339,24 @@ func (c Hsetex) Key(key string) HsetexKey {
 
 type HsetexConditionFnx Incomplete
 
-func (c HsetexConditionFnx) Seconds(seconds int64) HsetexExpirationSeconds {
-	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(seconds, 10))
-	return (HsetexExpirationSeconds)(c)
+func (c HsetexConditionFnx) Ex(ex int64) HsetexExpirationEx {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(ex, 10))
+	return (HsetexExpirationEx)(c)
 }
 
-func (c HsetexConditionFnx) Milliseconds(milliseconds int64) HsetexExpirationMilliseconds {
-	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(milliseconds, 10))
-	return (HsetexExpirationMilliseconds)(c)
+func (c HsetexConditionFnx) Px(px int64) HsetexExpirationPx {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(px, 10))
+	return (HsetexExpirationPx)(c)
 }
 
-func (c HsetexConditionFnx) UnixTimeSeconds(unixTimeSeconds int64) HsetexExpirationUnixTimeSeconds {
-	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(unixTimeSeconds, 10))
-	return (HsetexExpirationUnixTimeSeconds)(c)
+func (c HsetexConditionFnx) Exat(exat int64) HsetexExpirationExat {
+	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(exat, 10))
+	return (HsetexExpirationExat)(c)
 }
 
-func (c HsetexConditionFnx) UnixTimeMilliseconds(unixTimeMilliseconds int64) HsetexExpirationUnixTimeMilliseconds {
-	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(unixTimeMilliseconds, 10))
-	return (HsetexExpirationUnixTimeMilliseconds)(c)
+func (c HsetexConditionFnx) Pxat(pxat int64) HsetexExpirationPxat {
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(pxat, 10))
+	return (HsetexExpirationPxat)(c)
 }
 
 func (c HsetexConditionFnx) Keepttl() HsetexExpirationKeepttl {
@@ -1350,31 +1364,31 @@ func (c HsetexConditionFnx) Keepttl() HsetexExpirationKeepttl {
 	return (HsetexExpirationKeepttl)(c)
 }
 
-func (c HsetexConditionFnx) Numfields(numfields int64) HsetexFieldsNumfields {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
-	return (HsetexFieldsNumfields)(c)
+func (c HsetexConditionFnx) Fields() HsetexFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
+	return (HsetexFields)(c)
 }
 
 type HsetexConditionFxx Incomplete
 
-func (c HsetexConditionFxx) Seconds(seconds int64) HsetexExpirationSeconds {
-	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(seconds, 10))
-	return (HsetexExpirationSeconds)(c)
+func (c HsetexConditionFxx) Ex(ex int64) HsetexExpirationEx {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(ex, 10))
+	return (HsetexExpirationEx)(c)
 }
 
-func (c HsetexConditionFxx) Milliseconds(milliseconds int64) HsetexExpirationMilliseconds {
-	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(milliseconds, 10))
-	return (HsetexExpirationMilliseconds)(c)
+func (c HsetexConditionFxx) Px(px int64) HsetexExpirationPx {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(px, 10))
+	return (HsetexExpirationPx)(c)
 }
 
-func (c HsetexConditionFxx) UnixTimeSeconds(unixTimeSeconds int64) HsetexExpirationUnixTimeSeconds {
-	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(unixTimeSeconds, 10))
-	return (HsetexExpirationUnixTimeSeconds)(c)
+func (c HsetexConditionFxx) Exat(exat int64) HsetexExpirationExat {
+	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(exat, 10))
+	return (HsetexExpirationExat)(c)
 }
 
-func (c HsetexConditionFxx) UnixTimeMilliseconds(unixTimeMilliseconds int64) HsetexExpirationUnixTimeMilliseconds {
-	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(unixTimeMilliseconds, 10))
-	return (HsetexExpirationUnixTimeMilliseconds)(c)
+func (c HsetexConditionFxx) Pxat(pxat int64) HsetexExpirationPxat {
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(pxat, 10))
+	return (HsetexExpirationPxat)(c)
 }
 
 func (c HsetexConditionFxx) Keepttl() HsetexExpirationKeepttl {
@@ -1382,70 +1396,63 @@ func (c HsetexConditionFxx) Keepttl() HsetexExpirationKeepttl {
 	return (HsetexExpirationKeepttl)(c)
 }
 
-func (c HsetexConditionFxx) Numfields(numfields int64) HsetexFieldsNumfields {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
-	return (HsetexFieldsNumfields)(c)
+func (c HsetexConditionFxx) Fields() HsetexFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
+	return (HsetexFields)(c)
+}
+
+type HsetexExpirationEx Incomplete
+
+func (c HsetexExpirationEx) Fields() HsetexFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
+	return (HsetexFields)(c)
+}
+
+type HsetexExpirationExat Incomplete
+
+func (c HsetexExpirationExat) Fields() HsetexFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
+	return (HsetexFields)(c)
 }
 
 type HsetexExpirationKeepttl Incomplete
 
-func (c HsetexExpirationKeepttl) Numfields(numfields int64) HsetexFieldsNumfields {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
-	return (HsetexFieldsNumfields)(c)
+func (c HsetexExpirationKeepttl) Fields() HsetexFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
+	return (HsetexFields)(c)
 }
 
-type HsetexExpirationMilliseconds Incomplete
+type HsetexExpirationPx Incomplete
 
-func (c HsetexExpirationMilliseconds) Numfields(numfields int64) HsetexFieldsNumfields {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
-	return (HsetexFieldsNumfields)(c)
+func (c HsetexExpirationPx) Fields() HsetexFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
+	return (HsetexFields)(c)
 }
 
-type HsetexExpirationSeconds Incomplete
+type HsetexExpirationPxat Incomplete
 
-func (c HsetexExpirationSeconds) Numfields(numfields int64) HsetexFieldsNumfields {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
-	return (HsetexFieldsNumfields)(c)
+func (c HsetexExpirationPxat) Fields() HsetexFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
+	return (HsetexFields)(c)
 }
 
-type HsetexExpirationUnixTimeMilliseconds Incomplete
+type HsetexFieldValue Incomplete
 
-func (c HsetexExpirationUnixTimeMilliseconds) Numfields(numfields int64) HsetexFieldsNumfields {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
-	return (HsetexFieldsNumfields)(c)
+func (c HsetexFieldValue) FieldValue(field string, value string) HsetexFieldValue {
+	c.cs.s = append(c.cs.s, field, value)
+	return c
 }
 
-type HsetexExpirationUnixTimeSeconds Incomplete
-
-func (c HsetexExpirationUnixTimeSeconds) Numfields(numfields int64) HsetexFieldsNumfields {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
-	return (HsetexFieldsNumfields)(c)
-}
-
-type HsetexFieldsDataField Incomplete
-
-func (c HsetexFieldsDataField) Value(value string) HsetexFieldsDataValue {
-	c.cs.s = append(c.cs.s, value)
-	return (HsetexFieldsDataValue)(c)
-}
-
-type HsetexFieldsDataValue Incomplete
-
-func (c HsetexFieldsDataValue) Field(field string) HsetexFieldsDataField {
-	c.cs.s = append(c.cs.s, field)
-	return (HsetexFieldsDataField)(c)
-}
-
-func (c HsetexFieldsDataValue) Build() Completed {
+func (c HsetexFieldValue) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type HsetexFieldsNumfields Incomplete
+type HsetexFields Incomplete
 
-func (c HsetexFieldsNumfields) Field(field string) HsetexFieldsDataField {
-	c.cs.s = append(c.cs.s, field)
-	return (HsetexFieldsDataField)(c)
+func (c HsetexFields) Numfields(numfields int64) HsetexNumfields {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
+	return (HsetexNumfields)(c)
 }
 
 type HsetexKey Incomplete
@@ -1460,24 +1467,24 @@ func (c HsetexKey) Fxx() HsetexConditionFxx {
 	return (HsetexConditionFxx)(c)
 }
 
-func (c HsetexKey) Seconds(seconds int64) HsetexExpirationSeconds {
-	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(seconds, 10))
-	return (HsetexExpirationSeconds)(c)
+func (c HsetexKey) Ex(ex int64) HsetexExpirationEx {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(ex, 10))
+	return (HsetexExpirationEx)(c)
 }
 
-func (c HsetexKey) Milliseconds(milliseconds int64) HsetexExpirationMilliseconds {
-	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(milliseconds, 10))
-	return (HsetexExpirationMilliseconds)(c)
+func (c HsetexKey) Px(px int64) HsetexExpirationPx {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(px, 10))
+	return (HsetexExpirationPx)(c)
 }
 
-func (c HsetexKey) UnixTimeSeconds(unixTimeSeconds int64) HsetexExpirationUnixTimeSeconds {
-	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(unixTimeSeconds, 10))
-	return (HsetexExpirationUnixTimeSeconds)(c)
+func (c HsetexKey) Exat(exat int64) HsetexExpirationExat {
+	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(exat, 10))
+	return (HsetexExpirationExat)(c)
 }
 
-func (c HsetexKey) UnixTimeMilliseconds(unixTimeMilliseconds int64) HsetexExpirationUnixTimeMilliseconds {
-	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(unixTimeMilliseconds, 10))
-	return (HsetexExpirationUnixTimeMilliseconds)(c)
+func (c HsetexKey) Pxat(pxat int64) HsetexExpirationPxat {
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(pxat, 10))
+	return (HsetexExpirationPxat)(c)
 }
 
 func (c HsetexKey) Keepttl() HsetexExpirationKeepttl {
@@ -1485,9 +1492,15 @@ func (c HsetexKey) Keepttl() HsetexExpirationKeepttl {
 	return (HsetexExpirationKeepttl)(c)
 }
 
-func (c HsetexKey) Numfields(numfields int64) HsetexFieldsNumfields {
-	c.cs.s = append(c.cs.s, strconv.FormatInt(numfields, 10))
-	return (HsetexFieldsNumfields)(c)
+func (c HsetexKey) Fields() HsetexFields {
+	c.cs.s = append(c.cs.s, "FIELDS")
+	return (HsetexFields)(c)
+}
+
+type HsetexNumfields Incomplete
+
+func (c HsetexNumfields) FieldValue() HsetexFieldValue {
+	return (HsetexFieldValue)(c)
 }
 
 type Hsetnx Incomplete

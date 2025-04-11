@@ -3093,24 +3093,21 @@
     "arguments": [
       {
         "name": "key",
-        "type": "key",
-        "key_spec_index": 0
+        "type": "key"
       },
       {
         "name": "fields",
-        "token": "FIELDS",
-        "type": "block",
-        "arguments": [
-          {
-            "name": "numfields",
-            "type": "integer"
-          },
-          {
-            "name": "field",
-            "type": "string",
-            "multiple": true
-          }
-        ]
+        "type": "enum",
+        "enum": ["FIELDS"]
+      },
+      {
+        "name": "numfields",
+        "type": "integer"
+      },
+      {
+        "name": "field",
+        "type": "string",
+        "multiple": true
       }
     ],
     "since": "8.0.0",
@@ -3122,8 +3119,7 @@
     "arguments": [
       {
         "name": "key",
-        "type": "key",
-        "key_spec_index": 0
+        "type": "key"
       },
       {
         "name": "expiration",
@@ -3131,27 +3127,27 @@
         "optional": true,
         "arguments": [
           {
-            "name": "seconds",
+            "name": "EX",
             "type": "integer",
             "token": "EX"
           },
           {
-            "name": "milliseconds",
+            "name": "PX",
             "type": "integer",
             "token": "PX"
           },
           {
-            "name": "unix-time-seconds",
+            "name": "EXAT",
             "type": "unix-time",
             "token": "EXAT"
           },
           {
-            "name": "unix-time-milliseconds",
+            "name": "PXAT",
             "type": "unix-time",
             "token": "PXAT"
           },
           {
-            "name": "persist",
+            "name": "PERSIST",
             "type": "pure-token",
             "token": "PERSIST"
           }
@@ -3159,19 +3155,17 @@
       },
       {
         "name": "fields",
-        "token": "FIELDS",
-        "type": "block",
-        "arguments": [
-          {
-            "name": "numfields",
-            "type": "integer"
-          },
-          {
-            "name": "field",
-            "type": "string",
-            "multiple": true
-          }
-        ]
+        "type": "enum",
+        "enum": ["FIELDS"]
+      },
+      {
+        "name": "numfields",
+        "type": "integer"
+      },
+      {
+        "name": "field",
+        "type": "string",
+        "multiple": true
       }
     ],
     "since": "8.0.0",
@@ -3209,27 +3203,27 @@
         "optional": true,
         "arguments": [
           {
-            "name": "seconds",
+            "name": "EX",
             "type": "integer",
             "token": "EX"
           },
           {
-            "name": "milliseconds",
+            "name": "PX",
             "type": "integer",
             "token": "PX"
           },
           {
-            "name": "unix-time-seconds",
+            "name": "EXAT",
             "type": "unix-time",
             "token": "EXAT"
           },
           {
-            "name": "unix-time-milliseconds",
+            "name": "PXAT",
             "type": "unix-time",
             "token": "PXAT"
           },
           {
-            "name": "keepttl",
+            "name": "KEEPTTL",
             "type": "pure-token",
             "token": "KEEPTTL"
           }
@@ -3237,29 +3231,23 @@
       },
       {
         "name": "fields",
-        "token": "FIELDS",
-        "type": "block",
-        "arguments": [
-          {
-            "name": "numfields",
-            "type": "integer"
-          },
-          {
-            "name": "data",
-            "type": "block",
-            "multiple": true,
-            "arguments": [
-              {
-                "name": "field",
-                "type": "string"
-              },
-              {
-                "name": "value",
-                "type": "string"
-              }
-            ]
-          }
-        ]
+        "type": "enum",
+        "enum": ["FIELDS"]
+      },
+      {
+        "name": "numfields",
+        "type": "integer"
+      },
+      {
+        "name": [
+          "field",
+          "value"
+        ],
+        "type": [
+          "string",
+          "string"
+        ],
+        "multiple": true
       }
     ],
     "since": "8.0.0",
