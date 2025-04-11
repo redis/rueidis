@@ -3,6 +3,7 @@ package om
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -143,6 +144,55 @@ func (r *JSONRepository[T]) AlterIndex(ctx context.Context, cmdFn func(alter FtA
 // and note that the field name should be specified with JSON path syntax, otherwise the index may not work as expected.
 func (r *JSONRepository[T]) CreateIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) rueidis.Completed) error {
 	return r.client.Do(ctx, cmdFn(r.client.B().FtCreate().Index(r.idx).OnJson().Prefix(1).Prefix(r.prefix+":").Schema())).Error()
+}
+
+// CreateAndAliasIndex creates a new index, aliases it, and drops the old index if needed.
+func (r *JSONRepository[T]) CreateAndAliasIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) rueidis.Completed) error {
+	alias := r.idx
+
+	aliasExists := true
+	var currentIndex string
+
+	if err := r.client.Do(ctx, r.client.B().FtInfo().Index(alias).Build()).Error(); err != nil {
+		aliasExists = false
+	} else {
+		// If alias exists, alias is actually an index (RediSearch doesn't return alias mappings)
+		currentIndex = alias
+	}
+
+	newIndex := r.idx + "_v1"
+	if aliasExists {
+		parts := strings.Split(currentIndex, "_v")
+		if len(parts) == 2 {
+			if version, err := strconv.Atoi(parts[1]); err == nil {
+				newIndex = fmt.Sprintf("%s_v%d", r.idx, version+1)
+			}
+		}
+	}
+
+	if err := r.client.Do(ctx, cmdFn(r.client.B().FtCreate().Index(newIndex).OnJson().Prefix(1).Prefix(r.prefix+":").Schema())).Error(); err != nil {
+		return err
+	}
+
+	if aliasExists {
+		if err := r.client.Do(ctx, r.client.B().FtAliasupdate().Alias(alias).Index(newIndex).Build()).Error(); err != nil {
+			return err
+		}
+	} else {
+		if err := r.client.Do(ctx, r.client.B().FtAliasadd().Alias(alias).Index(newIndex).Build()).Error(); err != nil {
+			return err
+		}
+	}
+
+	if aliasExists && currentIndex != "" {
+		if err := r.client.Do(ctx, r.client.B().FtDropindex().Index(currentIndex).Build()).Error(); err != nil {
+			return err
+		}
+	}
+
+	r.idx = newIndex
+
+	return nil
 }
 
 // DropIndex uses FT.DROPINDEX from the RediSearch module to drop index whose name is `jsonidx:{prefix}`
