@@ -11,6 +11,10 @@ Client side caching metrics:
 - `rueidis_do_cache_miss`: number of cache miss on client side
 - `rueidis_do_cache_hits`: number of cache hits on client side
 
+Client side commmand metrics:
+- `rueidis_command_duration_seconds`: histogram of command duration
+- `rueidis_command_errors`: number of command errors
+
 ```golang
 package main
 
