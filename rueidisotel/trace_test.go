@@ -54,6 +54,7 @@ func (m *mockMeter) Int64UpDownCounter(name string, options ...metricapi.Int64Up
 	}
 	return nil, nil
 }
+
 func (m *mockMeter) Float64Histogram(name string, options ...metricapi.Float64HistogramOption) (metricapi.Float64Histogram, error) {
 	if m.testName == name {
 		return nil, fmt.Errorf("%w: %s", errMocked, m.testName)
@@ -272,6 +273,23 @@ func testWithClient(t *testing.T, client rueidis.Client, exp *tracetest.InMemory
 		client.DoMulti(ctx, client.B().Set().Key("key").Value("val").Build(), client.B().Set().Key("key").Value("val").Build())
 		validateTrace(t, exp, "SET SET", codes.Ok)
 	}
+
+	if err := mxp.Collect(ctx, &metrics); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	validateMetrics(t, metrics, "rueidis_command_errors", 6)
+
+	validateMetricNumDataPoints(t, metrics, "rueidis_command_errors", 1)
+	validateMetricNumDataPoints(t, metrics, "rueidis_command_duration_seconds", 1)
+
+	duration := float64HistogramMetric(metrics, "rueidis_command_duration_seconds")
+	if duration == 0 {
+		t.Fatalf("rueidis_command_duration_seconds: got 0, expected > 0")
+	}
+
+	validateMetricHasNoAttribute(t, metrics, "rueidis_command_errors", "operation")
+	validateMetricHasNoAttribute(t, metrics, "rueidis_command_duration_seconds", "operation")
 }
 
 func validateTrace(t *testing.T, exp *tracetest.InMemoryExporter, op string, code codes.Code) {
@@ -341,6 +359,7 @@ func TestWithClientSimple(t *testing.T) {
 		WithTracerProvider(tracerProvider),
 		WithMeterProvider(meterProvider),
 		WithDBStatement(dbStmtFunc),
+		WithOperationMetricAttr(),
 	)
 	defer client.Close()
 
@@ -366,22 +385,99 @@ func TestWithClientSimple(t *testing.T) {
 	if !found {
 		t.Fatalf("expected attribute 'any: label' not found in span attributes")
 	}
+
+	metrics := metricdata.ResourceMetrics{}
+	if err := mxp.Collect(context.Background(), &metrics); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	validateMetricNumDataPoints(t, metrics, "rueidis_command_duration_seconds", 1)
+	validateMetricHasAttributes(t, metrics, "rueidis_command_duration_seconds", "operation")
 }
 
 func validateMetrics(t *testing.T, metrics metricdata.ResourceMetrics, name string, value int64) {
-	for _, sm := range metrics.ScopeMetrics {
-		for _, m := range sm.Metrics {
-			if m.Name == name {
-				data := m.Data.(metricdata.Sum[int64])
-				metricdatatest.AssertHasAttributes(t, data, attribute.String("any", "label"))
-				if data.DataPoints[0].Value != value {
-					t.Fatalf("unexpected metric value %v", data.DataPoints[0].Value)
+	t.Helper()
+
+	data, ok := findMetric(metrics, name).(metricdata.Sum[int64])
+	if !ok {
+		t.Fatalf("metric %v not found", name)
+	}
+
+	metricdatatest.AssertHasAttributes(t, data, attribute.String("any", "label"))
+	var sum int64
+	for _, dp := range data.DataPoints {
+		sum += dp.Value
+	}
+	if sum != value {
+		t.Fatalf("unexpected value for %v: wanted %v, got %v", name, value, sum)
+	}
+}
+
+func validateMetricHasAttributes(t *testing.T, metrics metricdata.ResourceMetrics, name string, keys ...attribute.Key) {
+	t.Helper()
+
+	switch data := findMetric(metrics, name).(type) {
+	case metricdata.Sum[int64]:
+		for _, dp := range data.DataPoints {
+			for _, key := range keys {
+				_, ok := dp.Attributes.Value(key)
+				if !ok {
+					t.Fatalf("metric %v does not have attribute %v", name, key)
 				}
-				return
 			}
 		}
+	case metricdata.Histogram[float64]:
+		for _, dp := range data.DataPoints {
+			for _, key := range keys {
+				_, ok := dp.Attributes.Value(key)
+				if !ok {
+					t.Fatalf("metric %v does not have attribute %v", name, key)
+				}
+			}
+		}
+	default:
+		t.Fatalf("unexpected metric type for %v: %T", name, data)
 	}
-	t.Fatalf("metrics not found %v", name)
+}
+
+func validateMetricHasNoAttribute(t *testing.T, metrics metricdata.ResourceMetrics, name string, key attribute.Key) {
+	t.Helper()
+
+	switch data := findMetric(metrics, name).(type) {
+	case metricdata.Sum[int64]:
+		for _, dp := range data.DataPoints {
+			_, ok := dp.Attributes.Value(key)
+			if ok {
+				t.Fatalf("metric %v has attribute %v", name, key)
+			}
+		}
+	case metricdata.Histogram[float64]:
+		for _, dp := range data.DataPoints {
+			_, ok := dp.Attributes.Value(key)
+			if ok {
+				t.Fatalf("metric %v has attribute %v", name, key)
+			}
+		}
+	default:
+		t.Fatalf("unexpected metric type for %v: %T", name, data)
+	}
+}
+
+func validateMetricNumDataPoints(t *testing.T, metrics metricdata.ResourceMetrics, name string, num int) {
+	t.Helper()
+
+	switch data := findMetric(metrics, name).(type) {
+	case metricdata.Sum[int64]:
+		if len(data.DataPoints) != num {
+			t.Fatalf("unexpected number of data points for %v: got %d, expected %d", name, len(data.DataPoints), num)
+		}
+	case metricdata.Histogram[float64]:
+		if len(data.DataPoints) != num {
+			t.Fatalf("unexpected number of data points for %v: got %d, expected %d", name, len(data.DataPoints), num)
+		}
+	default:
+		t.Fatalf("unexpected metric type for %v: %T", name, data)
+	}
 }
 
 func ExampleWithClient_openTelemetry() {

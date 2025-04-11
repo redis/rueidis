@@ -37,6 +37,14 @@ func WithMeterProvider(provider metric.MeterProvider) Option {
 	}
 }
 
+// WithOperationMetricAttr sets the operation name as an attribute for duration and error metrics.
+// This may cause memory usage to increase with the number of commands used.
+func WithOperationMetricAttr() Option {
+	return func(cli *otelclient) {
+		cli.commandMetrics.opAttr = true
+	}
+}
+
 type HistogramOption struct {
 	Buckets []float64
 }
@@ -146,6 +154,20 @@ func newClient(opts ...Option) (*otelclient, error) {
 		return nil, err
 	}
 	cli.cscHits, err = cli.meter.Int64Counter("rueidis_do_cache_hits")
+	if err != nil {
+		return nil, err
+	}
+	cli.commandMetrics.addOpts = cli.addOpts
+	cli.commandMetrics.recordOpts = cli.recordOpts
+	cli.commandMetrics.duration, err = cli.meter.Float64Histogram(
+		"rueidis_command_duration_seconds",
+		metric.WithUnit("s"),
+		metric.WithExplicitBucketBoundaries(defaultHistogramBuckets...),
+	)
+	if err != nil {
+		return nil, err
+	}
+	cli.commandMetrics.errors, err = cli.meter.Int64Counter("rueidis_command_errors")
 	if err != nil {
 		return nil, err
 	}
