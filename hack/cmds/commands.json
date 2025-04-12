@@ -4778,7 +4778,7 @@
     "arguments": [
       {
         "name": "channel",
-        "type": "string",
+        "type": "key",
         "optional": true,
         "multiple": true
       }
