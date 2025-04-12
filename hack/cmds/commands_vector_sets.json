@@ -1,0 +1,354 @@
+{
+  "VADD": {
+    "summary": "Add a new element into the vector set specified by key. The vector can be provided as 32-bit floating point (FP32) blob of values, or as floating point numbers as strings, prefixed by the number of elements",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(log(N)) for each element added, where N is the number of elements in the vector set.",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "command": "REDUCE",
+        "name": "dim",
+        "type": "integer",
+        "optional": true
+      },
+      {
+        "name": "num",
+        "type": "oneof",
+        "arguments": [
+          {
+            "type": "block",
+            "arguments": [
+              {
+                "name": "FP32",
+                "type": "pure-token",
+                "token": "FP32"
+              },
+              {
+                "name": "vector",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "type": "block",
+            "arguments": [
+              {
+                "command": "VALUES",
+                "name": "num",
+                "type": "integer"
+              },
+              {
+                "name": "vector",
+                "type": "float32",
+                "multiple": true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "element",
+        "type": "string"
+      },
+      {
+        "name": "CAS",
+        "type": "pure-token",
+        "token": "CAS",
+        "optional": true
+      },
+      {
+        "name": "quantization",
+        "type": "oneof",
+        "arguments": [
+          {
+            "name": "noquant",
+            "type": "pure-token",
+            "token": "NOQUANT"
+          },
+          {
+            "name": "q8",
+            "type": "pure-token",
+            "token": "Q8"
+          },
+          {
+            "name": "bin",
+            "type": "pure-token",
+            "token": "BIN"
+          }
+        ],
+        "optional": true
+      },
+      {
+        "command": "EF",
+        "name": "build-exploration-factor",
+        "type": "integer",
+        "optional": true
+      },
+      {
+        "command": "SETATTR",
+        "name": "attributes",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "M",
+        "name": "numlinks",
+        "type": "integer",
+        "optional": true
+      }
+    ]
+  },
+  "VCARD": {
+    "summary": "Return the number of elements in the specified vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      }
+    ]
+  },
+  "VDIM": {
+    "summary": "Return the number of dimensions of the vectors in the specified vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      }
+    ]
+  },
+  "VEMB": {
+    "summary": "Return the approximate vector associated with a given element in the vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "element",
+        "type": "string"
+      },
+      {
+        "command": "RAW",
+        "type": "command",
+        "optional": true
+      }
+    ]
+  },
+  "VGETATTR": {
+    "summary": "Return the JSON attributes associated with an element in a vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "element",
+        "type": "string"
+      }
+    ]
+  },
+  "VINFO": {
+    "summary": "Return metadata and internal details about a vector set, including size, dimensions, quantization type, and graph structure.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      }
+    ]
+  },
+  "VLINKS": {
+    "summary": "Return the neighbors of a specified element in a vector set. The command shows the connections for each layer of the HNSW graph.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "element",
+        "type": "string"
+      },
+      {
+        "command": "WITHSCORES",
+        "type": "command",
+        "optional": true
+      }
+    ]
+  },
+  "VRANDMEMBER": {
+    "summary": "Return one or more random elements from a vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(N) where N is the absolute value of the count argument.",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "count",
+        "type": "integer",
+        "optional": true
+      }
+    ]
+  },
+  "VREM": {
+    "summary": "Remove an element from a vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(log(N)) for each element removed, where N is the number of elements in the vector set.",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "element",
+        "type": "string"
+      }
+    ]
+  },
+  "VSETATTR": {
+    "summary": "Associate a JSON object with an element in a vector set. Use this command to store attributes that can be used in filtered similarity searches with VSIM.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "element",
+        "type": "string"
+      },
+      {
+        "name": "JSON",
+        "type": "json_string"
+      }
+    ]
+  },
+  "VSIM": {
+    "summary": "Return elements similar to a given vector or element. Use this command to perform approximate or exact similarity searches within a vector set.",
+    "since": "Redis CE 8.0.0",
+    "group": "vector_set",
+    "complexity": "O(log(N)) where N is the number of elements in the vector set.",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "query_type",
+        "type": "oneof",
+        "arguments": [
+          {
+            "type": "block",
+            "arguments": [
+              {
+                "name": "ELE",
+                "type": "pure-token",
+                "token": "ELE"
+              },
+              {
+                "name": "element",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "type": "block",
+            "arguments": [
+              {
+                "name": "FP32",
+                "type": "pure-token",
+                "token": "FP32"
+              },
+              {
+                "name": "vector",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "type": "block",
+            "arguments": [
+              {
+                "command": "VALUES",
+                "name": "num",
+                "type": "integer"
+              },
+              {
+                "name": "vector",
+                "type": "float32",
+                "multiple": true
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "command": "WITHSCORES",
+        "type": "command",
+        "optional": true
+      },
+      {
+        "command": "COUNT",
+        "name": "num",
+        "type": "integer",
+        "optional": true
+      },
+      {
+        "command": "EF",
+        "name": "search-exploration-factor",
+        "type": "integer",
+        "optional": true
+      },
+      {
+        "command": "FILTER",
+        "name": "expression",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "FILTER-EF",
+        "name": "max-filtering-effort",
+        "type": "integer",
+        "optional": true
+      },
+      {
+        "name": "TRUTH",
+        "type": "pure-token",
+        "token": "TRUTH",
+        "optional": true
+      },
+      {
+        "name": "NOTHREAD",
+        "type": "pure-token",
+        "token": "NOTHREAD",
+        "optional": true
+      }
+    ]
+  }
+}

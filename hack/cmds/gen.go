@@ -677,10 +677,12 @@ func toGoType(paramType string) string {
 		return "[]string"
 	case "...string": // TODO hack for FT.CREATE VECTOR
 		return "...string"
-	case "key", "string", "pattern", "type":
+	case "key", "string", "pattern", "type", "json_string":
 		return "string"
 	case "double":
 		return "float64"
+	case "float32":
+		return "float32"
 	case "integer", "posix time", "unix-time":
 		return "int64"
 	case "unsigned integer":
@@ -870,6 +872,8 @@ func printBuilder(w io.Writer, parent, next goStruct) {
 					switch toGoType(next.BuildDef.Parameters[0].Type) {
 					case "float64":
 						fmt.Fprintf(w, "\t\tc.cs.s = append(c.cs.s, strconv.FormatFloat(n, 'f', -1, 64))\n")
+					case "float32":
+						fmt.Fprintf(w, "\t\tc.cs.s = append(c.cs.s, strconv.FormatFloat(float64(n), 'f', -1, 64))\n")
 					case "int64":
 						fmt.Fprintf(w, "\t\tc.cs.s = append(c.cs.s, strconv.FormatInt(n, 10))\n")
 					case "uint64":
