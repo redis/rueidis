@@ -20,20 +20,35 @@
         "type": "oneof",
         "arguments": [
           {
-            "name": "FP32",
-            "type": "pure-token",
-            "token": "FP32"
+            "type": "block",
+            "arguments": [
+              {
+                "name": "FP32",
+                "type": "pure-token",
+                "token": "FP32"
+              },
+              {
+                "name": "vector",
+                "type": "string"
+              }
+            ]
           },
           {
-            "command": "VALUES",
-            "name": "num",
-            "type": "integer"
+            "type": "block",
+            "arguments": [
+              {
+                "command": "VALUES",
+                "name": "num",
+                "type": "integer"
+              },
+              {
+                "name": "vector",
+                "type": "float32",
+                "multiple": true
+              }
+            ]
           }
         ]
-      },
-      {
-        "name": "vector",
-        "type": "string"
       },
       {
         "name": "element",
@@ -229,7 +244,7 @@
         "type": "string"
       },
       {
-        "name": "JSON string",
+        "name": "JSON",
         "type": "json_string"
       }
     ]
@@ -249,33 +264,47 @@
         "type": "oneof",
         "arguments": [
           {
-            "name": "ELE",
-            "type": "pure-token",
-            "token": "ELE"
+            "type": "block",
+            "arguments": [
+              {
+                "name": "ELE",
+                "type": "pure-token",
+                "token": "ELE"
+              },
+              {
+                "name": "element",
+                "type": "string"
+              }
+            ]
           },
           {
-            "name": "FP32",
-            "type": "pure-token",
-            "token": "FP32"
+            "type": "block",
+            "arguments": [
+              {
+                "name": "FP32",
+                "type": "pure-token",
+                "token": "FP32"
+              },
+              {
+                "name": "vector",
+                "type": "string"
+              }
+            ]
           },
           {
-            "command": "VALUES",
-            "name": "num",
-            "type": "integer"
-          }
-        ]
-      },
-      {
-        "name": "query",
-        "type": "oneof",
-        "arguments": [
-          {
-            "name": "vector",
-            "type": "string"
-          },
-          {
-            "name": "element",
-            "type": "string"
+            "type": "block",
+            "arguments": [
+              {
+                "command": "VALUES",
+                "name": "num",
+                "type": "integer"
+              },
+              {
+                "name": "vector",
+                "type": "float32",
+                "multiple": true
+              }
+            ]
           }
         ]
       },

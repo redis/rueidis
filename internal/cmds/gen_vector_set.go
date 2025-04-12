@@ -125,14 +125,14 @@ func (c VaddKey) Reduce(dim int64) VaddReduce {
 	return (VaddReduce)(c)
 }
 
-func (c VaddKey) Fp32() VaddNumFp32 {
+func (c VaddKey) Fp32() VaddNumFp32Fp32 {
 	c.cs.s = append(c.cs.s, "FP32")
-	return (VaddNumFp32)(c)
+	return (VaddNumFp32Fp32)(c)
 }
 
-func (c VaddKey) Values(num int64) VaddNumValues {
+func (c VaddKey) Values(num int64) VaddNumValuesValues {
 	c.cs.s = append(c.cs.s, "VALUES", strconv.FormatInt(num, 10))
-	return (VaddNumValues)(c)
+	return (VaddNumValuesValues)(c)
 }
 
 type VaddM Incomplete
@@ -142,18 +142,41 @@ func (c VaddM) Build() Completed {
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type VaddNumFp32 Incomplete
+type VaddNumFp32Fp32 Incomplete
 
-func (c VaddNumFp32) Vector(vector string) VaddVector {
+func (c VaddNumFp32Fp32) Vector(vector string) VaddNumFp32Vector {
 	c.cs.s = append(c.cs.s, vector)
-	return (VaddVector)(c)
+	return (VaddNumFp32Vector)(c)
 }
 
-type VaddNumValues Incomplete
+type VaddNumFp32Vector Incomplete
 
-func (c VaddNumValues) Vector(vector string) VaddVector {
-	c.cs.s = append(c.cs.s, vector)
-	return (VaddVector)(c)
+func (c VaddNumFp32Vector) Element(element string) VaddElement {
+	c.cs.s = append(c.cs.s, element)
+	return (VaddElement)(c)
+}
+
+type VaddNumValuesValues Incomplete
+
+func (c VaddNumValuesValues) Vector(vector ...float32) VaddNumValuesVector {
+	for _, n := range vector {
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(float64(n), 'f', -1, 64))
+	}
+	return (VaddNumValuesVector)(c)
+}
+
+type VaddNumValuesVector Incomplete
+
+func (c VaddNumValuesVector) Vector(vector ...float32) VaddNumValuesVector {
+	for _, n := range vector {
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(float64(n), 'f', -1, 64))
+	}
+	return c
+}
+
+func (c VaddNumValuesVector) Element(element string) VaddElement {
+	c.cs.s = append(c.cs.s, element)
+	return (VaddElement)(c)
 }
 
 type VaddQuantizationBin Incomplete
@@ -224,14 +247,14 @@ func (c VaddQuantizationQ8) Build() Completed {
 
 type VaddReduce Incomplete
 
-func (c VaddReduce) Fp32() VaddNumFp32 {
+func (c VaddReduce) Fp32() VaddNumFp32Fp32 {
 	c.cs.s = append(c.cs.s, "FP32")
-	return (VaddNumFp32)(c)
+	return (VaddNumFp32Fp32)(c)
 }
 
-func (c VaddReduce) Values(num int64) VaddNumValues {
+func (c VaddReduce) Values(num int64) VaddNumValuesValues {
 	c.cs.s = append(c.cs.s, "VALUES", strconv.FormatInt(num, 10))
-	return (VaddNumValues)(c)
+	return (VaddNumValuesValues)(c)
 }
 
 type VaddSetattr Incomplete
@@ -244,13 +267,6 @@ func (c VaddSetattr) M(numlinks int64) VaddM {
 func (c VaddSetattr) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
-}
-
-type VaddVector Incomplete
-
-func (c VaddVector) Element(element string) VaddElement {
-	c.cs.s = append(c.cs.s, element)
-	return (VaddElement)(c)
 }
 
 type Vcard Incomplete
@@ -537,14 +553,14 @@ func (c Vsetattr) Key(key string) VsetattrKey {
 
 type VsetattrElement Incomplete
 
-func (c VsetattrElement) JsonString(jsonString string) VsetattrJsonString {
-	c.cs.s = append(c.cs.s, jsonString)
-	return (VsetattrJsonString)(c)
+func (c VsetattrElement) Json(json string) VsetattrJson {
+	c.cs.s = append(c.cs.s, json)
+	return (VsetattrJson)(c)
 }
 
-type VsetattrJsonString Incomplete
+type VsetattrJson Incomplete
 
-func (c VsetattrJsonString) Build() Completed {
+func (c VsetattrJson) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
@@ -674,19 +690,19 @@ func (c VsimFilterEf) Build() Completed {
 
 type VsimKey Incomplete
 
-func (c VsimKey) Ele() VsimQueryTypeEle {
+func (c VsimKey) Ele() VsimQueryTypeEleEle {
 	c.cs.s = append(c.cs.s, "ELE")
-	return (VsimQueryTypeEle)(c)
+	return (VsimQueryTypeEleEle)(c)
 }
 
-func (c VsimKey) Fp32() VsimQueryTypeFp32 {
+func (c VsimKey) Fp32() VsimQueryTypeFp32Fp32 {
 	c.cs.s = append(c.cs.s, "FP32")
-	return (VsimQueryTypeFp32)(c)
+	return (VsimQueryTypeFp32Fp32)(c)
 }
 
-func (c VsimKey) Values(num int64) VsimQueryTypeValues {
+func (c VsimKey) Values(num int64) VsimQueryTypeValuesValues {
 	c.cs.s = append(c.cs.s, "VALUES", strconv.FormatInt(num, 10))
-	return (VsimQueryTypeValues)(c)
+	return (VsimQueryTypeValuesValues)(c)
 }
 
 type VsimNothread Incomplete
@@ -696,122 +712,158 @@ func (c VsimNothread) Build() Completed {
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type VsimQueryElement Incomplete
+type VsimQueryTypeEleEle Incomplete
 
-func (c VsimQueryElement) Withscores() VsimWithscores {
+func (c VsimQueryTypeEleEle) Element(element string) VsimQueryTypeEleElement {
+	c.cs.s = append(c.cs.s, element)
+	return (VsimQueryTypeEleElement)(c)
+}
+
+type VsimQueryTypeEleElement Incomplete
+
+func (c VsimQueryTypeEleElement) Withscores() VsimWithscores {
 	c.cs.s = append(c.cs.s, "WITHSCORES")
 	return (VsimWithscores)(c)
 }
 
-func (c VsimQueryElement) Count(num int64) VsimCount {
+func (c VsimQueryTypeEleElement) Count(num int64) VsimCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(num, 10))
 	return (VsimCount)(c)
 }
 
-func (c VsimQueryElement) Ef(searchExplorationFactor int64) VsimEf {
+func (c VsimQueryTypeEleElement) Ef(searchExplorationFactor int64) VsimEf {
 	c.cs.s = append(c.cs.s, "EF", strconv.FormatInt(searchExplorationFactor, 10))
 	return (VsimEf)(c)
 }
 
-func (c VsimQueryElement) Filter(expression string) VsimFilter {
+func (c VsimQueryTypeEleElement) Filter(expression string) VsimFilter {
 	c.cs.s = append(c.cs.s, "FILTER", expression)
 	return (VsimFilter)(c)
 }
 
-func (c VsimQueryElement) FilterEf(maxFilteringEffort int64) VsimFilterEf {
+func (c VsimQueryTypeEleElement) FilterEf(maxFilteringEffort int64) VsimFilterEf {
 	c.cs.s = append(c.cs.s, "FILTER-EF", strconv.FormatInt(maxFilteringEffort, 10))
 	return (VsimFilterEf)(c)
 }
 
-func (c VsimQueryElement) Truth() VsimTruth {
+func (c VsimQueryTypeEleElement) Truth() VsimTruth {
 	c.cs.s = append(c.cs.s, "TRUTH")
 	return (VsimTruth)(c)
 }
 
-func (c VsimQueryElement) Nothread() VsimNothread {
+func (c VsimQueryTypeEleElement) Nothread() VsimNothread {
 	c.cs.s = append(c.cs.s, "NOTHREAD")
 	return (VsimNothread)(c)
 }
 
-func (c VsimQueryElement) Build() Completed {
+func (c VsimQueryTypeEleElement) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type VsimQueryTypeEle Incomplete
+type VsimQueryTypeFp32Fp32 Incomplete
 
-func (c VsimQueryTypeEle) Vector(vector string) VsimQueryVector {
+func (c VsimQueryTypeFp32Fp32) Vector(vector string) VsimQueryTypeFp32Vector {
 	c.cs.s = append(c.cs.s, vector)
-	return (VsimQueryVector)(c)
+	return (VsimQueryTypeFp32Vector)(c)
 }
 
-func (c VsimQueryTypeEle) Element(element string) VsimQueryElement {
-	c.cs.s = append(c.cs.s, element)
-	return (VsimQueryElement)(c)
-}
+type VsimQueryTypeFp32Vector Incomplete
 
-type VsimQueryTypeFp32 Incomplete
-
-func (c VsimQueryTypeFp32) Vector(vector string) VsimQueryVector {
-	c.cs.s = append(c.cs.s, vector)
-	return (VsimQueryVector)(c)
-}
-
-func (c VsimQueryTypeFp32) Element(element string) VsimQueryElement {
-	c.cs.s = append(c.cs.s, element)
-	return (VsimQueryElement)(c)
-}
-
-type VsimQueryTypeValues Incomplete
-
-func (c VsimQueryTypeValues) Vector(vector string) VsimQueryVector {
-	c.cs.s = append(c.cs.s, vector)
-	return (VsimQueryVector)(c)
-}
-
-func (c VsimQueryTypeValues) Element(element string) VsimQueryElement {
-	c.cs.s = append(c.cs.s, element)
-	return (VsimQueryElement)(c)
-}
-
-type VsimQueryVector Incomplete
-
-func (c VsimQueryVector) Withscores() VsimWithscores {
+func (c VsimQueryTypeFp32Vector) Withscores() VsimWithscores {
 	c.cs.s = append(c.cs.s, "WITHSCORES")
 	return (VsimWithscores)(c)
 }
 
-func (c VsimQueryVector) Count(num int64) VsimCount {
+func (c VsimQueryTypeFp32Vector) Count(num int64) VsimCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(num, 10))
 	return (VsimCount)(c)
 }
 
-func (c VsimQueryVector) Ef(searchExplorationFactor int64) VsimEf {
+func (c VsimQueryTypeFp32Vector) Ef(searchExplorationFactor int64) VsimEf {
 	c.cs.s = append(c.cs.s, "EF", strconv.FormatInt(searchExplorationFactor, 10))
 	return (VsimEf)(c)
 }
 
-func (c VsimQueryVector) Filter(expression string) VsimFilter {
+func (c VsimQueryTypeFp32Vector) Filter(expression string) VsimFilter {
 	c.cs.s = append(c.cs.s, "FILTER", expression)
 	return (VsimFilter)(c)
 }
 
-func (c VsimQueryVector) FilterEf(maxFilteringEffort int64) VsimFilterEf {
+func (c VsimQueryTypeFp32Vector) FilterEf(maxFilteringEffort int64) VsimFilterEf {
 	c.cs.s = append(c.cs.s, "FILTER-EF", strconv.FormatInt(maxFilteringEffort, 10))
 	return (VsimFilterEf)(c)
 }
 
-func (c VsimQueryVector) Truth() VsimTruth {
+func (c VsimQueryTypeFp32Vector) Truth() VsimTruth {
 	c.cs.s = append(c.cs.s, "TRUTH")
 	return (VsimTruth)(c)
 }
 
-func (c VsimQueryVector) Nothread() VsimNothread {
+func (c VsimQueryTypeFp32Vector) Nothread() VsimNothread {
 	c.cs.s = append(c.cs.s, "NOTHREAD")
 	return (VsimNothread)(c)
 }
 
-func (c VsimQueryVector) Build() Completed {
+func (c VsimQueryTypeFp32Vector) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type VsimQueryTypeValuesValues Incomplete
+
+func (c VsimQueryTypeValuesValues) Vector(vector ...float32) VsimQueryTypeValuesVector {
+	for _, n := range vector {
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(float64(n), 'f', -1, 64))
+	}
+	return (VsimQueryTypeValuesVector)(c)
+}
+
+type VsimQueryTypeValuesVector Incomplete
+
+func (c VsimQueryTypeValuesVector) Vector(vector ...float32) VsimQueryTypeValuesVector {
+	for _, n := range vector {
+		c.cs.s = append(c.cs.s, strconv.FormatFloat(float64(n), 'f', -1, 64))
+	}
+	return c
+}
+
+func (c VsimQueryTypeValuesVector) Withscores() VsimWithscores {
+	c.cs.s = append(c.cs.s, "WITHSCORES")
+	return (VsimWithscores)(c)
+}
+
+func (c VsimQueryTypeValuesVector) Count(num int64) VsimCount {
+	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(num, 10))
+	return (VsimCount)(c)
+}
+
+func (c VsimQueryTypeValuesVector) Ef(searchExplorationFactor int64) VsimEf {
+	c.cs.s = append(c.cs.s, "EF", strconv.FormatInt(searchExplorationFactor, 10))
+	return (VsimEf)(c)
+}
+
+func (c VsimQueryTypeValuesVector) Filter(expression string) VsimFilter {
+	c.cs.s = append(c.cs.s, "FILTER", expression)
+	return (VsimFilter)(c)
+}
+
+func (c VsimQueryTypeValuesVector) FilterEf(maxFilteringEffort int64) VsimFilterEf {
+	c.cs.s = append(c.cs.s, "FILTER-EF", strconv.FormatInt(maxFilteringEffort, 10))
+	return (VsimFilterEf)(c)
+}
+
+func (c VsimQueryTypeValuesVector) Truth() VsimTruth {
+	c.cs.s = append(c.cs.s, "TRUTH")
+	return (VsimTruth)(c)
+}
+
+func (c VsimQueryTypeValuesVector) Nothread() VsimNothread {
+	c.cs.s = append(c.cs.s, "NOTHREAD")
+	return (VsimNothread)(c)
+}
+
+func (c VsimQueryTypeValuesVector) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
