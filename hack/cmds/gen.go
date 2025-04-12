@@ -677,7 +677,7 @@ func toGoType(paramType string) string {
 		return "[]string"
 	case "...string": // TODO hack for FT.CREATE VECTOR
 		return "...string"
-	case "key", "string", "pattern", "type":
+	case "key", "string", "pattern", "type", "json_string":
 		return "string"
 	case "double":
 		return "float64"
