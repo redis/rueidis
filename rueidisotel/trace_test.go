@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -338,12 +339,7 @@ func TestWithDBStatement(t *testing.T) {
 	}
 }
 
-func TestWithClientSimple(t *testing.T) {
-	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
-	if err != nil {
-		t.Fatal(err)
-	}
-
+func TestNewClientSimple(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
 	tracerProvider := trace.NewTracerProvider(trace.WithSyncer(exp))
 
@@ -352,8 +348,8 @@ func TestWithClientSimple(t *testing.T) {
 
 	dbStmtFunc := func(cmdTokens []string) string { return strings.Join(cmdTokens, " ") }
 
-	client = WithClient(
-		client,
+	client, err := NewClient(
+		rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}},
 		TraceAttrs(attribute.String("any", "label")),
 		MetricAttrs(attribute.String("any", "label")),
 		WithTracerProvider(tracerProvider),
@@ -361,6 +357,9 @@ func TestWithClientSimple(t *testing.T) {
 		WithDBStatement(dbStmtFunc),
 		WithOperationMetricAttr(),
 	)
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer client.Close()
 
 	cmd := client.B().Set().Key("key").Value("val").Build()
@@ -368,23 +367,24 @@ func TestWithClientSimple(t *testing.T) {
 
 	// Validate trace
 	spans := exp.GetSpans().Snapshots()
-	if len(spans) != 1 {
-		t.Fatalf("expected 1 span, got %d", len(spans))
+	if len(spans) < 2 {
+		t.Fatalf("expected at least 2 spans, got %d", len(spans))
 	}
-	span := spans[0]
-	if span.Name() != "SET" {
-		t.Fatalf("unexpected span name: got %s, expected %s", span.Name(), "Set")
+
+	commandSpanIdx := slices.IndexFunc(spans, func(span trace.ReadOnlySpan) bool { return span.Name() == "SET" })
+	if commandSpanIdx == -1 {
+		t.Fatal("could not find SET span")
 	}
-	var found bool
-	for _, attr := range span.Attributes() {
-		if string(attr.Key) == "any" && attr.Value.AsString() == "label" {
-			found = true
-			break
-		}
+	commandSpan := spans[commandSpanIdx]
+	validateSpanHasAttribute(t, commandSpan, "any", "label")
+
+	dialSpanIdx := slices.IndexFunc(spans, func(span trace.ReadOnlySpan) bool { return span.Name() == "redis.dial" })
+	if dialSpanIdx == -1 {
+		t.Fatal("could not find dial span")
 	}
-	if !found {
-		t.Fatalf("expected attribute 'any: label' not found in span attributes")
-	}
+	dialSpan := spans[dialSpanIdx]
+	validateSpanHasAttribute(t, dialSpan, "server.address", "127.0.0.1:6379")
+	validateSpanHasAttribute(t, dialSpan, "any", "label")
 
 	metrics := metricdata.ResourceMetrics{}
 	if err := mxp.Collect(context.Background(), &metrics); err != nil {
@@ -393,6 +393,53 @@ func TestWithClientSimple(t *testing.T) {
 
 	validateMetricNumDataPoints(t, metrics, "rueidis_command_duration_seconds", 1)
 	validateMetricHasAttributes(t, metrics, "rueidis_command_duration_seconds", "operation")
+}
+
+func TestNewClientErrorSpan(t *testing.T) {
+	exp := tracetest.NewInMemoryExporter()
+	tracerProvider := trace.NewTracerProvider(trace.WithSyncer(exp))
+
+	mxp := metric.NewManualReader()
+	meterProvider := metric.NewMeterProvider(metric.WithReader(mxp))
+
+	_, err := NewClient(
+		rueidis.ClientOption{InitAddress: []string{"256.256.256.256:6379"}},
+		TraceAttrs(attribute.String("any", "label")),
+		MetricAttrs(attribute.String("any", "label")),
+		WithTracerProvider(tracerProvider),
+		WithMeterProvider(meterProvider),
+		WithOperationMetricAttr(),
+	)
+	if err == nil {
+		t.Fatal("expected error")
+	}
+
+	spans := exp.GetSpans().Snapshots()
+	if len(spans) != 1 {
+		t.Fatalf("expected 1 span, got %d", len(spans))
+	}
+	span := spans[0]
+	if span.Name() != "redis.dial" {
+		t.Fatalf("expected span name 'redis.dial', got %s", span.Name())
+	}
+	validateSpanHasAttribute(t, span, "any", "label")
+	events := span.Events()
+	if len(events) != 1 {
+		t.Fatalf("expected 1 event, got %d", len(events))
+	}
+	event := events[0]
+	if event.Name != "exception" {
+		t.Fatalf("expected event name 'exception', got %s", event.Name)
+	}
+}
+
+func validateSpanHasAttribute(t *testing.T, span trace.ReadOnlySpan, key, value string) {
+	t.Helper()
+	if !slices.ContainsFunc(span.Attributes(), func(attr attribute.KeyValue) bool {
+		return string(attr.Key) == key && attr.Value.AsString() == value
+	}) {
+		t.Fatalf("expected attribute '%s: %s' not found in span attributes", key, value)
+	}
 }
 
 func validateMetrics(t *testing.T, metrics metricdata.ResourceMetrics, name string, value int64) {
