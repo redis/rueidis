@@ -10,6 +10,7 @@ import (
 	"github.com/redis/rueidis"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -56,6 +57,11 @@ type dialMetrics struct {
 	latency    metric.Float64Histogram
 	addOpts    []metric.AddOption
 	recordOpts []metric.RecordOption
+}
+
+type dialTracer struct {
+	trace.Tracer
+	tAttrs trace.SpanStartEventOption
 }
 
 // WithHistogramOption sets the HistogramOption.
@@ -116,7 +122,7 @@ func NewClient(clientOption rueidis.ClientOption, opts ...Option) (rueidis.Clien
 		return nil, err
 	}
 
-	clientOption.DialCtxFn = trackDialing(metrics, clientOption.DialCtxFn)
+	clientOption.DialCtxFn = trackDialing(metrics, dialTracer{Tracer: oclient.tracer, tAttrs: oclient.tAttrs}, clientOption.DialCtxFn)
 
 	cli, err := rueidis.NewClient(clientOption)
 	if err != nil {
@@ -174,16 +180,22 @@ func newClient(opts ...Option) (*otelclient, error) {
 	return cli, nil
 }
 
-func trackDialing(m dialMetrics, dialFn func(context.Context, string, *net.Dialer, *tls.Config) (conn net.Conn, err error)) func(context.Context, string, *net.Dialer, *tls.Config) (conn net.Conn, err error) {
-	return func(ctx context.Context, network string, dialer *net.Dialer, tlsConfig *tls.Config) (conn net.Conn, err error) {
+func trackDialing(m dialMetrics, t dialTracer, dialFn func(context.Context, string, *net.Dialer, *tls.Config) (conn net.Conn, err error)) func(context.Context, string, *net.Dialer, *tls.Config) (conn net.Conn, err error) {
+	return func(ctx context.Context, dst string, dialer *net.Dialer, tlsConfig *tls.Config) (conn net.Conn, err error) {
+		ctx, span := t.Start(ctx, "redis.dial", kind, trace.WithAttributes(dbattr, attribute.String("server.address", dst)), t.tAttrs)
+		defer span.End()
+
 		m.attempt.Add(ctx, 1, m.addOpts...)
 
 		start := time.Now()
 
-		conn, err = dialFn(ctx, network, dialer, tlsConfig)
+		conn, err = dialFn(ctx, dst, dialer, tlsConfig)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			return nil, err
 		}
+		span.SetStatus(codes.Ok, "")
 
 		// Use floating point division for higher precision (instead of Seconds method).
 		m.latency.Record(ctx, float64(time.Since(start))/float64(time.Second), m.recordOpts...)
