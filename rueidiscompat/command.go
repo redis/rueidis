@@ -2153,6 +2153,45 @@ type HExpireArgs struct {
 	LT bool
 }
 
+// ExpirationType represents an expiration option for the HGETEX command.
+type HGetEXExpirationType string
+
+const (
+	HGetEXExpirationEX      HGetEXExpirationType = "EX"
+	HGetEXExpirationPX      HGetEXExpirationType = "PX"
+	HGetEXExpirationEXAT    HGetEXExpirationType = "EXAT"
+	HGetEXExpirationPXAT    HGetEXExpirationType = "PXAT"
+	HGetEXExpirationPERSIST HGetEXExpirationType = "PERSIST"
+)
+
+type HSetEXCondition string
+
+const (
+	HSetEXFNX HSetEXCondition = "FNX"
+	HSetEXFXX HSetEXCondition = "FXX"
+)
+
+type HGetEXOptions struct {
+	ExpirationType HGetEXExpirationType
+	ExpirationVal  int64
+}
+
+type HSetEXExpirationType string
+
+const (
+	HSetEXExpirationEX      HSetEXExpirationType = "EX"
+	HSetEXExpirationPX      HSetEXExpirationType = "PX"
+	HSetEXExpirationEXAT    HSetEXExpirationType = "EXAT"
+	HSetEXExpirationPXAT    HSetEXExpirationType = "PXAT"
+	HSetEXExpirationKEEPTTL HSetEXExpirationType = "KEEPTTL"
+)
+
+type HSetEXOptions struct {
+	Condition      HSetEXCondition
+	ExpirationType HSetEXExpirationType
+	ExpirationVal  int64
+}
+
 type Sort struct {
 	By     string
 	Order  string

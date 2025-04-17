@@ -175,6 +175,11 @@ type CoreCmdable interface {
 	HPExpireTime(ctx context.Context, key string, fields ...string) *IntSliceCmd
 	HTTL(ctx context.Context, key string, fields ...string) *IntSliceCmd
 	HPTTL(ctx context.Context, key string, fields ...string) *IntSliceCmd
+	HGetDel(ctx context.Context, key string, fields ...string) *StringSliceCmd
+	HGetEX(ctx context.Context, key string, fields ...string) *StringSliceCmd
+	HGetEXWithArgs(ctx context.Context, key string, options *HGetEXOptions, fields ...string) *StringSliceCmd
+	HSetEX(ctx context.Context, key string, fieldsAndValues ...string) *IntCmd
+	HSetEXWithArgs(ctx context.Context, key string, options *HSetEXOptions, fieldsAndValues ...string) *IntCmd
 
 	BLPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd
 	BLMPop(ctx context.Context, timeout time.Duration, direction string, count int64, keys ...string) *KeyValuesCmd
@@ -1553,6 +1558,92 @@ func (c *Compat) HPTTL(ctx context.Context, key string, fields ...string) *IntSl
 	cmd := c.client.B().Hpttl().Key(key).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntSliceCmd(resp)
+}
+
+func (c *Compat) HGetDel(ctx context.Context, key string, fields ...string) *StringSliceCmd {
+	cmd := c.client.B().Hgetdel().Key(key).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) HGetEX(ctx context.Context, key string, fields ...string) *StringSliceCmd {
+	cmd := c.client.B().Hgetex().Key(key).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) HGetEXWithArgs(ctx context.Context, key string, options *HGetEXOptions, fields ...string) *StringSliceCmd {
+	if options == nil {
+		return c.HGetEX(ctx, key, fields...)
+	}
+
+	var cmd rueidis.Completed
+	if options.ExpirationType == HGetEXExpirationEX {
+		cmd = c.client.B().Hgetex().Key(key).Ex(options.ExpirationVal).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	} else if options.ExpirationType == HGetEXExpirationPX {
+		cmd = c.client.B().Hgetex().Key(key).Px(options.ExpirationVal).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	} else if options.ExpirationType == HGetEXExpirationEXAT {
+		cmd = c.client.B().Hgetex().Key(key).Exat(options.ExpirationVal).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	} else if options.ExpirationType == HGetEXExpirationPXAT {
+		cmd = c.client.B().Hgetex().Key(key).Pxat(options.ExpirationVal).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	} else if options.ExpirationType == HGetEXExpirationPERSIST {
+		cmd = c.client.B().Hgetex().Key(key).Persist().Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	}
+	resp := c.client.Do(ctx, cmd)
+	return newStringSliceCmd(resp)
+}
+
+func (c *Compat) HSetEX(ctx context.Context, key string, fieldsAndValues ...string) *IntCmd {
+	partial := c.client.B().Hsetex().Key(key).Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
+
+	for i := 0; i < len(fieldsAndValues); i += 2 {
+		partial = partial.FieldValue(fieldsAndValues[i], fieldsAndValues[i+1])
+	}
+	cmd := partial.Build()
+
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) HSetEXWithArgs(ctx context.Context, key string, options *HSetEXOptions, fieldsAndValues ...string) *IntCmd {
+	if options == nil {
+		return c.HSetEX(ctx, key, fieldsAndValues...)
+	}
+
+	var partial cmds.HsetexFieldValue
+	if options.Condition == HSetEXFNX {
+		if options.ExpirationType == HSetEXExpirationEX {
+			partial = c.client.B().Hsetex().Key(key).Fnx().Ex(options.ExpirationVal).Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
+		} else if options.ExpirationType == HSetEXExpirationPX {
+			partial = c.client.B().Hsetex().Key(key).Fnx().Px(options.ExpirationVal).Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
+		} else if options.ExpirationType == HSetEXExpirationEXAT {
+			partial = c.client.B().Hsetex().Key(key).Fnx().Exat(options.ExpirationVal).Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
+		} else if options.ExpirationType == HSetEXExpirationPXAT {
+			partial = c.client.B().Hsetex().Key(key).Fnx().Pxat(options.ExpirationVal).Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
+		} else if options.ExpirationType == HSetEXExpirationKEEPTTL {
+			partial = c.client.B().Hsetex().Key(key).Fnx().Keepttl().Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
+		}
+	} else if options.Condition == HSetEXFXX {
+		if options.ExpirationType == HSetEXExpirationEX {
+			partial = c.client.B().Hsetex().Key(key).Fxx().Ex(options.ExpirationVal).Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
+		} else if options.ExpirationType == HSetEXExpirationPX {
+			partial = c.client.B().Hsetex().Key(key).Fxx().Px(options.ExpirationVal).Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
+		} else if options.ExpirationType == HSetEXExpirationEXAT {
+			partial = c.client.B().Hsetex().Key(key).Fxx().Exat(options.ExpirationVal).Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
+		} else if options.ExpirationType == HSetEXExpirationPXAT {
+			partial = c.client.B().Hsetex().Key(key).Fxx().Pxat(options.ExpirationVal).Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
+		} else if options.ExpirationType == HSetEXExpirationKEEPTTL {
+			partial = c.client.B().Hsetex().Key(key).Fxx().Keepttl().Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
+		}
+	}
+
+	for i := 0; i < len(fieldsAndValues); i += 2 {
+		partial = partial.FieldValue(fieldsAndValues[i], fieldsAndValues[i+1])
+	}
+
+	cmd := partial.Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
 }
 
 func (c *Compat) BLPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd {

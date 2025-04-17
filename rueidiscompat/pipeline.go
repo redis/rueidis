@@ -751,6 +751,36 @@ func (c *Pipeline) HPTTL(ctx context.Context, key string, fields ...string) *Int
 	return ret
 }
 
+func (c *Pipeline) HGetDel(ctx context.Context, key string, fields ...string) *StringSliceCmd {
+	ret := c.comp.HGetDel(ctx, key, fields...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) HGetEX(ctx context.Context, key string, fields ...string) *StringSliceCmd {
+	ret := c.comp.HGetEX(ctx, key, fields...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) HGetEXWithArgs(ctx context.Context, key string, options *HGetEXOptions, fields ...string) *StringSliceCmd {
+	ret := c.comp.HGetEXWithArgs(ctx, key, options, fields...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) HSetEX(ctx context.Context, key string, fieldsAndValues ...string) *IntCmd {
+	ret := c.comp.HSetEX(ctx, key, fieldsAndValues...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) HSetEXWithArgs(ctx context.Context, key string, options *HSetEXOptions, fieldsAndValues ...string) *IntCmd {
+	ret := c.comp.HSetEXWithArgs(ctx, key, options, fieldsAndValues...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) BLPop(ctx context.Context, timeout time.Duration, keys ...string) *StringSliceCmd {
 	ret := c.comp.BLPop(ctx, timeout, keys...)
 	c.rets = append(c.rets, ret)
