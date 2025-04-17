@@ -1573,6 +1573,10 @@ func (c *Compat) HGetEX(ctx context.Context, key string, fields ...string) *Stri
 }
 
 func (c *Compat) HGetEXWithArgs(ctx context.Context, key string, options *HGetEXOptions, fields ...string) *StringSliceCmd {
+	if options == nil {
+		return c.HGetEX(ctx, key, fields...)
+	}
+
 	var cmd rueidis.Completed
 	if options.ExpirationType == HGetEXExpirationEX {
 		cmd = c.client.B().Hgetex().Key(key).Ex(options.ExpirationVal).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
@@ -1602,6 +1606,10 @@ func (c *Compat) HSetEX(ctx context.Context, key string, fieldsAndValues ...stri
 }
 
 func (c *Compat) HSetEXWithArgs(ctx context.Context, key string, options *HSetEXOptions, fieldsAndValues ...string) *IntCmd {
+	if options == nil {
+		return c.HSetEX(ctx, key, fieldsAndValues...)
+	}
+
 	var partial cmds.HsetexFieldValue
 	if options.Condition == HSetEXFNX {
 		if options.ExpirationType == HSetEXExpirationEX {
