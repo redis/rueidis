@@ -15,6 +15,7 @@ type singleClient struct {
 	stop         uint32
 	cmd          Builder
 	retry        bool
+	hasLftm      bool
 	DisableCache bool
 }
 
@@ -32,11 +33,11 @@ func newSingleClient(opt *ClientOption, prev conn, connFn connFn, retryer retryH
 	if err := conn.Dial(); err != nil {
 		return nil, err
 	}
-	return newSingleClientWithConn(conn, cmds.NewBuilder(cmds.NoSlot), !opt.DisableRetry, opt.DisableCache, retryer), nil
+	return newSingleClientWithConn(conn, cmds.NewBuilder(cmds.NoSlot), !opt.DisableRetry, opt.DisableCache, retryer, opt.ConnLifetime > 0), nil
 }
 
-func newSingleClientWithConn(conn conn, builder Builder, retry, disableCache bool, retryer retryHandler) *singleClient {
-	return &singleClient{cmd: builder, conn: conn, retry: retry, retryHandler: retryer, DisableCache: disableCache}
+func newSingleClientWithConn(conn conn, builder Builder, retry, disableCache bool, retryer retryHandler, hasLftm bool) *singleClient {
+	return &singleClient{cmd: builder, conn: conn, retry: retry, retryHandler: retryer, hasLftm: hasLftm, DisableCache: disableCache}
 }
 
 func (c *singleClient) B() Builder {
@@ -89,8 +90,21 @@ func (c *singleClient) DoMulti(ctx context.Context, multi ...Completed) (resps [
 	attempts := 1
 retry:
 	resps = c.conn.DoMulti(ctx, multi...).s
-	if resps[0].Error() == errConnExpired {
-		goto retry
+	if c.hasLftm {
+		var ml []Completed
+	recover:
+		ml = ml[:0]
+		for i, resp := range resps {
+			if resp.Error() == errConnExpired {
+				ml = multi[i:]
+				break
+			}
+		}
+		if len(ml) > 0 {
+			rs := c.conn.DoMulti(ctx, ml...).s
+			resps = append(resps[:len(resps)-len(rs)], rs...)
+			goto recover
+		}
 	}
 	if c.retry && allReadOnly(multi) {
 		for i, resp := range resps {

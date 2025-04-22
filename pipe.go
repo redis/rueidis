@@ -504,6 +504,9 @@ func (p *pipe) _backgroundRead() (err error) {
 
 	defer func() {
 		resp := newErrResult(err)
+		if e := p.Error(); e == errConnExpired {
+			resp = newErrResult(e)
+		}
 		if err != nil && ff < len(multi) {
 			for ; ff < len(resps); ff++ {
 				resps[ff] = resp

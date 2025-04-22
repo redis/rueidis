@@ -1424,6 +1424,81 @@ func TestSingleClientLoadingRetry(t *testing.T) {
 	})
 }
 
+func TestSingleClientConnLifetime(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+
+	setup := func() (*singleClient, *mockConn) {
+		m := &mockConn{}
+		client, err := newSingleClient(
+			&ClientOption{InitAddress: []string{""}, ConnLifetime: 5 * time.Second},
+			m,
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		return client, m
+	}
+
+	t.Run("Do", func(t *testing.T) {
+		client, m := setup()
+		m.DoFn = func(cmd Completed) RedisResult {
+			return newResult(strmsg('+', "OK"), nil)
+		}
+		if v, err := client.Do(context.Background(), client.B().Get().Key("Do").Build()).ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMulti", func(t *testing.T) {
+		client, m := setup()
+		m.DoMultiFn = func(multi ...Completed) *redisresults {
+			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+		}
+		if v, err := client.DoMulti(context.Background(), client.B().Get().Key("Do").Build())[0].ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMulti ConnLifetime - at the head of processing", func(t *testing.T) {
+		client, m := setup()
+		attempts := 0
+		m.DoMultiFn = func(multi ...Completed) *redisresults {
+			attempts++
+			if attempts == 1 {
+				return &redisresults{s: []RedisResult{newErrResult(errConnExpired)}}
+			}
+			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+		}
+		if v, err := client.DoMulti(context.Background(), client.B().Get().Key("Do").Build())[0].ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMulti ConnLifetime in the middle of processing", func(t *testing.T) {
+		client, m := setup()
+		attempts := 0
+		m.DoMultiFn = func(multi ...Completed) *redisresults {
+			attempts++
+			if attempts == 1 {
+				return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil), newErrResult(errConnExpired)}}
+			}
+			// recover the failure of the first call
+			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+		}
+		resps := client.DoMulti(context.Background(), client.B().Get().Key("Do").Build(), client.B().Get().Key("Do").Build())
+		if len(resps) != 2 {
+			t.Errorf("unexpected response length %v", len(resps))
+		}
+		for _, resp := range resps {
+			if v, err := resp.ToString(); err != nil || v != "OK" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+	})
+}
+
 func BenchmarkSingleClient_DoCache(b *testing.B) {
 	ctx := context.Background()
 	client, err := NewClient(ClientOption{InitAddress: []string{"127.0.0.1:6379"}, Dialer: net.Dialer{KeepAlive: -1}})
