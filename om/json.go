@@ -150,47 +150,66 @@ func (r *JSONRepository[T]) CreateIndex(ctx context.Context, cmdFn func(schema F
 func (r *JSONRepository[T]) CreateAndAliasIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) rueidis.Completed) error {
 	alias := r.idx
 
-	aliasExists := true
 	var currentIndex string
-
-	if err := r.client.Do(ctx, r.client.B().FtInfo().Index(alias).Build()).Error(); err != nil {
-		aliasExists = false
+	aliasExists := false
+	infoCmd := r.client.B().FtInfo().Index(alias).Build()
+	infoResp, err := r.client.Do(ctx, infoCmd).ToMap()
+	if err != nil {
+		if strings.Contains(err.Error(), "Unknown index name") {
+			aliasExists = false
+		} else {
+			return fmt.Errorf("failed to check if index exists: %w", err)
+		}
 	} else {
-		// If alias exists, alias is actually an index (RediSearch doesn't return alias mappings)
-		currentIndex = alias
+		aliasExists = true
 	}
 
-	newIndex := r.idx + "_v1"
 	if aliasExists {
-		parts := strings.Split(currentIndex, "_v")
-		if len(parts) == 2 {
-			if version, err := strconv.Atoi(parts[1]); err == nil {
-				newIndex = fmt.Sprintf("%s_v%d", r.idx, version+1)
+		message, ok := infoResp["index_name"]
+		if !ok {
+			return fmt.Errorf("index_name not found in FT.INFO response")
+		}
+
+		currentIndex, err = message.ToString()
+		if err != nil {
+			return fmt.Errorf("failed to convert index_name to string: %w", err)
+		}
+	}
+
+	newIndex := alias + "_v1"
+	if aliasExists && currentIndex != "" {
+		lastVersionIndex := strings.LastIndex(currentIndex, "_v")
+		if lastVersionIndex != -1 && lastVersionIndex+2 < len(currentIndex) {
+			versionStr := currentIndex[lastVersionIndex+2:]
+			if version, err := strconv.Atoi(versionStr); err == nil {
+				newIndex = fmt.Sprintf("%s_v%d", alias, version+1)
 			}
 		}
 	}
 
+	// Create the new index
 	if err := r.client.Do(ctx, cmdFn(r.client.B().FtCreate().Index(newIndex).OnJson().Prefix(1).Prefix(r.prefix+":").Schema())).Error(); err != nil {
 		return err
 	}
 
+	// Update or add the alias
+	var aliasErr error
 	if aliasExists {
-		if err := r.client.Do(ctx, r.client.B().FtAliasupdate().Alias(alias).Index(newIndex).Build()).Error(); err != nil {
-			return err
-		}
+		aliasErr = r.client.Do(ctx, r.client.B().FtAliasupdate().Alias(alias).Index(newIndex).Build()).Error()
 	} else {
-		if err := r.client.Do(ctx, r.client.B().FtAliasadd().Alias(alias).Index(newIndex).Build()).Error(); err != nil {
-			return err
-		}
+		aliasErr = r.client.Do(ctx, r.client.B().FtAliasadd().Alias(alias).Index(newIndex).Build()).Error()
 	}
 
-	if aliasExists && currentIndex != "" {
+	if aliasErr != nil {
+		return fmt.Errorf("failed to update alias: %w", aliasErr)
+	}
+
+	// Drop the old index if it exists and differs from the new one
+	if aliasExists && currentIndex != "" && currentIndex != newIndex {
 		if err := r.client.Do(ctx, r.client.B().FtDropindex().Index(currentIndex).Build()).Error(); err != nil {
-			return err
+			return fmt.Errorf("failed to drop old index: %w", err)
 		}
 	}
-
-	r.idx = newIndex
 
 	return nil
 }
