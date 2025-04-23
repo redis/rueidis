@@ -134,8 +134,21 @@ func (c *singleClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL) 
 	attempts := 1
 retry:
 	resps = c.conn.DoMultiCache(ctx, multi...).s
-	if resps[0].Error() == errConnExpired {
-		goto retry
+	if c.hasLftm {
+		var ml []CacheableTTL
+	recover:
+		ml = ml[:0]
+		for i, resp := range resps {
+			if resp.Error() == errConnExpired {
+				ml = multi[i:]
+				break
+			}
+		}
+		if len(ml) > 0 {
+			rs := c.conn.DoMultiCache(ctx, ml...).s
+			resps = append(resps[:len(resps)-len(rs)], rs...)
+			goto recover
+		}
 	}
 	if c.retry {
 		for i, resp := range resps {

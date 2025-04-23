@@ -1497,6 +1497,55 @@ func TestSingleClientConnLifetime(t *testing.T) {
 			}
 		}
 	})
+
+	t.Run("DoMultiCache", func(t *testing.T) {
+		client, m := setup()
+		m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
+			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+		}
+		cmd := client.B().Get().Key("Do").Cache()
+		if v, err := client.DoMultiCache(context.Background(), CT(cmd, 0))[0].ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMultiCache ConnLifetime - at the head of processing", func(t *testing.T) {
+		client, m := setup()
+		attempts := 0
+		m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
+			attempts++
+			if attempts == 1 {
+				return &redisresults{s: []RedisResult{newErrResult(errConnExpired)}}
+			}
+			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+		}
+		cmd := client.B().Get().Key("Do").Cache()
+		if v, err := client.DoMultiCache(context.Background(), CT(cmd, 0))[0].ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMultiCache ConnLifetime in the middle of processing", func(t *testing.T) {
+		client, m := setup()
+		attempts := 0
+		m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
+			attempts++
+			if attempts == 1 {
+				return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil), newErrResult(errConnExpired)}}
+			}
+			// recover the failure of the first call
+			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+		}
+		resps := client.DoMultiCache(context.Background(), CT(client.B().Get().Key("Do").Cache(), 0), CT(client.B().Get().Key("Do").Cache(), 0))
+		if len(resps) != 2 {
+			t.Errorf("unexpected response length %v", len(resps))
+		}
+		for _, resp := range resps {
+			if v, err := resp.ToString(); err != nil || v != "OK" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+	})
 }
 
 func BenchmarkSingleClient_DoCache(b *testing.B) {
