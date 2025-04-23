@@ -18,7 +18,7 @@ func newStandaloneClient(opt *ClientOption, connFn connFn, retryer retryHandler)
 	}
 	s := &standalone{
 		toReplicas: opt.SendToReplicas,
-		primary:    newSingleClientWithConn(p, cmds.NewBuilder(cmds.NoSlot), !opt.DisableRetry, opt.DisableCache, retryer),
+		primary:    newSingleClientWithConn(p, cmds.NewBuilder(cmds.NoSlot), !opt.DisableRetry, opt.DisableCache, retryer, false),
 		replicas:   make([]*singleClient, len(opt.Standalone.ReplicaAddress)),
 	}
 	opt.ReplicaOnly = true
@@ -31,7 +31,7 @@ func newStandaloneClient(opt *ClientOption, connFn connFn, retryer retryHandler)
 			}
 			return nil, err
 		}
-		s.replicas[i] = newSingleClientWithConn(replicaConn, cmds.NewBuilder(cmds.NoSlot), !opt.DisableRetry, opt.DisableCache, retryer)
+		s.replicas[i] = newSingleClientWithConn(replicaConn, cmds.NewBuilder(cmds.NoSlot), !opt.DisableRetry, opt.DisableCache, retryer, false)
 	}
 	return s, nil
 }

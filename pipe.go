@@ -55,6 +55,8 @@ type wire interface {
 	CleanSubscriptions()
 	SetPubSubHooks(hooks PubSubHooks) <-chan error
 	SetOnCloseHook(fn func(error))
+	StopTimer() bool
+	ResetTimer() bool
 }
 
 var _ wire = (*pipe)(nil)
@@ -77,11 +79,13 @@ type pipe struct {
 	psubs           *subs                                      // pubsub pmessage subscriptions
 	pingTimer       *time.Timer                                // timer for background ping
 	info            map[string]RedisMessage
+	lftmTimer       *time.Timer // lifetime timer
 	timeout         time.Duration
 	pinggap         time.Duration
 	maxFlushDelay   time.Duration
-	r2mu            sync.Mutex
 	wrCounter       atomic.Uint64
+	lftm            time.Duration // lifetime
+	r2mu            sync.Mutex
 	version         int32
 	blcksig         int32
 	state           int32
@@ -328,6 +332,10 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 			p.backgroundPing()
 		}
 	}
+	if option.ConnLifetime > 0 {
+		p.lftm = option.ConnLifetime
+		p.lftmTimer = time.AfterFunc(option.ConnLifetime, p.expired)
+	}
 	return p, nil
 }
 
@@ -344,6 +352,7 @@ func (p *pipe) _exit(err error) {
 	p.error.CompareAndSwap(nil, &errs{error: err})
 	atomic.CompareAndSwapInt32(&p.state, 1, 2) // stop accepting new requests
 	_ = p.conn.Close()                         // force both read & write goroutine to exit
+	p.StopTimer()
 	p.clhks.Load().(func(error))(err)
 }
 
@@ -495,6 +504,9 @@ func (p *pipe) _backgroundRead() (err error) {
 
 	defer func() {
 		resp := newErrResult(err)
+		if e := p.Error(); e == errConnExpired {
+			resp = newErrResult(e)
+		}
 		if err != nil && ff < len(multi) {
 			for ; ff < len(resps); ff++ {
 				resps[ff] = resp
@@ -1633,6 +1645,25 @@ func (p *pipe) Close() {
 	p.r2mu.Unlock()
 }
 
+func (p *pipe) StopTimer() bool {
+	if p.lftmTimer == nil {
+		return true
+	}
+	return p.lftmTimer.Stop()
+}
+
+func (p *pipe) ResetTimer() bool {
+	if p.lftmTimer == nil || p.Error() != nil {
+		return true
+	}
+	return p.lftmTimer.Reset(p.lftm)
+}
+
+func (p *pipe) expired() {
+	p.error.CompareAndSwap(nil, errExpired)
+	p.Close()
+}
+
 type pshks struct {
 	hooks PubSubHooks
 	close chan error
@@ -1672,6 +1703,9 @@ const (
 )
 
 var cacheMark = &(RedisMessage{})
-var errClosing = &errs{error: ErrClosing}
+var (
+	errClosing = &errs{error: ErrClosing}
+	errExpired = &errs{error: errConnExpired}
+)
 
 type errs struct{ error }
