@@ -1,5 +1,8 @@
 name: Tag Prefix Workflow
 
+permissions:
+  contents: write
+
 on:
   push:
     tags:
