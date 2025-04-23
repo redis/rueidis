@@ -1,6 +1,6 @@
 # rueidislock
 
-A [Redis Distributed Lock Pattern](https://redis.io/docs/reference/patterns/distributed-locks/) enhanced by [Client Side Caching](https://redis.io/docs/manual/client-side-caching/).
+A [Redis Distributed Lock Pattern](https://redis.io/docs/latest/develop/use/patterns/distributed-locks/) enhanced by [Client Side Caching](https://redis.io/docs/manual/client-side-caching/).
 
 ```go
 package main
