@@ -1,5 +1,8 @@
 name: Go Modules Test
 
+permissions:
+  contents: read
+
 on: [push, pull_request]
 
 # https://docs.github.com/en/actions/learn-github-actions/expressions
