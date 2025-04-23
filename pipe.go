@@ -79,19 +79,19 @@ type pipe struct {
 	psubs           *subs                                      // pubsub pmessage subscriptions
 	pingTimer       *time.Timer                                // timer for background ping
 	info            map[string]RedisMessage
+	lftmTimer       *time.Timer // lifetime timer
 	timeout         time.Duration
 	pinggap         time.Duration
 	maxFlushDelay   time.Duration
-	r2mu            sync.Mutex
 	wrCounter       atomic.Uint64
+	lftm            time.Duration // lifetime
+	r2mu            sync.Mutex
 	version         int32
 	blcksig         int32
 	state           int32
 	bgState         int32
 	r2ps            bool // identify this pipe is used for resp2 pubsub or not
 	noNoDelay       bool
-	lftm            time.Duration // lifetime
-	lftmTimer       *time.Timer   // lifetime timer
 	optIn           bool
 }
 
