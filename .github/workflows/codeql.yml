@@ -1,5 +1,8 @@
 name: "CodeQL"
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [ "**" ]

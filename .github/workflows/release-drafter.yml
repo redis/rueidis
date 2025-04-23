@@ -6,7 +6,8 @@ on:
     branches:
       - main
 
-permissions: {}
+permissions:
+  contents: write
 jobs:
   update_release_draft:
     permissions:
