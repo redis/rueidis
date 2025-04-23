@@ -81,6 +81,7 @@ retry:
 		// allowing others to make wires concurrently instead of waiting in line
 		p.cond.L.Unlock()
 		v = p.make(ctx)
+		v.StopTimer()
 		return v
 	}
 
@@ -88,7 +89,7 @@ retry:
 	v = p.list[i]
 	p.list[i] = nil
 	p.list = p.list[:i]
-	if v.Error() != nil {
+	if !v.StopTimer() || v.Error() != nil {
 		p.size--
 		v.Close()
 		goto retry
@@ -102,6 +103,7 @@ func (p *pool) Store(v wire) {
 	if !p.down && v.Error() == nil {
 		p.list = append(p.list, v)
 		p.startTimerIfNeeded()
+		v.ResetTimer()
 	} else {
 		p.size--
 		v.Close()

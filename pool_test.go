@@ -332,6 +332,83 @@ func TestPoolWithIdleTTL(t *testing.T) {
 	})
 }
 
+func TestPoolWithConnLifetime(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+	setup := func(wires []wire) *pool {
+		var count int32
+		return newPool(len(wires), dead, 0, 0, func(ctx context.Context) wire {
+			idx := atomic.AddInt32(&count, 1) - 1
+			return wires[idx]
+		})
+	}
+
+	t.Run("Reuse without expired connections", func(t *testing.T) {
+		stopTimerCall := 0
+		wires := []wire{
+			&mockWire{},
+			&mockWire{
+				StopTimerFn: func() bool {
+					stopTimerCall++
+					return false
+				}, // connection lifetime timer is already fired
+			},
+		}
+		conn := make([]wire, 0, len(wires))
+		pool := setup(wires)
+		for i := 0; i < len(wires); i++ {
+			conn = append(conn, pool.Acquire(context.Background()))
+		}
+		for i := 0; i < len(conn); i++ {
+			pool.Store(conn[i])
+		}
+
+		if stopTimerCall != 1 {
+			t.Errorf("StopTimer must be called when making wire")
+		}
+
+		pool.cond.L.Lock()
+		if pool.size != 2 {
+			t.Errorf("size must be equal to 2, actual: %d", pool.size)
+		}
+		if len(pool.list) != 2 {
+			t.Errorf("list len must equal to 2, actual: %d", len(pool.list))
+		}
+		pool.cond.L.Unlock()
+
+		// stop timer failed, so drop the expired connection
+		pool.Store(pool.Acquire(context.Background()))
+
+		if stopTimerCall != 2 {
+			t.Errorf("StopTimer must be called when acquiring from pool")
+		}
+
+		pool.cond.L.Lock()
+		if pool.size != 1 {
+			t.Errorf("size must be equal to 1, actual: %d", pool.size)
+		}
+		if len(pool.list) != 1 {
+			t.Errorf("list len must equal to 1, actual: %d", len(pool.list))
+		}
+		pool.cond.L.Unlock()
+	})
+
+	t.Run("Reset timer when storing to pool", func(t *testing.T) {
+		call := false
+		w := &mockWire{
+			ResetTimerFn: func() bool {
+				call = true
+				return true
+			},
+		}
+		pool := setup([]wire{w})
+		pool.Store(pool.Acquire(context.Background()))
+
+		if !call {
+			t.Error("ResetTimer must be called when storing")
+		}
+	})
+}
+
 func TestPoolWithAcquireCtx(t *testing.T) {
 	defer ShouldNotLeaked(SetupLeakDetection())
 	setup := func(size int, delay time.Duration) *pool {
