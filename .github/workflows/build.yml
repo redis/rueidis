@@ -85,7 +85,7 @@ jobs:
             done
           fi
 
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5.4.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
