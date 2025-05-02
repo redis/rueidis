@@ -914,27 +914,6 @@ func (c *clusterClient) DoCache(ctx context.Context, cmd Cacheable, ttl time.Dur
 	return resp
 }
 
-func (c *clusterClient) doMultiCache(ctx context.Context, cc conn, multi ...CacheableTTL) *redisresults {
-	resps := cc.DoMultiCache(ctx, multi...)
-	if c.hasLftm {
-		var ml []CacheableTTL
-	recover:
-		ml = ml[:0]
-		for i, resp := range resps.s {
-			if resp.Error() == errConnExpired {
-				ml = multi[i:]
-				break
-			}
-		}
-		if len(ml) > 0 {
-			rs := cc.DoMultiCache(ctx, ml...).s
-			resps.s = append(resps.s[:len(resps.s)-len(rs)], rs...)
-			goto recover
-		}
-	}
-	return resps
-}
-
 func (c *clusterClient) askingMulti(cc conn, ctx context.Context, multi []Completed) *redisresults {
 	var inTx bool
 	commands := make([]Completed, 0, len(multi)*2)
@@ -1144,7 +1123,23 @@ func (c *clusterClient) doretrycache(
 ) {
 	clean := true
 	if len(re.commands) != 0 {
-		resps := c.doMultiCache(ctx, cc, re.commands...)
+		resps := cc.DoMultiCache(ctx, re.commands...)
+		if c.hasLftm {
+			var ml []CacheableTTL
+		recover:
+			ml = ml[:0]
+			for i, resp := range resps.s {
+				if resp.Error() == errConnExpired {
+					ml = re.commands[i:]
+					break
+				}
+			}
+			if len(ml) > 0 {
+				rs := cc.DoMultiCache(ctx, ml...).s
+				resps.s = append(resps.s[:len(resps.s)-len(rs)], rs...)
+				goto recover
+			}
+		}
 		clean = c.resultcachefn(ctx, results, retries, mu, cc, re.cIndexes, re.commands, resps.s, attempts)
 		resultsp.Put(resps)
 	}

@@ -7616,9 +7616,52 @@ func TestClusterClientConnLifetime(t *testing.T) {
 		}
 	})
 
+	t.Run("Do ConnLifetime in MOVE", func(t *testing.T) {
+		client, m := setup()
+		var attempts int64
+		m.DoFn = func(cmd Completed) RedisResult {
+			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+				return slotsMultiResp
+			}
+			switch atomic.AddInt64(&attempts, 1) {
+			case 1:
+				return newResult(strmsg('-', "MOVED 0 :1"), nil)
+			case 2:
+				return newErrResult(errConnExpired)
+			}
+			return newResult(strmsg('+', "OK"), nil)
+		}
+		c := client.B().Get().Key("Do").Build()
+		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Do ConnLifetime in ASK", func(t *testing.T) {
+		client, m := setup()
+		var attempts int64
+		m.DoFn = func(cmd Completed) RedisResult {
+			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+				return slotsMultiResp
+			}
+			return newResult(strmsg('-', "ASK 0 :0"), nil)
+		}
+		m.DoMultiFn = func(multi ...Completed) *redisresults {
+			if atomic.AddInt64(&attempts, 1) == 1 {
+				return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil), newErrResult(errConnExpired)}}
+			}
+			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil), newResult(strmsg('+', "OK"), nil)}}
+		}
+		c := client.B().Get().Key("Do").Build()
+		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
 	t.Run("DoCache ConnLifetime", func(t *testing.T) {
 		client, m := setup()
 		var attempts int64
+		m.DoFn = func(cmd Completed) RedisResult { return slotsMultiResp }
 		m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
 			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
 				return slotsMultiResp
@@ -7633,9 +7676,49 @@ func TestClusterClientConnLifetime(t *testing.T) {
 		}
 	})
 
+	t.Run("DoCache ConnLifetime in MOVE", func(t *testing.T) {
+		client, m := setup()
+		var attempts int64
+		m.DoFn = func(cmd Completed) RedisResult { return slotsMultiResp }
+		m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
+			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+				return slotsMultiResp
+			}
+			switch atomic.AddInt64(&attempts, 1) {
+			case 1:
+				return newResult(strmsg('-', "MOVED 0 :1"), nil)
+			case 2:
+				return newErrResult(errConnExpired)
+			}
+			return newResult(strmsg('+', "OK"), nil)
+		}
+		if v, err := client.DoCache(context.Background(), client.B().Get().Key("Do").Cache(), 0).ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoCache ConnLifetime in ASK", func(t *testing.T) {
+		client, m := setup()
+		var attempts int64
+		m.DoFn = func(cmd Completed) RedisResult { return slotsMultiResp }
+		m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
+			return newResult(strmsg('-', "ASK 0 :0"), nil)
+		}
+		m.DoMultiFn = func(multi ...Completed) *redisresults {
+			if atomic.AddInt64(&attempts, 1) == 1 {
+				return &redisresults{s: []RedisResult{{}, newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired)}}
+			}
+			return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, newResult(slicemsg('*', []RedisMessage{{}, strmsg('+', "OK")}), nil)}}
+		}
+		if v, err := client.DoCache(context.Background(), client.B().Get().Key("Do").Cache(), 0).ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
 	t.Run("DoMulti ConnLifetime - at the head of processing", func(t *testing.T) {
 		client, m := setup()
 		var attempts int64
+		m.DoFn = func(cmd Completed) RedisResult { return slotsMultiResp }
 		m.DoMultiFn = func(multi ...Completed) *redisresults {
 			if atomic.AddInt64(&attempts, 1) == 1 {
 				return &redisresults{s: []RedisResult{newErrResult(errConnExpired)}}
@@ -7650,6 +7733,7 @@ func TestClusterClientConnLifetime(t *testing.T) {
 	t.Run("DoMulti ConnLifetime - in the middle of processing", func(t *testing.T) {
 		client, m := setup()
 		var attempts int64
+		m.DoFn = func(cmd Completed) RedisResult { return slotsMultiResp }
 		m.DoMultiFn = func(multi ...Completed) *redisresults {
 			if atomic.AddInt64(&attempts, 1) == 1 {
 				return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil), newErrResult(errConnExpired)}}
@@ -7663,6 +7747,42 @@ func TestClusterClientConnLifetime(t *testing.T) {
 		}
 		for _, resp := range resps {
 			if v, err := resp.ToString(); err != nil || v != "OK" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+	})
+
+	t.Run("DoMulti ConnLifetime in ASK - in the middle of processing", func(t *testing.T) {
+		client, m := setup()
+		var attempts int64
+		m.DoFn = func(cmd Completed) RedisResult { return slotsMultiResp }
+		m.DoMultiFn = func(multi ...Completed) *redisresults {
+			ret := make([]RedisResult, len(multi))
+			switch atomic.AddInt64(&attempts, 1) {
+			case 1:
+				for i := range ret {
+					ret[i] = newResult(strmsg('-', "ASK 0 :1"), nil)
+				}
+				return &redisresults{s: ret}
+			case 2:
+				return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired)}}
+			}
+			for i := 0; i < len(multi); i += 2 {
+				ret[i] = newResult(strmsg('+', "OK"), nil)
+				ret[i+1] = newResult(strmsg('+', multi[i+1].Commands()[1]), nil)
+			}
+			return &redisresults{s: ret}
+		}
+		resps := client.DoMulti(context.Background(), client.B().Get().Key("a").Build(), client.B().Get().Key("b").Build())
+		if len(resps) != 2 {
+			t.Errorf("unexpected response length %v", len(resps))
+		}
+		for i, resp := range resps {
+			v, err := resp.ToString()
+			if err != nil || i == 0 && v != "a" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+			if err != nil || i == 1 && v != "b" {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
 		}
