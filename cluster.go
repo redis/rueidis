@@ -523,9 +523,10 @@ process:
 	switch addr, mode := c.shouldRefreshRetry(resp.Error(), ctx); mode {
 	case RedirectMove:
 		ncc := c.redirectOrNew(addr, cc, cmd.Slot(), mode)
+	recover:
 		resp = ncc.Do(ctx, cmd)
 		if resp.Error() == errConnExpired {
-			goto retry
+			goto recover
 		}
 		goto process
 	case RedirectAsk:
@@ -861,9 +862,11 @@ retry:
 process:
 	switch addr, mode := c.shouldRefreshRetry(resp.Error(), ctx); mode {
 	case RedirectMove:
-		resp = c.redirectOrNew(addr, cc, cmd.Slot(), mode).DoCache(ctx, cmd, ttl)
+		ncc := c.redirectOrNew(addr, cc, cmd.Slot(), mode)
+	recover:
+		resp = ncc.DoCache(ctx, cmd, ttl)
 		if resp.Error() == errConnExpired {
-			goto retry
+			goto recover
 		}
 		goto process
 	case RedirectAsk:
