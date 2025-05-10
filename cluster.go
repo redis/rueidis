@@ -774,10 +774,21 @@ func (c *clusterClient) doretry(
 			var ml []Completed
 		recover:
 			ml = ml[:0]
+			var txIdx int // check transaction block, if zero then not in transaction
 			for i, resp := range resps.s {
 				if resp.Error() == errConnExpired {
-					ml = re.commands[i:]
+					if txIdx > 0 {
+						ml = re.commands[txIdx:]
+					} else {
+						ml = re.commands[i:]
+					}
 					break
+				}
+				// if no error then check if transaction block
+				if isMulti(re.commands[i]) {
+					txIdx = i
+				} else if isExec(re.commands[i]) {
+					txIdx = 0
 				}
 			}
 			if len(ml) > 0 {
@@ -932,13 +943,13 @@ func (c *clusterClient) askingMulti(cc conn, ctx context.Context, multi []Comple
 		var ml []Completed
 	recover:
 		ml = ml[:0]
+		var askingIdx int
 		for i, resp := range resps.s {
+			if commands[i] == cmds.AskingCmd {
+				askingIdx = i
+			}
 			if resp.Error() == errConnExpired {
-				if i > 0 && commands[i-1] == cmds.AskingCmd {
-					ml = commands[i-1:]
-				} else {
-					ml = commands[i:]
-				}
+				ml = commands[askingIdx:]
 				break
 			}
 		}
@@ -969,9 +980,9 @@ func (c *clusterClient) askingMultiCache(cc conn, ctx context.Context, multi []C
 		var ml []Completed
 	recover:
 		ml = ml[:0]
-		for i, resp := range resps.s {
-			if resp.Error() == errConnExpired {
-				ml = commands[(i/6)*6:]
+		for i := 5; i < len(resps.s); i += 6 { // check exec command error only
+			if resps.s[i].Error() == errConnExpired {
+				ml = commands[i-5:]
 				break
 			}
 		}
