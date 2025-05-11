@@ -94,10 +94,21 @@ retry:
 		var ml []Completed
 	recover:
 		ml = ml[:0]
+		var txIdx int // check transaction block, if zero then not in transaction
 		for i, resp := range resps {
 			if resp.Error() == errConnExpired {
-				ml = multi[i:]
+				if txIdx > 0 {
+					ml = multi[txIdx:]
+				} else {
+					ml = multi[i:]
+				}
 				break
+			}
+			// if no error then check if transaction block
+			if isMulti(multi[i]) {
+				txIdx = i
+			} else if isExec(multi[i]) {
+				txIdx = 0
 			}
 		}
 		if len(ml) > 0 {
