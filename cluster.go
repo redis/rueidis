@@ -516,7 +516,7 @@ retry:
 		return newErrResult(err)
 	}
 	resp = cc.Do(ctx, cmd)
-	if resp.Error() == errConnExpired {
+	if resp.NonRedisError() == errConnExpired {
 		goto retry
 	}
 process:
@@ -525,7 +525,7 @@ process:
 		ncc := c.redirectOrNew(addr, cc, cmd.Slot(), mode)
 	recover1:
 		resp = ncc.Do(ctx, cmd)
-		if resp.Error() == errConnExpired {
+		if resp.NonRedisError() == errConnExpired {
 			goto recover1
 		}
 		goto process
@@ -534,7 +534,7 @@ process:
 	recover2:
 		results := ncc.DoMulti(ctx, cmds.AskingCmd, cmd)
 		resp = results.s[1]
-		if resp.Error() == errConnExpired {
+		if resp.NonRedisError() == errConnExpired {
 			goto recover2
 		}
 		resultsp.Put(results)
@@ -776,7 +776,7 @@ func (c *clusterClient) doretry(
 			ml = ml[:0]
 			var txIdx int // check transaction block, if zero then not in transaction
 			for i, resp := range resps.s {
-				if resp.Error() == errConnExpired {
+				if resp.NonRedisError() == errConnExpired {
 					if txIdx > 0 {
 						ml = re.commands[txIdx:]
 					} else {
@@ -887,7 +887,7 @@ retry:
 		return newErrResult(err)
 	}
 	resp = cc.DoCache(ctx, cmd, ttl)
-	if resp.Error() == errConnExpired {
+	if resp.NonRedisError() == errConnExpired {
 		goto retry
 	}
 process:
@@ -896,7 +896,7 @@ process:
 		ncc := c.redirectOrNew(addr, cc, cmd.Slot(), mode)
 	recover:
 		resp = ncc.DoCache(ctx, cmd, ttl)
-		if resp.Error() == errConnExpired {
+		if resp.NonRedisError() == errConnExpired {
 			goto recover
 		}
 		goto process
@@ -948,7 +948,7 @@ func (c *clusterClient) askingMulti(cc conn, ctx context.Context, multi []Comple
 			if commands[i] == cmds.AskingCmd {
 				askingIdx = i
 			}
-			if resp.Error() == errConnExpired {
+			if resp.NonRedisError() == errConnExpired {
 				ml = commands[askingIdx:]
 				break
 			}
@@ -981,7 +981,7 @@ func (c *clusterClient) askingMultiCache(cc conn, ctx context.Context, multi []C
 	recover:
 		ml = ml[:0]
 		for i := 5; i < len(resps.s); i += 6 { // check exec command error only
-			if resps.s[i].Error() == errConnExpired {
+			if resps.s[i].NonRedisError() == errConnExpired {
 				ml = commands[i-5:]
 				break
 			}
@@ -1140,7 +1140,7 @@ func (c *clusterClient) doretrycache(
 		recover:
 			ml = ml[:0]
 			for i, resp := range resps.s {
-				if resp.Error() == errConnExpired {
+				if resp.NonRedisError() == errConnExpired {
 					ml = re.commands[i:]
 					break
 				}

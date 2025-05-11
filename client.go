@@ -48,16 +48,15 @@ func (c *singleClient) Do(ctx context.Context, cmd Completed) (resp RedisResult)
 	attempts := 1
 retry:
 	resp = c.conn.Do(ctx, cmd)
-	if resp.Error() == errConnExpired {
-		goto retry
-	}
-	if c.retry && cmd.IsReadOnly() && c.isRetryable(resp.Error(), ctx) {
-		shouldRetry := c.retryHandler.WaitOrSkipRetry(
-			ctx, attempts, cmd, resp.Error(),
-		)
-		if shouldRetry {
-			attempts++
+	if err := resp.Error(); err != nil {
+		if err == errConnExpired {
 			goto retry
+		}
+		if c.retry && cmd.IsReadOnly() && c.isRetryable(err, ctx) {
+			if c.retryHandler.WaitOrSkipRetry(ctx, attempts, cmd, err) {
+				attempts++
+				goto retry
+			}
 		}
 	}
 	if resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
@@ -96,7 +95,7 @@ retry:
 		ml = ml[:0]
 		var txIdx int // check transaction block, if zero then not in transaction
 		for i, resp := range resps {
-			if resp.Error() == errConnExpired {
+			if resp.NonRedisError() == errConnExpired {
 				if txIdx > 0 {
 					ml = multi[txIdx:]
 				} else {
@@ -150,7 +149,7 @@ retry:
 	recover:
 		ml = ml[:0]
 		for i, resp := range resps {
-			if resp.Error() == errConnExpired {
+			if resp.NonRedisError() == errConnExpired {
 				ml = multi[i:]
 				break
 			}
@@ -186,14 +185,15 @@ func (c *singleClient) DoCache(ctx context.Context, cmd Cacheable, ttl time.Dura
 	attempts := 1
 retry:
 	resp = c.conn.DoCache(ctx, cmd, ttl)
-	if resp.Error() == errConnExpired {
-		goto retry
-	}
-	if c.retry && c.isRetryable(resp.Error(), ctx) {
-		shouldRetry := c.retryHandler.WaitOrSkipRetry(ctx, attempts, Completed(cmd), resp.Error())
-		if shouldRetry {
-			attempts++
+	if err := resp.Error(); err != nil {
+		if err == errConnExpired {
 			goto retry
+		}
+		if c.retry && c.isRetryable(err, ctx) {
+			if c.retryHandler.WaitOrSkipRetry(ctx, attempts, Completed(cmd), err) {
+				attempts++
+				goto retry
+			}
 		}
 	}
 	if err := resp.NonRedisError(); err == nil || err == ErrDoCacheAborted {
