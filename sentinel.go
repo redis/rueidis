@@ -68,16 +68,15 @@ func (c *sentinelClient) Do(ctx context.Context, cmd Completed) (resp RedisResul
 	attempts := 1
 retry:
 	resp = c.mConn.Load().(conn).Do(ctx, cmd)
-	if resp.Error() == errConnExpired {
-		goto retry
-	}
-	if c.retry && cmd.IsReadOnly() && c.isRetryable(resp.Error(), ctx) {
-		shouldRetry := c.retryHandler.WaitOrSkipRetry(
-			ctx, attempts, cmd, resp.Error(),
-		)
-		if shouldRetry {
-			attempts++
+	if err := resp.Error(); err != nil {
+		if err == errConnExpired {
 			goto retry
+		}
+		if c.retry && cmd.IsReadOnly() && c.isRetryable(err, ctx) {
+			if c.retryHandler.WaitOrSkipRetry(ctx, attempts, cmd, err) {
+				attempts++
+				goto retry
+			}
 		}
 	}
 	if resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
@@ -101,7 +100,7 @@ retry:
 		ml = ml[:0]
 		var txIdx int // check transaction block, if zero then not in transaction
 		for i, resp := range resps.s {
-			if resp.Error() == errConnExpired {
+			if resp.NonRedisError() == errConnExpired {
 				if txIdx > 0 {
 					ml = multi[txIdx:]
 				} else {
@@ -148,16 +147,16 @@ func (c *sentinelClient) DoCache(ctx context.Context, cmd Cacheable, ttl time.Du
 	attempts := 1
 retry:
 	resp = c.mConn.Load().(conn).DoCache(ctx, cmd, ttl)
-	if resp.Error() == errConnExpired {
-		goto retry
-	}
-	if c.retry && c.isRetryable(resp.Error(), ctx) {
-		shouldRetry := c.retryHandler.WaitOrSkipRetry(ctx, attempts, Completed(cmd), resp.Error())
-		if shouldRetry {
-			attempts++
+	if err := resp.Error(); err != nil {
+		if err == errConnExpired {
 			goto retry
 		}
-
+		if c.retry && c.isRetryable(err, ctx) {
+			if c.retryHandler.WaitOrSkipRetry(ctx, attempts, Completed(cmd), err) {
+				attempts++
+				goto retry
+			}
+		}
 	}
 	if err := resp.NonRedisError(); err == nil || err == ErrDoCacheAborted {
 		cmds.PutCacheable(cmd)
@@ -178,7 +177,7 @@ retry:
 	recover:
 		ml = ml[:0]
 		for i, resp := range resps.s {
-			if resp.Error() == errConnExpired {
+			if resp.NonRedisError() == errConnExpired {
 				ml = multi[i:]
 				break
 			}
