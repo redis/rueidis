@@ -1749,3 +1749,249 @@ func TestSentinelClientLoadingRetry(t *testing.T) {
 		}
 	})
 }
+
+func TestSentinelClientConnLifetime(t *testing.T) {
+	defer ShouldNotLeaked(SetupLeakDetection())
+
+	setup := func() (*sentinelClient, *mockConn, *mockConn) {
+		s0 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{
+					{val: slicemsg('*', []RedisMessage{})},
+					{val: slicemsg('*', []RedisMessage{
+						strmsg('+', ""), strmsg('+', "1"),
+					})},
+				}}
+			},
+		}
+		m1 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				if cmd == cmds.RoleCmd {
+					return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "master")})}
+				}
+				return RedisResult{}
+			},
+			AddrFn: func() string { return ":1" },
+		}
+		client, err := newSentinelClient(
+			&ClientOption{InitAddress: []string{":0"}, ConnLifetime: 1 * time.Second},
+			func(dst string, opt *ClientOption) conn {
+				if dst == ":0" {
+					return s0
+				}
+				if dst == ":1" {
+					return m1
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		return client, s0, m1
+	}
+
+	t.Run("Do ConnLifetime", func(t *testing.T) {
+		client, _, m := setup()
+		var attempts int64
+		m.DoFn = func(cmd Completed) RedisResult {
+			if atomic.AddInt64(&attempts, 1) == 1 {
+				return newErrResult(errConnExpired)
+			}
+			return newResult(strmsg('+', "OK"), nil)
+		}
+		if v, err := client.Do(context.Background(), client.B().Get().Key("Do").Build()).ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoCache ConnLifetime", func(t *testing.T) {
+		client, _, m := setup()
+		var attempts int64
+		m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
+			if atomic.AddInt64(&attempts, 1) == 1 {
+				return newErrResult(errConnExpired)
+			}
+			return newResult(strmsg('+', "OK"), nil)
+		}
+		if v, err := client.DoCache(context.Background(), client.B().Get().Key("Do").Cache(), 0).ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMulti ConnLifetime - at the head of processing", func(t *testing.T) {
+		client, _, m := setup()
+		var attempts int64
+		m.DoMultiFn = func(multi ...Completed) *redisresults {
+			if atomic.AddInt64(&attempts, 1) == 1 {
+				return &redisresults{s: []RedisResult{newErrResult(errConnExpired)}}
+			}
+			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+		}
+		if v, err := client.DoMulti(context.Background(), client.B().Get().Key("Do").Build())[0].ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMulti ConnLifetime - in the middle of processing", func(t *testing.T) {
+		client, _, m := setup()
+		var attempts int64
+		m.DoMultiFn = func(multi ...Completed) *redisresults {
+			if atomic.AddInt64(&attempts, 1) == 1 {
+				return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil), newErrResult(errConnExpired)}}
+			}
+			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+		}
+		resps := client.DoMulti(context.Background(), client.B().Get().Key("Do").Build(), client.B().Get().Key("Do").Build())
+		if len(resps) != 2 {
+			t.Errorf("unexpected response length %v", len(resps))
+		}
+		for _, resp := range resps {
+			if v, err := resp.ToString(); err != nil || v != "OK" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+	})
+
+	t.Run("DoMulti ConnLifetime Transaction Block", func(t *testing.T) {
+		client, _, m := setup()
+		var (
+			attempts int64
+			orgMulti []Completed
+		)
+		m.DoMultiFn = func(multi ...Completed) *redisresults {
+			switch atomic.AddInt64(&attempts, 1) {
+			case 1: // errConnExpired at the head of processing
+				orgMulti = multi
+				return &redisresults{s: []RedisResult{newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired)}}
+			case 2: // errConnExpired at Multi Command
+				if len(multi) != 6 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[0].Commands()) {
+					t.Fatalf("unexpected multi when errConnExpired occurred at the head of proccessing, %v", multi)
+				}
+				return &redisresults{s: []RedisResult{
+					newResult(strmsg('+', "1"), nil),
+					newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired),
+				}}
+			case 3: // errConnExpired in the middle of transaction block
+				if len(multi) != 5 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[1].Commands()) {
+					t.Fatalf("unexpected multi when errConnExpired occurred at Multi Command, %v", multi)
+				}
+				return &redisresults{s: []RedisResult{
+					newResult(strmsg('+', "OK"), nil),
+					newResult(strmsg('+', "QUEUE"), nil),
+					newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired),
+				}}
+			case 4: // errConnExpired at Exec Command
+				if len(multi) != 5 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[1].Commands()) {
+					t.Fatalf("unexpected multi when errConnExpired occurred in the middle of transaction block, %v", multi)
+				}
+				return &redisresults{s: []RedisResult{
+					newResult(strmsg('+', "OK"), nil),
+					newResult(strmsg('+', "QUEUE"), nil),
+					newResult(strmsg('+', "QUEUE"), nil),
+					newErrResult(errConnExpired), newErrResult(errConnExpired)}}
+			case 5: // errConnExpired at end of processing
+				if len(multi) != 5 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[1].Commands()) {
+					t.Fatalf("unexpected multi when errConnExpired occurred at at Exec Command, %v", multi)
+				}
+				return &redisresults{s: []RedisResult{
+					newResult(strmsg('+', "OK"), nil),
+					newResult(strmsg('+', "QUEUE"), nil),
+					newResult(strmsg('+', "QUEUE"), nil),
+					newResult(slicemsg('*', []RedisMessage{
+						strmsg('+', "2"),
+						strmsg('+', "3"),
+					}), nil),
+					newErrResult(errConnExpired),
+				}}
+			case 6:
+				if len(multi) != 1 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[5].Commands()) {
+					t.Fatalf("unexpected multi when errConnExpired occurred at end of processing, %v", multi)
+				}
+			}
+			return &redisresults{s: []RedisResult{newResult(strmsg('+', "4"), nil)}}
+		}
+		multi := []Completed{
+			client.B().Get().Key("1{t}").Build(),
+			client.B().Multi().Build(),
+			client.B().Get().Key("2{t}").Build(),
+			client.B().Get().Key("3{t}").Build(),
+			client.B().Exec().Build(),
+			client.B().Get().Key("4{t}").Build(),
+		}
+		resps := client.DoMulti(context.Background(), multi...)
+		if len(resps) != 6 {
+			t.Fatalf("unexpected response length %v", len(resps))
+		}
+		if v, err := resps[0].ToString(); err != nil || v != "1" {
+			t.Errorf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); err != nil || v != "OK" {
+			t.Errorf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[2].ToString(); err != nil || v != "QUEUE" {
+			t.Errorf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[3].ToString(); err != nil || v != "QUEUE" {
+			t.Errorf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[4].AsStrSlice(); err != nil || !reflect.DeepEqual(v, []string{"2", "3"}) {
+			t.Errorf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[5].ToString(); err != nil || v != "4" {
+			t.Errorf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMultiCache ConnLifetime - at the head of processing", func(t *testing.T) {
+		client, _, m := setup()
+		var attempts int64
+		m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
+			if atomic.AddInt64(&attempts, 1) == 1 {
+				return &redisresults{s: []RedisResult{newErrResult(errConnExpired)}}
+			}
+			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+		}
+		if v, err := client.DoMultiCache(context.Background(), CT(client.B().Get().Key("Do").Cache(), 0))[0].ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMultiCache ConnLifetime - in the middle of processing", func(t *testing.T) {
+		client, _, m := setup()
+		var attempts int64
+		m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
+			if atomic.AddInt64(&attempts, 1) == 1 {
+				return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil), newErrResult(errConnExpired)}}
+			}
+			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+		}
+		resps := client.DoMultiCache(context.Background(), CT(client.B().Get().Key("Do").Cache(), 0), CT(client.B().Get().Key("Do").Cache(), 0))
+		if len(resps) != 2 {
+			t.Errorf("unexpected response length %v", len(resps))
+		}
+		for _, resp := range resps {
+			if v, err := resp.ToString(); err != nil || v != "OK" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+	})
+
+	t.Run("Receive ConnLifetime", func(t *testing.T) {
+		client, _, m := setup()
+		c := client.B().Subscribe().Channel("ch").Build()
+		hdl := func(message PubSubMessage) {}
+		var attempts int64
+		m.ReceiveFn = func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+			if atomic.AddInt64(&attempts, 1) == 1 {
+				return errConnExpired
+			}
+			return nil
+		}
+		if err := client.Receive(context.Background(), c, hdl); err != nil {
+			t.Fatalf("unexpected response %v", err)
+		}
+	})
+}
