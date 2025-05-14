@@ -14,7 +14,7 @@ import (
 	"github.com/redis/rueidis/internal/util"
 )
 
-// ErrNoSlot indicates that there is no redis node owns the key slot.
+// ErrNoSlot indicates that there is no redis node owning the key slot.
 var ErrNoSlot = errors.New("the slot has no redis node")
 var ErrReplicaOnlyConflict = errors.New("ReplicaOnly conflicts with SendToReplicas option")
 var ErrInvalidShardsRefreshInterval = errors.New("ShardsRefreshInterval must be greater than or equal to 0")
@@ -117,7 +117,7 @@ func (c *clusterClient) init() error {
 			if err := cc.Dial(); err == nil {
 				c.mu.Lock()
 				if _, ok := c.conns[addr]; ok {
-					go cc.Close() // abort the new connection instead of closing the old one which may already been used
+					go cc.Close() // abort the new connection instead of closing the old one, which may already been used
 				} else {
 					c.conns[addr] = connrole{
 						conn: cc,
@@ -502,7 +502,7 @@ func (c *clusterClient) B() Builder {
 }
 
 func (c *clusterClient) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
-	if resp = c.do(ctx, cmd); resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
+	if resp = c.do(ctx, cmd); resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in the pipe.
 		cmds.PutCompleted(cmd)
 	}
 	return resp
@@ -600,7 +600,7 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 			} else {
 				cc = c.pslots[cmd.Slot()]
 			}
-			if cc == nil { // check cc == nil again in case of non-deterministic SendToReplicas.
+			if cc == nil { // check cc == nil again in the case of non-deterministic SendToReplicas.
 				return nil, false
 			}
 			re := retries.m[cc]
@@ -774,7 +774,7 @@ func (c *clusterClient) doretry(
 			var ml []Completed
 		recover:
 			ml = ml[:0]
-			var txIdx int // check transaction block, if zero then not in transaction
+			var txIdx int // check transaction block, if zero, then not in transaction
 			for i, resp := range resps.s {
 				if resp.NonRedisError() == errConnExpired {
 					if txIdx > 0 {
@@ -784,7 +784,7 @@ func (c *clusterClient) doretry(
 					}
 					break
 				}
-				// if no error then check if transaction block
+				// if no error, then check if transaction block
 				if isMulti(re.commands[i]) {
 					txIdx = i
 				} else if isExec(re.commands[i]) {
@@ -830,7 +830,7 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...Completed) []Redis
 	attempts := 1
 
 retry:
-	retries.RetryDelay = -1 // Assume no retry. Because client retry flag can be set to false.
+	retries.RetryDelay = -1 // Assume no retry. Because a client retry flag can be set to false.
 
 	var cc1 conn
 	var re1 *retry
@@ -1184,7 +1184,7 @@ func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL)
 	attempts := 1
 
 retry:
-	retries.RetryDelay = -1 // Assume no retry. Because client retry flag can be set to false.
+	retries.RetryDelay = -1 // Assume no retry. Because a client retry flag can be set to false.
 
 	var cc1 conn
 	var re1 *retrycache

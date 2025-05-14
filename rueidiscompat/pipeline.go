@@ -39,15 +39,15 @@ import (
 // Pipeliner is a mechanism to realise Redis Pipeline technique.
 //
 // Pipelining is a technique to extremely speed up processing by packing
-// operations to batches, send them at once to Redis and read a replies in a
+// operations to batches, send them at once to Redis and read a reply in a
 // single step.
 // See https://redis.io/topics/pipelining
 //
-// Pay attention, that Pipeline is not a transaction, so you can get unexpected
+// Pay attention that Pipeline is not a transaction, so you can get unexpected
 // results in case of big pipelines and small read/write timeouts.
-// Redis client has retransmission logic in case of timeouts, pipeline
-// can be retransmitted and commands can be executed more then once.
-// To avoid this: it is good idea to use reasonable bigger read/write timeouts
+// Redis client has retransmission logic in case of timeouts, pipelines
+// can be retransmitted, and commands can be executed more than once.
+// To avoid this: it is a good idea to use reasonable bigger read/write timeouts
 // depends on your batch size and/or use TxPipeline.
 type Pipeliner interface {
 	CoreCmdable
@@ -3185,8 +3185,9 @@ func (c *Pipeline) Discard() {
 // Exec executes all previously queued commands using one
 // client-server roundtrip.
 //
-// Exec always returns list of commands and error of the first failed
-// command if any.
+// Exec always returns a list of commands and error of the first failed
+//
+//	command, if any.
 func (c *Pipeline) Exec(ctx context.Context) ([]Cmder, error) {
 	p := c.comp.client.(*proxy)
 	if len(p.cmds) == 0 {

@@ -18,7 +18,7 @@ type (
 	FtAggregateIndex = cmds.FtAggregateIndex
 	// FtAlterSchema is the FT.ALTERINDEX command builder
 	FtAlterIndex = cmds.FtAlterIndex
-	// Arbitrary is alias to cmds.Arbitrary. This allows user build arbitrary command in Repository.CreateIndex
+	// Arbitrary is an alias to cmds.Arbitrary. This allows the user to build an arbitrary command in Repository.CreateIndex
 	Arbitrary = cmds.Arbitrary
 )
 

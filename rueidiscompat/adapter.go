@@ -975,7 +975,7 @@ func (c *Compat) GetSet(ctx context.Context, key string, value any) *StringCmd {
 	return newStringCmd(resp)
 }
 
-// GetEx An expiration of zero removes the TTL associated with the key (i.e. GETEX key persist).
+// GetEx An expiration of zero removes the TTL associated with the key (i.e., GETEX key persist).
 // Requires Redis >= 6.2.0.
 func (c *Compat) GetEx(ctx context.Context, key string, expiration time.Duration) *StringCmd {
 	var resp rueidis.RedisResult
@@ -2181,13 +2181,13 @@ func (c *Compat) XAutoClaimJustID(ctx context.Context, a XAutoClaimArgs) *XAutoC
 	return newXAutoClaimJustIDCmd(resp)
 }
 
-// xTrim If approx is true, add the "~" parameter, otherwise it is the default "=" (redis default).
+// xTrim If approx is true, add the "~" parameter; otherwise it is the default "=" (redis default).
 // example:
 //
 //	XTRIM key MAXLEN/MINID threshold LIMIT limit.
 //	XTRIM key MAXLEN/MINID ~ threshold LIMIT limit.
 //
-// The redis-server version is lower than 6.2, please set limit to 0.
+// The redis-server version is lower than 6.2, please set the limit to 0.
 func (c *Compat) xTrim(ctx context.Context, key, strategy string,
 	approx bool, threshold string, limit int64) *IntCmd {
 	cmd := c.client.B().Arbitrary("XTRIM").Keys(key).Args(strategy)
@@ -3848,7 +3848,7 @@ func (c *Compat) CMSMergeWithWeight(ctx context.Context, destKey string, sourceK
 	wCmd := (cmds.CmsMergeSource)(_cmd).Weights()
 	for _, k := range keys {
 		// weight should be integer
-		// we converts int64 to float64 to avoid API breaking change
+		// we convert int64 to float64 to avoid API breaking change
 		wCmd.Weight((float64)(sourceKeys[k]))
 	}
 	cmd := (cmds.CmsMergeWeightWeight)(wCmd).Build()
@@ -4024,7 +4024,7 @@ func (c *Compat) TSAdd(ctx context.Context, key string, timestamp interface{}, v
 }
 
 // TSAddWithArgs - Adds one or more observations to a t-digest sketch.
-// This function also allows for specifying additional options such as:
+// This function also allows for specifying additional options such as
 // Retention, ChunkSize, Encoding, DuplicatePolicy and Labels.
 // For more information - https://redis.io/commands/ts.add/
 func (c *Compat) TSAddWithArgs(ctx context.Context, key string, timestamp interface{}, value float64, options *TSOptions) *IntCmd {
@@ -4082,7 +4082,7 @@ func (c *Compat) TSCreate(ctx context.Context, key string) *StatusCmd {
 }
 
 // TSCreateWithArgs - Creates a new time-series key with additional options.
-// This function allows for specifying additional options such as:
+// This function allows for specifying additional options such as
 // Retention, ChunkSize, Encoding, DuplicatePolicy and Labels.
 // For more information - https://redis.io/commands/ts.create/
 func (c *Compat) TSCreateWithArgs(ctx context.Context, key string, options *TSOptions) *StatusCmd {
@@ -4129,7 +4129,7 @@ func (c *Compat) TSCreateWithArgs(ctx context.Context, key string, options *TSOp
 }
 
 // TSAlter - Alters an existing time-series key with additional options.
-// This function allows for specifying additional options such as:
+// This function allows for specifying additional options such as
 // Retention, ChunkSize and DuplicatePolicy.
 // For more information - https://redis.io/commands/ts.alter/
 func (c *Compat) TSAlter(ctx context.Context, key string, options *TSAlterOptions) *StatusCmd {
@@ -4207,8 +4207,8 @@ func (c *Compat) TSCreateRule(ctx context.Context, sourceKey string, destKey str
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
-// TSCreateRuleWithArgs - Creates a compaction rule from sourceKey to destKey with additional option.
-// This function allows for specifying additional option such as:
+// TSCreateRuleWithArgs - Creates a compaction rule from sourceKey to destKey with an additional option.
+// This function allows for specifying an additional option such as
 // AlignTimestamp.
 // For more information - https://redis.io/commands/ts.createrule/
 func (c *Compat) TSCreateRuleWithArgs(ctx context.Context, sourceKey string, destKey string, aggregator Aggregator, bucketDuration int, options *TSCreateRuleOptions) *StatusCmd {
@@ -4340,8 +4340,8 @@ func (c *Compat) TSDeleteRule(ctx context.Context, sourceKey string, destKey str
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
-// TSGetWithArgs - Gets the last sample of a time-series key with additional option.
-// This function allows for specifying additional option such as:
+// TSGetWithArgs - Gets the last sample of a time-series key with an additional option.
+// This function allows for specifying an additional option such as
 // Latest.
 // For more information - https://redis.io/commands/ts.get/
 func (c *Compat) TSGetWithArgs(ctx context.Context, key string, options *TSGetOptions) *TSTimestampValueCmd {
@@ -5152,7 +5152,7 @@ func (c *Compat) FTAggregateWithArgs(ctx context.Context, index string, query st
 		// [ SORTBY nargs [ property ASC | DESC [ property ASC | DESC ...]] [MAX num] [WITHCOUNT]
 		if options.SortBy != nil {
 			var numOfArgs int64 = 0
-			// count number of args to be passed in to cmds.FtAggregateQuery(_cmd).Sortby()
+			// count the number of args to be passed in to cmds.FtAggregateQuery(_cmd).Sortby()
 			for _, sortBy := range options.SortBy {
 				numOfArgs++
 				if sortBy.Asc && sortBy.Desc {
@@ -5290,7 +5290,7 @@ func (c *Compat) FTConfigSet(ctx context.Context, option string, value interface
 
 // FTCreate - Creates a new index with the given options and schema.
 // The 'index' parameter specifies the name of the index to create.
-// The 'options' parameter specifies various options for the index, such as:
+// The 'options' parameter specifies various options for the index, such as
 // whether to index hashes or JSONs, prefixes, filters, default language, score, score field, payload field, etc.
 // The 'schema' parameter specifies the schema for the index, which includes the field name, field type, etc.
 // For more information, please refer to the Redis documentation:
@@ -5553,7 +5553,7 @@ func (c *Compat) FTDropIndex(ctx context.Context, index string) *StatusCmd {
 }
 
 // FTDropIndexWithArgs - Deletes an index with options.
-// The 'index' parameter specifies the index to delete, and the 'options' parameter specifies the DeleteDocs option for docs deletion.
+// The 'index' parameter specifies the index to delete, and the 'options' parameter specifies the DeleteDocs option for doc deletion.
 // For more information, please refer to the Redis documentation:
 // [FT.DROPINDEX]: (https://redis.io/commands/ft.dropindex/)
 // see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1101
@@ -5605,7 +5605,7 @@ func (c *Compat) FTInfo(ctx context.Context, index string) *FTInfoCmd {
 }
 
 // FTSpellCheck - Checks a query string for spelling errors.
-// For more details about spellcheck query please follow:
+// For more details about a spellcheck query please follow:
 // https://redis.io/docs/interact/search-and-query/advanced-concepts/spellcheck/
 // For more information, please refer to the Redis documentation:
 // [FT.SPELLCHECK]: (https://redis.io/commands/ft.spellcheck/)
@@ -5616,7 +5616,7 @@ func (c *Compat) FTSpellCheck(ctx context.Context, index string, query string) *
 }
 
 // FTSpellCheckWithArgs - Checks a query string for spelling errors with additional options.
-// For more details about spellcheck query please follow:
+// For more details about a spellcheck query please follow:
 // https://redis.io/docs/interact/search-and-query/advanced-concepts/spellcheck/
 // For more information, please refer to the Redis documentation:
 // [FT.SPELLCHECK]: (https://redis.io/commands/ft.spellcheck/)
@@ -6593,12 +6593,12 @@ func appendStructField(v reflect.Value) []string {
 			continue
 		}
 
-		// if its a nil pointer
+		// if it's a nil pointer
 		if field.Kind() == reflect.Pointer && field.IsNil() {
 			continue
 		}
 
-		// if its a valid pointer
+		// if it's a valid pointer
 		if field.Kind() == reflect.Pointer && field.Elem().CanInterface() {
 			dst = append(dst, name, str(field.Elem().Interface()))
 			continue

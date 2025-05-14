@@ -130,7 +130,7 @@ func WithEnableReadOperation(enableReadOperations bool) BloomFilterOptionFunc {
 }
 
 // BloomFilter based on Redis Bitmaps.
-// BloomFilter uses 128-bit murmur3 hash function.
+// BloomFilter uses a 128-bit murmur3 hash function.
 type BloomFilter interface {
 	// Add adds an item to the Bloom filter.
 	Add(ctx context.Context, key string) error
@@ -184,7 +184,7 @@ type bloomFilter struct {
 }
 
 // NewBloomFilter creates a new Bloom filter.
-// NOTE: 'name:c' is used as a counter key in the Redis
+// NOTE: 'name:c' is used as a counter-key in the Redis
 // to keep track of the number of items in the Bloom filter for Count method.
 func NewBloomFilter(
 	client rueidis.Client,

@@ -12,7 +12,7 @@ import (
 	"github.com/redis/rueidis"
 )
 
-// NewJSONRepository creates an JSONRepository.
+// NewJSONRepository creates a JSONRepository.
 // The prefix parameter is used as redis key prefix. The entity stored by the repository will be named in the form of `{prefix}:{id}`
 // The schema parameter should be a struct with fields tagged with `redis:",key"` and `redis:",ver"`
 func NewJSONRepository[T any](prefix string, schema T, client rueidis.Client, opts ...RepositoryOption) Repository[T] {
@@ -56,7 +56,7 @@ func (r *JSONRepository[T]) Fetch(ctx context.Context, id string) (v *T, err err
 	return v, err
 }
 
-// FetchCache is like Fetch, but it uses client side caching mechanism.
+// FetchCache is like Fetch, but it uses the client side caching mechanism.
 func (r *JSONRepository[T]) FetchCache(ctx context.Context, id string, ttl time.Duration) (v *T, err error) {
 	record, err := r.client.DoCache(ctx, r.client.B().JsonGet().Key(key(r.prefix, id)).Path(".").Cache(), ttl).ToString()
 	if err == nil {
@@ -138,22 +138,22 @@ func (r *JSONRepository[T]) AlterIndex(ctx context.Context, cmdFn func(alter FtA
 	return r.client.Do(ctx, cmdFn(r.client.B().FtAlter().Index(r.idx))).Error()
 }
 
-// CreateIndex uses FT.CREATE from the RediSearch module to create inverted index under the name `jsonidx:{prefix}`
+// CreateIndex uses FT.CREATE from the RediSearch module to create an inverted index under the name `jsonidx:{prefix}`
 // You can use the cmdFn parameter to mutate the index construction command,
 // and note that the field name should be specified with JSON path syntax, otherwise the index may not work as expected.
 func (r *JSONRepository[T]) CreateIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) rueidis.Completed) error {
 	return r.client.Do(ctx, cmdFn(r.client.B().FtCreate().Index(r.idx).OnJson().Prefix(1).Prefix(r.prefix+":").Schema())).Error()
 }
 
-// DropIndex uses FT.DROPINDEX from the RediSearch module to drop index whose name is `jsonidx:{prefix}`
+// DropIndex uses FT.DROPINDEX from the RediSearch module to drop the index whose name is `jsonidx:{prefix}`
 func (r *JSONRepository[T]) DropIndex(ctx context.Context) error {
 	return r.client.Do(ctx, r.client.B().FtDropindex().Index(r.idx).Build()).Error()
 }
 
 // Search uses FT.SEARCH from the RediSearch module to search the index whose name is `jsonidx:{prefix}`
 // It returns three values:
-// 1. total count of match results inside the redis, and note that it might be larger than returned search result.
-// 2. search result, and note that its length might smaller than the first return value.
+// 1. total count of match results inside the redis, and note that it might be larger than the returned search result.
+// 2. the search result, and note that its length might be smaller than the first return value.
 // 3. error if any
 // You can use the cmdFn parameter to mutate the search command.
 func (r *JSONRepository[T]) Search(ctx context.Context, cmdFn func(search FtSearchIndex) rueidis.Completed) (n int64, s []*T, err error) {

@@ -51,14 +51,14 @@ func WithTracerProvider(provider trace.TracerProvider) Option {
 	}
 }
 
-// WithDBStatement tells the tracing hook to add raw redis commands to db.statement attribute.
+// WithDBStatement tells the tracing hook to add raw redis commands to the db.statement attribute.
 func WithDBStatement(f StatementFunc) Option {
 	return func(o *otelclient) {
 		o.dbStmtFunc = f
 	}
 }
 
-// StatementFunc is a the function that maps a command's tokens to a string to put in the db.statement attribute
+// StatementFunc is the function that maps a command's tokens to a string to put in the db.statement attribute
 type StatementFunc func(cmdTokens []string) string
 
 type commandMetrics struct {
@@ -434,7 +434,7 @@ func endSpan(span trace.Span, err error) {
 	span.End()
 }
 
-// do not record full db.statement to avoid collecting sensitive data
+// do not record the full db.statement to avoid collecting sensitive data
 func attr(op string, size int) trace.SpanStartEventOption {
 	return trace.WithAttributes(dbattr, attribute.String("db.operation", op), attribute.Int("db.stmt_size", size))
 }

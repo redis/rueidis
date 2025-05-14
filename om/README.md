@@ -59,7 +59,7 @@ if _, ok := repo.(*om.HashRepository[Example]); ok {
 
 if _, ok := repo.(*om.JSONRepository[Example]); ok {
     repo.CreateIndex(ctx, func(schema om.FtCreateSchema) rueidis.Completed {
-        return schema.FieldName("$.str").As("str").Tag().Build() // the FieldName of a json index should be a json path syntax
+        return schema.FieldName("$.str").As("str").Tag().Build() // the FieldName of a JSON index should be a JSON path syntax
     })
 }
 
@@ -72,7 +72,7 @@ n, records, _ := repo.Search(ctx, func(search om.FtSearchIndex) rueidis.Complete
     return search.Query("@str:{$v}").Params().Nargs(2).NameValue().NameValue("v", exp.Str).Dialect(2).Build()
 })
 
-fmt.Println("total", n) // n is total number of results matched in redis, which is >= len(records)
+fmt.Println("total", n) // n is the total number of results matched in redis, which is >= len(records)
 
 for _, v := range records {
     fmt.Println(v.Str) // print "special_chars:[$.-]"

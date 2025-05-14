@@ -37,7 +37,7 @@ func NewTypedCacheAsideClient[T any](
 	}
 }
 
-// Get retrieves a value of type T from the cache, or fetches it using the provided
+// Get retrieves a value of type T from the cache or fetches it using the provided
 // function and stores it in the cache. The value is cached for the specified TTL.
 // If the value cannot be retrieved or deserialized, an error is returned.
 func (c typedCacheAsideClient[T]) Get(ctx context.Context, ttl time.Duration, key string, fn func(ctx context.Context, key string) (val *T, err error)) (val *T, err error) {

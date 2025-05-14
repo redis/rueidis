@@ -458,8 +458,8 @@ func (p *pipe) _backgroundWrite() (err error) {
 			}
 			ones[0], multi, ch = p.queue.WaitForWrite()
 			if flushDelay != 0 && p.loadWaits() > 1 { // do not delay for sequential usage
-				// Blocking commands are executed in dedicated client which is acquired from pool.
-				// So, there is no sense to wait other commands to be written.
+				// Blocking commands are executed in a dedicated client which is acquired from the pool.
+				// So, there is no sense to wait for other commands to be written.
 				// https://github.com/redis/rueidis/issues/379
 				var blocked bool
 				for i := 0; i < len(multi) && !blocked; i++ {
@@ -492,7 +492,7 @@ func (p *pipe) _backgroundRead() (err error) {
 		resps []RedisResult
 		ch    chan RedisResult
 		ff    int // fulfilled count
-		skip  int // skip rest push messages
+		skip  int // skip the rest push messages
 		ver   = p.version
 		prply bool // push reply
 		unsub bool // unsubscribe notification
@@ -534,8 +534,8 @@ func (p *pipe) _backgroundRead() (err error) {
 		} else if ver == 6 && len(msg.values()) != 0 {
 			// This is a workaround for Redis 6's broken invalidation protocol: https://github.com/redis/redis/issues/8935
 			// When Redis 6 handles MULTI, MGET, or other multi-keys command,
-			// it will send invalidation message immediately if it finds the keys are expired, thus causing the multi-keys command response to be broken.
-			// We fix this by fetching the next message and patch it back to the response.
+			// it will send invalidation messages immediately if it finds the keys are expired, thus causing the multi-keys command response to be broken.
+			// We fix this by fetching the next message and patching it back to the response.
 			i := 0
 			for j, v := range msg.values() {
 				if v.typ == '>' {
@@ -559,7 +559,7 @@ func (p *pipe) _backgroundRead() (err error) {
 			if ch == nil {
 				cond.L.Unlock()
 				// Redis will send sunsubscribe notification proactively in the event of slot migration.
-				// We should ignore them and go fetch next message.
+				// We should ignore them and go fetch the next message.
 				// We also treat all the other unsubscribe notifications just like sunsubscribe,
 				// so that we don't need to track how many channels we have subscribed to deal with wildcard unsubscribe command
 				// See https://github.com/redis/rueidis/pull/691
@@ -577,7 +577,7 @@ func (p *pipe) _backgroundRead() (err error) {
 			if multi == nil {
 				multi = ones
 			}
-		} else if ff >= 4 && len(msg.values()) >= 2 && multi[0].IsOptIn() { // if unfulfilled multi commands are lead by opt-in and get success response
+		} else if ff >= 4 && len(msg.values()) >= 2 && multi[0].IsOptIn() { // if unfulfilled multi commands are lead by opt-in and get a success response
 			now := time.Now()
 			if cacheable := Cacheable(multi[ff-1]); cacheable.IsMGet() {
 				cc := cmds.MGetCacheCmd(cacheable)
@@ -603,7 +603,7 @@ func (p *pipe) _backgroundRead() (err error) {
 		}
 		if prply {
 			// Redis will send sunsubscribe notification proactively in the event of slot migration.
-			// We should ignore them and go fetch next message.
+			// We should ignore them and go fetch the next message.
 			// We also treat all the other unsubscribe notifications just like sunsubscribe,
 			// so that we don't need to track how many channels we have subscribed to deal with wildcard unsubscribe command
 			// See https://github.com/redis/rueidis/pull/691
@@ -894,7 +894,7 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 			return p._r2pipe(ctx).Do(ctx, cmd)
 		}
 	}
-	waits := p.incrWaits() // if this is 1, and background worker is not started, no need to queue
+	waits := p.incrWaits() // if this is 1, and the background worker is not started, no need to queue
 	state := atomic.LoadInt32(&p.state)
 
 	if state == 1 {
@@ -956,7 +956,7 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 
 	cmds.CompletedCS(multi[0]).Verify()
 
-	isOptIn := multi[0].IsOptIn() // len(multi) > 0 should have already been checked by upper layer
+	isOptIn := multi[0].IsOptIn() // len(multi) > 0 should have already been checked by the upper layer
 	noReply := 0
 
 	for _, cmd := range multi {
@@ -998,7 +998,7 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 		}
 	}
 
-	waits := p.incrWaits() // if this is 1, and background worker is not started, no need to queue
+	waits := p.incrWaits() // if this is 1, and the background worker is not started, no need to queue
 	state := atomic.LoadInt32(&p.state)
 
 	if state == 1 {
@@ -1078,7 +1078,7 @@ func (s *RedisResultStream) Error() error {
 }
 
 // WriteTo reads a redis response from redis and then write it to the given writer.
-// This function is not thread safe and should be called sequentially to read multiple responses.
+// This function is not thread-safe and should be called sequentially to read multiple responses.
 // An io.EOF error will be reported if all responses are read.
 func (s *RedisResultStream) WriteTo(w io.Writer) (n int64, err error) {
 	if err = s.e; err == nil && s.n > 0 {
@@ -1436,7 +1436,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 			}
 		}()
 		last := len(exec) - 1
-		if len(rewritten.Commands()) == len(commands) { // all cache miss
+		if len(rewritten.Commands()) == len(commands) { // all cache misses
 			return newResult(exec[last], nil)
 		}
 		partial = exec[last].values()

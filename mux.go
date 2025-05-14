@@ -246,7 +246,7 @@ func (m *mux) DoMulti(ctx context.Context, multi ...Completed) (resp *redisresul
 			return m.pipelineMulti(ctx, multi)
 		}
 		if cmd.IsBlock() {
-			cmds.ToBlock(&multi[0]) // mark the first cmd as block if one of them is block to shortcut later check.
+			cmds.ToBlock(&multi[0]) // mark the first cmd as blocked if one of them is blocked to shortcut later check.
 			goto block
 		}
 	}

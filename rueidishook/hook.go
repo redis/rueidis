@@ -21,7 +21,7 @@ type Hook interface {
 	DoMultiStream(client rueidis.Client, ctx context.Context, multi ...rueidis.Completed) rueidis.MultiRedisResultStream
 }
 
-// WithHook wraps rueidis.Client with Hook and allows user to intercept rueidis.Client
+// WithHook wraps rueidis.Client with Hook and allows the user to intercept rueidis.Client
 func WithHook(client rueidis.Client, hook Hook) rueidis.Client {
 	return &hookclient{client: client, hook: hook}
 }

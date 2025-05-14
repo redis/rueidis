@@ -79,7 +79,7 @@ retry:
 			}
 		}
 	}
-	if resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
+	if resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in the pipe.
 		cmds.PutCompleted(cmd)
 	}
 	return resp
@@ -98,7 +98,7 @@ retry:
 		var ml []Completed
 	recover:
 		ml = ml[:0]
-		var txIdx int // check transaction block, if zero then not in transaction
+		var txIdx int // check transaction block, if zero, then not in transaction
 		for i, resp := range resps.s {
 			if resp.NonRedisError() == errConnExpired {
 				if txIdx > 0 {
@@ -108,7 +108,7 @@ retry:
 				}
 				break
 			}
-			// if no error then check if transaction block
+			// if no error, then check if transaction block
 			if isMulti(multi[i]) {
 				txIdx = i
 			} else if isExec(multi[i]) {
@@ -397,8 +397,8 @@ func (c *sentinelClient) _refresh() (err error) {
 			err = c.sConn.Dial()
 		}
 		if err == nil {
-			// listWatch returns server address with sentinels.
-			// check if target is master or replica
+			// listWatch returns the server address with sentinels.
+			// check if the target is master or replica
 			if target, sentinels, err = c.listWatch(c.sConn); err == nil {
 				for _, sentinel := range sentinels {
 					c._addSentinel(sentinel)
@@ -428,7 +428,7 @@ func (c *sentinelClient) _refresh() (err error) {
 	return err
 }
 
-// listWatch will use sentinel to list current master|replica address along with sentinels address
+// listWatch will use sentinel to list the current master|replica address along with sentinel address
 func (c *sentinelClient) listWatch(cc conn) (target string, sentinels []string, err error) {
 	ctx := context.Background()
 	sentinelsCMD := c.cmd.SentinelSentinels().Master(c.mOpt.Sentinel.MasterSet).Build()
@@ -436,7 +436,7 @@ func (c *sentinelClient) listWatch(cc conn) (target string, sentinels []string, 
 	replicasCMD := c.cmd.SentinelReplicas().Master(c.mOpt.Sentinel.MasterSet).Build()
 
 	defer func() {
-		if err == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
+		if err == nil { // not recycle cmds if error, since cmds may be used later in the pipe.
 			cmds.PutCompleted(sentinelsCMD)
 			cmds.PutCompleted(getMasterCMD)
 			cmds.PutCompleted(replicasCMD)
@@ -497,7 +497,7 @@ func (c *sentinelClient) listWatch(cc conn) (target string, sentinels []string, 
 		}
 	}
 
-	// we return random slave address instead of master
+	// we return a random slave address instead of master
 	if c.replica {
 		addr, err := pickReplica(resp.s)
 		if err != nil {
@@ -522,7 +522,7 @@ func pickReplica(resp []RedisResult) (string, error) {
 	}
 
 	eligible := make([]map[string]string, 0, len(replicas))
-	// eliminate replicas with s_down condition
+	// eliminate replicas with the s_down condition
 	for i := range replicas {
 		replica, err := replicas[i].AsStrMap()
 		if err != nil {

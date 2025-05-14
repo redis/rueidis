@@ -59,7 +59,7 @@ retry:
 			}
 		}
 	}
-	if resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in pipe. consider recycle them by pipe
+	if resp.NonRedisError() == nil { // not recycle cmds if error, since cmds may be used later in the pipe.
 		cmds.PutCompleted(cmd)
 	}
 	return resp
@@ -93,7 +93,7 @@ retry:
 		var ml []Completed
 	recover:
 		ml = ml[:0]
-		var txIdx int // check transaction block, if zero then not in transaction
+		var txIdx int // check transaction block, if zero, then not in transaction
 		for i, resp := range resps {
 			if resp.NonRedisError() == errConnExpired {
 				if txIdx > 0 {
@@ -103,7 +103,7 @@ retry:
 				}
 				break
 			}
-			// if no error then check if transaction block
+			// if no error, then check if transaction block
 			if isMulti(multi[i]) {
 				txIdx = i
 			} else if isExec(multi[i]) {
