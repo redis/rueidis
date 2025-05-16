@@ -7,7 +7,7 @@ toolchain go1.23.4
 replace github.com/redis/rueidis => ../
 
 require (
-	github.com/redis/rueidis v1.0.59
+	github.com/redis/rueidis v1.0.60
 	github.com/twmb/murmur3 v1.1.8
 )
 
