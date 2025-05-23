@@ -224,6 +224,30 @@ func testCluster(resp3 bool) {
 		It("ClusterSlaves", func() {
 			Expect(adapter.ClusterSlaves(ctx, "1").Err()).To(MatchError("Unknown node 1"))
 		})
+		It("should ClusterResetSoft and execute", func() {
+			// This command is sent to all primary nodes.
+			// In a test environment, it might return "OK" or an error depending on node state.
+			// The main goal is to ensure the command is sent and doesn't cause a client-side panic.
+			// An error is acceptable if the cluster nodes are not in a state to be reset.
+			err := adapter.ClusterResetSoft(ctx).Err()
+			if err != nil {
+				// Example: "ERR This instance has cluster support disabled" if run on standalone
+				// Or specific errors from cluster nodes.
+				Expect(err).To(HaveOccurred())
+			} else {
+				Expect(err).NotTo(HaveOccurred())
+			}
+		})
+		It("should ClusterResetHard and execute", func() {
+			// Similar to ClusterResetSoft, this is sent to all primary nodes.
+			// It's more likely to error if nodes are not empty or in a specific state.
+			err := adapter.ClusterResetHard(ctx).Err()
+			if err != nil {
+				Expect(err).To(HaveOccurred())
+			} else {
+				Expect(err).NotTo(HaveOccurred())
+			}
+		})
 	})
 }
 
@@ -1294,49 +1318,114 @@ func testAdapter(resp3 bool) {
 			Expect(get.Val()).To(Equal("\xff"))
 		})
 
-		It("BitPos should panic", func() {
+		It("BitPos should panic if too many pos args are provided (e.g., start, end, and unit-like)", func() {
 			Expect(func() {
-				adapter.BitPos(ctx, "mykey", 0, 0, 0, 0)
+				// Simulating adapter.BitPos(ctx, "mykey", bit, start, end, unit) which is not its signature
+				// The adapter.BitPos(key, bit, pos...) will take pos[0] as start, pos[1] as end.
+				// If pos[2] is provided, it would be an error for the standard BITPOS command
+				// that the adapter forms, as it doesn't expect a third integer for unit.
+				// The panic here is from the adapter's argument count check before forming the command.
+				adapter.BitPos(ctx, "mykey_panic", 0, 0, 0, 0) // bit, start, end, and an extra one
 			}).To(Panic())
 		})
 
-		It("should BitPos", func() {
-			err := adapter.Set(ctx, "mykey", "\xff\xf0\x00", 0).Err()
-			Expect(err).NotTo(HaveOccurred())
+		It("should BitPos with varying pos arguments and negative indices", func() {
+			key := "mykey_bitpos_varied"
+			// Value: \x0f\x00\xf0 (00001111 00000000 11110000)
+			Expect(adapter.Set(ctx, key, "\x0f\x00\xf0", 0).Err()).NotTo(HaveOccurred())
 
-			pos, err := adapter.BitPos(ctx, "mykey", 0).Result()
+			// 0 pos args (find first '1')
+			pos, err := adapter.BitPos(ctx, key, 1).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(12)))
+			Expect(pos).To(Equal(int64(4))) // First '1' is at 0000'1'111
 
-			pos, err = adapter.BitPos(ctx, "mykey", 1).Result()
+			// 0 pos args (find first '0')
+			pos, err = adapter.BitPos(ctx, key, 0).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(0))) // First '0' is at '0'0001111
+
+			// 1 pos arg (start byte offset)
+			// Find first '1' starting from byte 1 (0x00)
+			pos, err = adapter.BitPos(ctx, key, 1, 1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(16))) // First '1' in \xf0 (11110000) is at bit 16
+
+			// Find first '0' starting from byte 2 (0xf0)
+			pos, err = adapter.BitPos(ctx, key, 0, 2).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(20))) // First '0' in \xf0 is at 1111'0'000 (bit 20)
+
+			// 2 pos args (start byte offset, end byte offset)
+			// Find first '1' in byte 0 (\x0f)
+			pos, err = adapter.BitPos(ctx, key, 1, 0, 0).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(4)))
+
+			// Find first '1' in byte 2 (\xf0)
+			pos, err = adapter.BitPos(ctx, key, 1, 2, 2).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(16)))
+
+			// Find first '0' in byte 1 (\x00)
+			pos, err = adapter.BitPos(ctx, key, 0, 1, 1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(8)))
+
+			// Bit not found in specified range
+			// Find '1' in byte 1 (\x00)
+			pos, err = adapter.BitPos(ctx, key, 1, 1, 1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(-1)))
+
+			// Negative pos args
+			// Find first '1' in the last byte (\xf0) (string length 3 bytes)
+			// Corresponds to BitPos(ctx, key, 1, -1, -1)
+			pos, err = adapter.BitPos(ctx, key, 1, -1).Result() // This means start from last byte to end of string
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(16)))
+
+			// Find first '0' in the last byte (\xf0)
+			pos, err = adapter.BitPos(ctx, key, 0, -1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(20)))
+
+			// Find first '1' from second to last byte (\x00) to last byte (\xf0)
+			// Corresponds to BitPos(ctx, key, 1, -2, -1)
+			pos, err = adapter.BitPos(ctx, key, 1, -2, -1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(16))) // Found in \xf0
+
+			// Find first '1' in the range of the first byte using negative indices
+			// String length is 3. Last byte is -1 (index 2). Second to last is -2 (index 1). First byte is -3 (index 0).
+			// Search in range of first byte: start = -3, end = -3
+			pos, err = adapter.BitPos(ctx, key, 1, -3, -3).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(4)))
+
+			// Search in a range that is effectively empty or invalid due to Redis interpretation
+			// e.g. start=2, end=1. Redis returns -1 if range is invalid or bit not found.
+			pos, err = adapter.BitPos(ctx, key, 1, 2, 1).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(-1)))
+
+			// Test with a key that doesn't exist
+			pos, err = adapter.BitPos(ctx, "nonexistent_key_bitpos", 1).Result()
+			Expect(err).NotTo(HaveOccurred()) // Redis BITPOS returns 0 for non-existent key if bit is 0, -1 if bit is 1
+			Expect(pos).To(Equal(int64(-1)))
+			pos, err = adapter.BitPos(ctx, "nonexistent_key_bitpos", 0).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(pos).To(Equal(int64(0)))
 
-			pos, err = adapter.BitPos(ctx, "mykey", 0, 2).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(16)))
 
-			pos, err = adapter.BitPos(ctx, "mykey", 1, 2).Result()
+			// Edge case: string of all 0xff
+			Expect(adapter.Set(ctx, "all_ones", "\xff\xff", 0).Err()).NotTo(HaveOccurred())
+			pos, err = adapter.BitPos(ctx, "all_ones", 0).Result() // find first 0
 			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(-1)))
+			Expect(pos).To(Equal(int64(16))) // first 0 is after all 16 ones (at the conceptual 17th bit)
 
-			pos, err = adapter.BitPos(ctx, "mykey", 0, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(16)))
-
-			pos, err = adapter.BitPos(ctx, "mykey", 1, -1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(-1)))
-
-			pos, err = adapter.BitPos(ctx, "mykey", 0, 2, 1).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(-1)))
-
-			pos, err = adapter.BitPos(ctx, "mykey", 0, 0, -3).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(-1)))
-
-			pos, err = adapter.BitPos(ctx, "mykey", 0, 0, 0).Result()
+			// Edge case: string of all 0x00
+			Expect(adapter.Set(ctx, "all_zeros", "\x00\x00", 0).Err()).NotTo(HaveOccurred())
+			pos, err = adapter.BitPos(ctx, "all_zeros", 1).Result() // find first 1
 			Expect(err).NotTo(HaveOccurred())
 			Expect(pos).To(Equal(int64(-1)))
 		})
@@ -2725,6 +2814,975 @@ func testAdapter(resp3 bool) {
 		}
 	})
 
+	Describe("hash field expiration", Label("hash-expiration", "NonRedisEnterprise"), func() {
+		Context("HExpireWithArgs", func() {
+			It("should expire a field with no options", func() {
+				Expect(adapter.HSet(ctx, "myhash", "field", "value").Err()).NotTo(HaveOccurred())
+				res, err := adapter.HExpireWithArgs(ctx, "myhash", 10*time.Second, HExpireArgs{}, "field").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 10*time.Second.Milliseconds(), 100*time.Millisecond))
+			})
+
+			It("NX option", func() {
+				// Field does not exist
+				res, err := adapter.HExpireWithArgs(ctx, "myhash", 10*time.Second, HExpireArgs{NX: true}, "nonexistent").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{-2}))
+
+				// Field exists with no expiry
+				Expect(adapter.HSet(ctx, "myhash", "field_no_expiry", "value").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HExpireWithArgs(ctx, "myhash", 10*time.Second, HExpireArgs{NX: true}, "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 10*time.Second.Milliseconds(), 100*time.Millisecond))
+
+				// Field exists with an expiry
+				Expect(adapter.HSet(ctx, "myhash", "field_with_expiry", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HExpire(ctx, "myhash", 5*time.Second, "field_with_expiry").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HExpireWithArgs(ctx, "myhash", 10*time.Second, HExpireArgs{NX: true}, "field_with_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{0}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_with_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 5*time.Second.Milliseconds(), 100*time.Millisecond))
+			})
+
+			It("XX option", func() {
+				// Field does not exist
+				res, err := adapter.HExpireWithArgs(ctx, "myhash", 10*time.Second, HExpireArgs{XX: true}, "nonexistent").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{-2}))
+
+				// Field exists with no expiry
+				Expect(adapter.HSet(ctx, "myhash", "field_no_expiry", "value").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HExpireWithArgs(ctx, "myhash", 10*time.Second, HExpireArgs{XX: true}, "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{0}))
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(Equal(int64(-1)))
+
+				// Field exists with an expiry
+				Expect(adapter.HSet(ctx, "myhash", "field_with_expiry", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HExpire(ctx, "myhash", 5*time.Second, "field_with_expiry").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HExpireWithArgs(ctx, "myhash", 10*time.Second, HExpireArgs{XX: true}, "field_with_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_with_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 10*time.Second.Milliseconds(), 100*time.Millisecond))
+			})
+
+			It("GT option", func() {
+				// Field does not exist
+				res, err := adapter.HExpireWithArgs(ctx, "myhash", 10*time.Second, HExpireArgs{GT: true}, "nonexistent").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{-2}))
+
+				// Field exists with no expiry
+				Expect(adapter.HSet(ctx, "myhash", "field_no_expiry", "value").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HExpireWithArgs(ctx, "myhash", 10*time.Second, HExpireArgs{GT: true}, "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1})) // Set expiry because it has no expiry
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 10*time.Second.Milliseconds(), 100*time.Millisecond))
+
+				// Field exists with an expiry, new expiry is greater
+				Expect(adapter.HSet(ctx, "myhash", "field_expiry_less", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HExpire(ctx, "myhash", 5*time.Second, "field_expiry_less").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HExpireWithArgs(ctx, "myhash", 10*time.Second, HExpireArgs{GT: true}, "field_expiry_less").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_expiry_less").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 10*time.Second.Milliseconds(), 100*time.Millisecond))
+
+				// Field exists with an expiry, new expiry is not greater
+				Expect(adapter.HSet(ctx, "myhash", "field_expiry_greater", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HExpire(ctx, "myhash", 15*time.Second, "field_expiry_greater").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HExpireWithArgs(ctx, "myhash", 10*time.Second, HExpireArgs{GT: true}, "field_expiry_greater").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{0}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_expiry_greater").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 15*time.Second.Milliseconds(), 100*time.Millisecond))
+			})
+
+			It("LT option", func() {
+				// Field does not exist
+				res, err := adapter.HExpireWithArgs(ctx, "myhash", 10*time.Second, HExpireArgs{LT: true}, "nonexistent").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{-2}))
+
+				// Field exists with no expiry
+				Expect(adapter.HSet(ctx, "myhash", "field_no_expiry", "value").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HExpireWithArgs(ctx, "myhash", 10*time.Second, HExpireArgs{LT: true}, "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{0})) // Do not set expiry because LT requires current expiry
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(Equal(int64(-1)))
+
+
+				// Field exists with an expiry, new expiry is less
+				Expect(adapter.HSet(ctx, "myhash", "field_expiry_greater", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HExpire(ctx, "myhash", 15*time.Second, "field_expiry_greater").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HExpireWithArgs(ctx, "myhash", 10*time.Second, HExpireArgs{LT: true}, "field_expiry_greater").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_expiry_greater").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 10*time.Second.Milliseconds(), 100*time.Millisecond))
+
+				// Field exists with an expiry, new expiry is not less
+				Expect(adapter.HSet(ctx, "myhash", "field_expiry_less", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HExpire(ctx, "myhash", 5*time.Second, "field_expiry_less").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HExpireWithArgs(ctx, "myhash", 10*time.Second, HExpireArgs{LT: true}, "field_expiry_less").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{0}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_expiry_less").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 5*time.Second.Milliseconds(), 100*time.Millisecond))
+			})
+		})
+
+		Context("HExpireAtWithArgs", func() {
+			It("should expire a field with no options", func() {
+				Expect(adapter.HSet(ctx, "myhash", "field", "value").Err()).NotTo(HaveOccurred())
+				expireAt := time.Now().Add(10 * time.Second)
+				res, err := adapter.HExpireAtWithArgs(ctx, "myhash", expireAt, HExpireAtArgs{}, "field").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", expireAt.UnixMilli(), 100*time.Millisecond))
+			})
+
+			It("NX option", func() {
+				expireAt := time.Now().Add(10 * time.Second)
+				// Field does not exist
+				res, err := adapter.HExpireAtWithArgs(ctx, "myhash", expireAt, HExpireAtArgs{NX: true}, "nonexistent").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{-2}))
+
+				// Field exists with no expiry
+				Expect(adapter.HSet(ctx, "myhash", "field_no_expiry", "value").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HExpireAtWithArgs(ctx, "myhash", expireAt, HExpireAtArgs{NX: true}, "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", expireAt.UnixMilli(), 100*time.Millisecond))
+
+				// Field exists with an expiry
+				currentExpiry := time.Now().Add(5 * time.Second)
+				Expect(adapter.HSet(ctx, "myhash", "field_with_expiry", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HExpireAt(ctx, "myhash", currentExpiry, "field_with_expiry").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HExpireAtWithArgs(ctx, "myhash", expireAt, HExpireAtArgs{NX: true}, "field_with_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{0}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_with_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", currentExpiry.UnixMilli(), 100*time.Millisecond))
+			})
+
+			It("XX option", func() {
+				expireAt := time.Now().Add(10 * time.Second)
+				// Field does not exist
+				res, err := adapter.HExpireAtWithArgs(ctx, "myhash", expireAt, HExpireAtArgs{XX: true}, "nonexistent").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{-2}))
+
+				// Field exists with no expiry
+				Expect(adapter.HSet(ctx, "myhash", "field_no_expiry", "value").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HExpireAtWithArgs(ctx, "myhash", expireAt, HExpireAtArgs{XX: true}, "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{0}))
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(Equal(int64(-1)))
+
+				// Field exists with an expiry
+				currentExpiry := time.Now().Add(5 * time.Second)
+				Expect(adapter.HSet(ctx, "myhash", "field_with_expiry", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HExpireAt(ctx, "myhash", currentExpiry, "field_with_expiry").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HExpireAtWithArgs(ctx, "myhash", expireAt, HExpireAtArgs{XX: true}, "field_with_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_with_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", expireAt.UnixMilli(), 100*time.Millisecond))
+			})
+
+			It("GT option", func() {
+				newExpireAt := time.Now().Add(10 * time.Second)
+				// Field does not exist
+				res, err := adapter.HExpireAtWithArgs(ctx, "myhash", newExpireAt, HExpireAtArgs{GT: true}, "nonexistent").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{-2}))
+
+				// Field exists with no expiry
+				Expect(adapter.HSet(ctx, "myhash", "field_no_expiry", "value").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HExpireAtWithArgs(ctx, "myhash", newExpireAt, HExpireAtArgs{GT: true}, "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", newExpireAt.UnixMilli(), 100*time.Millisecond))
+
+				// Field exists with an expiry, new expiry is greater
+				currentExpiryLess := time.Now().Add(5 * time.Second)
+				Expect(adapter.HSet(ctx, "myhash", "field_expiry_less", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HExpireAt(ctx, "myhash", currentExpiryLess, "field_expiry_less").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HExpireAtWithArgs(ctx, "myhash", newExpireAt, HExpireAtArgs{GT: true}, "field_expiry_less").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_expiry_less").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", newExpireAt.UnixMilli(), 100*time.Millisecond))
+
+				// Field exists with an expiry, new expiry is not greater
+				currentExpiryGreater := time.Now().Add(15 * time.Second)
+				Expect(adapter.HSet(ctx, "myhash", "field_expiry_greater", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HExpireAt(ctx, "myhash", currentExpiryGreater, "field_expiry_greater").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HExpireAtWithArgs(ctx, "myhash", newExpireAt, HExpireAtArgs{GT: true}, "field_expiry_greater").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{0}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_expiry_greater").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", currentExpiryGreater.UnixMilli(), 100*time.Millisecond))
+			})
+
+			It("LT option", func() {
+				newExpireAt := time.Now().Add(10 * time.Second)
+				// Field does not exist
+				res, err := adapter.HExpireAtWithArgs(ctx, "myhash", newExpireAt, HExpireAtArgs{LT: true}, "nonexistent").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{-2}))
+
+				// Field exists with no expiry
+				Expect(adapter.HSet(ctx, "myhash", "field_no_expiry", "value").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HExpireAtWithArgs(ctx, "myhash", newExpireAt, HExpireAtArgs{LT: true}, "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{0}))
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(Equal(int64(-1)))
+
+				// Field exists with an expiry, new expiry is less
+				currentExpiryGreater := time.Now().Add(15 * time.Second)
+				Expect(adapter.HSet(ctx, "myhash", "field_expiry_greater", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HExpireAt(ctx, "myhash", currentExpiryGreater, "field_expiry_greater").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HExpireAtWithArgs(ctx, "myhash", newExpireAt, HExpireAtArgs{LT: true}, "field_expiry_greater").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_expiry_greater").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", newExpireAt.UnixMilli(), 100*time.Millisecond))
+
+				// Field exists with an expiry, new expiry is not less
+				currentExpiryLess := time.Now().Add(5 * time.Second)
+				Expect(adapter.HSet(ctx, "myhash", "field_expiry_less", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HExpireAt(ctx, "myhash", currentExpiryLess, "field_expiry_less").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HExpireAtWithArgs(ctx, "myhash", newExpireAt, HExpireAtArgs{LT: true}, "field_expiry_less").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{0}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_expiry_less").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", currentExpiryLess.UnixMilli(), 100*time.Millisecond))
+			})
+		})
+
+		Context("HPExpireAtWithArgs", func() {
+			It("should expire a field with no options", func() {
+				Expect(adapter.HSet(ctx, "myhash", "field", "value").Err()).NotTo(HaveOccurred())
+				expireAt := time.Now().Add(10 * time.Second)
+				res, err := adapter.HPExpireAtWithArgs(ctx, "myhash", expireAt, HPExpireAtArgs{}, "field").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", expireAt.UnixMilli(), 100*time.Millisecond))
+			})
+
+			It("NX option", func() {
+				expireAt := time.Now().Add(10 * time.Second)
+				// Field does not exist
+				res, err := adapter.HPExpireAtWithArgs(ctx, "myhash", expireAt, HPExpireAtArgs{NX: true}, "nonexistent").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{-2}))
+
+				// Field exists with no expiry
+				Expect(adapter.HSet(ctx, "myhash", "field_no_expiry", "value").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HPExpireAtWithArgs(ctx, "myhash", expireAt, HPExpireAtArgs{NX: true}, "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", expireAt.UnixMilli(), 100*time.Millisecond))
+
+				// Field exists with an expiry
+				currentExpiry := time.Now().Add(5 * time.Second)
+				Expect(adapter.HSet(ctx, "myhash", "field_with_expiry", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HPExpireAt(ctx, "myhash", currentExpiry, "field_with_expiry").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HPExpireAtWithArgs(ctx, "myhash", expireAt, HPExpireAtArgs{NX: true}, "field_with_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{0}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_with_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", currentExpiry.UnixMilli(), 100*time.Millisecond))
+			})
+
+			It("XX option", func() {
+				expireAt := time.Now().Add(10 * time.Second)
+				// Field does not exist
+				res, err := adapter.HPExpireAtWithArgs(ctx, "myhash", expireAt, HPExpireAtArgs{XX: true}, "nonexistent").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{-2}))
+
+				// Field exists with no expiry
+				Expect(adapter.HSet(ctx, "myhash", "field_no_expiry", "value").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HPExpireAtWithArgs(ctx, "myhash", expireAt, HPExpireAtArgs{XX: true}, "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{0}))
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(Equal(int64(-1)))
+
+				// Field exists with an expiry
+				currentExpiry := time.Now().Add(5 * time.Second)
+				Expect(adapter.HSet(ctx, "myhash", "field_with_expiry", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HPExpireAt(ctx, "myhash", currentExpiry, "field_with_expiry").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HPExpireAtWithArgs(ctx, "myhash", expireAt, HPExpireAtArgs{XX: true}, "field_with_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_with_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", expireAt.UnixMilli(), 100*time.Millisecond))
+			})
+
+			It("GT option", func() {
+				newExpireAt := time.Now().Add(10 * time.Second)
+				// Field does not exist
+				res, err := adapter.HPExpireAtWithArgs(ctx, "myhash", newExpireAt, HPExpireAtArgs{GT: true}, "nonexistent").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{-2}))
+
+				// Field exists with no expiry
+				Expect(adapter.HSet(ctx, "myhash", "field_no_expiry", "value").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HPExpireAtWithArgs(ctx, "myhash", newExpireAt, HPExpireAtArgs{GT: true}, "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", newExpireAt.UnixMilli(), 100*time.Millisecond))
+
+				// Field exists with an expiry, new expiry is greater
+				currentExpiryLess := time.Now().Add(5 * time.Second)
+				Expect(adapter.HSet(ctx, "myhash", "field_expiry_less", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HPExpireAt(ctx, "myhash", currentExpiryLess, "field_expiry_less").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HPExpireAtWithArgs(ctx, "myhash", newExpireAt, HPExpireAtArgs{GT: true}, "field_expiry_less").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_expiry_less").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", newExpireAt.UnixMilli(), 100*time.Millisecond))
+
+				// Field exists with an expiry, new expiry is not greater
+				currentExpiryGreater := time.Now().Add(15 * time.Second)
+				Expect(adapter.HSet(ctx, "myhash", "field_expiry_greater", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HPExpireAt(ctx, "myhash", currentExpiryGreater, "field_expiry_greater").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HPExpireAtWithArgs(ctx, "myhash", newExpireAt, HPExpireAtArgs{GT: true}, "field_expiry_greater").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{0}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_expiry_greater").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", currentExpiryGreater.UnixMilli(), 100*time.Millisecond))
+			})
+
+			It("LT option", func() {
+				newExpireAt := time.Now().Add(10 * time.Second)
+				// Field does not exist
+				res, err := adapter.HPExpireAtWithArgs(ctx, "myhash", newExpireAt, HPExpireAtArgs{LT: true}, "nonexistent").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{-2}))
+
+				// Field exists with no expiry
+				Expect(adapter.HSet(ctx, "myhash", "field_no_expiry", "value").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HPExpireAtWithArgs(ctx, "myhash", newExpireAt, HPExpireAtArgs{LT: true}, "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{0}))
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(Equal(int64(-1)))
+
+				// Field exists with an expiry, new expiry is less
+				currentExpiryGreater := time.Now().Add(15 * time.Second)
+				Expect(adapter.HSet(ctx, "myhash", "field_expiry_greater", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HPExpireAt(ctx, "myhash", currentExpiryGreater, "field_expiry_greater").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HPExpireAtWithArgs(ctx, "myhash", newExpireAt, HPExpireAtArgs{LT: true}, "field_expiry_greater").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_expiry_greater").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", newExpireAt.UnixMilli(), 100*time.Millisecond))
+
+				// Field exists with an expiry, new expiry is not less
+				currentExpiryLess := time.Now().Add(5 * time.Second)
+				Expect(adapter.HSet(ctx, "myhash", "field_expiry_less", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HPExpireAt(ctx, "myhash", currentExpiryLess, "field_expiry_less").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HPExpireAtWithArgs(ctx, "myhash", newExpireAt, HPExpireAtArgs{LT: true}, "field_expiry_less").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{0}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_expiry_less").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", currentExpiryLess.UnixMilli(), 100*time.Millisecond))
+			})
+		})
+
+		Describe("HSetEX and HSetEXWithArgs", Label("hash-expiration", "NonRedisEnterprise"), func() {
+			It("HSetEX should set a field with expiry", func() {
+				// Field does not exist
+				res, err := adapter.HSetEX(ctx, "myhash", "field_new", "value_new", 10*time.Second).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal(int64(1)))
+				val, err := adapter.HGet(ctx, "myhash", "field_new").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal("value_new"))
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field_new").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 10*time.Second.Milliseconds(), 100*time.Millisecond))
+
+				// Field exists, overwrite
+				Expect(adapter.HSet(ctx, "myhash", "field_existing", "value_old", 0).Err()).NotTo(HaveOccurred())
+				res, err = adapter.HSetEX(ctx, "myhash", "field_existing", "value_updated", 20*time.Second).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal(int64(0))) // Field updated, not added
+				val, err = adapter.HGet(ctx, "myhash", "field_existing").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal("value_updated"))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_existing").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 20*time.Second.Milliseconds(), 100*time.Millisecond))
+			})
+
+			Context("HSetEXWithArgs", func() {
+				Context("NX condition (set only if field does not exist)", func() {
+					Context("EX expiration", func() {
+						It("field does not exist", func() {
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_nx_ex", "field", "value_nx_ex", HSetEXArgs{Condition: HSetEXCondition{NX: true}, Expiration: HSetEXExpiration{EX: 10}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(1)))
+							val, _ := adapter.HGet(ctx, "myhash_nx_ex", "field").Result()
+							Expect(val).To(Equal("value_nx_ex"))
+							ttl, _ := adapter.HPTTL(ctx, "myhash_nx_ex", "field").Result()
+							Expect(ttl[0]).To(BeNumerically("~", 10*time.Second.Milliseconds(), 100*time.Millisecond))
+						})
+						It("field exists with no expiry", func() {
+							Expect(adapter.HSet(ctx, "myhash_nx_ex", "field_no_exp", "old_value").Err()).NotTo(HaveOccurred())
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_nx_ex", "field_no_exp", "new_value", HSetEXArgs{Condition: HSetEXCondition{NX: true}, Expiration: HSetEXExpiration{EX: 10}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(0))) // Not set
+							val, _ := adapter.HGet(ctx, "myhash_nx_ex", "field_no_exp").Result()
+							Expect(val).To(Equal("old_value"))
+							ttl, _ := adapter.HPTTL(ctx, "myhash_nx_ex", "field_no_exp").Result()
+							Expect(ttl[0]).To(Equal(int64(-1)))
+						})
+						It("field exists with expiry", func() {
+							Expect(adapter.HSet(ctx, "myhash_nx_ex", "field_with_exp", "old_value").Err()).NotTo(HaveOccurred())
+							Expect(adapter.HExpire(ctx, "myhash_nx_ex", 5*time.Second, "field_with_exp").Err()).NotTo(HaveOccurred())
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_nx_ex", "field_with_exp", "new_value", HSetEXArgs{Condition: HSetEXCondition{NX: true}, Expiration: HSetEXExpiration{EX: 10}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(0))) // Not set
+							val, _ := adapter.HGet(ctx, "myhash_nx_ex", "field_with_exp").Result()
+							Expect(val).To(Equal("old_value"))
+							ttl, _ := adapter.HPTTL(ctx, "myhash_nx_ex", "field_with_exp").Result()
+							Expect(ttl[0]).To(BeNumerically("~", 5*time.Second.Milliseconds(), 100*time.Millisecond))
+						})
+					})
+					Context("PX expiration", func() {
+						It("field does not exist", func() {
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_nx_px", "field", "value_nx_px", HSetEXArgs{Condition: HSetEXCondition{NX: true}, Expiration: HSetEXExpiration{PX: 10000}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(1)))
+							val, _ := adapter.HGet(ctx, "myhash_nx_px", "field").Result()
+							Expect(val).To(Equal("value_nx_px"))
+							ttl, _ := adapter.HPTTL(ctx, "myhash_nx_px", "field").Result()
+							Expect(ttl[0]).To(BeNumerically("~", 10000, 100))
+						})
+						// Similar tests for field exists with/without expiry
+					})
+					Context("EXAT expiration", func() {
+						It("field does not exist", func() {
+							expireAt := time.Now().Add(10 * time.Second)
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_nx_exat", "field", "value_nx_exat", HSetEXArgs{Condition: HSetEXCondition{NX: true}, Expiration: HSetEXExpiration{EXAT: expireAt}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(1)))
+							val, _ := adapter.HGet(ctx, "myhash_nx_exat", "field").Result()
+							Expect(val).To(Equal("value_nx_exat"))
+							ttl, _ := adapter.HPTTL(ctx, "myhash_nx_exat", "field").Result()
+							Expect(ttl[0]).To(BeNumerically("~", expireAt.UnixMilli(), 100*time.Millisecond))
+						})
+						// Similar tests for field exists with/without expiry
+					})
+					Context("PXAT expiration", func() {
+						It("field does not exist", func() {
+							expireAt := time.Now().Add(10 * time.Second)
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_nx_pxat", "field", "value_nx_pxat", HSetEXArgs{Condition: HSetEXCondition{NX: true}, Expiration: HSetEXExpiration{PXAT: expireAt}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(1)))
+							val, _ := adapter.HGet(ctx, "myhash_nx_pxat", "field").Result()
+							Expect(val).To(Equal("value_nx_pxat"))
+							ttl, _ := adapter.HPTTL(ctx, "myhash_nx_pxat", "field").Result()
+							Expect(ttl[0]).To(BeNumerically("~", expireAt.UnixMilli(), 100*time.Millisecond))
+						})
+						// Similar tests for field exists with/without expiry
+					})
+					Context("KEEPTTL expiration", func() {
+						It("field does not exist (KEEPTTL is ignored, no TTL set)", func() {
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_nx_keepttl", "field", "value_nx_keepttl", HSetEXArgs{Condition: HSetEXCondition{NX: true}, Expiration: HSetEXExpiration{KEEPTTL: true}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(1)))
+							val, _ := adapter.HGet(ctx, "myhash_nx_keepttl", "field").Result()
+							Expect(val).To(Equal("value_nx_keepttl"))
+							ttl, _ := adapter.HPTTL(ctx, "myhash_nx_keepttl", "field").Result()
+							Expect(ttl[0]).To(Equal(int64(-1))) // No TTL should be set
+						})
+						It("field exists with no expiry (KEEPTTL is ignored, NX fails)", func() {
+							Expect(adapter.HSet(ctx, "myhash_nx_keepttl", "field_no_exp", "old_value").Err()).NotTo(HaveOccurred())
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_nx_keepttl", "field_no_exp", "new_value", HSetEXArgs{Condition: HSetEXCondition{NX: true}, Expiration: HSetEXExpiration{KEEPTTL: true}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(0)))
+							val, _ := adapter.HGet(ctx, "myhash_nx_keepttl", "field_no_exp").Result()
+							Expect(val).To(Equal("old_value"))
+							ttl, _ := adapter.HPTTL(ctx, "myhash_nx_keepttl", "field_no_exp").Result()
+							Expect(ttl[0]).To(Equal(int64(-1)))
+						})
+						It("field exists with expiry (KEEPTTL is ignored, NX fails)", func() {
+							Expect(adapter.HSet(ctx, "myhash_nx_keepttl", "field_with_exp", "old_value").Err()).NotTo(HaveOccurred())
+							Expect(adapter.HExpire(ctx, "myhash_nx_keepttl", 5*time.Second, "field_with_exp").Err()).NotTo(HaveOccurred())
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_nx_keepttl", "field_with_exp", "new_value", HSetEXArgs{Condition: HSetEXCondition{NX: true}, Expiration: HSetEXExpiration{KEEPTTL: true}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(0)))
+							val, _ := adapter.HGet(ctx, "myhash_nx_keepttl", "field_with_exp").Result()
+							Expect(val).To(Equal("old_value"))
+							ttl, _ := adapter.HPTTL(ctx, "myhash_nx_keepttl", "field_with_exp").Result()
+							Expect(ttl[0]).To(BeNumerically("~", 5*time.Second.Milliseconds(), 100*time.Millisecond))
+						})
+					})
+				})
+				Context("XX condition (set only if field exists)", func() {
+					Context("EX expiration", func() {
+						It("field does not exist", func() {
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_xx_ex", "field_new", "value_xx_ex", HSetEXArgs{Condition: HSetEXCondition{XX: true}, Expiration: HSetEXExpiration{EX: 10}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(0))) // Not set
+							_, err = adapter.HGet(ctx, "myhash_xx_ex", "field_new").Result()
+							Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+						})
+						It("field exists with no expiry", func() {
+							Expect(adapter.HSet(ctx, "myhash_xx_ex", "field_no_exp", "old_value").Err()).NotTo(HaveOccurred())
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_xx_ex", "field_no_exp", "new_value_xx_ex", HSetEXArgs{Condition: HSetEXCondition{XX: true}, Expiration: HSetEXExpiration{EX: 10}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(0))) // Updated existing field
+							val, _ := adapter.HGet(ctx, "myhash_xx_ex", "field_no_exp").Result()
+							Expect(val).To(Equal("new_value_xx_ex"))
+							ttl, _ := adapter.HPTTL(ctx, "myhash_xx_ex", "field_no_exp").Result()
+							Expect(ttl[0]).To(BeNumerically("~", 10*time.Second.Milliseconds(), 100*time.Millisecond))
+						})
+						It("field exists with expiry", func() {
+							Expect(adapter.HSet(ctx, "myhash_xx_ex", "field_with_exp", "old_value").Err()).NotTo(HaveOccurred())
+							Expect(adapter.HExpire(ctx, "myhash_xx_ex", 5*time.Second, "field_with_exp").Err()).NotTo(HaveOccurred())
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_xx_ex", "field_with_exp", "new_value_xx_ex", HSetEXArgs{Condition: HSetEXCondition{XX: true}, Expiration: HSetEXExpiration{EX: 10}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(0))) // Updated existing field
+							val, _ := adapter.HGet(ctx, "myhash_xx_ex", "field_with_exp").Result()
+							Expect(val).To(Equal("new_value_xx_ex"))
+							ttl, _ := adapter.HPTTL(ctx, "myhash_xx_ex", "field_with_exp").Result()
+							Expect(ttl[0]).To(BeNumerically("~", 10*time.Second.Milliseconds(), 100*time.Millisecond))
+						})
+					})
+					Context("PX expiration", func() {
+						It("field does not exist", func() {
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_xx_px", "field_new", "value_xx_px", HSetEXArgs{Condition: HSetEXCondition{XX: true}, Expiration: HSetEXExpiration{PX: 10000}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(0)))
+							_, err = adapter.HGet(ctx, "myhash_xx_px", "field_new").Result()
+							Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+						})
+						It("field exists with no expiry", func() {
+							Expect(adapter.HSet(ctx, "myhash_xx_px", "field_no_exp", "old_value").Err()).NotTo(HaveOccurred())
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_xx_px", "field_no_exp", "new_value_xx_px", HSetEXArgs{Condition: HSetEXCondition{XX: true}, Expiration: HSetEXExpiration{PX: 10000}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(0)))
+							val, _ := adapter.HGet(ctx, "myhash_xx_px", "field_no_exp").Result()
+							Expect(val).To(Equal("new_value_xx_px"))
+							ttl, _ := adapter.HPTTL(ctx, "myhash_xx_px", "field_no_exp").Result()
+							Expect(ttl[0]).To(BeNumerically("~", 10000, 100))
+						})
+						It("field exists with expiry", func() {
+							Expect(adapter.HSet(ctx, "myhash_xx_px", "field_with_exp", "old_value").Err()).NotTo(HaveOccurred())
+							Expect(adapter.HExpire(ctx, "myhash_xx_px", 5*time.Second, "field_with_exp").Err()).NotTo(HaveOccurred())
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_xx_px", "field_with_exp", "new_value_xx_px", HSetEXArgs{Condition: HSetEXCondition{XX: true}, Expiration: HSetEXExpiration{PX: 10000}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(0)))
+							val, _ := adapter.HGet(ctx, "myhash_xx_px", "field_with_exp").Result()
+							Expect(val).To(Equal("new_value_xx_px"))
+							ttl, _ := adapter.HPTTL(ctx, "myhash_xx_px", "field_with_exp").Result()
+							Expect(ttl[0]).To(BeNumerically("~", 10000, 100))
+						})
+					})
+					Context("EXAT expiration", func() {
+						It("field does not exist", func() {
+							expireAt := time.Now().Add(10 * time.Second)
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_xx_exat", "field_new", "value_xx_exat", HSetEXArgs{Condition: HSetEXCondition{XX: true}, Expiration: HSetEXExpiration{EXAT: expireAt}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(0)))
+							_, err = adapter.HGet(ctx, "myhash_xx_exat", "field_new").Result()
+							Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+						})
+						It("field exists with no expiry", func() {
+							Expect(adapter.HSet(ctx, "myhash_xx_exat", "field_no_exp", "old_value").Err()).NotTo(HaveOccurred())
+							expireAt := time.Now().Add(10 * time.Second)
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_xx_exat", "field_no_exp", "new_value_xx_exat", HSetEXArgs{Condition: HSetEXCondition{XX: true}, Expiration: HSetEXExpiration{EXAT: expireAt}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(0)))
+							val, _ := adapter.HGet(ctx, "myhash_xx_exat", "field_no_exp").Result()
+							Expect(val).To(Equal("new_value_xx_exat"))
+							ttl, _ := adapter.HPTTL(ctx, "myhash_xx_exat", "field_no_exp").Result()
+							Expect(ttl[0]).To(BeNumerically("~", expireAt.UnixMilli(), 100*time.Millisecond))
+						})
+						It("field exists with expiry", func() {
+							Expect(adapter.HSet(ctx, "myhash_xx_exat", "field_with_exp", "old_value").Err()).NotTo(HaveOccurred())
+							Expect(adapter.HExpire(ctx, "myhash_xx_exat", 5*time.Second, "field_with_exp").Err()).NotTo(HaveOccurred())
+							expireAt := time.Now().Add(10 * time.Second)
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_xx_exat", "field_with_exp", "new_value_xx_exat", HSetEXArgs{Condition: HSetEXCondition{XX: true}, Expiration: HSetEXExpiration{EXAT: expireAt}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(0)))
+							val, _ := adapter.HGet(ctx, "myhash_xx_exat", "field_with_exp").Result()
+							Expect(val).To(Equal("new_value_xx_exat"))
+							ttl, _ := adapter.HPTTL(ctx, "myhash_xx_exat", "field_with_exp").Result()
+							Expect(ttl[0]).To(BeNumerically("~", expireAt.UnixMilli(), 100*time.Millisecond))
+						})
+					})
+					Context("PXAT expiration", func() {
+						It("field does not exist", func() {
+							expireAt := time.Now().Add(10 * time.Second)
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_xx_pxat", "field_new", "value_xx_pxat", HSetEXArgs{Condition: HSetEXCondition{XX: true}, Expiration: HSetEXExpiration{PXAT: expireAt}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(0)))
+							_, err = adapter.HGet(ctx, "myhash_xx_pxat", "field_new").Result()
+							Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+						})
+						It("field exists with no expiry", func() {
+							Expect(adapter.HSet(ctx, "myhash_xx_pxat", "field_no_exp", "old_value").Err()).NotTo(HaveOccurred())
+							expireAt := time.Now().Add(10 * time.Second)
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_xx_pxat", "field_no_exp", "new_value_xx_pxat", HSetEXArgs{Condition: HSetEXCondition{XX: true}, Expiration: HSetEXExpiration{PXAT: expireAt}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(0)))
+							val, _ := adapter.HGet(ctx, "myhash_xx_pxat", "field_no_exp").Result()
+							Expect(val).To(Equal("new_value_xx_pxat"))
+							ttl, _ := adapter.HPTTL(ctx, "myhash_xx_pxat", "field_no_exp").Result()
+							Expect(ttl[0]).To(BeNumerically("~", expireAt.UnixMilli(), 100*time.Millisecond))
+						})
+						It("field exists with expiry", func() {
+							Expect(adapter.HSet(ctx, "myhash_xx_pxat", "field_with_exp", "old_value").Err()).NotTo(HaveOccurred())
+							Expect(adapter.HExpire(ctx, "myhash_xx_pxat", 5*time.Second, "field_with_exp").Err()).NotTo(HaveOccurred())
+							expireAt := time.Now().Add(10 * time.Second)
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_xx_pxat", "field_with_exp", "new_value_xx_pxat", HSetEXArgs{Condition: HSetEXCondition{XX: true}, Expiration: HSetEXExpiration{PXAT: expireAt}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(0)))
+							val, _ := adapter.HGet(ctx, "myhash_xx_pxat", "field_with_exp").Result()
+							Expect(val).To(Equal("new_value_xx_pxat"))
+							ttl, _ := adapter.HPTTL(ctx, "myhash_xx_pxat", "field_with_exp").Result()
+							Expect(ttl[0]).To(BeNumerically("~", expireAt.UnixMilli(), 100*time.Millisecond))
+						})
+					})
+					Context("KEEPTTL expiration", func() {
+						It("field does not exist (KEEPTTL is ignored, XX fails)", func() {
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_xx_keepttl", "field_new", "value_xx_keepttl", HSetEXArgs{Condition: HSetEXCondition{XX: true}, Expiration: HSetEXExpiration{KEEPTTL: true}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(0)))
+							_, err = adapter.HGet(ctx, "myhash_xx_keepttl", "field_new").Result()
+							Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+						})
+						It("field exists with no expiry", func() {
+							Expect(adapter.HSet(ctx, "myhash_xx_keepttl", "field_no_exp", "old_value").Err()).NotTo(HaveOccurred())
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_xx_keepttl", "field_no_exp", "new_value_xx_keepttl", HSetEXArgs{Condition: HSetEXCondition{XX: true}, Expiration: HSetEXExpiration{KEEPTTL: true}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(0)))
+							val, _ := adapter.HGet(ctx, "myhash_xx_keepttl", "field_no_exp").Result()
+							Expect(val).To(Equal("new_value_xx_keepttl"))
+							ttl, _ := adapter.HPTTL(ctx, "myhash_xx_keepttl", "field_no_exp").Result()
+							Expect(ttl[0]).To(Equal(int64(-1))) // Should remain without TTL
+						})
+						It("field exists with expiry", func() {
+							Expect(adapter.HSet(ctx, "myhash_xx_keepttl", "field_with_exp", "old_value").Err()).NotTo(HaveOccurred())
+							Expect(adapter.HExpire(ctx, "myhash_xx_keepttl", 5*time.Second, "field_with_exp").Err()).NotTo(HaveOccurred())
+							res, err := adapter.HSetEXWithArgs(ctx, "myhash_xx_keepttl", "field_with_exp", "new_value_xx_keepttl", HSetEXArgs{Condition: HSetEXCondition{XX: true}, Expiration: HSetEXExpiration{KEEPTTL: true}}).Result()
+							Expect(err).NotTo(HaveOccurred())
+							Expect(res).To(Equal(int64(0)))
+							val, _ := adapter.HGet(ctx, "myhash_xx_keepttl", "field_with_exp").Result()
+							Expect(val).To(Equal("new_value_xx_keepttl"))
+							ttl, _ := adapter.HPTTL(ctx, "myhash_xx_keepttl", "field_with_exp").Result()
+							Expect(ttl[0]).To(BeNumerically("~", 5*time.Second.Milliseconds(), 100*time.Millisecond)) // Should keep original TTL
+						})
+					})
+				})
+			})
+		})
+
+		Describe("HGetEX and HGetEXWithArgs", Label("hash-expiration", "NonRedisEnterprise"), func() {
+			It("HGetEX should get a field and set expiry", func() {
+				Expect(adapter.HSet(ctx, "myhash", "field", "value").Err()).NotTo(HaveOccurred())
+
+				val, err := adapter.HGetEX(ctx, "myhash", "field", 10*time.Second).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(val).To(Equal("value"))
+
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 10*time.Second.Milliseconds(), 100*time.Millisecond))
+
+				// Field does not exist
+				_, err = adapter.HGetEX(ctx, "myhash", "nonexistent", 10*time.Second).Result()
+				Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+			})
+
+			Context("HGetEXWithArgs", func() {
+				It("EX option", func() {
+					// Field exists
+					Expect(adapter.HSet(ctx, "myhash", "field_ex", "value_ex").Err()).NotTo(HaveOccurred())
+					val, err := adapter.HGetEXWithArgs(ctx, "myhash", "field_ex", HGetEXExpiration{EX: 15}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(val).To(Equal("value_ex"))
+					ttl, err := adapter.HPTTL(ctx, "myhash", "field_ex").Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(ttl[0]).To(BeNumerically("~", 15*time.Second.Milliseconds(), 100*time.Millisecond))
+
+					// Field does not exist
+					_, err = adapter.HGetEXWithArgs(ctx, "myhash", "nonexistent_ex", HGetEXExpiration{EX: 15}).Result()
+					Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+				})
+
+				It("PX option", func() {
+					// Field exists
+					Expect(adapter.HSet(ctx, "myhash", "field_px", "value_px").Err()).NotTo(HaveOccurred())
+					val, err := adapter.HGetEXWithArgs(ctx, "myhash", "field_px", HGetEXExpiration{PX: 12000}).Result() // 12000ms = 12s
+					Expect(err).NotTo(HaveOccurred())
+					Expect(val).To(Equal("value_px"))
+					ttl, err := adapter.HPTTL(ctx, "myhash", "field_px").Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(ttl[0]).To(BeNumerically("~", 12000, 100))
+
+					// Field does not exist
+					_, err = adapter.HGetEXWithArgs(ctx, "myhash", "nonexistent_px", HGetEXExpiration{PX: 12000}).Result()
+					Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+				})
+
+				It("EXAT option", func() {
+					expireAt := time.Now().Add(20 * time.Second)
+					// Field exists
+					Expect(adapter.HSet(ctx, "myhash", "field_exat", "value_exat").Err()).NotTo(HaveOccurred())
+					val, err := adapter.HGetEXWithArgs(ctx, "myhash", "field_exat", HGetEXExpiration{EXAT: expireAt}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(val).To(Equal("value_exat"))
+					ttl, err := adapter.HPTTL(ctx, "myhash", "field_exat").Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(ttl[0]).To(BeNumerically("~", expireAt.UnixMilli(), 100*time.Millisecond))
+
+					// Field does not exist
+					_, err = adapter.HGetEXWithArgs(ctx, "myhash", "nonexistent_exat", HGetEXExpiration{EXAT: expireAt}).Result()
+					Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+				})
+
+				It("PXAT option", func() {
+					expireAt := time.Now().Add(25 * time.Second)
+					// Field exists
+					Expect(adapter.HSet(ctx, "myhash", "field_pxat", "value_pxat").Err()).NotTo(HaveOccurred())
+					val, err := adapter.HGetEXWithArgs(ctx, "myhash", "field_pxat", HGetEXExpiration{PXAT: expireAt}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(val).To(Equal("value_pxat"))
+					ttl, err := adapter.HPTTL(ctx, "myhash", "field_pxat").Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(ttl[0]).To(BeNumerically("~", expireAt.UnixMilli(), 100*time.Millisecond))
+
+					// Field does not exist
+					_, err = adapter.HGetEXWithArgs(ctx, "myhash", "nonexistent_pxat", HGetEXExpiration{PXAT: expireAt}).Result()
+					Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+				})
+
+				It("PERSIST option", func() {
+					// Field exists with an expiry
+					Expect(adapter.HSet(ctx, "myhash", "field_persist", "value_persist").Err()).NotTo(HaveOccurred())
+					Expect(adapter.HExpire(ctx, "myhash", 30*time.Second, "field_persist").Err()).NotTo(HaveOccurred())
+					val, err := adapter.HGetEXWithArgs(ctx, "myhash", "field_persist", HGetEXExpiration{PERSIST: true}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(val).To(Equal("value_persist"))
+					ttl, err := adapter.HPTTL(ctx, "myhash", "field_persist").Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(ttl[0]).To(Equal(int64(-1))) // Should have no expiry
+
+					// Field exists with no expiry
+					Expect(adapter.HSet(ctx, "myhash", "field_persist_no_expiry", "value_persist_no_expiry").Err()).NotTo(HaveOccurred())
+					val, err = adapter.HGetEXWithArgs(ctx, "myhash", "field_persist_no_expiry", HGetEXExpiration{PERSIST: true}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(val).To(Equal("value_persist_no_expiry"))
+					ttl, err = adapter.HPTTL(ctx, "myhash", "field_persist_no_expiry").Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(ttl[0]).To(Equal(int64(-1)))
+
+
+					// Field does not exist
+					_, err = adapter.HGetEXWithArgs(ctx, "myhash", "nonexistent_persist", HGetEXExpiration{PERSIST: true}).Result()
+					Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+				})
+			})
+		})
+
+		Context("HPExpireWithArgs", func() {
+			It("should expire a field with no options", func() {
+				Expect(adapter.HSet(ctx, "myhash", "field", "value").Err()).NotTo(HaveOccurred())
+				res, err := adapter.HPExpireWithArgs(ctx, "myhash", 10000, HPExpireArgs{}, "field").Result() // 10000 ms = 10s
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 10000, 100))
+			})
+
+			It("NX option", func() {
+				// Field does not exist
+				res, err := adapter.HPExpireWithArgs(ctx, "myhash", 10000, HPExpireArgs{NX: true}, "nonexistent").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{-2}))
+
+				// Field exists with no expiry
+				Expect(adapter.HSet(ctx, "myhash", "field_no_expiry", "value").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HPExpireWithArgs(ctx, "myhash", 10000, HPExpireArgs{NX: true}, "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 10000, 100))
+
+				// Field exists with an expiry
+				Expect(adapter.HSet(ctx, "myhash", "field_with_expiry", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HPExpire(ctx, "myhash", 5000, "field_with_expiry").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HPExpireWithArgs(ctx, "myhash", 10000, HPExpireArgs{NX: true}, "field_with_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{0}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_with_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 5000, 100))
+			})
+
+			It("XX option", func() {
+				// Field does not exist
+				res, err := adapter.HPExpireWithArgs(ctx, "myhash", 10000, HPExpireArgs{XX: true}, "nonexistent").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{-2}))
+
+				// Field exists with no expiry
+				Expect(adapter.HSet(ctx, "myhash", "field_no_expiry", "value").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HPExpireWithArgs(ctx, "myhash", 10000, HPExpireArgs{XX: true}, "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{0}))
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(Equal(int64(-1)))
+
+				// Field exists with an expiry
+				Expect(adapter.HSet(ctx, "myhash", "field_with_expiry", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HPExpire(ctx, "myhash", 5000, "field_with_expiry").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HPExpireWithArgs(ctx, "myhash", 10000, HPExpireArgs{XX: true}, "field_with_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_with_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 10000, 100))
+			})
+
+			It("GT option", func() {
+				// Field does not exist
+				res, err := adapter.HPExpireWithArgs(ctx, "myhash", 10000, HPExpireArgs{GT: true}, "nonexistent").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{-2}))
+
+				// Field exists with no expiry
+				Expect(adapter.HSet(ctx, "myhash", "field_no_expiry", "value").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HPExpireWithArgs(ctx, "myhash", 10000, HPExpireArgs{GT: true}, "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1})) // Set expiry because it has no expiry
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 10000, 100))
+
+				// Field exists with an expiry, new expiry is greater
+				Expect(adapter.HSet(ctx, "myhash", "field_expiry_less", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HPExpire(ctx, "myhash", 5000, "field_expiry_less").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HPExpireWithArgs(ctx, "myhash", 10000, HPExpireArgs{GT: true}, "field_expiry_less").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_expiry_less").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 10000, 100))
+
+				// Field exists with an expiry, new expiry is not greater
+				Expect(adapter.HSet(ctx, "myhash", "field_expiry_greater", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HPExpire(ctx, "myhash", 15000, "field_expiry_greater").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HPExpireWithArgs(ctx, "myhash", 10000, HPExpireArgs{GT: true}, "field_expiry_greater").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{0}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_expiry_greater").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 15000, 100))
+			})
+
+			It("LT option", func() {
+				// Field does not exist
+				res, err := adapter.HPExpireWithArgs(ctx, "myhash", 10000, HPExpireArgs{LT: true}, "nonexistent").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{-2}))
+
+				// Field exists with no expiry
+				Expect(adapter.HSet(ctx, "myhash", "field_no_expiry", "value").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HPExpireWithArgs(ctx, "myhash", 10000, HPExpireArgs{LT: true}, "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{0})) // Do not set expiry because LT requires current expiry
+				ttl, err := adapter.HPTTL(ctx, "myhash", "field_no_expiry").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(Equal(int64(-1)))
+
+				// Field exists with an expiry, new expiry is less
+				Expect(adapter.HSet(ctx, "myhash", "field_expiry_greater", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HPExpire(ctx, "myhash", 15000, "field_expiry_greater").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HPExpireWithArgs(ctx, "myhash", 10000, HPExpireArgs{LT: true}, "field_expiry_greater").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{1}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_expiry_greater").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 10000, 100))
+
+				// Field exists with an expiry, new expiry is not less
+				Expect(adapter.HSet(ctx, "myhash", "field_expiry_less", "value").Err()).NotTo(HaveOccurred())
+				Expect(adapter.HPExpire(ctx, "myhash", 5000, "field_expiry_less").Err()).NotTo(HaveOccurred())
+				res, err = adapter.HPExpireWithArgs(ctx, "myhash", 10000, HPExpireArgs{LT: true}, "field_expiry_less").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(res).To(Equal([]int64{0}))
+				ttl, err = adapter.HPTTL(ctx, "myhash", "field_expiry_less").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ttl[0]).To(BeNumerically("~", 5000, 100))
+			})
+		})
+	})
+
 	Describe("hyperloglog", func() {
 		It("should PFMerge", func() {
 			pfAdd := adapter.PFAdd(ctx, "hll1", "1", "2", "3", "4", "5")
@@ -4102,40 +5160,285 @@ func testAdapter(resp3 bool) {
 		})
 
 		if resp3 {
-			It("should ZAddArgs", func() {
-				// Test only the GT+LT options.
-				added, err := adapter.ZAddArgs(ctx, "zset", ZAddArgs{
-					GT:      true,
-					Members: []Z{{Score: 1, Member: "one"}},
-				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(added).To(Equal(int64(1)))
+			Describe("ZAddArgs", func() {
+				key := "zset_zaddargs"
 
-				vals, err := adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(vals).To(Equal([]Z{{Score: 1, Member: "one"}}))
+				BeforeEach(func() {
+					adapter.Del(ctx, key)
+				})
 
-				added, err = adapter.ZAddArgs(ctx, "zset", ZAddArgs{
-					GT:      true,
-					Members: []Z{{Score: 2, Member: "one"}},
-				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(added).To(Equal(int64(0)))
+				It("should add new members with NX", func() {
+					added, err := adapter.ZAddArgs(ctx, key, ZAddArgs{
+						NX:      true,
+						Members: []Z{{Score: 1, Member: "one"}, {Score: 2, Member: "two"}},
+					}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(added).To(Equal(int64(2)))
+					vals, _ := adapter.ZRangeWithScores(ctx, key, 0, -1).Result()
+					Expect(vals).To(ConsistOf(Z{Score: 1, Member: "one"}, Z{Score: 2, Member: "two"}))
+				})
 
-				vals, err = adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(vals).To(Equal([]Z{{Score: 2, Member: "one"}}))
+				It("should not update existing members with NX", func() {
+					adapter.ZAdd(ctx, key, Z{Score: 1, Member: "one"})
+					added, err := adapter.ZAddArgs(ctx, key, ZAddArgs{
+						NX:      true,
+						Members: []Z{{Score: 10, Member: "one"}, {Score: 3, Member: "three"}},
+					}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(added).To(Equal(int64(1))) // Only "three" should be added
+					vals, _ := adapter.ZRangeWithScores(ctx, key, 0, -1).Result()
+					Expect(vals).To(ConsistOf(Z{Score: 1, Member: "one"}, Z{Score: 3, Member: "three"}))
+				})
+				
+				It("should add new members with NX and CH (CH ignored for new members)", func() {
+					added, err := adapter.ZAddArgs(ctx, key, ZAddArgs{
+						NX:      true,
+						CH:      true,
+						Members: []Z{{Score: 1, Member: "one"}, {Score: 2, Member: "two"}},
+					}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(added).To(Equal(int64(2))) // Returns number of new elements added
+				})
+				
+				It("should not update with NX and CH, count only new", func() {
+					adapter.ZAdd(ctx, key, Z{Score: 1, Member: "one"})
+					added, err := adapter.ZAddArgs(ctx, key, ZAddArgs{
+						NX:      true,
+						CH:      true,
+						Members: []Z{{Score: 10, Member: "one"}, {Score: 3, Member: "three"}},
+					}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(added).To(Equal(int64(1))) // Only "three" was added and thus "changed" in the context of NX
+				})
 
-				added, err = adapter.ZAddArgs(ctx, "zset", ZAddArgs{
-					LT:      true,
-					Members: []Z{{Score: 1, Member: "one"}},
-				}).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(added).To(Equal(int64(0)))
+				It("should not add new members with XX", func() {
+					added, err := adapter.ZAddArgs(ctx, key, ZAddArgs{
+						XX:      true,
+						Members: []Z{{Score: 1, Member: "new_one"}},
+					}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(added).To(Equal(int64(0)))
+					card, _ := adapter.ZCard(ctx, key).Result()
+					Expect(card).To(Equal(int64(0)))
+				})
 
-				vals, err = adapter.ZRangeWithScores(ctx, "zset", 0, -1).Result()
-				Expect(err).NotTo(HaveOccurred())
-				Expect(vals).To(Equal([]Z{{Score: 1, Member: "one"}}))
+				It("should update existing members with XX", func() {
+					adapter.ZAdd(ctx, key, Z{Score: 1, Member: "one"}, Z{Score: 2, Member: "two"})
+					added, err := adapter.ZAddArgs(ctx, key, ZAddArgs{
+						XX:      true,
+						Members: []Z{{Score: 10, Member: "one"}, {Score: 20, Member: "two"}},
+					}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(added).To(Equal(int64(0))) // XX mode returns 0 if only updates happened, no new members
+					vals, _ := adapter.ZRangeWithScores(ctx, key, 0, -1).Result()
+					Expect(vals).To(ConsistOf(Z{Score: 10, Member: "one"}, Z{Score: 20, Member: "two"}))
+				})
+				
+				It("should update existing members with XX and CH, count changes", func() {
+					adapter.ZAdd(ctx, key, Z{Score: 1, Member: "one"}, Z{Score: 2, Member: "two"}) // member "two" score is same
+					added, err := adapter.ZAddArgs(ctx, key, ZAddArgs{
+						XX:      true,
+						CH:      true,
+						Members: []Z{{Score: 10, Member: "one"}, {Score: 2, Member: "two"}, {Score: 30, Member: "new_three"}},
+					}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(added).To(Equal(int64(1))) // Only "one" changed score. "two" score same. "new_three" not added.
+					vals, _ := adapter.ZRangeWithScores(ctx, key, 0, -1).Result()
+					Expect(vals).To(ConsistOf(Z{Score: 10, Member: "one"}, Z{Score: 2, Member: "two"}))
+				})
+
+				It("should add with GT if member new (GT has no effect on new members)", func() {
+					added, err := adapter.ZAddArgs(ctx, key, ZAddArgs{
+						GT:      true,
+						Members: []Z{{Score: 1, Member: "one"}},
+					}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(added).To(Equal(int64(1)))
+					vals, _ := adapter.ZRangeWithScores(ctx, key, 0, -1).Result()
+					Expect(vals).To(Equal([]Z{{Score: 1, Member: "one"}}))
+				})
+
+				It("should update with GT if score is greater", func() {
+					adapter.ZAdd(ctx, key, Z{Score: 1, Member: "one"})
+					added, err := adapter.ZAddArgs(ctx, key, ZAddArgs{
+						GT:      true,
+						Members: []Z{{Score: 2, Member: "one"}},
+					}).Result() // Returns 0 because no new elements were added, but change occurred
+					Expect(err).NotTo(HaveOccurred())
+					Expect(added).To(Equal(int64(0))) 
+					vals, _ := adapter.ZRangeWithScores(ctx, key, 0, -1).Result()
+					Expect(vals).To(Equal([]Z{{Score: 2, Member: "one"}}))
+				})
+				
+				It("should update with GT and CH if score is greater, count changes", func() {
+					adapter.ZAdd(ctx, key, Z{Score: 1, Member: "one"})
+					added, err := adapter.ZAddArgs(ctx, key, ZAddArgs{
+						GT:      true,
+						CH:      true,
+						Members: []Z{{Score: 2, Member: "one"}},
+					}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(added).To(Equal(int64(1))) // one element changed
+					vals, _ := adapter.ZRangeWithScores(ctx, key, 0, -1).Result()
+					Expect(vals).To(Equal([]Z{{Score: 2, Member: "one"}}))
+				})
+
+				It("should not update with GT if score is not greater", func() {
+					adapter.ZAdd(ctx, key, Z{Score: 2, Member: "one"})
+					added, err := adapter.ZAddArgs(ctx, key, ZAddArgs{
+						GT:      true,
+						CH:      true, // Add CH to see if it reports a change
+						Members: []Z{{Score: 1, Member: "one"}, {Score: 2, Member: "one"}},
+					}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(added).To(Equal(int64(0))) // No change occurred
+					vals, _ := adapter.ZRangeWithScores(ctx, key, 0, -1).Result()
+					Expect(vals).To(Equal([]Z{{Score: 2, Member: "one"}}))
+				})
+
+				It("should add with LT if member new (LT has no effect on new members)", func() {
+					added, err := adapter.ZAddArgs(ctx, key, ZAddArgs{
+						LT:      true,
+						Members: []Z{{Score: 2, Member: "one"}},
+					}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(added).To(Equal(int64(1)))
+					vals, _ := adapter.ZRangeWithScores(ctx, key, 0, -1).Result()
+					Expect(vals).To(Equal([]Z{{Score: 2, Member: "one"}}))
+				})
+
+				It("should update with LT if score is lesser", func() {
+					adapter.ZAdd(ctx, key, Z{Score: 2, Member: "one"})
+					added, err := adapter.ZAddArgs(ctx, key, ZAddArgs{
+						LT:      true,
+						Members: []Z{{Score: 1, Member: "one"}},
+					}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(added).To(Equal(int64(0)))
+					vals, _ := adapter.ZRangeWithScores(ctx, key, 0, -1).Result()
+					Expect(vals).To(Equal([]Z{{Score: 1, Member: "one"}}))
+				})
+
+				It("should update with LT and CH if score is lesser, count changes", func() {
+					adapter.ZAdd(ctx, key, Z{Score: 2, Member: "one"})
+					added, err := adapter.ZAddArgs(ctx, key, ZAddArgs{
+						LT:      true,
+						CH:      true,
+						Members: []Z{{Score: 1, Member: "one"}},
+					}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(added).To(Equal(int64(1)))
+					vals, _ := adapter.ZRangeWithScores(ctx, key, 0, -1).Result()
+					Expect(vals).To(Equal([]Z{{Score: 1, Member: "one"}}))
+				})
+
+				It("should not update with LT if score is not lesser", func() {
+					adapter.ZAdd(ctx, key, Z{Score: 1, Member: "one"})
+					added, err := adapter.ZAddArgs(ctx, key, ZAddArgs{
+						LT:      true,
+						CH:      true,
+						Members: []Z{{Score: 2, Member: "one"}, {Score: 1, Member: "one"}},
+					}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(added).To(Equal(int64(0)))
+					vals, _ := adapter.ZRangeWithScores(ctx, key, 0, -1).Result()
+					Expect(vals).To(Equal([]Z{{Score: 1, Member: "one"}}))
+				})
+			})
+
+			Describe("ZAddArgsIncr", func() {
+				key := "zset_zaddargsincr"
+
+				BeforeEach(func() {
+					adapter.Del(ctx, key)
+				})
+
+				It("should increment existing member", func() {
+					adapter.ZAdd(ctx, key, Z{Score: 1, Member: "one"})
+					newScore, err := adapter.ZAddArgsIncr(ctx, key, ZAddArgs{
+						Members: []Z{{Score: 2.5, Member: "one"}},
+					}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(newScore).To(Equal(3.5))
+					vals, _ := adapter.ZRangeWithScores(ctx, key, 0, -1).Result()
+					Expect(vals).To(Equal([]Z{{Score: 3.5, Member: "one"}}))
+				})
+
+				It("should add new member if INCR and member does not exist", func() {
+					newScore, err := adapter.ZAddArgsIncr(ctx, key, ZAddArgs{
+						Members: []Z{{Score: 5, Member: "new_one"}},
+					}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(newScore).To(Equal(float64(5)))
+					vals, _ := adapter.ZRangeWithScores(ctx, key, 0, -1).Result()
+					Expect(vals).To(Equal([]Z{{Score: 5, Member: "new_one"}}))
+				})
+
+				It("INCR with NX: should add new member, should not increment existing", func() {
+					// Add new with INCR + NX
+					newScore, err := adapter.ZAddArgsIncr(ctx, key, ZAddArgs{
+						NX:      true,
+						Members: []Z{{Score: 3, Member: "fresh"}},
+					}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(newScore).To(Equal(float64(3)))
+					vals, _ := adapter.ZRangeWithScores(ctx, key, 0, -1).Result()
+					Expect(vals).To(ContainElement(Z{Score: 3, Member: "fresh"}))
+					
+					// Attempt to increment existing "fresh" with INCR + NX (should not happen)
+					// Redis ZADD with INCR and NX on an existing member returns nil (error in go-redis context)
+					nilScore, errIsNil := adapter.ZAddArgsIncr(ctx, key, ZAddArgs{
+						NX:      true,
+						Members: []Z{{Score: 5, Member: "fresh"}},
+					}).Result()
+					Expect(rueidis.IsRedisNil(errIsNil)).To(BeTrue()) // Expecting nil from Redis, rueidis translates to Nil error
+					Expect(nilScore).To(BeZero()) // On Nil error, value is zero for numeric types
+					vals, _ = adapter.ZRangeWithScores(ctx, key, 0, -1).Result()
+					Expect(vals).To(ContainElement(Z{Score: 3, Member: "fresh"})) // Score should be unchanged
+				})
+
+				It("INCR with XX: should increment existing, should not add new", func() {
+					adapter.ZAdd(ctx, key, Z{Score: 1, Member: "existing"})
+					
+					// Increment existing with INCR + XX
+					newScore, err := adapter.ZAddArgsIncr(ctx, key, ZAddArgs{
+						XX:      true,
+						Members: []Z{{Score: 2, Member: "existing"}},
+					}).Result()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(newScore).To(Equal(float64(3)))
+					vals, _ := adapter.ZRangeWithScores(ctx, key, 0, -1).Result()
+					Expect(vals).To(ContainElement(Z{Score: 3, Member: "existing"}))
+
+					// Attempt to add new with INCR + XX (should not happen)
+					// Redis ZADD with INCR and XX on a non-existing member returns nil
+					nilScore, errIsNil := adapter.ZAddArgsIncr(ctx, key, ZAddArgs{
+						XX:      true,
+						Members: []Z{{Score: 5, Member: "non_existing_for_xx"}},
+					}).Result()
+					Expect(rueidis.IsRedisNil(errIsNil)).To(BeTrue())
+					Expect(nilScore).To(BeZero())
+					card, _ := adapter.ZCard(ctx, key).Result()
+					Expect(card).To(Equal(int64(1))) // Should still only have "existing"
+				})
+
+				It("INCR with GT should error", func() {
+					_, err := adapter.ZAddArgsIncr(ctx, key, ZAddArgs{
+						GT:      true,
+						Members: []Z{{Score: 1, Member: "one"}},
+					}).Result()
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("GT, LT, and INCR options at the same time are not compatible"))
+				})
+
+				It("INCR with LT should error", func() {
+					_, err := adapter.ZAddArgsIncr(ctx, key, ZAddArgs{
+						LT:      true,
+						Members: []Z{{Score: 1, Member: "one"}},
+					}).Result()
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("GT, LT, and INCR options at the same time are not compatible"))
+				})
 			})
 		}
 
@@ -4430,45 +5733,44 @@ func testAdapter(resp3 bool) {
 				Member: "three",
 			}}))
 
-			// adding back 3
-			err = adapter.ZAdd(ctx, "zset", Z{
-				Score:  3,
-				Member: "three",
-			}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			members, err = adapter.ZPopMax(ctx, "zset", 2).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(members).To(Equal([]Z{{
-				Score:  3,
-				Member: "three",
-			}, {
-				Score:  2,
-				Member: "two",
-			}}))
+			// Test ZPopMax with count > 1
+			keyMaxCount := "zset_zpopmax_count_gt1"
+			Expect(adapter.ZAdd(ctx, keyMaxCount, Z{Score: 1, Member: "one"}).Err()).NotTo(HaveOccurred())
+			Expect(adapter.ZAdd(ctx, keyMaxCount, Z{Score: 2, Member: "two"}).Err()).NotTo(HaveOccurred())
+			Expect(adapter.ZAdd(ctx, keyMaxCount, Z{Score: 3, Member: "three"}).Err()).NotTo(HaveOccurred())
+			Expect(adapter.ZAdd(ctx, keyMaxCount, Z{Score: 4, Member: "four"}).Err()).NotTo(HaveOccurred())
+			Expect(adapter.ZAdd(ctx, keyMaxCount, Z{Score: 5, Member: "five"}).Err()).NotTo(HaveOccurred())
 
-			// adding back 2 & 3
-			err = adapter.ZAdd(ctx, "zset", Z{
-				Score:  3,
-				Member: "three",
-			}).Err()
+			poppedMax, err := adapter.ZPopMax(ctx, keyMaxCount, 3).Result()
 			Expect(err).NotTo(HaveOccurred())
-			err = adapter.ZAdd(ctx, "zset", Z{
-				Score:  2,
-				Member: "two",
-			}).Err()
+			Expect(poppedMax).To(HaveLen(3))
+			Expect(poppedMax).To(Equal([]Z{
+				{Score: 5, Member: "five"},
+				{Score: 4, Member: "four"},
+				{Score: 3, Member: "three"},
+			}))
+
+			remainingMax, err := adapter.ZRangeWithScores(ctx, keyMaxCount, 0, -1).Result()
 			Expect(err).NotTo(HaveOccurred())
-			members, err = adapter.ZPopMax(ctx, "zset", 10).Result()
+			Expect(remainingMax).To(Equal([]Z{
+				{Score: 1, Member: "one"},
+				{Score: 2, Member: "two"},
+			}))
+
+			// Original test's behavior for count > available elements
+			// Ensure this still works, using the original key "zset" or a new one if preferred
+			// For safety, let's use a new key to avoid interference if original test logic is very specific
+			keyMaxCountLarge := "zset_zpopmax_count_large"
+			Expect(adapter.ZAdd(ctx, keyMaxCountLarge, Z{Score: 1, Member: "m1"}).Err()).NotTo(HaveOccurred())
+			Expect(adapter.ZAdd(ctx, keyMaxCountLarge, Z{Score: 2, Member: "m2"}).Err()).NotTo(HaveOccurred())
+			poppedAll, err := adapter.ZPopMax(ctx, keyMaxCountLarge, 10).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(members).To(Equal([]Z{{
-				Score:  3,
-				Member: "three",
-			}, {
-				Score:  2,
-				Member: "two",
-			}, {
-				Score:  1,
-				Member: "one",
-			}}))
+			Expect(poppedAll).To(ConsistOf([]Z{ // ConsistOf because order might vary if scores were same
+				{Score: 2, Member: "m2"},
+				{Score: 1, Member: "m1"},
+			}))
+			Expect(adapter.ZCard(ctx, keyMaxCountLarge).Val()).To(Equal(int64(0)))
+
 		})
 
 		It("should ZPopMin", func() {
@@ -4495,47 +5797,41 @@ func testAdapter(resp3 bool) {
 				Member: "one",
 			}}))
 
-			// adding back 1
-			err = adapter.ZAdd(ctx, "zset", Z{
-				Score:  1,
-				Member: "one",
-			}).Err()
-			Expect(err).NotTo(HaveOccurred())
-			members, err = adapter.ZPopMin(ctx, "zset", 2).Result()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(members).To(Equal([]Z{{
-				Score:  1,
-				Member: "one",
-			}, {
-				Score:  2,
-				Member: "two",
-			}}))
+			// Test ZPopMin with count > 1
+			keyMinCount := "zset_zpopmin_count_gt1"
+			Expect(adapter.ZAdd(ctx, keyMinCount, Z{Score: 1, Member: "one"}).Err()).NotTo(HaveOccurred())
+			Expect(adapter.ZAdd(ctx, keyMinCount, Z{Score: 2, Member: "two"}).Err()).NotTo(HaveOccurred())
+			Expect(adapter.ZAdd(ctx, keyMinCount, Z{Score: 3, Member: "three"}).Err()).NotTo(HaveOccurred())
+			Expect(adapter.ZAdd(ctx, keyMinCount, Z{Score: 4, Member: "four"}).Err()).NotTo(HaveOccurred())
+			Expect(adapter.ZAdd(ctx, keyMinCount, Z{Score: 5, Member: "five"}).Err()).NotTo(HaveOccurred())
 
-			// adding back 1 & 2
-			err = adapter.ZAdd(ctx, "zset", Z{
-				Score:  1,
-				Member: "one",
-			}).Err()
+			poppedMin, err := adapter.ZPopMin(ctx, keyMinCount, 3).Result()
 			Expect(err).NotTo(HaveOccurred())
+			Expect(poppedMin).To(HaveLen(3))
+			Expect(poppedMin).To(Equal([]Z{
+				{Score: 1, Member: "one"},
+				{Score: 2, Member: "two"},
+				{Score: 3, Member: "three"},
+			}))
 
-			err = adapter.ZAdd(ctx, "zset", Z{
-				Score:  2,
-				Member: "two",
-			}).Err()
+			remainingMin, err := adapter.ZRangeWithScores(ctx, keyMinCount, 0, -1).Result()
 			Expect(err).NotTo(HaveOccurred())
-
-			members, err = adapter.ZPopMin(ctx, "zset", 10).Result()
+			Expect(remainingMin).To(Equal([]Z{
+				{Score: 4, Member: "four"},
+				{Score: 5, Member: "five"},
+			}))
+			
+			// Original test's behavior for count > available elements
+			keyMinCountLarge := "zset_zpopmin_count_large"
+			Expect(adapter.ZAdd(ctx, keyMinCountLarge, Z{Score: 1, Member: "m1"}).Err()).NotTo(HaveOccurred())
+			Expect(adapter.ZAdd(ctx, keyMinCountLarge, Z{Score: 2, Member: "m2"}).Err()).NotTo(HaveOccurred())
+			poppedAllMin, err := adapter.ZPopMin(ctx, keyMinCountLarge, 10).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(members).To(Equal([]Z{{
-				Score:  1,
-				Member: "one",
-			}, {
-				Score:  2,
-				Member: "two",
-			}, {
-				Score:  3,
-				Member: "three",
-			}}))
+			Expect(poppedAllMin).To(ConsistOf([]Z{ // ConsistOf because order might vary if scores were same
+				{Score: 1, Member: "m1"},
+				{Score: 2, Member: "m2"},
+			}))
+			Expect(adapter.ZCard(ctx, keyMinCountLarge).Val()).To(Equal(int64(0)))
 		})
 
 		It("should ZRange", func() {
@@ -7694,17 +8990,80 @@ func testAdapterCache(resp3 bool) {
 			Expect(pos).To(Equal(int64(-1)))
 		})
 
-		It("should BitPosSpan", func() {
-			err := adapter.Set(ctx, "mykey", "\x00\xff\x00", 0).Err()
-			Expect(err).NotTo(HaveOccurred())
+		It("should BitPosSpan with varied arguments", func() {
+			key := "mykey_bitposspan"
+			// Value: \x0f\x00\xf0 (00001111 00000000 11110000)
+			Expect(adapter.Set(ctx, key, "\x0f\x00\xf0", 0).Err()).NotTo(HaveOccurred())
 
-			pos, err := adapter.Cache(time.Hour).BitPosSpan(ctx, "mykey", 0, 1, 3, "byte").Result()
+			// BIT span
+			// Find first '1' from bit 0 up to bit 7 (within first byte \x0f)
+			pos, err := adapter.BitPosSpan(ctx, key, 1, 0, 0, "bit").Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(16)))
+			Expect(pos).To(Equal(int64(4)))
 
-			pos, err = adapter.Cache(time.Hour).BitPosSpan(ctx, "mykey", 0, 1, 3, "bit").Result()
+			// Find first '0' from bit 16 up to bit 23 (within third byte \xf0)
+			pos, err = adapter.BitPosSpan(ctx, key, 0, 16, 23, "bit").Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(pos).To(Equal(int64(1)))
+			Expect(pos).To(Equal(int64(20)))
+
+			// Find first '1' from bit 8 to bit 15 (second byte \x00) - not found
+			pos, err = adapter.BitPosSpan(ctx, key, 1, 8, 15, "bit").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(-1)))
+			
+			// BYTE span
+			// Find first '1' from byte 0 up to byte 0 (first byte \x0f)
+			pos, err = adapter.BitPosSpan(ctx, key, 1, 0, 0, "byte").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(4)))
+
+			// Find first '0' from byte 2 up to byte 2 (third byte \xf0)
+			pos, err = adapter.BitPosSpan(ctx, key, 0, 2, 2, "byte").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(20)))
+
+			// Find first '1' in byte 1 (\x00) - not found
+			pos, err = adapter.BitPosSpan(ctx, key, 1, 1, 1, "byte").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(-1)))
+
+			// Test with non-existent key
+			pos, err = adapter.BitPosSpan(ctx, "nonexistent_key_bitposspan", 1, 0, 0, "BIT").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(-1)))
+			pos, err = adapter.BitPosSpan(ctx, "nonexistent_key_bitposspan", 0, 0, 0, "BYTE").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(0)))
+
+			// Test with negative indices (Redis BITPOS with BYTE/BIT option doesn't support negative start/end for byte ranges)
+			// The adapter should handle this by passing them as is, and Redis will error or interpret.
+			// Standard BITPOS does, but when BYTE/BIT is added, the meaning of start/end changes to bit offsets.
+			// For BitPosSpan, start/end are bit offsets if span is "BIT", byte offsets if span is "BYTE".
+			// Negative offsets are not standard for the BYTE/BIT variant in Redis 7+ for the bit/byte ranges.
+			// Let's test how the adapter/Redis handles it if we try to use them conceptually.
+			// If the adapter directly maps to BITPOS's start/end for BYTE/BIT unit, Redis will likely error.
+			// This part tests the adapter's behavior when such arguments are passed.
+			// Assuming the adapter might try to pass them, leading to Redis error.
+			// However, the adapter's BitPosSpan actually takes positive bit/byte counts for start/end, not offsets.
+			// The arguments for BitPosSpan are: key, bit, start_bit_or_byte_count, end_bit_or_byte_count, unit
+			// So negative values here are not about string end offsets but literal negative counts, which Redis rejects.
+			
+			// Re-evaluating BitPosSpan signature: BitPosSpan(ctx, key, bit, start, end, unit)
+			// 'start' and 'end' are counts/indices *within the specified unit*.
+			// e.g. for BYTE, start=1, end=3 means bytes 1 through 3.
+
+			// Find first '1' in bytes 0-1 (\x0f\x00)
+			pos, err = adapter.BitPosSpan(ctx, key, 1, 0, 1, "byte").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(4)))
+			
+			// Find first '0' in bits 4-11 (covers 0000'1111 0000'0000) -> first '0' is at bit index 0.
+			// This test is a bit tricky because it spans across byte boundary if not careful.
+			// 00001111 | 00000000 : bit 4 is '1', bit 5 is '1', bit 6 is '1', bit 7 is '1'. bit 8 is '0'.
+			// So, searching for '0' from bit 4 to 11.
+			pos, err = adapter.BitPosSpan(ctx, key, 0, 4, 11, "bit").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pos).To(Equal(int64(8)))
 		})
 
 		It("should BitFieldRO", func() {
@@ -9394,6 +10753,133 @@ func testAdapterCache(resp3 bool) {
 			val, err = adapter.Cache(time.Hour).GeoSearch(ctx, "Sicily", q).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(Equal([]string{"Palermo"}))
+		})
+
+		It("should panic when GeoRadius is called with Store option on CacheCompat", func() {
+			cachedAdapter := adapter.Cache(time.Hour)
+			Expect(func() {
+				cachedAdapter.GeoRadius(ctx, "Sicily", 15, 37, GeoRadiusQuery{
+					Radius: 200,
+					Store:  "some_key",
+				}).Result()
+			}).To(Panic())
+		})
+
+		It("should panic when GeoRadius is called with StoreDist option on CacheCompat", func() {
+			cachedAdapter := adapter.Cache(time.Hour)
+			Expect(func() {
+				cachedAdapter.GeoRadius(ctx, "Sicily", 15, 37, GeoRadiusQuery{
+					Radius:    200,
+					StoreDist: "some_key",
+				}).Result()
+			}).To(Panic())
+		})
+
+		It("should panic when GeoRadiusByMember is called with Store option on CacheCompat", func() {
+			cachedAdapter := adapter.Cache(time.Hour)
+			Expect(func() {
+				cachedAdapter.GeoRadiusByMember(ctx, "Sicily", "Catania", GeoRadiusQuery{
+					Radius: 200,
+					Store:  "some_key",
+				}).Result()
+			}).To(Panic())
+		})
+
+		It("should panic when GeoRadiusByMember is called with StoreDist option on CacheCompat", func() {
+			cachedAdapter := adapter.Cache(time.Hour)
+			Expect(func() {
+				cachedAdapter.GeoRadiusByMember(ctx, "Sicily", "Catania", GeoRadiusQuery{
+					Radius:    200,
+					StoreDist: "some_key",
+				}).Result()
+			}).To(Panic())
+		})
+
+		Context("GeoDist with CacheCompat", func() {
+			// Palermo: 13.361389, 38.115556
+			// Catania: 15.087269, 37.502669
+			// Expected distances (approximate):
+			const (
+				distMeters     = 166274.15
+				distKm         = 166.27415
+				distMiles      = 103.318
+				distFeet       = 545518.87
+				distTolerance  = 0.01     // Tolerance for km/miles
+				distToleranceM = 10.0     // Tolerance for meters/feet due to larger numbers & Redis rounding
+			)
+
+			It("should get geo distance in Meters (m)", func() {
+				cachedAdapter := adapter.Cache(time.Hour)
+				dist, err := cachedAdapter.GeoDist(ctx, "Sicily", "Palermo", "Catania", "m").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(dist).To(BeNumerically("~", distMeters, distToleranceM))
+				// Call again
+				dist, err = cachedAdapter.GeoDist(ctx, "Sicily", "Palermo", "Catania", "m").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(dist).To(BeNumerically("~", distMeters, distToleranceM))
+			})
+
+			It("should get geo distance in Kilometers (km)", func() {
+				cachedAdapter := adapter.Cache(time.Hour)
+				dist, err := cachedAdapter.GeoDist(ctx, "Sicily", "Palermo", "Catania", "km").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(dist).To(BeNumerically("~", distKm, distTolerance))
+				// Call again
+				dist, err = cachedAdapter.GeoDist(ctx, "Sicily", "Palermo", "Catania", "km").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(dist).To(BeNumerically("~", distKm, distTolerance))
+			})
+
+			It("should get geo distance in Miles (mi)", func() {
+				cachedAdapter := adapter.Cache(time.Hour)
+				dist, err := cachedAdapter.GeoDist(ctx, "Sicily", "Palermo", "Catania", "mi").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(dist).To(BeNumerically("~", distMiles, distTolerance))
+				// Call again
+				dist, err = cachedAdapter.GeoDist(ctx, "Sicily", "Palermo", "Catania", "mi").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(dist).To(BeNumerically("~", distMiles, distTolerance))
+			})
+
+			It("should get geo distance in Feet (ft)", func() {
+				cachedAdapter := adapter.Cache(time.Hour)
+				dist, err := cachedAdapter.GeoDist(ctx, "Sicily", "Palermo", "Catania", "ft").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(dist).To(BeNumerically("~", distFeet, distToleranceM))
+				// Call again
+				dist, err = cachedAdapter.GeoDist(ctx, "Sicily", "Palermo", "Catania", "ft").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(dist).To(BeNumerically("~", distFeet, distToleranceM))
+			})
+
+			It("should default to Kilometers (km) if unit is empty", func() {
+				cachedAdapter := adapter.Cache(time.Hour)
+				dist, err := cachedAdapter.GeoDist(ctx, "Sicily", "Palermo", "Catania", "").Result() // Default unit
+				Expect(err).NotTo(HaveOccurred())
+				Expect(dist).To(BeNumerically("~", distKm, distTolerance))
+				// Call again
+				dist, err = cachedAdapter.GeoDist(ctx, "Sicily", "Palermo", "Catania", "").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(dist).To(BeNumerically("~", distKm, distTolerance))
+			})
+
+			It("should use Kilometers (km) if unit is not specified (nil)", func() {
+				cachedAdapter := adapter.Cache(time.Hour)
+				dist, err := cachedAdapter.GeoDist(ctx, "Sicily", "Palermo", "Catania").Result() // Unit not specified
+				Expect(err).NotTo(HaveOccurred())
+				Expect(dist).To(BeNumerically("~", distKm, distTolerance))
+				// Call again
+				dist, err = cachedAdapter.GeoDist(ctx, "Sicily", "Palermo", "Catania").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(dist).To(BeNumerically("~", distKm, distTolerance))
+			})
+			
+			It("should panic on invalid unit in GeoDist with CacheCompat", func() {
+				cachedAdapter := adapter.Cache(time.Hour)
+				Expect(func() {
+					cachedAdapter.GeoDist(ctx, "Sicily", "Palermo", "Catania", "invalid_unit").Result()
+				}).To(Panic())
+			})
 		})
 	})
 
