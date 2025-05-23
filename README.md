@@ -130,6 +130,30 @@ for _, resp := range client.DoMulti(ctx, cmds...) {
 }
 ```
 
+When using `DoMulti()` to send multiple commands, the original commands are recycled after execution by default.
+If you need to reference them afterward (e.g. to retrieve the key), use the `Pin()` method to prevent recycling.
+
+```golang
+// Create pinned commands to preserve them from being recycled
+cmds := make(valkey.Commands, 0, 10)
+for i := 0; i < 10; i++ {
+	cmds = append(cmds, client.B().Get().Key(strconv.Itoa(i)).Build().Pin())
+}
+
+// Execute commands and process responses
+for i, resp := range client.DoMulti(context.Background(), cmds...) {
+	fmt.Println(resp.ToString()) // this is the result
+	fmt.Println(cmds[i].Commands()[1]) // this is the corresponding key
+}
+```
+
+Alternatively, you can use the `MGet` and `MGetCache` helper functions to easily map keys to their corresponding responses.
+
+```golang
+val, err := MGet(client, ctx, []string{"k1", "k2"})
+fmt.Println(val["k1"].ToString()) // this is the k1 value
+```
+
 ## [Server-Assisted Client-Side Caching](https://redis.io/docs/manual/client-side-caching/)
 
 The opt-in mode of [server-assisted client-side caching](https://redis.io/docs/manual/client-side-caching/) is enabled by default and can be used by calling `DoCache()` or `DoMultiCache()` with client-side TTLs specified.
