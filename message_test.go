@@ -2070,3 +2070,632 @@ func TestRedisMessage(t *testing.T) {
 		}
 	})
 }
+
+func TestRedisMessage_AsXRangeSlice(t *testing.T) {
+	t.Run("normal XRange entry with field-value pairs", func(t *testing.T) {
+		message := slicemsg('*', []RedisMessage{
+			strmsg('+', "1234567890-0"),
+			slicemsg('*', []RedisMessage{
+				strmsg('+', "field1"),
+				strmsg('+', "value1"),
+				strmsg('+', "field2"),
+				strmsg('+', "value2"),
+			}),
+		})
+
+		want := XRangeSlice{
+			ID: "1234567890-0",
+			FieldValues: []XRangeFieldValue{
+				{Field: "field1", Value: "value1"},
+				{Field: "field2", Value: "value2"},
+			},
+		}
+
+		got, err := message.AsXRangeSlice()
+		if err != nil {
+			t.Fatalf("AsXRangeSlice() error = %v", err)
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("AsXRangeSlice() = %v, want %v", got, want)
+		}
+	})
+
+	t.Run("XRange entry with duplicate fields (preserves order and duplicates)", func(t *testing.T) {
+		message := slicemsg('*', []RedisMessage{
+			strmsg('+', "1747784186966-0"),
+			slicemsg('*', []RedisMessage{
+				strmsg('+', "foo"),
+				strmsg('+', "1"),
+				strmsg('+', "foo"),
+				strmsg('+', "2"),
+				strmsg('+', "bar"),
+				strmsg('+', "3"),
+				strmsg('+', "bar"),
+				strmsg('+', "4"),
+			}),
+		})
+
+		want := XRangeSlice{
+			ID: "1747784186966-0",
+			FieldValues: []XRangeFieldValue{
+				{Field: "foo", Value: "1"},
+				{Field: "foo", Value: "2"},
+				{Field: "bar", Value: "3"},
+				{Field: "bar", Value: "4"},
+			},
+		}
+
+		got, err := message.AsXRangeSlice()
+		if err != nil {
+			t.Fatalf("AsXRangeSlice() error = %v", err)
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("AsXRangeSlice() = %v, want %v", got, want)
+		}
+	})
+
+	t.Run("XRange entry with nil field-values", func(t *testing.T) {
+		message := slicemsg('*', []RedisMessage{
+			strmsg('+', "1234567890-2"),
+			{typ: '_'},
+		})
+
+		want := XRangeSlice{
+			ID:          "1234567890-2",
+			FieldValues: nil,
+		}
+
+		got, err := message.AsXRangeSlice()
+		if err != nil {
+			t.Fatalf("AsXRangeSlice() error = %v", err)
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("AsXRangeSlice() = %v, want %v", got, want)
+		}
+	})
+
+	t.Run("XRange entry with empty field-values array", func(t *testing.T) {
+		message := slicemsg('*', []RedisMessage{
+			strmsg('+', "1234567890-3"),
+			slicemsg('*', []RedisMessage{}),
+		})
+
+		want := XRangeSlice{
+			ID:          "1234567890-3",
+			FieldValues: []XRangeFieldValue{},
+		}
+
+		got, err := message.AsXRangeSlice()
+		if err != nil {
+			t.Fatalf("AsXRangeSlice() error = %v", err)
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("AsXRangeSlice() = %v, want %v", got, want)
+		}
+	})
+
+	t.Run("XRange entry with odd number of field-values (handles gracefully)", func(t *testing.T) {
+		message := slicemsg('*', []RedisMessage{
+			strmsg('+', "1234567890-4"),
+			slicemsg('*', []RedisMessage{
+				strmsg('+', "field1"),
+				strmsg('+', "value1"),
+				strmsg('+', "field2"),
+			}),
+		})
+
+		want := XRangeSlice{
+			ID: "1234567890-4",
+			FieldValues: []XRangeFieldValue{
+				{Field: "field1", Value: "value1"},
+			},
+		}
+
+		got, err := message.AsXRangeSlice()
+		if err != nil {
+			t.Fatalf("AsXRangeSlice() error = %v", err)
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("AsXRangeSlice() = %v, want %v", got, want)
+		}
+	})
+
+	t.Run("invalid array length", func(t *testing.T) {
+		message := slicemsg('*', []RedisMessage{
+			strmsg('+', "1234567890-0"),
+		})
+
+		_, err := message.AsXRangeSlice()
+		if err == nil {
+			t.Fatal("AsXRangeSlice() expected error but got none")
+		}
+		if !strings.Contains(err.Error(), "got 1, wanted 2") {
+			t.Errorf("AsXRangeSlice() error = %v, want error containing 'got 1, wanted 2'", err)
+		}
+	})
+
+	t.Run("not an array", func(t *testing.T) {
+		message := strmsg('+', "not-an-array")
+
+		_, err := message.AsXRangeSlice()
+		if err == nil {
+			t.Fatal("AsXRangeSlice() expected error but got none")
+		}
+	})
+
+	t.Run("error response", func(t *testing.T) {
+		message := RedisMessage{typ: '_'}
+
+		_, err := message.AsXRangeSlice()
+		if err == nil {
+			t.Fatal("AsXRangeSlice() expected error but got none")
+		}
+	})
+
+	t.Run("error in ID parsing", func(t *testing.T) {
+		message := slicemsg('*', []RedisMessage{
+			{typ: '_'}, // ID that will cause error
+			slicemsg('*', []RedisMessage{}),
+		})
+
+		_, err := message.AsXRangeSlice()
+		if err == nil {
+			t.Fatal("AsXRangeSlice() expected error but got none")
+		}
+	})
+
+	t.Run("field-values array parsing error", func(t *testing.T) {
+		message := slicemsg('*', []RedisMessage{
+			strmsg('+', "1234567890-0"),
+			{typ: '-'}, // Error type for field-values
+		})
+
+		_, err := message.AsXRangeSlice()
+		if err == nil {
+			t.Fatal("AsXRangeSlice() expected error but got none")
+		}
+	})
+}
+
+func TestRedisMessage_AsXRangeSlices(t *testing.T) {
+	t.Run("multiple XRange entries", func(t *testing.T) {
+		message := slicemsg('*', []RedisMessage{
+			slicemsg('*', []RedisMessage{
+				strmsg('+', "1234567890-0"),
+				slicemsg('*', []RedisMessage{
+					strmsg('+', "field1"),
+					strmsg('+', "value1"),
+				}),
+			}),
+			slicemsg('*', []RedisMessage{
+				strmsg('+', "1234567890-1"),
+				slicemsg('*', []RedisMessage{
+					strmsg('+', "field2"),
+					strmsg('+', "value2"),
+				}),
+			}),
+		})
+
+		want := []XRangeSlice{
+			{
+				ID: "1234567890-0",
+				FieldValues: []XRangeFieldValue{
+					{Field: "field1", Value: "value1"},
+				},
+			},
+			{
+				ID: "1234567890-1",
+				FieldValues: []XRangeFieldValue{
+					{Field: "field2", Value: "value2"},
+				},
+			},
+		}
+
+		got, err := message.AsXRangeSlices()
+		if err != nil {
+			t.Fatalf("AsXRangeSlices() error = %v", err)
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("AsXRangeSlices() = %v, want %v", got, want)
+		}
+	})
+
+	t.Run("empty array", func(t *testing.T) {
+		message := slicemsg('*', []RedisMessage{})
+
+		want := []XRangeSlice{}
+		got, err := message.AsXRangeSlices()
+		if err != nil {
+			t.Fatalf("AsXRangeSlices() error = %v", err)
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("AsXRangeSlices() = %v, want %v", got, want)
+		}
+	})
+
+	t.Run("not an array", func(t *testing.T) {
+		message := strmsg('+', "not-an-array")
+
+		_, err := message.AsXRangeSlices()
+		if err == nil {
+			t.Fatal("AsXRangeSlices() expected error but got none")
+		}
+	})
+
+	t.Run("invalid entry in array", func(t *testing.T) {
+		message := slicemsg('*', []RedisMessage{
+			strmsg('+', "invalid-entry"),
+		})
+
+		_, err := message.AsXRangeSlices()
+		if err == nil {
+			t.Fatal("AsXRangeSlices() expected error but got none")
+		}
+	})
+
+	t.Run("error response", func(t *testing.T) {
+		message := RedisMessage{typ: '_'}
+
+		_, err := message.AsXRangeSlices()
+		if err == nil {
+			t.Fatal("AsXRangeSlices() expected error but got none")
+		}
+	})
+}
+
+func TestRedisMessage_AsXReadSlices(t *testing.T) {
+	t.Run("XREAD response with map format", func(t *testing.T) {
+		message := slicemsg('%', []RedisMessage{
+			strmsg('+', "stream1"),
+			slicemsg('*', []RedisMessage{
+				slicemsg('*', []RedisMessage{
+					strmsg('+', "1234567890-0"),
+					slicemsg('*', []RedisMessage{
+						strmsg('+', "field1"),
+						strmsg('+', "value1"),
+					}),
+				}),
+			}),
+			strmsg('+', "stream2"),
+			slicemsg('*', []RedisMessage{
+				slicemsg('*', []RedisMessage{
+					strmsg('+', "1234567890-1"),
+					slicemsg('*', []RedisMessage{
+						strmsg('+', "field2"),
+						strmsg('+', "value2"),
+					}),
+				}),
+			}),
+		})
+
+		want := map[string][]XRangeSlice{
+			"stream1": {{
+				ID: "1234567890-0",
+				FieldValues: []XRangeFieldValue{
+					{Field: "field1", Value: "value1"},
+				},
+			}},
+			"stream2": {{
+				ID: "1234567890-1",
+				FieldValues: []XRangeFieldValue{
+					{Field: "field2", Value: "value2"},
+				},
+			}},
+		}
+
+		got, err := message.AsXReadSlices()
+		if err != nil {
+			t.Fatalf("AsXReadSlices() error = %v", err)
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("AsXReadSlices() = %v, want %v", got, want)
+		}
+	})
+
+	t.Run("XREAD response with array format", func(t *testing.T) {
+		message := slicemsg('*', []RedisMessage{
+			slicemsg('*', []RedisMessage{
+				strmsg('+', "stream1"),
+				slicemsg('*', []RedisMessage{
+					slicemsg('*', []RedisMessage{
+						strmsg('+', "1234567890-0"),
+						slicemsg('*', []RedisMessage{
+							strmsg('+', "field1"),
+							strmsg('+', "value1"),
+						}),
+					}),
+				}),
+			}),
+		})
+
+		want := map[string][]XRangeSlice{
+			"stream1": {{
+				ID: "1234567890-0",
+				FieldValues: []XRangeFieldValue{
+					{Field: "field1", Value: "value1"},
+				},
+			}},
+		}
+
+		got, err := message.AsXReadSlices()
+		if err != nil {
+			t.Fatalf("AsXReadSlices() error = %v", err)
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("AsXReadSlices() = %v, want %v", got, want)
+		}
+	})
+
+	t.Run("error response", func(t *testing.T) {
+		message := strmsg('-', "ERR some error")
+
+		_, err := message.AsXReadSlices()
+		if err == nil {
+			t.Fatal("AsXReadSlices() expected error but got none")
+		}
+	})
+
+	t.Run("invalid type", func(t *testing.T) {
+		message := strmsg('+', "invalid")
+
+		_, err := message.AsXReadSlices()
+		if err == nil {
+			t.Fatal("AsXReadSlices() expected error but got none")
+		}
+		if !strings.Contains(err.Error(), "is not a map/array/set") {
+			t.Errorf("AsXReadSlices() error = %v, want error containing 'is not a map/array/set'", err)
+		}
+	})
+
+	t.Run("invalid array entry length", func(t *testing.T) {
+		message := slicemsg('*', []RedisMessage{
+			slicemsg('*', []RedisMessage{
+				strmsg('+', "stream1"),
+			}),
+		})
+
+		_, err := message.AsXReadSlices()
+		if err == nil {
+			t.Fatal("AsXReadSlices() expected error but got none")
+		}
+		if !strings.Contains(err.Error(), "got 1, wanted 2") {
+			t.Errorf("AsXReadSlices() error = %v, want error containing 'got 1, wanted 2'", err)
+		}
+	})
+
+	t.Run("map format with AsXRangeSlices error", func(t *testing.T) {
+		message := slicemsg('%', []RedisMessage{
+			strmsg('+', "stream1"),
+			strmsg('+', "invalid-range-data"), // This will cause AsXRangeSlices to fail
+		})
+
+		_, err := message.AsXReadSlices()
+		if err == nil {
+			t.Fatal("AsXReadSlices() expected error but got none")
+		}
+	})
+
+	t.Run("array format with AsXRangeSlices error", func(t *testing.T) {
+		message := slicemsg('*', []RedisMessage{
+			slicemsg('*', []RedisMessage{
+				strmsg('+', "stream1"),
+				strmsg('+', "invalid-range-data"), // This will cause AsXRangeSlices to fail
+			}),
+		})
+
+		_, err := message.AsXReadSlices()
+		if err == nil {
+			t.Fatal("AsXReadSlices() expected error but got none")
+		}
+	})
+
+	t.Run("array format with non-array entry", func(t *testing.T) {
+		message := slicemsg('*', []RedisMessage{
+			strmsg('+', "not-an-array-entry"),
+		})
+
+		_, err := message.AsXReadSlices()
+		if err == nil {
+			t.Fatal("AsXReadSlices() expected error but got none")
+		}
+		if !strings.Contains(err.Error(), "got 0, wanted 2") {
+			t.Errorf("AsXReadSlices() error = %v, want error containing 'got 0, wanted 2'", err)
+		}
+	})
+}
+func TestRedisResult_XRangeSlice_Methods(t *testing.T) {
+	t.Run("AsXRangeSlice with error", func(t *testing.T) {
+		result := RedisResult{err: errors.New("network error")}
+
+		_, err := result.AsXRangeSlice()
+		if err == nil {
+			t.Fatal("AsXRangeSlice() expected error but got none")
+		}
+		if err.Error() != "network error" {
+			t.Errorf("AsXRangeSlice() error = %v, want 'network error'", err)
+		}
+	})
+
+	t.Run("AsXRangeSlice success", func(t *testing.T) {
+		message := slicemsg('*', []RedisMessage{
+			strmsg('+', "1234567890-0"),
+			slicemsg('*', []RedisMessage{
+				strmsg('+', "field1"),
+				strmsg('+', "value1"),
+			}),
+		})
+		result := RedisResult{val: message}
+
+		want := XRangeSlice{
+			ID: "1234567890-0",
+			FieldValues: []XRangeFieldValue{
+				{Field: "field1", Value: "value1"},
+			},
+		}
+
+		got, err := result.AsXRangeSlice()
+		if err != nil {
+			t.Fatalf("AsXRangeSlice() error = %v", err)
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("AsXRangeSlice() = %v, want %v", got, want)
+		}
+	})
+
+	t.Run("AsXRangeSlices with error", func(t *testing.T) {
+		result := RedisResult{err: errors.New("network error")}
+
+		_, err := result.AsXRangeSlices()
+		if err == nil {
+			t.Fatal("AsXRangeSlices() expected error but got none")
+		}
+		if err.Error() != "network error" {
+			t.Errorf("AsXRangeSlices() error = %v, want 'network error'", err)
+		}
+	})
+
+	t.Run("AsXRangeSlices success", func(t *testing.T) {
+		message := slicemsg('*', []RedisMessage{
+			slicemsg('*', []RedisMessage{
+				strmsg('+', "1234567890-0"),
+				slicemsg('*', []RedisMessage{
+					strmsg('+', "field1"),
+					strmsg('+', "value1"),
+				}),
+			}),
+		})
+		result := RedisResult{val: message}
+
+		want := []XRangeSlice{{
+			ID: "1234567890-0",
+			FieldValues: []XRangeFieldValue{
+				{Field: "field1", Value: "value1"},
+			},
+		}}
+
+		got, err := result.AsXRangeSlices()
+		if err != nil {
+			t.Fatalf("AsXRangeSlices() error = %v", err)
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("AsXRangeSlices() = %v, want %v", got, want)
+		}
+	})
+
+	t.Run("AsXReadSlices with error", func(t *testing.T) {
+		result := RedisResult{err: errors.New("network error")}
+
+		_, err := result.AsXReadSlices()
+		if err == nil {
+			t.Fatal("AsXReadSlices() expected error but got none")
+		}
+		if err.Error() != "network error" {
+			t.Errorf("AsXReadSlices() error = %v, want 'network error'", err)
+		}
+	})
+
+	t.Run("AsXReadSlices success", func(t *testing.T) {
+		message := slicemsg('*', []RedisMessage{
+			slicemsg('*', []RedisMessage{
+				strmsg('+', "stream1"),
+				slicemsg('*', []RedisMessage{
+					slicemsg('*', []RedisMessage{
+						strmsg('+', "1234567890-0"),
+						slicemsg('*', []RedisMessage{
+							strmsg('+', "field1"),
+							strmsg('+', "value1"),
+						}),
+					}),
+				}),
+			}),
+		})
+		result := RedisResult{val: message}
+
+		want := map[string][]XRangeSlice{
+			"stream1": {{
+				ID: "1234567890-0",
+				FieldValues: []XRangeFieldValue{
+					{Field: "field1", Value: "value1"},
+				},
+			}},
+		}
+
+		got, err := result.AsXReadSlices()
+		if err != nil {
+			t.Fatalf("AsXReadSlices() error = %v", err)
+		}
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("AsXReadSlices() = %v, want %v", got, want)
+		}
+	})
+}
+
+// Test to verify order preservation and duplicate handling (the core issue)
+func TestXRangeSlice_OrderAndDuplicates(t *testing.T) {
+	// This test specifically verifies the key features mentioned in the issue
+	message := slicemsg('*', []RedisMessage{
+		strmsg('+', "1747784186966-0"),
+		slicemsg('*', []RedisMessage{
+			strmsg('+', "foo"),
+			strmsg('+', "1"),
+			strmsg('+', "foo"),
+			strmsg('+', "2"),
+			strmsg('+', "bar"),
+			strmsg('+', "3"),
+			strmsg('+', "bar"),
+			strmsg('+', "4"),
+		}),
+	})
+
+	result, err := message.AsXRangeSlice()
+	if err != nil {
+		t.Fatalf("AsXRangeSlice() error = %v", err)
+	}
+
+	// Verify order is preserved
+	expectedOrder := []XRangeFieldValue{
+		{Field: "foo", Value: "1"},
+		{Field: "foo", Value: "2"},
+		{Field: "bar", Value: "3"},
+		{Field: "bar", Value: "4"},
+	}
+
+	if !reflect.DeepEqual(result.FieldValues, expectedOrder) {
+		t.Errorf("Order not preserved. Got %v, want %v", result.FieldValues, expectedOrder)
+	}
+
+	// Verify duplicates are preserved
+	fooCount := 0
+	barCount := 0
+	for _, fv := range result.FieldValues {
+		switch fv.Field {
+		case "foo":
+			fooCount++
+		case "bar":
+			barCount++
+		}
+	}
+
+	if fooCount != 2 {
+		t.Errorf("Expected 2 'foo' entries, got %d", fooCount)
+	}
+	if barCount != 2 {
+		t.Errorf("Expected 2 'bar' entries, got %d", barCount)
+	}
+
+	// Show that converting to map loses information (for comparison)
+	oldStyleMap := map[string]string{
+		"foo": "2", // Only keeps the last value
+		"bar": "4", // Only keeps the last value
+	}
+
+	// Convert new style back to map should match old behavior for last values
+	newStyleAsMap := make(map[string]string)
+	for _, fv := range result.FieldValues {
+		newStyleAsMap[fv.Field] = fv.Value // This overwrites, just like the old map behavior
+	}
+
+	if !reflect.DeepEqual(newStyleAsMap, oldStyleMap) {
+		t.Errorf("Map conversion doesn't match expected behavior. Got %v, want %v", newStyleAsMap, oldStyleMap)
+	}
+}
