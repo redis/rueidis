@@ -26,7 +26,7 @@ type redisExpect struct {
 }
 
 type redisMock struct {
-	t    *testing.T
+	t    testing.TB
 	buf  *bufio.Reader
 	conn net.Conn
 }
