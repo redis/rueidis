@@ -277,7 +277,12 @@ To receive messages from channels, `client.Receive()` should be used. It support
 
 ```golang
 err = client.Receive(context.Background(), client.B().Subscribe().Channel("ch1", "ch2").Build(), func(msg rueidis.PubSubMessage) {
-    // Handle the message. Note that if you want to call another `client.Do()` here, you need to do it in another goroutine or the `client` will be blocked.
+    // Handle the message. If you need to perform heavy processing or issue
+    // additional commands, do that in a separate goroutine to avoid
+    // blocking the pipeline, e.g.:
+    //   go func() {
+    //       // long work or client.Do(...)
+    //   }()
 })
 ```
 
@@ -294,6 +299,26 @@ While the `client.Receive()` call is blocking, the `Client` is still able to acc
 and they are sharing the same TCP connection. If your message handler may take some time to complete, it is recommended
 to use the `client.Receive()` inside a `client.Dedicated()` for not blocking other concurrent requests.
 
+#### Subscription confirmations
+
+Use `rueidis.WithOnSubscriptionHook` when you need to observe subscribe / unsubscribe confirmations that the server sends. The hook can be triggered multiple times because the client may automatically reconnect and resubscribe.
+
+```go
+ctx := rueidis.WithOnSubscriptionHook(context.Background(), func(s rueidis.PubSubSubscription) {
+    // This hook runs in the pipeline goroutine. If you need to perform
+    // heavy work or invoke additional commands, do it in another
+    // goroutine to avoid blocking the pipeline, for example:
+    //   go func() {
+    //       // long work or client.Do(...)
+    //   }()
+    fmt.Printf("%s %s (count %d)\n", s.Kind, s.Channel, s.Count)
+})
+
+err := client.Receive(ctx, client.B().Subscribe().Channel("news").Build(), func(m rueidis.PubSubMessage) {
+    // ...
+})
+```
+
 ### Alternative PubSub Hooks
 
 The `client.Receive()` requires users to provide a subscription command in advance.
@@ -305,7 +330,12 @@ defer cancel()
 
 wait := c.SetPubSubHooks(rueidis.PubSubHooks{
 	OnMessage: func(m rueidis.PubSubMessage) {
-		// Handle the message. Note that if you want to call another `c.Do()` here, you need to do it in another goroutine or the `c` will be blocked.
+		// Handle the message. If you need to perform heavy processing or issue
+		// additional commands, do that in a separate goroutine to avoid
+		// blocking the pipeline, e.g.:
+		//   go func() {
+		//       // long work or client.Do(...)
+		//   }()
 	}
 })
 c.Do(ctx, c.B().Subscribe().Channel("ch").Build())

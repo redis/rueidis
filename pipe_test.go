@@ -2962,6 +2962,8 @@ func TestPubSub(t *testing.T) {
 			).Reply(strmsg('+', "PONG"))
 		}()
 
+		confirms := make(chan PubSubSubscription, 2)
+		ctx = WithOnSubscriptionHook(ctx, func(s PubSubSubscription) { confirms <- s })
 		if err := p.Receive(ctx, activate, func(msg PubSubMessage) {
 			if msg.Channel == "1" && msg.Message == "2" {
 				if err := p.Do(ctx, deactivate).Error(); err != nil {
@@ -2971,7 +2973,12 @@ func TestPubSub(t *testing.T) {
 		}); err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-
+		if s := <-confirms; s.Kind != "subscribe" || s.Channel != "1" {
+			t.Fatalf("unexpected subscription %v", s)
+		}
+		if s := <-confirms; s.Kind != "unsubscribe" || s.Channel != "1" {
+			t.Fatalf("unexpected subscription %v", s)
+		}
 		cancel()
 	})
 
@@ -3003,6 +3010,8 @@ func TestPubSub(t *testing.T) {
 			).Reply(strmsg('+', "PONG"))
 		}()
 
+		confirms := make(chan PubSubSubscription, 2)
+		ctx = WithOnSubscriptionHook(ctx, func(s PubSubSubscription) { confirms <- s })
 		if err := p.Receive(ctx, activate, func(msg PubSubMessage) {
 			if msg.Channel == "1" && msg.Message == "2" {
 				if err := p.Do(ctx, deactivate).Error(); err != nil {
@@ -3012,7 +3021,12 @@ func TestPubSub(t *testing.T) {
 		}); err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-
+		if s := <-confirms; s.Kind != "ssubscribe" || s.Channel != "1" {
+			t.Fatalf("unexpected subscription %v", s)
+		}
+		if s := <-confirms; s.Kind != "sunsubscribe" || s.Channel != "1" {
+			t.Fatalf("unexpected subscription %v", s)
+		}
 		cancel()
 	})
 
@@ -3045,6 +3059,8 @@ func TestPubSub(t *testing.T) {
 			).Reply(strmsg('+', "PONG"))
 		}()
 
+		confirms := make(chan PubSubSubscription, 2)
+		ctx = WithOnSubscriptionHook(ctx, func(s PubSubSubscription) { confirms <- s })
 		if err := p.Receive(ctx, activate, func(msg PubSubMessage) {
 			if msg.Pattern == "1" && msg.Channel == "2" && msg.Message == "3" {
 				if err := p.Do(ctx, deactivate).Error(); err != nil {
@@ -3054,7 +3070,12 @@ func TestPubSub(t *testing.T) {
 		}); err != nil {
 			t.Fatalf("unexpected err %v", err)
 		}
-
+		if s := <-confirms; s.Kind != "psubscribe" || s.Channel != "1" {
+			t.Fatalf("unexpected subscription %v", s)
+		}
+		if s := <-confirms; s.Kind != "punsubscribe" || s.Channel != "1" {
+			t.Fatalf("unexpected subscription %v", s)
+		}
 		cancel()
 	})
 
