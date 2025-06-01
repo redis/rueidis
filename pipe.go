@@ -788,9 +788,9 @@ const hookKey recvCtxKey = 0
 // WithOnSubscriptionHook attaches a subscription confirmation hook to the provided
 // context and returns a new context for the Receive method.
 //
-// The hook is invoked by Receive each time the server sends a subscribe or
+// The hook is invoked each time the server sends a subscribe or
 // unsubscribe confirmation, allowing callers to observe the state of a Pub/Sub
-// subscription.
+// subscription during the lifetime of a Receive invocation.
 //
 // The hook may be called multiple times because the client can resubscribe after a
 // reconnection. Therefore, the hook implementation must be safe to run more than once.
