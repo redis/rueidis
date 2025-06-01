@@ -54,8 +54,8 @@ type chs struct {
 
 type sub struct {
 	ch chan PubSubMessage
-	cs []string
 	fn func(PubSubSubscription)
+	cs []string
 }
 
 func (s *subs) Publish(channel string, msg PubSubMessage) {
