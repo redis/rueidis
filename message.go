@@ -1036,8 +1036,8 @@ func (m *RedisMessage) AsXRead() (ret map[string][]XRangeEntry, err error) {
 
 // New slice-based structures that preserve order and duplicates
 type XRangeSlice struct {
-	FieldValues []XRangeFieldValue
 	ID          string
+	FieldValues []XRangeFieldValue
 }
 
 type XRangeFieldValue struct {
