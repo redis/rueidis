@@ -301,7 +301,9 @@ to use the `client.Receive()` inside a `client.Dedicated()` for not blocking oth
 
 #### Subscription confirmations
 
-Use `rueidis.WithOnSubscriptionHook` when you need to observe subscribe / unsubscribe confirmations that the server sends. The hook can be triggered multiple times because the client may automatically reconnect and resubscribe.
+Use `rueidis.WithOnSubscriptionHook` when you need to observe subscribe / unsubscribe confirmations that the server sends during the lifetime of a `client.Receive()`.
+
+The hook can be triggered multiple times because the `client.Receive()` may automatically reconnect and resubscribe.
 
 ```go
 ctx := rueidis.WithOnSubscriptionHook(context.Background(), func(s rueidis.PubSubSubscription) {
