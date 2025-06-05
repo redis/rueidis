@@ -30,7 +30,6 @@ func TestJSONPanic(t *testing.T) {
 	JSON(a)
 }
 
-
 func TestVectorString32(t *testing.T) {
 	for _, test := range [][]float32{
 		{},

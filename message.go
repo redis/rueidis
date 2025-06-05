@@ -1054,12 +1054,10 @@ func (m *RedisMessage) AsXRangeSlice() (XRangeSlice, error) {
 	if len(values) != 2 {
 		return XRangeSlice{}, fmt.Errorf("got %d, wanted 2", len(values))
 	}
-
 	id, err := values[0].ToString()
 	if err != nil {
 		return XRangeSlice{}, err
 	}
-
 	// Handle the field-values array
 	fieldArray, err := values[1].ToArray()
 	if err != nil {
@@ -1068,7 +1066,6 @@ func (m *RedisMessage) AsXRangeSlice() (XRangeSlice, error) {
 		}
 		return XRangeSlice{}, err
 	}
-
 	// Convert pairs to slice (preserving order)
 	fieldValues := make([]XRangeFieldValue, 0, len(fieldArray)/2)
 	for i := 0; i < cap(fieldValues); i++ {
@@ -1079,7 +1076,6 @@ func (m *RedisMessage) AsXRangeSlice() (XRangeSlice, error) {
 			Value: value,
 		})
 	}
-
 	return XRangeSlice{
 		ID:          id,
 		FieldValues: fieldValues,
@@ -1092,7 +1088,6 @@ func (m *RedisMessage) AsXRangeSlices() ([]XRangeSlice, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	msgs := make([]XRangeSlice, 0, len(values))
 	for _, v := range values {
 		msg, err := v.AsXRangeSlice()
@@ -1109,10 +1104,8 @@ func (m *RedisMessage) AsXReadSlices() (map[string][]XRangeSlice, error) {
 	if err := m.Error(); err != nil {
 		return nil, err
 	}
-
 	var ret map[string][]XRangeSlice
 	var err error
-
 	if m.IsMap() {
 		ret = make(map[string][]XRangeSlice, len(m.values())/2)
 		for i := 0; i < len(m.values()); i += 2 {
@@ -1122,7 +1115,6 @@ func (m *RedisMessage) AsXReadSlices() (map[string][]XRangeSlice, error) {
 		}
 		return ret, nil
 	}
-
 	if m.IsArray() {
 		ret = make(map[string][]XRangeSlice, len(m.values()))
 		for _, v := range m.values() {
@@ -1135,7 +1127,6 @@ func (m *RedisMessage) AsXReadSlices() (map[string][]XRangeSlice, error) {
 		}
 		return ret, nil
 	}
-
 	typ := m.typ
 	return nil, fmt.Errorf("%w: valkey message type %s is not a map/array/set", errParse, typeNames[typ])
 }
