@@ -135,7 +135,7 @@ If you need to reference them afterward (e.g. to retrieve the key), use the `Pin
 
 ```golang
 // Create pinned commands to preserve them from being recycled
-cmds := make(valkey.Commands, 0, 10)
+cmds := make(rueidis.Commands, 0, 10)
 for i := 0; i < 10; i++ {
 	cmds = append(cmds, client.B().Get().Key(strconv.Itoa(i)).Build().Pin())
 }
