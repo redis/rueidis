@@ -14,7 +14,6 @@ import (
 
 	"github.com/redis/rueidis/internal/cmds"
 	"github.com/redis/rueidis/internal/util"
-	"golang.org/x/sync/errgroup"
 )
 
 func newSentinelClient(opt *ClientOption, connFn connFn, retryer retryHandler) (client *sentinelClient, err error) {
@@ -64,7 +63,7 @@ type sentinelClient struct {
 	sentinels    *list.List
 	mAddr        string
 	sAddr        string
-	rAddr 		 string
+	rAddr        string
 	sc           call
 	mu           sync.Mutex
 	stop         uint32
@@ -187,11 +186,7 @@ func (c *sentinelClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL
 	}
 	attempts := 1
 
-	commands := make([]Completed, 0, len(multi))
-	for _, command := range multi {
-		commands = append(commands, Completed(command.Cmd))
-	}
-	sendToReplica := c.sendAllToReplica(commands)
+	sendToReplica := c.sendAllToReplicaCache(multi)
 retry:
 	cc := c.pickMulti(sendToReplica)
 	resps := cc.DoMultiCache(ctx, multi...)
@@ -315,7 +310,7 @@ func (c *sentinelClient) Nodes() map[string]Client {
 		master := c.mConn.Load().(conn)
 		replica := c.rConn.Load().(conn)
 		return map[string]Client{
-			master.Addr(): newSingleClientWithConn(master, c.cmd, c.retry, disableCache, c.retryHandler, false),
+			master.Addr():  newSingleClientWithConn(master, c.cmd, c.retry, disableCache, c.retryHandler, false),
 			replica.Addr(): newSingleClientWithConn(replica, c.cmd, c.retry, disableCache, c.retryHandler, false),
 		}
 	default:
@@ -401,7 +396,6 @@ func (c *sentinelClient) pickMulti(sendToReplica bool) (cc conn) {
 	return cc
 }
 
-
 func (c *sentinelClient) sendAllToReplica(cmds []Completed) bool {
 	if c.rOpt == nil || c.rOpt.SendToReplicas == nil {
 		return false
@@ -410,6 +404,22 @@ func (c *sentinelClient) sendAllToReplica(cmds []Completed) bool {
 	if c.rOpt.SendToReplicas != nil {
 		for _, cmd := range cmds {
 			if !c.rOpt.SendToReplicas(cmd) {
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+func (c *sentinelClient) sendAllToReplicaCache(cmds []CacheableTTL) bool {
+	if c.rOpt == nil || c.rOpt.SendToReplicas == nil {
+		return false
+	}
+
+	if c.rOpt.SendToReplicas != nil {
+		for _, cmd := range cmds {
+			if !c.rOpt.SendToReplicas(Completed(cmd.Cmd)) {
 				return false
 			}
 		}
@@ -451,7 +461,7 @@ func (c *sentinelClient) _switchMaster(addr string) (err error) {
 		return err
 	}
 
- 	if resp[0].string() != "master" {
+	if resp[0].string() != "master" {
 		target.Close()
 		return errNotMaster
 	}
@@ -550,23 +560,20 @@ func (c *sentinelClient) _refresh() (err error) {
 				case c.replica:
 					err = c._switchReplica(replica)
 				case c.rOpt != nil:
-					var eg errgroup.Group
-					eg.Go(func() error {
-						err := c._switchMaster(master)
-						if err != nil {
-							return err
-						}
-						return nil
-					})
-					eg.Go(func() error {
-						err := c._switchReplica(replica)
-						if err != nil {
-							return err
-						}
-						return nil
-					})
+					errs := make(chan error, 1)
+					go func(errs chan error, master string) {
+						errs <- c._switchMaster(master)
+					}(errs, master)
+					go func(errs chan error, replica string) {
+						errs <- c._switchReplica(replica)
+					}(errs, replica)
 
-					err = eg.Wait()
+					for i := 0; i < 2; i++ {
+						if e := <-errs; e != nil {
+							err = e
+							break
+						}
+					}
 				default:
 					err = c._switchMaster(master)
 				}
