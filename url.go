@@ -82,7 +82,7 @@ func ParseURL(str string) (opt ClientOption, err error) {
 		}
 	}
 	if q.Has("write_timeout") {
-		if opt.Dialer.Timeout, err = time.ParseDuration(q.Get("write_timeout")); err != nil {
+		if opt.ConnWriteTimeout, err = time.ParseDuration(q.Get("write_timeout")); err != nil {
 			return opt, fmt.Errorf("redis: invalid write timeout: %q", q.Get("write_timeout"))
 		}
 	}
