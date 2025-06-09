@@ -656,7 +656,7 @@ func TestSentinelClientInit(t *testing.T) {
 
 		client, err := newSentinelClient(
 			&ClientOption{
-				InitAddress: []string{"127.0.0.1:0"}, 
+				InitAddress:    []string{"127.0.0.1:0"},
 				SendToReplicas: func(cmd Completed) bool { return true },
 			},
 			func(dst string, opt *ClientOption) conn {
@@ -696,6 +696,197 @@ func TestSentinelClientInit(t *testing.T) {
 		}
 		if client.rConn.Load() == nil {
 			t.Fatalf("unexpected nil replica conn")
+		}
+		client.Close()
+	})
+
+	t.Run("sentinel disconnect SendToReplicas is set", func(t *testing.T) {
+		trigger := make(chan error)
+		disconnect := int32(0)
+		s0closed := int32(0)
+		r1closed := int32(0)
+		s0 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				if atomic.LoadInt32(&disconnect) == 1 {
+					return newErrResult(errors.New("die"))
+				}
+				return RedisResult{}
+			},
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{
+					s: []RedisResult{
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.0.2"),
+									strmsg('+', "port"), strmsg('+', "0"),
+								}),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								strmsg('+', "127.0.1.0"),
+								strmsg('+', "10"),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.1.1"),
+									strmsg('+', "port"), strmsg('+', "11"),
+								}),
+							}),
+						},
+					},
+				}
+			},
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+				if err, ok := <-trigger; ok {
+					return err
+				}
+				return ErrClosing
+			},
+			CloseFn: func() {
+				atomic.StoreInt32(&s0closed, 1)
+			},
+		}
+		s1 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{
+					s: []RedisResult{
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.0.3"),
+									strmsg('+', "port"), strmsg('+', "0"),
+								}),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								strmsg('+', "127.0.1.0"),
+								strmsg('+', "10"),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.1.1"),
+									strmsg('+', "port"), strmsg('+', "11"),
+								}),
+							}),
+						},
+					},
+				}
+			},
+		}
+		s2 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{
+					s: []RedisResult{
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.0.1"),
+									strmsg('+', "port"), strmsg('+', "0"),
+								}),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								strmsg('+', "127.0.1.0"),
+								strmsg('+', "10"),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.1.2"),
+									strmsg('+', "port"), strmsg('+', "12"),
+								}),
+							}),
+						},
+					},
+				}
+			},
+		}
+		m := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "master")})}
+			},
+		}
+		r1 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				if atomic.LoadInt32(&disconnect) == 1 {
+					return newErrResult(errors.New("die"))
+				}
+				return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "slave")})}
+			},
+			CloseFn: func() {
+				atomic.StoreInt32(&r1closed, 1)
+			},
+			ErrorFn: func() error {
+				if atomic.LoadInt32(&disconnect) == 1 {
+					return errClosing
+				}
+				return nil
+			},
+		}
+		r2 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "slave")})}
+			},
+		}
+		client, err := newSentinelClient(
+			&ClientOption{
+				InitAddress:    []string{"127.0.0.1:0"},
+				SendToReplicas: func(cmd Completed) bool { return true },
+			},
+			func(dst string, opt *ClientOption) conn {
+				if dst == "127.0.0.1:0" {
+					return s0
+				}
+				if dst == "127.0.0.2:0" {
+					return s1
+				}
+				if dst == "127.0.0.3:0" {
+					return s2
+				}
+				if dst == "127.0.1.0:10" {
+					return m
+				}
+				if dst == "127.0.1.1:11" {
+					return r1
+				}
+				if dst == "127.0.1.2:12" {
+					return r2
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		atomic.StoreInt32(&disconnect, 1)
+		trigger <- errors.New("reconnect")
+		close(trigger)
+		for {
+			t.Log("wait switch master and replica")
+			if client.mConn.Load().(*mockConn) == m && client.rConn.Load().(*mockConn) == r2 {
+				break
+			}
+		}
+		if atomic.LoadInt32(&s0closed) != 1 {
+			t.Fatalf("s0 not closed")
+		}
+		for {
+			t.Log("wait r1 closed")
+			if atomic.LoadInt32(&r1closed) == 1 {
+				break
+			}
 		}
 		client.Close()
 	})
@@ -2142,7 +2333,7 @@ func TestSendToReplicasSentinelClientDelegate(t *testing.T) {
 		client, err := newSentinelClient(
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
-				SendToReplicas: func(cmd Completed) bool { 
+				SendToReplicas: func(cmd Completed) bool {
 					return cmd.IsReadOnly()
 				},
 			},
@@ -2169,9 +2360,9 @@ func TestSendToReplicasSentinelClientDelegate(t *testing.T) {
 	t.Run("Delegate MGetCache to master", func(t *testing.T) {
 		disabledCacheClient, err := newSentinelClient(
 			&ClientOption{
-				InitAddress: []string{"127.0.0.1:0"},
+				InitAddress:  []string{"127.0.0.1:0"},
 				DisableCache: true,
-				SendToReplicas: func(cmd Completed) bool { 
+				SendToReplicas: func(cmd Completed) bool {
 					return false
 				},
 			},
@@ -2228,9 +2419,9 @@ func TestSendToReplicasSentinelClientDelegate(t *testing.T) {
 	t.Run("Delegate MGetCache to replica", func(t *testing.T) {
 		disabledCacheClient, err := newSentinelClient(
 			&ClientOption{
-				InitAddress: []string{"127.0.0.1:0"},
+				InitAddress:  []string{"127.0.0.1:0"},
 				DisableCache: true,
-				SendToReplicas: func(cmd Completed) bool { 
+				SendToReplicas: func(cmd Completed) bool {
 					return true
 				},
 			},
@@ -2333,7 +2524,7 @@ func TestSendToReplicasSentinelClientDelegate(t *testing.T) {
 		client, err := newSentinelClient(
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
-				SendToReplicas: func(cmd Completed) bool { 
+				SendToReplicas: func(cmd Completed) bool {
 					return false
 				},
 			},
@@ -2438,7 +2629,7 @@ func TestSendToReplicasSentinelClientDelegate(t *testing.T) {
 			}
 			return &redisresults{
 				s: []RedisResult{
-					newResult(strmsg('+', "DoMulti"), nil), 
+					newResult(strmsg('+', "DoMulti"), nil),
 					newResult(strmsg('+', "value2"), nil),
 				},
 			}
@@ -2514,7 +2705,7 @@ func TestSendToReplicasSentinelClientDelegate(t *testing.T) {
 		client, err := newSentinelClient(
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
-				SendToReplicas: func(cmd Completed) bool { 
+				SendToReplicas: func(cmd Completed) bool {
 					return false
 				},
 			},
@@ -2582,7 +2773,7 @@ func TestSendToReplicasSentinelClientDelegate(t *testing.T) {
 			}
 			return &redisresults{
 				s: []RedisResult{
-					newResult(strmsg('+', "value1"), nil), 
+					newResult(strmsg('+', "value1"), nil),
 					newResult(strmsg('+', "value2"), nil),
 				},
 			}
@@ -2617,7 +2808,7 @@ func TestSendToReplicasSentinelClientDelegate(t *testing.T) {
 		client, err := newSentinelClient(
 			&ClientOption{
 				InitAddress: []string{"127.0.0.1:0"},
-				SendToReplicas: func(cmd Completed) bool { 
+				SendToReplicas: func(cmd Completed) bool {
 					return true
 				},
 			},
@@ -2740,9 +2931,9 @@ func TestReplicaOnlySentinelClientDelegate(t *testing.T) {
 	t.Run("Delegate MGetCache", func(t *testing.T) {
 		disabledCacheClient, err := newSentinelClient(
 			&ClientOption{
-				InitAddress: []string{"127.0.0.1:0"},
+				InitAddress:  []string{"127.0.0.1:0"},
 				DisableCache: true,
-				ReplicaOnly: true,
+				ReplicaOnly:  true,
 			},
 			func(dst string, opt *ClientOption) conn {
 				if dst == "127.0.0.1:0" {
@@ -2910,7 +3101,7 @@ func TestReplicaOnlySentinelClientDelegate(t *testing.T) {
 			}
 			return &redisresults{
 				s: []RedisResult{
-					newResult(strmsg('+', "value1"), nil), 
+					newResult(strmsg('+', "value1"), nil),
 					newResult(strmsg('+', "value2"), nil),
 				},
 			}
