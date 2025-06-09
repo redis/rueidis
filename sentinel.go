@@ -584,30 +584,13 @@ func (c *sentinelClient) _refresh() (err error) {
 	c.mu.Unlock()
 
 	if err == nil {
-		switch {
-		case c.replica:
+		if c.replica {
 			if replica := c.rConn.Load(); replica == nil {
 				err = ErrNoAddr
 			} else {
 				err = replica.(conn).Error()
 			}
-		case c.rOpt != nil:
-			if master := c.mConn.Load(); master == nil {
-				err = ErrNoAddr
-			} else {
-				err = master.(conn).Error()
-			}
-
-			if err != nil {
-				return err
-			}
-
-			if replica := c.rConn.Load(); replica == nil {
-				err = ErrNoAddr
-			} else {
-				err = replica.(conn).Error()
-			}
-		default:
+		} else {
 			if master := c.mConn.Load(); master == nil {
 				err = ErrNoAddr
 			} else {

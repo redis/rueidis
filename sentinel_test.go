@@ -890,6 +890,81 @@ func TestSentinelClientInit(t *testing.T) {
 		}
 		client.Close()
 	})
+
+	t.Run("Init no nodes ReplicaOnly", func(t *testing.T) {
+		if _, err := newSentinelClient(
+			&ClientOption{InitAddress: []string{}, ReplicaOnly: true},
+			func(dst string, opt *ClientOption) conn { return nil },
+			newRetryer(defaultRetryDelayFn),
+		); err != ErrNoAddr {
+			t.Fatalf("unexpected err %v", err)
+		}
+	})
+
+	t.Run("Init no nodes SendToReplicas, no master", func(t *testing.T) {
+		if _, err := newSentinelClient(
+			&ClientOption{InitAddress: []string{}, SendToReplicas: func(cmd Completed) bool { return true }},
+			func(dst string, opt *ClientOption) conn { return nil },
+			newRetryer(defaultRetryDelayFn),
+		); err != ErrNoAddr {
+			t.Fatalf("unexpected err %v", err)
+		}
+	})
+
+	t.Run("Init no nodes SendToReplicas, no replica", func(t *testing.T) {
+		sentinelWithOnlyMaster := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{
+					s: []RedisResult{
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.0.1"),
+									strmsg('+', "port"), strmsg('+', "0"),
+								}),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								strmsg('+', "127.0.1.0"),
+								strmsg('+', "10"),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{}),
+						},
+					},
+				}
+			},
+		}
+
+		_, err := newSentinelClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				SendToReplicas: func(cmd Completed) bool {
+					return cmd.IsReadOnly()
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				if dst == "127.0.0.1:0" {
+					return sentinelWithOnlyMaster
+				}
+				if dst == "127.0.1.0:10" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "master")})}
+						},
+					}
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != ErrNoAddr {
+			t.Fatalf("unexpected err %v", err)
+		}
+	})
 }
 
 func TestSentinelRefreshAfterClose(t *testing.T) {
