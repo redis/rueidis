@@ -37,7 +37,7 @@ func newSentinelClient(opt *ClientOption, connFn connFn, retryer retryHandler) (
 		return nil, ErrReplicaOnlyConflict
 	}
 
-	if opt.SendToReplicas != nil {
+	if opt.SendToReplicas != nil || opt.ReplicaOnly {
 		rOpt := *opt
 		rOpt.ReplicaOnly = true
 		client.rOpt = &rOpt
@@ -306,7 +306,7 @@ func (c *sentinelClient) Nodes() map[string]Client {
 	case c.replica:
 		cc := c.rConn.Load().(conn)
 		return map[string]Client{cc.Addr(): newSingleClientWithConn(cc, c.cmd, c.retry, disableCache, c.retryHandler, false)}
-	case c.rOpt != nil:
+	case c.mOpt.SendToReplicas != nil:
 		master := c.mConn.Load().(conn)
 		replica := c.rConn.Load().(conn)
 		return map[string]Client{
@@ -367,8 +367,8 @@ func (c *sentinelClient) pick(cmd Completed) (cc conn) {
 	switch {
 	case c.replica:
 		cc = c.rConn.Load().(conn)
-	case c.rOpt != nil:
-		if c.rOpt.SendToReplicas(cmd) {
+	case c.mOpt.SendToReplicas != nil:
+		if c.mOpt.SendToReplicas(cmd) {
 			cc = c.rConn.Load().(conn)
 		} else {
 			cc = c.mConn.Load().(conn)
@@ -383,7 +383,7 @@ func (c *sentinelClient) pickMulti(sendToReplica bool) (cc conn) {
 	switch {
 	case c.replica:
 		cc = c.rConn.Load().(conn)
-	case c.rOpt != nil:
+	case c.mOpt.SendToReplicas != nil:
 		if sendToReplica {
 			cc = c.rConn.Load().(conn)
 		} else {
@@ -397,15 +397,13 @@ func (c *sentinelClient) pickMulti(sendToReplica bool) (cc conn) {
 }
 
 func (c *sentinelClient) sendAllToReplica(cmds []Completed) bool {
-	if c.rOpt == nil || c.rOpt.SendToReplicas == nil {
+	if c.mOpt.SendToReplicas == nil {
 		return false
 	}
 
-	if c.rOpt.SendToReplicas != nil {
-		for _, cmd := range cmds {
-			if !c.rOpt.SendToReplicas(cmd) {
-				return false
-			}
+	for _, cmd := range cmds {
+		if !c.mOpt.SendToReplicas(cmd) {
+			return false
 		}
 	}
 
@@ -413,43 +411,58 @@ func (c *sentinelClient) sendAllToReplica(cmds []Completed) bool {
 }
 
 func (c *sentinelClient) sendAllToReplicaCache(cmds []CacheableTTL) bool {
-	if c.rOpt == nil || c.rOpt.SendToReplicas == nil {
+	if c.mOpt.SendToReplicas == nil {
 		return false
 	}
 
-	if c.rOpt.SendToReplicas != nil {
-		for _, cmd := range cmds {
-			if !c.rOpt.SendToReplicas(Completed(cmd.Cmd)) {
-				return false
-			}
+	for _, cmd := range cmds {
+		if !c.mOpt.SendToReplicas(Completed(cmd.Cmd)) {
+			return false
 		}
 	}
 
 	return true
 }
 
-func (c *sentinelClient) switchMasterRetry(addr string) {
+func (c *sentinelClient) switchTargetRetry(addr string, isMaster bool) {
 	c.mu.Lock()
-	err := c._switchMaster(addr)
+	err := c._switchTarget(addr, isMaster)
 	c.mu.Unlock()
 	if err != nil {
 		go c.refreshRetry()
 	}
 }
 
-func (c *sentinelClient) _switchMaster(addr string) (err error) {
-	var target conn
+func (c *sentinelClient) _switchTarget(addr string, isMaster bool) (err error) {
 	if atomic.LoadUint32(&c.stop) == 1 {
 		return nil
 	}
-	if c.mAddr == addr {
-		target = c.mConn.Load().(conn)
-		if target.Error() != nil {
-			target = nil
+
+	var (
+		target conn
+		opt    *ClientOption
+	)
+
+	if isMaster {
+		opt = c.mOpt
+		if c.mAddr == addr {
+			target = c.mConn.Load().(conn)
+			if target.Error() != nil {
+				target = nil
+			}
+		}
+	} else {
+		opt = c.rOpt
+		if c.rAddr == addr {
+			target = c.rConn.Load().(conn)
+			if target.Error() != nil {
+				target = nil
+			}
 		}
 	}
+
 	if target == nil {
-		target = c.connFn(addr, c.mOpt)
+		target = c.connFn(addr, opt)
 		if err = target.Dial(); err != nil {
 			return err
 		}
@@ -461,55 +474,34 @@ func (c *sentinelClient) _switchMaster(addr string) (err error) {
 		return err
 	}
 
-	if resp[0].string() != "master" {
-		target.Close()
-		return errNotMaster
-	}
-
-	c.mAddr = addr
-	if old := c.mConn.Swap(target); old != nil {
-		if prev := old.(conn); prev != target {
-			prev.Close()
+	if isMaster {
+		if resp[0].string() != "master" {
+			target.Close()
+			return errNotMaster
 		}
-	}
-	return nil
-}
 
-func (c *sentinelClient) _switchReplica(addr string) (err error) {
-	var target conn
-	if atomic.LoadUint32(&c.stop) == 1 {
-		return nil
-	}
-	if c.rAddr == addr {
-		target = c.rConn.Load().(conn)
-		if target.Error() != nil {
-			target = nil
+		c.mAddr = addr
+
+		if old := c.mConn.Swap(target); old != nil {
+			if prev := old.(conn); prev != target {
+				prev.Close()
+			}
 		}
-	}
-	if target == nil {
-		target = c.connFn(addr, c.sOpt)
-		if err = target.Dial(); err != nil {
-			return err
+	} else {
+		if resp[0].string() != "slave" {
+			target.Close()
+			return errNotSlave
+		}
+
+		c.rAddr = addr
+
+		if old := c.rConn.Swap(target); old != nil {
+			if prev := old.(conn); prev != target {
+				prev.Close()
+			}
 		}
 	}
 
-	resp, err := target.Do(context.Background(), cmds.RoleCmd).ToArray()
-	if err != nil {
-		target.Close()
-		return err
-	}
-
-	if resp[0].string() != "slave" {
-		target.Close()
-		return errNotSlave
-	}
-
-	c.rAddr = addr
-	if old := c.rConn.Swap(target); old != nil {
-		if prev := old.(conn); prev != target {
-			prev.Close()
-		}
-	}
 	return nil
 }
 
@@ -558,14 +550,14 @@ func (c *sentinelClient) _refresh() (err error) {
 
 				switch {
 				case c.replica:
-					err = c._switchReplica(replica)
-				case c.rOpt != nil:
+					err = c._switchTarget(replica, false)
+				case c.mOpt.SendToReplicas != nil:
 					errs := make(chan error, 1)
 					go func(errs chan error, master string) {
-						errs <- c._switchMaster(master)
+						errs <- c._switchTarget(master, true)
 					}(errs, master)
 					go func(errs chan error, replica string) {
-						errs <- c._switchReplica(replica)
+						errs <- c._switchTarget(replica, false)
 					}(errs, replica)
 
 					for i := 0; i < 2; i++ {
@@ -575,7 +567,7 @@ func (c *sentinelClient) _refresh() (err error) {
 						}
 					}
 				default:
-					err = c._switchMaster(master)
+					err = c._switchTarget(master, true)
 				}
 
 				if err == nil {
@@ -653,12 +645,12 @@ func (c *sentinelClient) listWatch(cc conn) (master string, replica string, sent
 			case "+switch-master":
 				m := strings.SplitN(event.Message, " ", 5)
 				if m[0] == c.sOpt.Sentinel.MasterSet {
-					c.switchMasterRetry(net.JoinHostPort(m[3], m[4]))
+					c.switchTargetRetry(net.JoinHostPort(m[3], m[4]), true)
 				}
 			case "+reboot":
 				m := strings.SplitN(event.Message, " ", 7)
 				if m[0] == "master" && m[1] == c.sOpt.Sentinel.MasterSet {
-					c.switchMasterRetry(net.JoinHostPort(m[2], m[3]))
+					c.switchTargetRetry(net.JoinHostPort(m[2], m[3]), true)
 				} else if (c.replica || c.rOpt != nil) && m[0] == "slave" && m[5] == c.sOpt.Sentinel.MasterSet {
 					c.refreshRetry()
 				}
@@ -679,7 +671,7 @@ func (c *sentinelClient) listWatch(cc conn) (master string, replica string, sent
 	var commands Commands
 	if c.replica {
 		commands = Commands{sentinelsCMD, replicasCMD}
-	} else if c.rOpt != nil {
+	} else if c.mOpt.SendToReplicas != nil {
 		commands = Commands{sentinelsCMD, getMasterCMD, replicasCMD}
 	} else {
 		commands = Commands{sentinelsCMD, getMasterCMD}
@@ -708,7 +700,7 @@ func (c *sentinelClient) listWatch(cc conn) (master string, replica string, sent
 	}
 
 	var r string
-	if c.rOpt != nil {
+	if c.mOpt.SendToReplicas != nil {
 		addr, err := pickReplica(resp.s[2])
 		if err != nil {
 			return "", "", nil, err
