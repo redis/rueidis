@@ -574,7 +574,14 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 	count := conncountp.Get(len(c.conns), len(c.conns))
 
 	if !init && c.rslots != nil && c.opt.SendToReplicas != nil {
-		for _, cmd := range multi {
+		var destination []conn
+		var stackDestination [32]conn
+		if len(multi) <= len(stackDestination) {
+			destination = stackDestination[:len(multi)]
+		} else {
+			destination = make([]conn, len(multi))
+		}
+		for i, cmd := range multi {
 			var cc conn
 			if c.opt.SendToReplicas(cmd) {
 				cc = c.rslots[cmd.Slot()]
@@ -584,6 +591,7 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 			if cc == nil {
 				return nil, false
 			}
+			destination[i] = cc
 			count.m[cc]++
 		}
 
@@ -594,15 +602,7 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 		conncountp.Put(count)
 
 		for i, cmd := range multi {
-			var cc conn
-			if c.opt.SendToReplicas(cmd) {
-				cc = c.rslots[cmd.Slot()]
-			} else {
-				cc = c.pslots[cmd.Slot()]
-			}
-			if cc == nil { // check cc == nil again in the case of non-deterministic SendToReplicas.
-				return nil, false
-			}
+			cc := destination[i]
 			re := retries.m[cc]
 			re.commands = append(re.commands, cmd)
 			re.cIndexes = append(re.cIndexes, i)
@@ -1035,7 +1035,14 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 
 		return retries
 	} else {
-		for _, cmd := range multi {
+		var destination []conn
+		var stackDestination [32]conn
+		if len(multi) <= len(stackDestination) {
+			destination = stackDestination[:len(multi)]
+		} else {
+			destination = make([]conn, len(multi))
+		}
+		for i, cmd := range multi {
 			var p conn
 			if c.opt.SendToReplicas(Completed(cmd.Cmd)) {
 				p = c.rslots[cmd.Cmd.Slot()]
@@ -1045,6 +1052,7 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 			if p == nil {
 				return nil
 			}
+			destination[i] = p
 			count.m[p]++
 		}
 
@@ -1055,12 +1063,7 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 		conncountp.Put(count)
 
 		for i, cmd := range multi {
-			var cc conn
-			if c.opt.SendToReplicas(Completed(cmd.Cmd)) {
-				cc = c.rslots[cmd.Cmd.Slot()]
-			} else {
-				cc = c.pslots[cmd.Cmd.Slot()]
-			}
+			cc := destination[i]
 			re := retries.m[cc]
 			re.commands = append(re.commands, cmd)
 			re.cIndexes = append(re.cIndexes, i)
