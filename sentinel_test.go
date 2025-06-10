@@ -3263,6 +3263,58 @@ func TestReplicaOnlySentinelClientDelegate(t *testing.T) {
 		}
 	})
 
+	t.Run("Dedicated Delegate", func(t *testing.T) {
+		client, _, r := setup()
+		defer client.Close()
+
+		w := &mockWire{
+			DoFn: func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "Delegate"), nil)
+			},
+			DoMultiFn: func(cmd ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{newResult(strmsg('+', "Delegate"), nil)}}
+			},
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+				return ErrClosing
+			},
+			ErrorFn: func() error {
+				return ErrClosing
+			},
+		}
+		r.AcquireFn = func() wire {
+			return w
+		}
+		stored := false
+		r.StoreFn = func(ww wire) {
+			if ww != w {
+				t.Fatalf("received unexpected wire %v", ww)
+			}
+			stored = true
+		}
+		if err := client.Dedicated(func(c DedicatedClient) error {
+			if v, err := c.Do(context.Background(), c.B().Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+			if v := c.DoMulti(context.Background()); len(v) != 0 {
+				t.Fatalf("received unexpected response %v", v)
+			}
+			for _, resp := range c.DoMulti(context.Background(), c.B().Get().Key("a").Build()) {
+				if v, err := resp.ToString(); err != nil || v != "Delegate" {
+					t.Fatalf("unexpected response %v %v", v, err)
+				}
+			}
+			if err := c.Receive(context.Background(), c.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
+				t.Fatalf("unexpected ret %v", err)
+			}
+			return nil
+		}); err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if !stored {
+			t.Fatalf("Dedicated desn't put back the wire")
+		}
+	})
+
 	t.Run("Dedicate Delegate", func(t *testing.T) {
 		client, _, r := setup()
 		defer client.Close()
