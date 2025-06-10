@@ -61,9 +61,9 @@ type sentinelClient struct {
 	sOpt         *ClientOption
 	rOpt         *ClientOption
 	sentinels    *list.List
-	mAddr        string
+	mAddr        atomic.Value
+	rAddr        atomic.Value
 	sAddr        string
-	rAddr        string
 	sc           call
 	mu           sync.Mutex
 	stop         uint32
@@ -445,7 +445,7 @@ func (c *sentinelClient) _switchTarget(addr string, isMaster bool) (err error) {
 
 	if isMaster {
 		opt = c.mOpt
-		if c.mAddr == addr {
+		if mAddr := c.mAddr.Load(); mAddr != nil && mAddr.(string) == addr {
 			target = c.mConn.Load().(conn)
 			if target.Error() != nil {
 				target = nil
@@ -453,7 +453,7 @@ func (c *sentinelClient) _switchTarget(addr string, isMaster bool) (err error) {
 		}
 	} else {
 		opt = c.rOpt
-		if c.rAddr == addr {
+		if rAddr := c.rAddr.Load(); rAddr != nil && rAddr.(string) == addr {
 			target = c.rConn.Load().(conn)
 			if target.Error() != nil {
 				target = nil
@@ -480,7 +480,7 @@ func (c *sentinelClient) _switchTarget(addr string, isMaster bool) (err error) {
 			return errNotMaster
 		}
 
-		c.mAddr = addr
+		c.mAddr.Store(addr)
 
 		if old := c.mConn.Swap(target); old != nil {
 			if prev := old.(conn); prev != target {
@@ -493,7 +493,7 @@ func (c *sentinelClient) _switchTarget(addr string, isMaster bool) (err error) {
 			return errNotSlave
 		}
 
-		c.rAddr = addr
+		c.rAddr.Store(addr)
 
 		if old := c.rConn.Swap(target); old != nil {
 			if prev := old.(conn); prev != target {
