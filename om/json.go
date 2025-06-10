@@ -76,7 +76,11 @@ func (r *JSONRepository[T]) decode(record string) (*T, error) {
 
 func (r *JSONRepository[T]) toExec(entity *T) (verf reflect.Value, exec rueidis.LuaExec) {
 	val := reflect.ValueOf(entity).Elem()
-	verf = val.Field(r.schema.ver.idx)
+	if !r.schema.verless {
+		verf = val.Field(r.schema.ver.idx)
+	} else {
+		verf = reflect.ValueOf(int64(0)) // verless, set verf to a dummy value
+	}
 	extVal := int64(0)
 	if r.schema.ext != nil {
 		if ext, ok := val.Field(r.schema.ext.idx).Interface().(time.Time); ok && !ext.IsZero() {
@@ -95,14 +99,18 @@ func (r *JSONRepository[T]) toExec(entity *T) (verf reflect.Value, exec rueidis.
 // Save the entity under the redis key of `{prefix}:{id}`.
 // It also uses the `redis:",ver"` field and lua script to perform optimistic locking and prevent lost update.
 func (r *JSONRepository[T]) Save(ctx context.Context, entity *T) (err error) {
-	valf, exec := r.toExec(entity)
+	var verf reflect.Value
+	var exec rueidis.LuaExec
+	verf, exec = r.toExec(entity)
 	str, err := jsonSaveScript.Exec(ctx, r.client, exec.Keys, exec.Args).ToString()
 	if rueidis.IsRedisNil(err) {
+		if r.schema.verless {
+			return nil
+		}
 		return ErrVersionMismatch
-	}
-	if err == nil {
+	} else if err == nil {
 		ver, _ := strconv.ParseInt(str, 10, 64)
-		valf.SetInt(ver)
+		verf.SetInt(ver)
 	}
 	return err
 }
@@ -110,19 +118,25 @@ func (r *JSONRepository[T]) Save(ctx context.Context, entity *T) (err error) {
 // SaveMulti batches multiple HashRepository.Save at once
 func (r *JSONRepository[T]) SaveMulti(ctx context.Context, entities ...*T) []error {
 	errs := make([]error, len(entities))
-	valf := make([]reflect.Value, len(entities))
+	verf := make([]reflect.Value, len(entities))
 	exec := make([]rueidis.LuaExec, len(entities))
 	for i, entity := range entities {
-		valf[i], exec[i] = r.toExec(entity)
+		verf[i], exec[i] = r.toExec(entity)
 	}
 	for i, resp := range jsonSaveScript.ExecMulti(ctx, r.client, exec...) {
-		if str, err := resp.ToString(); err != nil {
-			if errs[i] = err; rueidis.IsRedisNil(err) {
-				errs[i] = ErrVersionMismatch
+		str, err := resp.ToString()
+		if rueidis.IsRedisNil(err) {
+			if r.schema.verless {
+				continue
 			}
-		} else {
+			errs[i] = ErrVersionMismatch
+			continue
+		}
+		if err == nil {
 			ver, _ := strconv.ParseInt(str, 10, 64)
-			valf[i].SetInt(ver)
+			verf[i].SetInt(ver)
+		} else {
+			errs[i] = err
 		}
 	}
 	return errs
@@ -262,6 +276,12 @@ func (r *JSONRepository[T]) IndexName() string {
 }
 
 var jsonSaveScript = rueidis.NewLuaScript(`
+if (ARGV[1] == '')
+then
+  redis.call('JSON.SET',KEYS[1],'$',ARGV[3])
+  if #ARGV == 4 then redis.call('PEXPIREAT',KEYS[1],ARGV[4]) end
+  return nil
+end
 local v = redis.call('JSON.GET',KEYS[1],ARGV[1])
 if (not v or v == ARGV[2])
 then

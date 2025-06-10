@@ -67,11 +67,19 @@ func (r *HashRepository[T]) FetchCache(ctx context.Context, id string, ttl time.
 	return v, err
 }
 
-func (r *HashRepository[T]) toExec(entity *T) (val reflect.Value, exec rueidis.LuaExec) {
-	val = reflect.ValueOf(entity).Elem()
+func (r *HashRepository[T]) toExec(entity *T) (verf reflect.Value, exec rueidis.LuaExec) {
+	val := reflect.ValueOf(entity).Elem()
+	if !r.schema.verless {
+		verf = val.Field(r.schema.ver.idx)
+	} else {
+		verf = reflect.ValueOf(int64(0)) // verless, set verf to a dummy value
+	}
 	fields := r.factory.NewConverter(val).ToHash()
 	keyVal := fields[r.schema.key.name]
-	verVal := fields[r.schema.ver.name]
+	var verVal string
+	if !r.schema.verless {
+		verVal = fields[r.schema.ver.name]
+	}
 	extVal := int64(0)
 	if r.schema.ext != nil {
 		if ext, ok := val.Field(r.schema.ext.idx).Interface().(time.Time); ok && !ext.IsZero() {
@@ -98,14 +106,16 @@ func (r *HashRepository[T]) toExec(entity *T) (val reflect.Value, exec rueidis.L
 // Save the entity under the redis key of `{prefix}:{id}`.
 // It also uses the `redis:",ver"` field and lua script to perform optimistic locking and prevent lost update.
 func (r *HashRepository[T]) Save(ctx context.Context, entity *T) (err error) {
-	val, exec := r.toExec(entity)
+	verf, exec := r.toExec(entity)
 	str, err := hashSaveScript.Exec(ctx, r.client, exec.Keys, exec.Args).ToString()
 	if rueidis.IsRedisNil(err) {
+		if r.schema.verless {
+			return nil
+		}
 		return ErrVersionMismatch
-	}
-	if err == nil {
+	} else if err == nil {
 		ver, _ := strconv.ParseInt(str, 10, 64)
-		val.Field(r.schema.ver.idx).SetInt(ver)
+		verf.SetInt(ver)
 	}
 	return err
 }
@@ -113,19 +123,25 @@ func (r *HashRepository[T]) Save(ctx context.Context, entity *T) (err error) {
 // SaveMulti batches multiple HashRepository.Save at once
 func (r *HashRepository[T]) SaveMulti(ctx context.Context, entities ...*T) []error {
 	errs := make([]error, len(entities))
-	vals := make([]reflect.Value, len(entities))
+	verf := make([]reflect.Value, len(entities))
 	exec := make([]rueidis.LuaExec, len(entities))
 	for i, entity := range entities {
-		vals[i], exec[i] = r.toExec(entity)
+		verf[i], exec[i] = r.toExec(entity)
 	}
 	for i, resp := range hashSaveScript.ExecMulti(ctx, r.client, exec...) {
-		if str, err := resp.ToString(); err != nil {
-			if errs[i] = err; rueidis.IsRedisNil(err) {
-				errs[i] = ErrVersionMismatch
+		str, err := resp.ToString()
+		if rueidis.IsRedisNil(err) {
+			if r.schema.verless {
+				continue
 			}
-		} else {
+			errs[i] = ErrVersionMismatch
+			continue
+		}
+		if err == nil {
 			ver, _ := strconv.ParseInt(str, 10, 64)
-			vals[i].Field(r.schema.ver.idx).SetInt(ver)
+			verf[i].SetInt(ver)
+		} else {
+			errs[i] = err
 		}
 	}
 	return errs
@@ -274,6 +290,15 @@ func (r *HashRepository[T]) fromFields(fields map[string]string) (*T, error) {
 }
 
 var hashSaveScript = rueidis.NewLuaScript(`
+if (ARGV[1] == '')
+then
+  local e = (#ARGV % 2 == 1) and table.remove(ARGV) or nil
+  if redis.call('HSET',KEYS[1],unpack(ARGV))
+  then
+    if e then redis.call('PEXPIREAT',KEYS[1],e) end
+  end
+  return nil
+end
 local v = redis.call('HGET',KEYS[1],ARGV[1])
 if (not v or v == ARGV[2])
 then

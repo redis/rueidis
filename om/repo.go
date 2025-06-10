@@ -16,7 +16,7 @@ type (
 	FtSearchIndex = cmds.FtSearchIndex
 	// FtAggregateIndex is the FT.AGGREGATE command builder
 	FtAggregateIndex = cmds.FtAggregateIndex
-	// FtAlterSchema is the FT.ALTERINDEX command builder
+	// FtAlterIndex is the FT.ALTERINDEX command builder
 	FtAlterIndex = cmds.FtAlterIndex
 	// Arbitrary is an alias to cmds.Arbitrary. This allows the user to build an arbitrary command in Repository.CreateIndex
 	Arbitrary = cmds.Arbitrary
@@ -31,7 +31,7 @@ var (
 
 // IsRecordNotFound checks if the error is indicating the requested entity is not found.
 func IsRecordNotFound(err error) bool {
-	return rueidis.IsRedisNil(err) || err == ErrEmptyHashRecord
+	return rueidis.IsRedisNil(err) || errors.Is(err, ErrEmptyHashRecord)
 }
 
 // Repository is backed by HashRepository or JSONRepository
