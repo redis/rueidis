@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"reflect"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -882,11 +883,8 @@ func TestSentinelClientInit(t *testing.T) {
 		if atomic.LoadInt32(&s0closed) != 1 {
 			t.Fatalf("s0 not closed")
 		}
-		for {
-			t.Log("wait r1 closed")
-			if atomic.LoadInt32(&r1closed) == 1 {
-				break
-			}
+		if atomic.LoadInt32(&r1closed) != 1 {
+			t.Fatalf("r1 not closed")
 		}
 		client.Close()
 	})
@@ -961,7 +959,7 @@ func TestSentinelClientInit(t *testing.T) {
 			},
 			newRetryer(defaultRetryDelayFn),
 		)
-		if err != ErrNoAddr {
+		if !strings.Contains(err.Error(), "not enough ready replicas") {
 			t.Fatalf("unexpected err %v", err)
 		}
 	})
@@ -2936,6 +2934,55 @@ func TestSendToReplicasSentinelClientDelegate(t *testing.T) {
 			t.Fatalf("Close is not delegated")
 		}
 	})
+
+	t.Run("Dedicate Delegate", func(t *testing.T) {
+		client, m, _ := setup()
+		defer client.Close()
+
+		w := &mockWire{
+			DoFn: func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "Delegate"), nil)
+			},
+			DoMultiFn: func(cmd ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{newResult(strmsg('+', "Delegate"), nil)}}
+			},
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+				return ErrClosing
+			},
+			ErrorFn: func() error {
+				return ErrClosing
+			},
+		}
+		m.AcquireFn = func() wire {
+			return w
+		}
+		stored := false
+		m.StoreFn = func(ww wire) {
+			if ww != w {
+				t.Fatalf("received unexpected wire %v", ww)
+			}
+			stored = true
+		}
+		c, cancel := client.Dedicate()
+		if v, err := c.Do(context.Background(), c.B().Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v := c.DoMulti(context.Background()); len(v) != 0 {
+			t.Fatalf("received unexpected response %v", v)
+		}
+		for _, resp := range c.DoMulti(context.Background(), c.B().Get().Key("a").Build()) {
+			if v, err := resp.ToString(); err != nil || v != "Delegate" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+		if err := c.Receive(context.Background(), c.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
+			t.Fatalf("unexpected ret %v", err)
+		}
+		cancel()
+		if !stored {
+			t.Fatalf("Dedicated desn't put back the wire")
+		}
+	})
 }
 
 func TestReplicaOnlySentinelClientDelegate(t *testing.T) {
@@ -3213,6 +3260,55 @@ func TestReplicaOnlySentinelClientDelegate(t *testing.T) {
 		client.Close()
 		if !replicaCalled {
 			t.Fatalf("Close is not delegated")
+		}
+	})
+
+	t.Run("Dedicate Delegate", func(t *testing.T) {
+		client, _, r := setup()
+		defer client.Close()
+
+		w := &mockWire{
+			DoFn: func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "Delegate"), nil)
+			},
+			DoMultiFn: func(cmd ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{newResult(strmsg('+', "Delegate"), nil)}}
+			},
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+				return ErrClosing
+			},
+			ErrorFn: func() error {
+				return ErrClosing
+			},
+		}
+		r.AcquireFn = func() wire {
+			return w
+		}
+		stored := false
+		r.StoreFn = func(ww wire) {
+			if ww != w {
+				t.Fatalf("received unexpected wire %v", ww)
+			}
+			stored = true
+		}
+		c, cancel := client.Dedicate()
+		if v, err := c.Do(context.Background(), c.B().Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v := c.DoMulti(context.Background()); len(v) != 0 {
+			t.Fatalf("received unexpected response %v", v)
+		}
+		for _, resp := range c.DoMulti(context.Background(), c.B().Get().Key("a").Build()) {
+			if v, err := resp.ToString(); err != nil || v != "Delegate" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+		if err := c.Receive(context.Background(), c.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
+			t.Fatalf("unexpected ret %v", err)
+		}
+		cancel()
+		if !stored {
+			t.Fatalf("Dedicated desn't put back the wire")
 		}
 	})
 }
