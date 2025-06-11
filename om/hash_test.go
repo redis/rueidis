@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/kr/pretty"
 	"math/rand"
 	"reflect"
 	"strings"
@@ -519,9 +518,6 @@ func TestNewHashRepositoryVerless(t *testing.T) {
 				t.Fatalf("unexpected return count %v", n)
 			}
 			if !reflect.DeepEqual(entities[2], records[0]) {
-				t.Log(pretty.Diff(entities, records))
-				t.Logf("entities: %#v", entities)
-				t.Logf("records: %#v", records)
 				t.Fatalf("entities[0] should be the same as records[2]")
 			}
 			if err = repo.DropIndex(ctx); err != nil {
