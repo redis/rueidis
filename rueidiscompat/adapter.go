@@ -5334,7 +5334,7 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 			_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).PayloadField(options.PayloadField))
 		}
 		// [MAXTEXTFIELDS]
-		// FIXME: in go-reids, FTCreateOptions.MaxTextFields should be bool, not int
+		// FIXME: in go-redis, FTCreateOptions.MaxTextFields should be bool, not int
 		if options.MaxTextFields > 0 {
 			_cmd = cmds.Incomplete(cmds.FtCreateIndex(_cmd).Maxtextfields())
 		}

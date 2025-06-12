@@ -14,7 +14,7 @@ var dead = deadFn()
 
 //gocyclo:ignore
 func TestPool(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	setup := func(size int) (*pool, *int32) {
 		var count int32
 		return newPool(size, dead, 0, 0, func(_ context.Context) wire {
@@ -67,7 +67,7 @@ func TestPool(t *testing.T) {
 			t.Fatalf("c3.Error() is not nil")
 		}
 		if atomic.LoadInt32(count) != 3 {
-			t.Fatalf("pool does not clean borken connections")
+			t.Fatalf("pool does not clean broken connections")
 		}
 		pool.cond.L.Lock()
 		defer pool.cond.L.Unlock()
@@ -208,7 +208,7 @@ func TestPool(t *testing.T) {
 }
 
 func TestPoolError(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	setup := func(size int) (*pool, *int32) {
 		var count int32
 		return newPool(size, dead, 0, 0, func(_ context.Context) wire {
@@ -244,7 +244,7 @@ func TestPoolError(t *testing.T) {
 }
 
 func TestPoolWithIdleTTL(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	setup := func(size int, ttl time.Duration, minSize int) *pool {
 		return newPool(size, dead, ttl, minSize, func(_ context.Context) wire {
 			closed := false
@@ -333,7 +333,7 @@ func TestPoolWithIdleTTL(t *testing.T) {
 }
 
 func TestPoolWithConnLifetime(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	setup := func(wires []wire) *pool {
 		var count int32
 		return newPool(len(wires), dead, 0, 0, func(ctx context.Context) wire {
@@ -410,7 +410,7 @@ func TestPoolWithConnLifetime(t *testing.T) {
 }
 
 func TestPoolWithAcquireCtx(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	setup := func(size int, delay time.Duration) *pool {
 		return newPool(size, dead, 0, 0, func(ctx context.Context) wire {
 			var err error
@@ -529,7 +529,7 @@ func TestPoolWithAcquireCtx(t *testing.T) {
 }
 
 func TestPoolWithCtxTimeout(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	setup := func(size int, delay time.Duration) *pool {
 		var count int64
 

@@ -1823,7 +1823,7 @@ func (cmd *ClusterSlotsCmd) from(res rueidis.RedisResult) {
 			return
 		}
 		if len(slot) < 2 {
-			cmd.SetErr(fmt.Errorf("got %d, excpected atleast 2", len(slot)))
+			cmd.SetErr(fmt.Errorf("got %d, expected at least 2", len(slot)))
 			return
 		}
 		start, err := slot[0].AsInt64()
@@ -4665,7 +4665,7 @@ const (
 	ClientTrackingBCAST       ClientFlags = 1 << 33 /* Tracking in BCAST mode. */
 	ClientTrackingOptIn       ClientFlags = 1 << 34 /* Tracking in opt-in mode. */
 	ClientTrackingOptOut      ClientFlags = 1 << 35 /* Tracking in opt-out mode. */
-	ClientTrackingCaching     ClientFlags = 1 << 36 /* CACHING yes/no was given, depending on optin/optout mode. */
+	ClientTrackingCaching     ClientFlags = 1 << 36 /* CACHING yes/no was given, depending on opt-in/opt-out mode. */
 	ClientTrackingNoLoop      ClientFlags = 1 << 37 /* Don't send invalidation messages about writes performed by myself.*/
 	ClientInTimeoutTable      ClientFlags = 1 << 38 /* This client is in the timeout table. */
 	ClientProtocolError       ClientFlags = 1 << 39 /* Protocol error chatting with it. */

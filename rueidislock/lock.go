@@ -257,7 +257,7 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 		}
 	}
 	deadline := now.Add(duration)
-	cacneltm := time.AfterFunc(duration, cancel)
+	canceltm := time.AfterFunc(duration, cancel)
 	released := int32(0)
 	acquired := int32(0)
 	failures := int32(0)
@@ -344,7 +344,7 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 			}
 		}(i, err)
 	}
-	if cacneltm.Stop() && atomic.LoadInt32(&failures) < m.majority {
+	if canceltm.Stop() && atomic.LoadInt32(&failures) < m.majority {
 		return func() {
 			cancel()
 			<-done

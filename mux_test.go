@@ -40,7 +40,7 @@ func setupMuxWithOption(wires []*mockWire, option *ClientOption) (conn *mux, che
 }
 
 func TestNewMuxDailErr(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	c := 0
 	e := errors.New("any")
 	m := makeMux("", &ClientOption{}, func(ctx context.Context, dst string, opt *ClientOption) (net.Conn, error) {
@@ -96,7 +96,7 @@ func TestNewMuxDailErr(t *testing.T) {
 }
 
 func TestNewMux(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	n1, n2 := net.Pipe()
 	mock := &redisMock{t: t, buf: bufio.NewReader(n2), conn: n2}
 	go func() {
@@ -137,7 +137,7 @@ func TestNewMux(t *testing.T) {
 }
 
 func TestNewMuxPipelineMultiplex(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	for _, v := range []int{-1, 0, 1, 2} {
 		m := makeMux("", &ClientOption{PipelineMultiplex: v}, func(_ context.Context, dst string, opt *ClientOption) (net.Conn, error) { return nil, nil })
 		if (v < 0 && len(m.wire) != 1) || (v >= 0 && len(m.wire) != 1<<v) {
@@ -147,7 +147,7 @@ func TestNewMuxPipelineMultiplex(t *testing.T) {
 }
 
 func TestMuxAddr(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	m := makeMux("dst1", &ClientOption{}, nil)
 	if m.Addr() != "dst1" {
 		t.Fatalf("unexpected m.Addr != dst1")
@@ -155,7 +155,7 @@ func TestMuxAddr(t *testing.T) {
 }
 
 func TestMuxOptInCmd(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	if m := makeMux("dst1", &ClientOption{
 		ClientTrackingOptions: []string{"OPTOUT"},
@@ -175,7 +175,7 @@ func TestMuxOptInCmd(t *testing.T) {
 }
 
 func TestMuxDialSuppress(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	var wires, waits, done int64
 	blocking := make(chan struct{})
 	m := newMux("", &ClientOption{}, (*mockWire)(nil), (*mockWire)(nil), func(_ context.Context) wire {
@@ -206,7 +206,7 @@ func TestMuxDialSuppress(t *testing.T) {
 
 //gocyclo:ignore
 func TestMuxReuseWire(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	t.Run("reuse wire if no error", func(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
@@ -477,7 +477,7 @@ func TestMuxReuseWire(t *testing.T) {
 
 //gocyclo:ignore
 func TestMuxDelegation(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	t.Run("wire info", func(t *testing.T) {
 		m, checkClean := setupMux([]*mockWire{
 			{
@@ -1034,7 +1034,7 @@ func TestMuxDelegation(t *testing.T) {
 
 //gocyclo:ignore
 func TestMuxRegisterCloseHook(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	t.Run("trigger hook with unexpected error", func(t *testing.T) {
 		var hook atomic.Value
 		m, checkClean := setupMux([]*mockWire{

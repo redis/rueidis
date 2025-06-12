@@ -146,7 +146,7 @@ func JsonMGet(client Client, ctx context.Context, keys []string, path string) (r
 	return doMultiGet(client, ctx, cmds.s, keys)
 }
 
-// JsonMSet is a helper that consults redis directly with multiple keys by grouping keys within the same slot into JSON.MSETs or multiple JOSN.SETs
+// JsonMSet is a helper that consults redis directly with multiple keys by grouping keys within the same slot into JSON.MSETs or multiple JSON.SETs
 func JsonMSet(client Client, ctx context.Context, kvs map[string]string, path string) map[string]error {
 	if len(kvs) == 0 {
 		return make(map[string]error)

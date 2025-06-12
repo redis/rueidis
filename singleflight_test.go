@@ -10,7 +10,7 @@ import (
 )
 
 func TestSingleFlight(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	var calls, done, err int64
 
 	sg := call{}
@@ -50,7 +50,7 @@ func TestSingleFlight(t *testing.T) {
 }
 
 func TestSingleFlightWithContext(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	ch := make(chan struct{})
 	sg := call{}
 	go func() {
@@ -84,7 +84,7 @@ func TestSingleFlightWithContext(t *testing.T) {
 }
 
 func TestSingleFlightLazyDo(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	ch := make(chan struct{})
 	sg := call{}
 	sg.LazyDo(time.Second, func() error {

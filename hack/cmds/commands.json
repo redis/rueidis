@@ -5693,7 +5693,7 @@
   },
   "SPOP": {
     "summary": "Remove and return one or multiple random members from a set",
-    "complexity": "Without the count argument O(1), otherwise O(N) where N is the value of the passed count.",
+    "complexity": "Without the count argument O(1); otherwise, O(N) where N is the value of the passed count.",
     "arguments": [
       {
         "name": "key",
@@ -5723,7 +5723,7 @@
   },
   "SRANDMEMBER": {
     "summary": "Get one or multiple random members from a set",
-    "complexity": "Without the count argument O(1), otherwise O(N) where N is the absolute value of the passed count.",
+    "complexity": "Without the count argument O(1); otherwise, O(N) where N is the absolute value of the passed count.",
     "arguments": [
       {
         "name": "key",
@@ -5924,7 +5924,7 @@
     "group": "generic"
   },
   "UNLINK": {
-    "summary": "Delete a key asynchronously in another thread. Otherwise it is just as DEL, but non blocking.",
+    "summary": "Delete a key asynchronously in another thread. Otherwise, it is just as DEL, but non blocking.",
     "complexity": "O(1) for each key removed regardless of its size. Then the command does O(N) work in a different thread in order to reclaim memory, where N is the number of allocations the deleted objects where composed of.",
     "arguments": [
       {

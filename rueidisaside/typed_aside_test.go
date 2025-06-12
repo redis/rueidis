@@ -100,7 +100,7 @@ func TestTypedCacheAsideClient_Get(t *testing.T) {
 		})
 
 		if err != nil {
-			t.Fatalf("nil valud should not return error: %v", err)
+			t.Fatalf("nil value should not return error: %v", err)
 		}
 		if val != nil {
 			t.Fatalf("expected nil value, got %v", val)

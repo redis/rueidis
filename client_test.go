@@ -198,7 +198,7 @@ func (m *mockConn) OptInCmd() cmds.Completed {
 }
 
 func TestNewSingleClientNoNode(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	if _, err := newSingleClient(
 		&ClientOption{}, nil, func(dst string, opt *ClientOption) conn {
 			return nil
@@ -209,7 +209,7 @@ func TestNewSingleClientNoNode(t *testing.T) {
 }
 
 func TestNewSingleClientReplicaOnlyNotSupported(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	if _, err := newSingleClient(
 		&ClientOption{ReplicaOnly: true, InitAddress: []string{"localhost"}}, nil, func(dst string, opt *ClientOption) conn { return nil }, newRetryer(defaultRetryDelayFn),
 	); err != ErrReplicaOnlyNotSupported {
@@ -218,8 +218,8 @@ func TestNewSingleClientReplicaOnlyNotSupported(t *testing.T) {
 }
 
 func TestNewSingleClientError(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
-	v := errors.New("dail err")
+	defer ShouldNotLeak(SetupLeakDetection())
+	v := errors.New("dial err")
 	if _, err := newSingleClient(
 		&ClientOption{InitAddress: []string{""}}, nil, func(dst string, opt *ClientOption) conn { return &mockConn{DialFn: func() error { return v }} }, newRetryer(defaultRetryDelayFn),
 	); err != v {
@@ -228,7 +228,7 @@ func TestNewSingleClientError(t *testing.T) {
 }
 
 func TestNewSingleClientOverride(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	m1 := &mockConn{}
 	var m2 conn
 	if _, err := newSingleClient(
@@ -248,7 +248,7 @@ func TestNewSingleClientOverride(t *testing.T) {
 
 //gocyclo:ignore
 func TestSingleClient(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	m := &mockConn{
 		AddrFn: func() string { return "myaddr" },
 	}
@@ -474,10 +474,10 @@ func TestSingleClient(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		if !stored {
-			t.Fatalf("Dedicated desn't put back the wire")
+			t.Fatalf("Dedicated doesn't put back the wire")
 		}
 		if !closed {
-			t.Fatalf("Dedicated desn't delegate Close")
+			t.Fatalf("Dedicated doesn't delegate Close")
 		}
 	})
 
@@ -540,10 +540,10 @@ func TestSingleClient(t *testing.T) {
 		cancel()
 
 		if !stored {
-			t.Fatalf("Dedicated desn't put back the wire")
+			t.Fatalf("Dedicated doesn't put back the wire")
 		}
 		if !closed {
-			t.Fatalf("Dedicated desn't delegate Close")
+			t.Fatalf("Dedicated doesn't delegate Close")
 		}
 	})
 
@@ -622,7 +622,7 @@ func TestSingleClient(t *testing.T) {
 }
 
 func TestSingleClientRetry(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	SetupClientRetry(t, func(m *mockConn) Client {
 		c, err := newSingleClient(
 			&ClientOption{InitAddress: []string{""}},
@@ -1260,7 +1260,7 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 }
 
 func TestSingleClientLoadingRetry(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	setup := func() (*singleClient, *mockConn) {
 		m := &mockConn{}
@@ -1425,7 +1425,7 @@ func TestSingleClientLoadingRetry(t *testing.T) {
 }
 
 func TestSingleClientConnLifetime(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	setup := func() (*singleClient, *mockConn) {
 		m := &mockConn{}
@@ -1510,7 +1510,7 @@ func TestSingleClientConnLifetime(t *testing.T) {
 				return &redisresults{s: []RedisResult{newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired)}}
 			case 2: // errConnExpired at Multi Command
 				if len(multi) != 6 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[0].Commands()) {
-					t.Fatalf("unexpected multi when errConnExpired occurred at the head of proccessing, %v", multi)
+					t.Fatalf("unexpected multi when errConnExpired occurred at the head of processing, %v", multi)
 				}
 				return &redisresults{s: []RedisResult{
 					newResult(strmsg('+', "1"), nil),

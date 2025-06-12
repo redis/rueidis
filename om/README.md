@@ -38,7 +38,7 @@ func main() {
 
     // lookup "my_prefix:01FNH4FCXV9JTB9WTVFAAKGSYB" through client side caching
     exp2, _ := repo.FetchCache(ctx, exp.Key, time.Second*5)
-    fmt.Println(exp2.Str) // output "mystr", which equals to exp.Str
+    fmt.Println(exp2.Str) // output "mystr", which is equal to exp.Str
 
     exp2.Ver = 0         // if someone changes the version during your GET then SET operation,
     repo.Save(ctx, exp2) // the save will fail with ErrVersionMismatch.

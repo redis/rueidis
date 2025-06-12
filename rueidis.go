@@ -192,7 +192,7 @@ type ClientOption struct {
 	// This default is ClientOption.Dialer.KeepAlive * (9+1), where 9 is the default of tcp_keepalive_probes on Linux.
 	ConnWriteTimeout time.Duration
 
-	// ConnLiftime is a lifetime for each connection. If specified,
+	// ConnLifetime is a lifetime for each connection. If specified,
 	// connections will close after passing lifetime. Note that the connection which a dedicated client and blocking use is not closed.
 	ConnLifetime time.Duration
 
@@ -201,7 +201,7 @@ type ClientOption struct {
 	// to Redis. Adding this delay increases latency, reduces throughput – but in most cases may significantly reduce
 	// application and Redis CPU utilization due to less executed system calls. By default, Rueidis flushes data to the
 	// connection without extra delays. Depending on network latency and application-specific conditions, the value
-	// of MaxFlushDelay may vary, sth like 20 microseconds should not affect latency/throughput a lot but still
+	// of MaxFlushDelay may vary, something like 20 microseconds should not affect latency/throughput a lot but still
 	// produce notable CPU usage reduction under load. Ref: https://github.com/redis/rueidis/issues/156
 	MaxFlushDelay time.Duration
 
@@ -225,7 +225,7 @@ type ClientOption struct {
 	DisableAutoPipelining bool
 	// AlwaysPipelining makes rueidis.Client always pipeline redis commands even if they are not issued concurrently.
 	AlwaysPipelining bool
-	// AlwaysRESP2 makes rueidis.Client always uses RESP2, otherwise it will try using RESP3 first.
+	// AlwaysRESP2 makes rueidis.Client always uses RESP2; otherwise, it will try using RESP3 first.
 	AlwaysRESP2 bool
 	//  ForceSingleClient force the usage of a single client connection, without letting the lib guessing
 	//  if redis instance is a cluster or a single redis instance.
@@ -342,7 +342,7 @@ type Client interface {
 }
 
 // DedicatedClient is obtained from Client.Dedicated() and it will be bound to a single redis connection, and
-// no other commands can be pipelined in to this connection during Client.Dedicated().
+// no other commands can be pipelined into this connection during Client.Dedicated().
 // If the DedicatedClient is obtained from a cluster client, the first command to it must have a Key() to identify the redis node.
 type DedicatedClient interface {
 	CoreClient

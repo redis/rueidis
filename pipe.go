@@ -27,7 +27,7 @@ var noHello = regexp.MustCompile("unknown command .?(HELLO|hello).?")
 
 // See https://github.com/redis/rueidis/pull/691
 func isUnsubReply(msg *RedisMessage) bool {
-	// ex. NOPERM User limiteduser has no permissions to run the 'ping' command
+	// ex. NOPERM User limited-user has no permissions to run the 'ping' command
 	// ex. LOADING server is loading the dataset in memory
 	// ex. BUSY
 	if msg.typ == '-' && (strings.HasPrefix(msg.string(), "LOADING") || strings.HasPrefix(msg.string(), "BUSY") || strings.Contains(msg.string(), "'ping'")) {
@@ -555,7 +555,7 @@ func (p *pipe) _backgroundRead() (err error) {
 		}
 		if ff == len(multi) {
 			ff = 0
-			ones[0], multi, ch, resps, cond = p.queue.NextResultCh() // ch should not be nil, otherwise it must be a protocol bug
+			ones[0], multi, ch, resps, cond = p.queue.NextResultCh() // ch should not be nil; otherwise, it must be a protocol bug
 			if ch == nil {
 				cond.L.Unlock()
 				// Redis will send sunsubscribe notification proactively in the event of slot migration.
@@ -912,8 +912,8 @@ func (p *pipe) Version() int {
 }
 
 func (p *pipe) AZ() string {
-	infoAvaliabilityZone := p.info["availability_zone"]
-	return infoAvaliabilityZone.string()
+	infoAvailabilityZone := p.info["availability_zone"]
+	return infoAvailabilityZone.string()
 }
 
 func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {

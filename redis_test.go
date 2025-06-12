@@ -221,7 +221,7 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 		return
 	}
 
-	t.Logf("testing client side caching with %d interations and %d parallelism\n", keys*5, para)
+	t.Logf("testing client side caching with %d iterations and %d parallelism\n", keys*5, para)
 	jobs, wait = parallel(para)
 	hits, miss := int64(0), int64(0)
 	for i := 0; i < keys*10 && !t.Failed(); i++ {
@@ -418,7 +418,7 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 		return
 	}
 
-	t.Logf("testing client side caching with %d interations and %d parallelism\n", keys*5, para)
+	t.Logf("testing client side caching with %d iterations and %d parallelism\n", keys*5, para)
 	jobs, wait = parallel(para)
 	hits, miss := int64(0), int64(0)
 	for i := 0; i < keys*10 && !t.Failed(); i += batch {
@@ -556,7 +556,7 @@ func testMultiSETGETHelpers(t *testing.T, client Client, csc bool) {
 	validate(resp)
 	for _, ret := range resp {
 		if ret.IsCacheHit() {
-			t.Fatalf("unexpeceted cache hit %v\n", ret)
+			t.Fatalf("unexpected cache hit %v\n", ret)
 		}
 	}
 	resp, err = MGetCache(client, ctx, time.Minute, cmdKeys)
@@ -566,7 +566,7 @@ func testMultiSETGETHelpers(t *testing.T, client Client, csc bool) {
 	validate(resp)
 	for _, ret := range resp {
 		if csc && !ret.IsCacheHit() {
-			t.Fatalf("unexpeceted cache miss %v\n", ret)
+			t.Fatalf("unexpected cache miss %v\n", ret)
 		}
 	}
 
@@ -586,7 +586,7 @@ func testMultiSETGETHelpers(t *testing.T, client Client, csc bool) {
 	}
 	for _, ret := range resp {
 		if !ret.IsNil() {
-			t.Fatalf("unexpeceted cache hit %v\n", ret)
+			t.Fatalf("unexpected cache hit %v\n", ret)
 		}
 	}
 }
@@ -913,7 +913,7 @@ func TestSingleClientIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	client, err := NewClient(ClientOption{
 		InitAddress:       []string{"127.0.0.1:6379"},
@@ -943,7 +943,7 @@ func TestSentinelClientIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:26379"},
@@ -977,7 +977,7 @@ func TestClusterClientIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	client, err := NewClient(ClientOption{
 		InitAddress:       []string{"127.0.0.1:7001", "127.0.0.1:7002", "127.0.0.1:7003"},
@@ -1007,7 +1007,7 @@ func TestSingleClient5Integration(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:       []string{"127.0.0.1:6355"},
 		ConnWriteTimeout:  180 * time.Second,
@@ -1028,7 +1028,7 @@ func TestCluster5ClientIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:       []string{"127.0.0.1:7004", "127.0.0.1:7005", "127.0.0.1:7006"},
 		ConnWriteTimeout:  180 * time.Second,
@@ -1050,7 +1050,7 @@ func TestSentinel5ClientIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:26355"},
 		ConnWriteTimeout: 180 * time.Second,
@@ -1074,7 +1074,7 @@ func TestKeyDBSingleClientIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:       []string{"127.0.0.1:6344"},
 		ConnWriteTimeout:  180 * time.Second,
@@ -1095,7 +1095,7 @@ func TestDragonflyDBSingleClientIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:       []string{"127.0.0.1:6333"},
 		ConnWriteTimeout:  180 * time.Second,
@@ -1116,7 +1116,7 @@ func TestKvrocksSingleClientIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:       []string{"127.0.0.1:6666"},
 		ConnWriteTimeout:  180 * time.Second,
@@ -1135,7 +1135,7 @@ func TestKvrocksSingleClientIntegration(t *testing.T) {
 }
 
 func TestNegativeConnWriteTimeout(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:6379"},
 		ConnWriteTimeout: -1,
@@ -1147,7 +1147,7 @@ func TestNegativeConnWriteTimeout(t *testing.T) {
 }
 
 func TestNegativeKeepalive(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress: []string{"127.0.0.1:6379"},
 		Dialer:      net.Dialer{KeepAlive: -1},
@@ -1159,7 +1159,7 @@ func TestNegativeKeepalive(t *testing.T) {
 }
 
 func TestNegativeConnWriteTimeoutKeepalive(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	client, err := NewClient(ClientOption{
 		InitAddress:      []string{"127.0.0.1:6379"},
 		Dialer:           net.Dialer{KeepAlive: -1},

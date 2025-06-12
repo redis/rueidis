@@ -140,7 +140,7 @@ func (r *JSONRepository[T]) AlterIndex(ctx context.Context, cmdFn func(alter FtA
 
 // CreateIndex uses FT.CREATE from the RediSearch module to create an inverted index under the name `jsonidx:{prefix}`
 // You can use the cmdFn parameter to mutate the index construction command,
-// and note that the field name should be specified with JSON path syntax, otherwise the index may not work as expected.
+// and note that the field name should be specified with JSON path syntax; otherwise, the index may not work as expected.
 func (r *JSONRepository[T]) CreateIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) rueidis.Completed) error {
 	return r.client.Do(ctx, cmdFn(r.client.B().FtCreate().Index(r.idx).OnJson().Prefix(1).Prefix(r.prefix+":").Schema())).Error()
 }

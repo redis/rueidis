@@ -52,7 +52,7 @@ func IsRedisErr(err error) (ret *RedisError, ok bool) {
 // RedisError is an error response or a nil message from the redis instance
 type RedisError RedisMessage
 
-// string retrives the contained string of the RedisError
+// string retrieves the contained string of the RedisError
 func (m *RedisError) string() string {
 	if m.bytes == nil {
 		return ""
@@ -1128,7 +1128,7 @@ func (m *RedisMessage) AsXReadSlices() (map[string][]XRangeSlice, error) {
 		return ret, nil
 	}
 	typ := m.typ
-	return nil, fmt.Errorf("%w: valkey message type %s is not a map/array/set", errParse, typeNames[typ])
+	return nil, fmt.Errorf("%w: redis message type %s is not a map/array/set", errParse, typeNames[typ])
 }
 
 // ZScore is the element type of ZRANGE WITHSCORES, ZDIFF WITHSCORES and ZPOPMAX command response
@@ -1156,7 +1156,7 @@ func (m *RedisMessage) AsZScore() (s ZScore, err error) {
 	return toZScore(arr)
 }
 
-// AsZScores converts ZRANGE WITHSCROES, ZDIFF WITHSCROES and ZPOPMAX/ZPOPMIN command with count > 1 responses to []ZScore
+// AsZScores converts ZRANGE WITHSCORES, ZDIFF WITHSCORES and ZPOPMAX/ZPOPMIN command with count > 1 responses to []ZScore
 func (m *RedisMessage) AsZScores() ([]ZScore, error) {
 	arr, err := m.ToArray()
 	if err != nil {

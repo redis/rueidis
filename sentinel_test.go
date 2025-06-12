@@ -14,7 +14,7 @@ import (
 
 //gocyclo:ignore
 func TestSentinelClientInit(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	t.Run("Init no nodes", func(t *testing.T) {
 		if _, err := newSentinelClient(
 			&ClientOption{InitAddress: []string{}},
@@ -202,7 +202,7 @@ func TestSentinelClientInit(t *testing.T) {
 				}}
 			},
 		}
-		sentinelWithFaultiSlave := &mockConn{
+		sentinelWithFaultySlave := &mockConn{
 			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
 			DoMultiFn: func(multi ...Completed) *redisresults {
 				return &redisresults{s: []RedisResult{
@@ -342,7 +342,7 @@ func TestSentinelClientInit(t *testing.T) {
 					return slaveWithReplicaResponseErr
 				}
 				if dst == ":2" {
-					return sentinelWithFaultiSlave
+					return sentinelWithFaultySlave
 				}
 				if dst == ":3" {
 					return sentinelWithHealthySlaveInSDown
@@ -605,7 +605,7 @@ func TestSentinelClientInit(t *testing.T) {
 }
 
 func TestSentinelRefreshAfterClose(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	first := true
 	s0 := &mockConn{
 		DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
@@ -650,7 +650,7 @@ func TestSentinelRefreshAfterClose(t *testing.T) {
 }
 
 func TestSentinelSwitchAfterClose(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	first := true
 	s0 := &mockConn{
 		DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
@@ -696,7 +696,7 @@ func TestSentinelSwitchAfterClose(t *testing.T) {
 
 //gocyclo:ignore
 func TestSentinelClientDelegate(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	s0 := &mockConn{
 		DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
 		DoMultiFn: func(multi ...Completed) *redisresults {
@@ -957,7 +957,7 @@ func TestSentinelClientDelegate(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		if !stored {
-			t.Fatalf("Dedicated desn't put back the wire")
+			t.Fatalf("Dedicated doesn't put back the wire")
 		}
 	})
 
@@ -1003,14 +1003,14 @@ func TestSentinelClientDelegate(t *testing.T) {
 		}
 		cancel()
 		if !stored {
-			t.Fatalf("Dedicated desn't put back the wire")
+			t.Fatalf("Dedicated doesn't put back the wire")
 		}
 	})
 }
 
 //gocyclo:ignore
 func TestSentinelClientDelegateRetry(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	setup := func(t *testing.T) (client *sentinelClient, cb func()) {
 		retry := uint32(0)
 		trigger := make(chan error)
@@ -1173,7 +1173,7 @@ func TestSentinelClientDelegateRetry(t *testing.T) {
 
 //gocyclo:ignore
 func TestSentinelClientPubSub(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	var s0count, s0close, m1close, m2close, m4close int32
 
 	messages := make(chan PubSubMessage)
@@ -1323,7 +1323,7 @@ func TestSentinelClientPubSub(t *testing.T) {
 
 //gocyclo:ignore
 func TestSentinelReplicaOnlyClientPubSub(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	var s0count, s0close, slave1close, slave2close, slave4close int32
 
 	messages := make(chan PubSubMessage)
@@ -1514,7 +1514,7 @@ func TestSentinelReplicaOnlyClientPubSub(t *testing.T) {
 }
 
 func TestSentinelClientRetry(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	SetupClientRetry(t, func(m *mockConn) Client {
 		m.DoOverride = map[string]func(cmd Completed) RedisResult{
 			"SENTINEL SENTINELS masters": func(cmd Completed) RedisResult {
@@ -1552,7 +1552,7 @@ func TestSentinelClientRetry(t *testing.T) {
 }
 
 func TestSentinelClientLoadingRetry(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	setup := func() (*sentinelClient, *mockConn, *mockConn) {
 		s0 := &mockConn{
@@ -1751,7 +1751,7 @@ func TestSentinelClientLoadingRetry(t *testing.T) {
 }
 
 func TestSentinelClientConnLifetime(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	setup := func() (*sentinelClient, *mockConn, *mockConn) {
 		s0 := &mockConn{
@@ -1868,7 +1868,7 @@ func TestSentinelClientConnLifetime(t *testing.T) {
 				return &redisresults{s: []RedisResult{newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired)}}
 			case 2: // errConnExpired at Multi Command
 				if len(multi) != 6 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[0].Commands()) {
-					t.Fatalf("unexpected multi when errConnExpired occurred at the head of proccessing, %v", multi)
+					t.Fatalf("unexpected multi when errConnExpired occurred at the head of processing, %v", multi)
 				}
 				return &redisresults{s: []RedisResult{
 					newResult(strmsg('+', "1"), nil),

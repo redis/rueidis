@@ -10,7 +10,7 @@ import (
 )
 
 func TestNewStandaloneClientNoNode(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	if _, err := newStandaloneClient(
 		&ClientOption{}, func(dst string, opt *ClientOption) conn {
 			return nil
@@ -21,8 +21,8 @@ func TestNewStandaloneClientNoNode(t *testing.T) {
 }
 
 func TestNewStandaloneClientError(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
-	v := errors.New("dail err")
+	defer ShouldNotLeak(SetupLeakDetection())
+	v := errors.New("dial err")
 	if _, err := newStandaloneClient(
 		&ClientOption{InitAddress: []string{""}}, func(dst string, opt *ClientOption) conn { return &mockConn{DialFn: func() error { return v }} }, newRetryer(defaultRetryDelayFn),
 	); err != v {
@@ -31,8 +31,8 @@ func TestNewStandaloneClientError(t *testing.T) {
 }
 
 func TestNewStandaloneClientReplicasError(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
-	v := errors.New("dail err")
+	defer ShouldNotLeak(SetupLeakDetection())
+	v := errors.New("dial err")
 	if _, err := newStandaloneClient(
 		&ClientOption{
 			InitAddress: []string{"1"},
@@ -53,7 +53,7 @@ func TestNewStandaloneClientReplicasError(t *testing.T) {
 }
 
 func TestNewStandaloneClientDelegation(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	w := &mockWire{}
 	p := &mockConn{
@@ -196,7 +196,7 @@ func TestNewStandaloneClientDelegation(t *testing.T) {
 }
 
 func TestNewStandaloneClientMultiReplicasDelegation(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	var counts [2]int32
 

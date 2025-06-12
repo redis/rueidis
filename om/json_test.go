@@ -234,7 +234,7 @@ func TestNewJSONRepository(t *testing.T) {
 				return search.Query("*").Sortby("$.Nested.F1").Build()
 			})
 			if err == nil {
-				t.Fatalf("search by property not loaded nor in schema")
+				t.Fatalf("search by property neither loaded nor in schema")
 			}
 			err = repo.AlterIndex(ctx, func(alter FtAlterIndex) rueidis.Completed {
 				return alter.

@@ -697,7 +697,7 @@ var singleShardWithoutIP = newResult(slicemsg(typeArray, []RedisMessage{
 
 //gocyclo:ignore
 func TestClusterClientInit(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	t.Run("Init no nodes", func(t *testing.T) {
 		if _, err := newClusterClient(
 			&ClientOption{InitAddress: []string{}},
@@ -1527,7 +1527,7 @@ func TestClusterClientInit(t *testing.T) {
 
 //gocyclo:ignore
 func TestClusterClient(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	m := &mockConn{
 		DoFn: func(cmd Completed) RedisResult {
 			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
@@ -1976,10 +1976,10 @@ func TestClusterClient(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		if !stored {
-			t.Fatalf("Dedicated desn't put back the wire")
+			t.Fatalf("Dedicated doesn't put back the wire")
 		}
 		if !closed {
-			t.Fatalf("Dedicated desn't delegate Close")
+			t.Fatalf("Dedicated doesn't delegate Close")
 		}
 	})
 
@@ -2082,10 +2082,10 @@ func TestClusterClient(t *testing.T) {
 		cancel()
 
 		if !stored {
-			t.Fatalf("Dedicated desn't put back the wire")
+			t.Fatalf("Dedicated doesn't put back the wire")
 		}
 		if !closed {
-			t.Fatalf("Dedicated desn't delegate Close")
+			t.Fatalf("Dedicated doesn't delegate Close")
 		}
 	})
 
@@ -2193,7 +2193,7 @@ func TestClusterClient(t *testing.T) {
 
 //gocyclo:ignore
 func TestClusterClient_SendToOnlyPrimaryNodes(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	primaryNodeConn := &mockConn{
 		DoOverride: map[string]func(cmd Completed) RedisResult{
@@ -2576,10 +2576,10 @@ func TestClusterClient_SendToOnlyPrimaryNodes(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		if !stored {
-			t.Fatalf("Dedicated desn't put back the wire")
+			t.Fatalf("Dedicated doesn't put back the wire")
 		}
 		if !closed {
-			t.Fatalf("Dedicated desn't delegate Close")
+			t.Fatalf("Dedicated doesn't delegate Close")
 		}
 	})
 
@@ -2682,17 +2682,17 @@ func TestClusterClient_SendToOnlyPrimaryNodes(t *testing.T) {
 		cancel()
 
 		if !stored {
-			t.Fatalf("Dedicated desn't put back the wire")
+			t.Fatalf("Dedicated doesn't put back the wire")
 		}
 		if !closed {
-			t.Fatalf("Dedicated desn't delegate Close")
+			t.Fatalf("Dedicated doesn't delegate Close")
 		}
 	})
 }
 
 //gocyclo:ignore
 func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	primaryNodeConn := &mockConn{
 		DoOverride: map[string]func(cmd Completed) RedisResult{
@@ -3068,10 +3068,10 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		if !stored {
-			t.Fatalf("Dedicated desn't put back the wire")
+			t.Fatalf("Dedicated doesn't put back the wire")
 		}
 		if !closed {
-			t.Fatalf("Dedicated desn't delegate Close")
+			t.Fatalf("Dedicated doesn't delegate Close")
 		}
 	})
 
@@ -3174,17 +3174,17 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 		cancel()
 
 		if !stored {
-			t.Fatalf("Dedicated desn't put back the wire")
+			t.Fatalf("Dedicated doesn't put back the wire")
 		}
 		if !closed {
-			t.Fatalf("Dedicated desn't delegate Close")
+			t.Fatalf("Dedicated doesn't delegate Close")
 		}
 	})
 }
 
 //gocyclo:ignore
 func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNodes(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	primaryNodeConn := &mockConn{
 		DoOverride: map[string]func(cmd Completed) RedisResult{
@@ -3658,10 +3658,10 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 			t.Fatalf("unexpected err %v", err)
 		}
 		if !stored {
-			t.Fatalf("Dedicated desn't put back the wire")
+			t.Fatalf("Dedicated doesn't put back the wire")
 		}
 		if !closed {
-			t.Fatalf("Dedicated desn't delegate Close")
+			t.Fatalf("Dedicated doesn't delegate Close")
 		}
 	})
 
@@ -3764,17 +3764,17 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 		cancel()
 
 		if !stored {
-			t.Fatalf("Dedicated desn't put back the wire")
+			t.Fatalf("Dedicated doesn't put back the wire")
 		}
 		if !closed {
-			t.Fatalf("Dedicated desn't delegate Close")
+			t.Fatalf("Dedicated doesn't delegate Close")
 		}
 	})
 }
 
 //gocyclo:ignore
 func TestClusterClient_SendPrimaryNodeOnlyButOneSlotAssigned(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	primaryNodeConn := &mockConn{
 		DoOverride: map[string]func(cmd Completed) RedisResult{
@@ -3836,7 +3836,7 @@ func TestClusterClient_SendPrimaryNodeOnlyButOneSlotAssigned(t *testing.T) {
 
 //gocyclo:ignore
 func TestClusterClientErr(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	t.Run("not refresh on context error", func(t *testing.T) {
 		var count int64
@@ -5758,7 +5758,7 @@ func TestClusterClientErr(t *testing.T) {
 }
 
 func TestClusterClientRetry(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	SetupClientRetry(t, func(m *mockConn) Client {
 		m.DoOverride = map[string]func(cmd Completed) RedisResult{
 			"CLUSTER SLOTS": func(cmd Completed) RedisResult { return slotsMultiResp },
@@ -5776,7 +5776,7 @@ func TestClusterClientRetry(t *testing.T) {
 }
 
 func TestClusterClientReplicaOnly_PickReplica(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	m := &mockConn{
 		DoFn: func(cmd Completed) RedisResult {
 			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
@@ -5814,7 +5814,7 @@ func TestClusterClientReplicaOnly_PickReplica(t *testing.T) {
 }
 
 func TestClusterClientReplicaOnly_PickMasterIfNoReplica(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	t.Run("replicas should be picked", func(t *testing.T) {
 		m := &mockConn{
 			DoFn: func(cmd Completed) RedisResult {
@@ -5904,7 +5904,7 @@ func TestClusterClientReplicaOnly_PickMasterIfNoReplica(t *testing.T) {
 }
 
 func TestClusterShardsParsing(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	t.Run("master selection", func(t *testing.T) {
 		result := parseShards(shardsRespTls.val, "127.0.0.1:5", true)
 		if len(result) != 1 {
@@ -5966,7 +5966,7 @@ func TestClusterShardsParsing(t *testing.T) {
 
 // https://github.com/redis/rueidis/issues/543
 func TestConnectToNonAvailableCluster(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	var wg sync.WaitGroup
 	for i := 0; i < 4; i++ {
 		wg.Add(1)
@@ -5986,7 +5986,7 @@ func TestConnectToNonAvailableCluster(t *testing.T) {
 }
 
 func TestClusterTopologyRefreshment(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	t.Run("no refreshment", func(t *testing.T) {
 		var callCount int64
@@ -6168,7 +6168,7 @@ func TestClusterTopologyRefreshment(t *testing.T) {
 }
 
 func TestClusterClientLoadingRetry(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	setup := func() (*clusterClient, *mockConn) {
 		m := &mockConn{
@@ -6348,7 +6348,7 @@ func TestClusterClientLoadingRetry(t *testing.T) {
 }
 
 func TestClusterClientMovedRetry(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	setup := func() (*clusterClient, *mockConn) {
 		m := &mockConn{
@@ -6416,7 +6416,7 @@ func TestClusterClientMovedRetry(t *testing.T) {
 }
 
 func TestClusterClientCacheASKRetry(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	setup := func() (*clusterClient, *mockConn) {
 		m := &mockConn{
@@ -6486,7 +6486,7 @@ func TestClusterClientCacheASKRetry(t *testing.T) {
 
 //gocyclo:ignore
 func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	primaryNodeConn := &mockConn{
 		DoOverride: map[string]func(cmd Completed) RedisResult{
@@ -6959,10 +6959,10 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 			t.Fatalf("unexpected err %v", err)
 		}
 		if !stored {
-			t.Fatalf("Dedicated desn't put back the wire")
+			t.Fatalf("Dedicated doesn't put back the wire")
 		}
 		if !closed {
-			t.Fatalf("Dedicated desn't delegate Close")
+			t.Fatalf("Dedicated doesn't delegate Close")
 		}
 	})
 
@@ -7065,17 +7065,17 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 		cancel()
 
 		if !stored {
-			t.Fatalf("Dedicated desn't put back the wire")
+			t.Fatalf("Dedicated doesn't put back the wire")
 		}
 		if !closed {
-			t.Fatalf("Dedicated desn't delegate Close")
+			t.Fatalf("Dedicated doesn't delegate Close")
 		}
 	})
 }
 
 //gocyclo:ignore
 func TestClusterClient_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	primaryNodeConn := &mockConn{
 		DoOverride: map[string]func(cmd Completed) RedisResult{
@@ -7461,10 +7461,10 @@ func TestClusterClient_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T
 			t.Fatalf("unexpected err %v", err)
 		}
 		if !stored {
-			t.Fatalf("Dedicated desn't put back the wire")
+			t.Fatalf("Dedicated doesn't put back the wire")
 		}
 		if !closed {
-			t.Fatalf("Dedicated desn't delegate Close")
+			t.Fatalf("Dedicated doesn't delegate Close")
 		}
 	})
 
@@ -7567,16 +7567,16 @@ func TestClusterClient_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T
 		cancel()
 
 		if !stored {
-			t.Fatalf("Dedicated desn't put back the wire")
+			t.Fatalf("Dedicated doesn't put back the wire")
 		}
 		if !closed {
-			t.Fatalf("Dedicated desn't delegate Close")
+			t.Fatalf("Dedicated doesn't delegate Close")
 		}
 	})
 }
 
 func TestClusterClientConnLifetime(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	setup := func() (*clusterClient, *mockConn) {
 		m := &mockConn{
@@ -7766,7 +7766,7 @@ func TestClusterClientConnLifetime(t *testing.T) {
 				return &redisresults{s: []RedisResult{newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired)}}
 			case 2: // errConnExpired at Multi command
 				if len(multi) != 6 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[0].Commands()) {
-					t.Fatalf("unexpected multi when errConnExpired occurred at the head of proccessing, %v", multi)
+					t.Fatalf("unexpected multi when errConnExpired occurred at the head of processing, %v", multi)
 				}
 				return &redisresults{s: []RedisResult{
 					newResult(strmsg('+', "1"), nil),
@@ -7904,7 +7904,7 @@ func TestClusterClientConnLifetime(t *testing.T) {
 				return &redisresults{s: []RedisResult{newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired)}}
 			case 3: // errConnExpired at Asking command before Multi command
 				if len(multi) != 9 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[0].Commands()) {
-					t.Fatalf("unexpected multi when errConnExpired occurred at the head of proccessing, %v", multi)
+					t.Fatalf("unexpected multi when errConnExpired occurred at the head of processing, %v", multi)
 				}
 				return &redisresults{s: []RedisResult{
 					newResult(strmsg('+', "OK"), nil),
@@ -8048,7 +8048,7 @@ func TestClusterClientConnLifetime(t *testing.T) {
 
 //gocyclo:ignore
 func TestClusterClient_SendToAlternatePrimaryAndReplicaNodes(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 
 	primaryNodeConn := &mockConn{
 		DoMultiFn: func(multi ...Completed) *redisresults {
