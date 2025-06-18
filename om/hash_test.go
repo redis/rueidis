@@ -491,6 +491,7 @@ func TestCreateAndAliasIndex(t *testing.T) {
 	repo := NewHashRepository("hashalias", HashTestStruct{}, client)
 
 	t.Run("CreateAndAliasIndex", func(t *testing.T) {
+		// Step 1: Create initial index and alias
 		err := repo.CreateAndAliasIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
 			return schema.FieldName("Val").Text().Build()
 		})
@@ -498,18 +499,10 @@ func TestCreateAndAliasIndex(t *testing.T) {
 			t.Fatalf("failed to create and alias index: %v", err)
 		}
 
-		// Verify the alias points to the correct index
-		infoCmd := client.B().FtInfo().Index(repo.IndexName()).Build()
-		infoResp, err := client.Do(ctx, infoCmd).ToMap()
-		if err != nil {
-			t.Fatalf("failed to fetch index info: %v", err)
-		}
+		// Step 2: Verify alias points to initial index (hashalias_v1)
+		verifyAliasTarget(t, ctx, client, repo.IndexName(), repo.IndexName()+"_v1")
 
-		if _, ok := infoResp["index_name"]; !ok {
-			t.Fatalf("index_name not found in FT.INFO response")
-		}
-
-		// Create a new version of the index and alias it
+		// Step 3: Create new index version and update alias
 		err = repo.CreateAndAliasIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
 			return schema.FieldName("Val").Text().Build()
 		})
@@ -517,14 +510,32 @@ func TestCreateAndAliasIndex(t *testing.T) {
 			t.Fatalf("failed to create and alias new index version: %v", err)
 		}
 
-		// Verify the alias points to the new index
-		infoResp, err = client.Do(ctx, infoCmd).ToMap()
-		if err != nil {
-			t.Fatalf("failed to fetch updated index info: %v", err)
-		}
-
-		if _, ok := infoResp["index_name"]; !ok {
-			t.Fatalf("index_name not found in updated FT.INFO response")
-		}
+		// Step 4: Verify alias now points to the updated index (e.g., hashalias_v2)
+		verifyAliasTarget(t, ctx, client, repo.IndexName(), repo.IndexName()+"_v2")
 	})
+}
+
+// Helper to verify that alias points to the expected index name
+func verifyAliasTarget(t *testing.T, ctx context.Context, client rueidis.Client, aliasName string, expectedIndex string) {
+	t.Helper()
+
+	infoCmd := client.B().FtInfo().Index(aliasName).Build()
+	infoResp, err := client.Do(ctx, infoCmd).ToMap()
+	if err != nil {
+		t.Fatalf("failed to fetch index info: %v", err)
+	}
+
+	indexMsg, ok := infoResp["index_name"]
+	if !ok {
+		t.Fatalf("FT.INFO response missing index_name field")
+	}
+
+	actualIndex, err := (&indexMsg).ToString()
+	if err != nil {
+		t.Fatalf("failed to convert index_name to string: %v", err)
+	}
+
+	if actualIndex != expectedIndex {
+		t.Fatalf("alias does not point to the expected index. expected=%s got=%s", expectedIndex, actualIndex)
+	}
 }

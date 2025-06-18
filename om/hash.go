@@ -193,7 +193,8 @@ func (r *HashRepository[T]) CreateAndAliasIndex(ctx context.Context, cmdFn func(
 	}
 
 	// Create the new index
-	if err := r.client.Do(ctx, cmdFn(r.client.B().FtCreate().Index(newIndex).OnHash().Prefix(1).Prefix(r.prefix+":").Schema())).Error(); err != nil {
+	cmd := r.client.B().FtCreate().Index(newIndex).OnHash().Prefix(1).Prefix(r.prefix + ":")
+	if err := r.client.Do(ctx, cmdFn(cmd.Schema())).Error(); err != nil {
 		return err
 	}
 
