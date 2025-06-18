@@ -64,7 +64,7 @@ func TestParseURL(t *testing.T) {
 	if opt, err := ParseURL("rediss://?skip_verify=true"); err != nil || opt.TLSConfig == nil || !opt.TLSConfig.InsecureSkipVerify {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}
-	if opt, err := ParseURL("rediss://?skip_verify=a"); !strings.HasPrefix(err.Error(), "valkey: invalid skip verify") {
+	if opt, err := ParseURL("rediss://?skip_verify=a"); !strings.HasPrefix(err.Error(), "redis: invalid skip verify") {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}
 	if opt, err := ParseURL("redis://?protocol=2"); !opt.AlwaysRESP2 {

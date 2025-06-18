@@ -18,7 +18,7 @@ type ClientOption struct {
 	// ClientBuilder can be used to modify rueidis.Client used by Locker
 	ClientBuilder func(option rueidis.ClientOption) (rueidis.Client, error)
 	ClientOption  rueidis.ClientOption
-	ClientTTL     time.Duration // TTL for the client marker, refreshed every 1/2 TTL. Defaults to 10s. The marker allows other client to know if this client is still alive.
+	ClientTTL     time.Duration // TTL for the client marker, refreshed every 1/2 TTL. Defaults to 10s. The marker allows other clients to know if this client is still alive.
 	UseLuaLock    bool
 }
 

@@ -1,6 +1,6 @@
 # rueidislock
 
-A [Redis Distributed Lock Pattern](https://redis.io/docs/reference/patterns/distributed-locks/) enhanced by [Client Side Caching](https://redis.io/docs/manual/client-side-caching/).
+A [Redis Distributed Lock Pattern](https://redis.io/docs/latest/develop/use/patterns/distributed-locks/) enhanced by [Client Side Caching](https://redis.io/docs/manual/client-side-caching/).
 
 ```go
 package main
@@ -39,7 +39,7 @@ func main() {
 ## Features backed by the Redis Client Side Caching
 * The returned `ctx` will be canceled automatically and immediately once the `KeyMajority` is not held anymore, for example:
   * Redis are down.
-  * Acquired keys has been deleted by other programs or administrators.
+  * Acquired keys have been deleted by other programs or administrators.
 * The waiting `Locker.WithContext` will try acquiring the lock again automatically and immediately once it has been released by someone or by another program.
 
 ## How it works
@@ -53,7 +53,7 @@ When the `locker.WithContext` is invoked, it will:
 
 ### Disable Client Side Caching
 
-Some Redis provider doesn't support client-side caching, ex. Google Cloud Memorystore.
+Some Redis providers don't support client-side caching, ex. Google Cloud Memorystore.
 You can disable client-side caching by setting `ClientOption.DisableCache` to `true`.
 Please note that when the client-side caching is disabled, rueidislock will only try to re-acquire locks for every ExtendInterval.
 

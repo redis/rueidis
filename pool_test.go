@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"runtime"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -13,7 +14,7 @@ var dead = deadFn()
 
 //gocyclo:ignore
 func TestPool(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	setup := func(size int) (*pool, *int32) {
 		var count int32
 		return newPool(size, dead, 0, 0, func(_ context.Context) wire {
@@ -66,7 +67,7 @@ func TestPool(t *testing.T) {
 			t.Fatalf("c3.Error() is not nil")
 		}
 		if atomic.LoadInt32(count) != 3 {
-			t.Fatalf("pool does not clean borken connections")
+			t.Fatalf("pool does not clean broken connections")
 		}
 		pool.cond.L.Lock()
 		defer pool.cond.L.Unlock()
@@ -207,7 +208,7 @@ func TestPool(t *testing.T) {
 }
 
 func TestPoolError(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	setup := func(size int) (*pool, *int32) {
 		var count int32
 		return newPool(size, dead, 0, 0, func(_ context.Context) wire {
@@ -243,7 +244,7 @@ func TestPoolError(t *testing.T) {
 }
 
 func TestPoolWithIdleTTL(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	setup := func(size int, ttl time.Duration, minSize int) *pool {
 		return newPool(size, dead, ttl, minSize, func(_ context.Context) wire {
 			closed := false
@@ -331,11 +332,88 @@ func TestPoolWithIdleTTL(t *testing.T) {
 	})
 }
 
+func TestPoolWithConnLifetime(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	setup := func(wires []wire) *pool {
+		var count int32
+		return newPool(len(wires), dead, 0, 0, func(ctx context.Context) wire {
+			idx := atomic.AddInt32(&count, 1) - 1
+			return wires[idx]
+		})
+	}
+
+	t.Run("Reuse without expired connections", func(t *testing.T) {
+		stopTimerCall := 0
+		wires := []wire{
+			&mockWire{},
+			&mockWire{
+				StopTimerFn: func() bool {
+					stopTimerCall++
+					return false
+				}, // connection lifetime timer is already fired
+			},
+		}
+		conn := make([]wire, 0, len(wires))
+		pool := setup(wires)
+		for i := 0; i < len(wires); i++ {
+			conn = append(conn, pool.Acquire(context.Background()))
+		}
+		for i := 0; i < len(conn); i++ {
+			pool.Store(conn[i])
+		}
+
+		if stopTimerCall != 1 {
+			t.Errorf("StopTimer must be called when making wire")
+		}
+
+		pool.cond.L.Lock()
+		if pool.size != 2 {
+			t.Errorf("size must be equal to 2, actual: %d", pool.size)
+		}
+		if len(pool.list) != 2 {
+			t.Errorf("list len must equal to 2, actual: %d", len(pool.list))
+		}
+		pool.cond.L.Unlock()
+
+		// stop timer failed, so drop the expired connection
+		pool.Store(pool.Acquire(context.Background()))
+
+		if stopTimerCall != 2 {
+			t.Errorf("StopTimer must be called when acquiring from pool")
+		}
+
+		pool.cond.L.Lock()
+		if pool.size != 1 {
+			t.Errorf("size must be equal to 1, actual: %d", pool.size)
+		}
+		if len(pool.list) != 1 {
+			t.Errorf("list len must equal to 1, actual: %d", len(pool.list))
+		}
+		pool.cond.L.Unlock()
+	})
+
+	t.Run("Reset timer when storing to pool", func(t *testing.T) {
+		call := false
+		w := &mockWire{
+			ResetTimerFn: func() bool {
+				call = true
+				return true
+			},
+		}
+		pool := setup([]wire{w})
+		pool.Store(pool.Acquire(context.Background()))
+
+		if !call {
+			t.Error("ResetTimer must be called when storing")
+		}
+	})
+}
+
 func TestPoolWithAcquireCtx(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	setup := func(size int, delay time.Duration) *pool {
 		return newPool(size, dead, 0, 0, func(ctx context.Context) wire {
-			var err error 
+			var err error
 			closed := false
 			timer := time.NewTimer(delay)
 			defer timer.Stop()
@@ -346,7 +424,7 @@ func TestPoolWithAcquireCtx(t *testing.T) {
 			case <-timer.C:
 				// noop
 			}
-			
+
 			return &mockWire{
 				CloseFn: func() {
 					closed = true
@@ -401,7 +479,7 @@ func TestPoolWithAcquireCtx(t *testing.T) {
 		// size = 5
 		for i := range conns {
 			d := time.Millisecond
-			if i % 2 == 0 {
+			if i%2 == 0 {
 				d = time.Millisecond * 8
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), d)
@@ -426,7 +504,7 @@ func TestPoolWithAcquireCtx(t *testing.T) {
 
 		// size = 10
 		for i := range conns {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond * 8)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*8)
 			w := p.Acquire(ctx)
 			conns[i] = w
 			cancel()
@@ -445,7 +523,94 @@ func TestPoolWithAcquireCtx(t *testing.T) {
 			t.Fatalf("pool len must equal to %d, actual: %d", len(conns), len(p.list))
 		}
 		p.cond.L.Unlock()
-		
+
 		p.Close()
+	})
+}
+
+func TestPoolWithCtxTimeout(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	setup := func(size int, delay time.Duration) *pool {
+		var count int64
+
+		return newPool(size, dead, 0, 0, func(ctx context.Context) wire {
+			if atomic.AddInt64(&count, 1) > int64(size) {
+				timer := time.NewTimer(delay)
+				defer timer.Stop()
+				<-timer.C
+			}
+			return &mockWire{}
+		})
+	}
+
+	t.Run("some connections exceed context deadline, acquire duration should be around ctx timeout duration", func(t *testing.T) {
+		p := setup(5, time.Millisecond*20)
+
+		var wg sync.WaitGroup
+		// acquire 5 connections with a higher deadline
+		for i := 0; i < 5; i++ {
+			ctx, cancel := context.WithTimeout(context.Background(), 40*time.Millisecond)
+			w := p.Acquire(ctx)
+			cancel()
+			if err := w.Error(); err != nil {
+				t.Fatalf("unexpected err: %v", err)
+			}
+		}
+
+		ctxTimeout := 1 * time.Millisecond
+		// acquire 5 more connections with a shorter deadline
+		for i := 0; i < 5; i++ {
+			wg.Add(1)
+			go func(index int) {
+				defer wg.Done()
+				start := time.Now()
+				ctx, cancel := context.WithTimeout(context.Background(), ctxTimeout)
+				defer cancel()
+				w := p.Acquire(ctx)
+				if err := w.Error(); !errors.Is(err, context.DeadlineExceeded) {
+					t.Errorf("unexpected err: %v", err)
+				}
+				if dur := time.Since(start).Milliseconds(); dur < ctxTimeout.Milliseconds() {
+					t.Errorf("Acquire time for request %d is not within the expected range: %d seconds, got: %d", i, ctxTimeout.Milliseconds(), dur)
+				}
+			}(i)
+		}
+		wg.Wait()
+	})
+
+	t.Run("context cancelled after some timeout, pool should not wait for the connection", func(t *testing.T) {
+		p := setup(5, time.Millisecond*20)
+
+		var wg sync.WaitGroup
+		// acquire 5 connections with a higher deadline
+		for i := 0; i < 5; i++ {
+			ctx, cancel := context.WithTimeout(context.Background(), 40*time.Millisecond)
+			w := p.Acquire(ctx)
+			cancel()
+			if err := w.Error(); err != nil {
+				t.Fatalf("unexpected err: %v", err)
+			}
+		}
+
+		cancelTimeout := 4 * time.Millisecond
+		// acquire 5 more connections with premature cancellation
+		for i := 0; i < 5; i++ {
+			wg.Add(1)
+			go func(index int) {
+				defer wg.Done()
+				start := time.Now()
+				ctx, cancel := context.WithCancel(context.Background())
+				time.AfterFunc(cancelTimeout, cancel)
+				w := p.Acquire(ctx)
+				if err := w.Error(); !errors.Is(err, context.Canceled) {
+					t.Errorf("unexpected err: %v", err)
+				}
+				if dur := time.Since(start).Milliseconds(); dur < cancelTimeout.Milliseconds() {
+					t.Errorf("Acquire time for request %d is not within the expected range: %d seconds, got: %d", i, cancelTimeout.Milliseconds(), dur)
+				}
+			}(i)
+		}
+
+		wg.Wait()
 	})
 }

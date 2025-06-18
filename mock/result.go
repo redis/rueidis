@@ -186,8 +186,8 @@ type pool struct {
 type pipe struct {
 	conn            net.Conn
 	error           atomic.Pointer[errs]
-	clhks           atomic.Value // closed hook, invoked after the conn is closed
-	pshks           atomic.Value // pubsub hook, registered by the SetPubSubHooks
+	clhks           atomic.Value          // closed hook, invoked after the conn is closed
+	pshks           atomic.Pointer[pshks] // pubsub hook, registered by the SetPubSubHooks
 	queue           any
 	cache           rueidis.CacheStore
 	r               *bufio.Reader
@@ -225,3 +225,8 @@ type stream struct {
 }
 
 type errs struct{ error }
+
+type pshks struct {
+	hooks rueidis.PubSubHooks
+	close chan error
+}

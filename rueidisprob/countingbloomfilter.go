@@ -109,7 +109,7 @@ return 1
 )
 
 // CountingBloomFilter based on Hashes.
-// CountingBloomFilter uses 128-bit murmur3 hash function.
+// CountingBloomFilter uses a 128-bit murmur3 hash function.
 type CountingBloomFilter interface {
 	// Add adds an item to the Counting Bloom Filter.
 	Add(ctx context.Context, key string) error
@@ -138,12 +138,12 @@ type CountingBloomFilter interface {
 
 	// ItemMinCount returns the minimum count of item in the Counting Bloom Filter.
 	// If the item is not in the Counting Bloom Filter, it returns a zero value.
-	// Minimum count is not always accurate because of the hash collisions.
+	// A minimum count is not always accurate because of the hash collisions.
 	ItemMinCount(ctx context.Context, key string) (uint64, error)
 
 	// ItemMinCountMulti returns the minimum count of items in the Counting Bloom Filter.
 	// If the item is not in the Counting Bloom Filter, it returns a zero value.
-	// Minimum count is not always accurate because of the hash collisions.
+	// A minimum count is not always accurate because of the hash collisions.
 	ItemMinCountMulti(ctx context.Context, keys []string) ([]uint64, error)
 
 	// Count returns count of items in Counting Bloom Filter.
@@ -178,7 +178,7 @@ type countingBloomFilter struct {
 }
 
 // NewCountingBloomFilter creates a new Counting Bloom Filter.
-// NOTE: 'name:cbf:c' is used as a counter key in the Redis and
+// NOTE: 'name:cbf:c' is used as a counter-key in the Redis and
 // 'name:cbf' is used as a filter key in the Redis
 // to keep track of the number of items in the Counting Bloom Filter for Count method.
 func NewCountingBloomFilter(

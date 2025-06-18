@@ -11,7 +11,7 @@ import (
 
 //gocyclo:ignore
 func TestRing(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	t.Run("PutOne", func(t *testing.T) {
 		ring := newRing(DefaultRingScale)
 		size := 5000

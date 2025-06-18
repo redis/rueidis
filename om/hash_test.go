@@ -48,7 +48,7 @@ func TestNewHashRepositoryPanic(t *testing.T) {
 	if v := recovered(func() {
 		NewHashRepository("hash", Unsupported{}, nil)
 	}); !strings.Contains(v, "should not contain unsupported field type") {
-		t.Fatalf("unexpeceted message %v", v)
+		t.Fatalf("unexpected message %v", v)
 	}
 }
 
@@ -268,7 +268,7 @@ func TestNewHashRepository(t *testing.T) {
 				return search.Query("*").Sortby("JSON").Build()
 			})
 			if err == nil {
-				t.Fatalf("search by property not loaded nor in schema")
+				t.Fatalf("search by property neither loaded nor in schema")
 			}
 			err = repo.AlterIndex(ctx, func(alter FtAlterIndex) rueidis.Completed {
 				return alter.

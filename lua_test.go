@@ -14,7 +14,7 @@ import (
 )
 
 func TestNewLuaScriptOnePass(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	body := strconv.Itoa(rand.Int())
 	sum := sha1.Sum([]byte(body))
 	sha := hex.EncodeToString(sum[:])
@@ -37,12 +37,12 @@ func TestNewLuaScriptOnePass(t *testing.T) {
 	script := NewLuaScript(body)
 
 	if v, err := script.Exec(context.Background(), c, k, a).ToString(); err != nil || v != "OK" {
-		t.Fatalf("ret mistmatch")
+		t.Fatalf("ret mismatch")
 	}
 }
 
 func TestNewLuaScript(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	body := strconv.Itoa(rand.Int())
 	sum := sha1.Sum([]byte(body))
 	sha := hex.EncodeToString(sum[:])
@@ -71,12 +71,43 @@ func TestNewLuaScript(t *testing.T) {
 	script := NewLuaScript(body)
 
 	if err, ok := IsRedisErr(script.Exec(context.Background(), c, k, a).Error()); ok && !err.IsNil() {
-		t.Fatalf("ret mistmatch")
+		t.Fatalf("ret mismatch")
+	}
+}
+
+func TestNewLuaScriptNoSha(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	body := strconv.Itoa(rand.Int())
+	sum := sha1.Sum([]byte(body))
+	sha := hex.EncodeToString(sum[:])
+
+	k := []string{"1", "2"}
+	a := []string{"3", "4"}
+
+	c := &client{
+		BFn: func() Builder {
+			return cmds.NewBuilder(cmds.NoSlot)
+		},
+		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
+			if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA", sha, "2", "1", "2", "3", "4"}) {
+				t.Fatal("EVALSHA must not be called")
+			}
+			if reflect.DeepEqual(cmd.Commands(), []string{"EVAL", body, "2", "1", "2", "3", "4"}) {
+				return newResult(RedisMessage{typ: '_'}, nil)
+			}
+			return newResult(strmsg('+', "unexpected"), nil)
+		},
+	}
+
+	script := NewLuaScriptNoSha(body)
+
+	if err, ok := IsRedisErr(script.Exec(context.Background(), c, k, a).Error()); ok && !err.IsNil() {
+		t.Fatalf("ret mismatch")
 	}
 }
 
 func TestNewLuaScriptReadOnly(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	body := strconv.Itoa(rand.Int())
 	sum := sha1.Sum([]byte(body))
 	sha := hex.EncodeToString(sum[:])
@@ -105,12 +136,43 @@ func TestNewLuaScriptReadOnly(t *testing.T) {
 	script := NewLuaScriptReadOnly(body)
 
 	if err, ok := IsRedisErr(script.Exec(context.Background(), c, k, a).Error()); ok && !err.IsNil() {
-		t.Fatalf("ret mistmatch")
+		t.Fatalf("ret mismatch")
+	}
+}
+
+func TestNewLuaScriptReadOnlyNoSha(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	body := strconv.Itoa(rand.Int())
+	sum := sha1.Sum([]byte(body))
+	sha := hex.EncodeToString(sum[:])
+
+	k := []string{"1", "2"}
+	a := []string{"3", "4"}
+
+	c := &client{
+		BFn: func() Builder {
+			return cmds.NewBuilder(cmds.NoSlot)
+		},
+		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
+			if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA_RO", sha, "2", "1", "2", "3", "4"}) {
+				t.Fatal("EVALSHA_RO must not be called")
+			}
+			if reflect.DeepEqual(cmd.Commands(), []string{"EVAL_RO", body, "2", "1", "2", "3", "4"}) {
+				return newResult(RedisMessage{typ: '_'}, nil)
+			}
+			return newResult(strmsg('+', "unexpected"), nil)
+		},
+	}
+
+	script := NewLuaScriptReadOnlyNoSha(body)
+
+	if err, ok := IsRedisErr(script.Exec(context.Background(), c, k, a).Error()); ok && !err.IsNil() {
+		t.Fatalf("ret mismatch")
 	}
 }
 
 func TestNewLuaScriptExecMultiError(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	body := strconv.Itoa(rand.Int())
 
 	k := []string{"1", "2"}
@@ -127,12 +189,12 @@ func TestNewLuaScriptExecMultiError(t *testing.T) {
 
 	script := NewLuaScript(body)
 	if script.ExecMulti(context.Background(), c, LuaExec{Keys: k, Args: a})[0].Error().Error() != "ANY ERR" {
-		t.Fatalf("ret mistmatch")
+		t.Fatalf("ret mismatch")
 	}
 }
 
 func TestNewLuaScriptExecMulti(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	body := strconv.Itoa(rand.Int())
 	sum := sha1.Sum([]byte(body))
 	sha := hex.EncodeToString(sum[:])
@@ -159,12 +221,42 @@ func TestNewLuaScriptExecMulti(t *testing.T) {
 
 	script := NewLuaScript(body)
 	if v, err := script.ExecMulti(context.Background(), c, LuaExec{Keys: k, Args: a})[0].ToString(); err != nil || v != "OK" {
-		t.Fatalf("ret mistmatch")
+		t.Fatalf("ret mismatch")
+	}
+}
+
+func TestNewLuaScriptExecMultiNoSha(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	body := strconv.Itoa(rand.Int())
+
+	k := []string{"1", "2"}
+	a := []string{"3", "4"}
+
+	c := &client{
+		BFn: func() Builder {
+			return cmds.NewBuilder(cmds.NoSlot)
+		},
+		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
+			return newResult(strmsg('+', "OK"), nil)
+		},
+		DoMultiFn: func(ctx context.Context, multi ...Completed) (resp []RedisResult) {
+			for _, cmd := range multi {
+				if reflect.DeepEqual(cmd.Commands(), []string{"EVAL", body, "2", "1", "2", "3", "4"}) {
+					resp = append(resp, newResult(strmsg('+', "OK"), nil))
+				}
+			}
+			return resp
+		},
+	}
+
+	script := NewLuaScriptNoSha(body)
+	if v, err := script.ExecMulti(context.Background(), c, LuaExec{Keys: k, Args: a})[0].ToString(); err != nil || v != "OK" {
+		t.Fatalf("ret mismatch")
 	}
 }
 
 func TestNewLuaScriptExecMultiRo(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	body := strconv.Itoa(rand.Int())
 	sum := sha1.Sum([]byte(body))
 	sha := hex.EncodeToString(sum[:])
@@ -191,7 +283,37 @@ func TestNewLuaScriptExecMultiRo(t *testing.T) {
 
 	script := NewLuaScriptReadOnly(body)
 	if v, err := script.ExecMulti(context.Background(), c, LuaExec{Keys: k, Args: a})[0].ToString(); err != nil || v != "OK" {
-		t.Fatalf("ret mistmatch")
+		t.Fatalf("ret mismatch")
+	}
+}
+
+func TestNewLuaScriptExecMultiRoNoSha(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	body := strconv.Itoa(rand.Int())
+
+	k := []string{"1", "2"}
+	a := []string{"3", "4"}
+
+	c := &client{
+		BFn: func() Builder {
+			return cmds.NewBuilder(cmds.NoSlot)
+		},
+		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
+			return newResult(strmsg('+', "OK"), nil)
+		},
+		DoMultiFn: func(ctx context.Context, multi ...Completed) (resp []RedisResult) {
+			for _, cmd := range multi {
+				if reflect.DeepEqual(cmd.Commands(), []string{"EVAL_RO", body, "2", "1", "2", "3", "4"}) {
+					resp = append(resp, newResult(strmsg('+', "OK"), nil))
+				}
+			}
+			return resp
+		},
+	}
+
+	script := NewLuaScriptReadOnlyNoSha(body)
+	if v, err := script.ExecMulti(context.Background(), c, LuaExec{Keys: k, Args: a})[0].ToString(); err != nil || v != "OK" {
+		t.Fatalf("ret mismatch")
 	}
 }
 

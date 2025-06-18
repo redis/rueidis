@@ -19,7 +19,7 @@ const Entries = 3
 
 //gocyclo:ignore
 func TestLRU(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	setup := func(t *testing.T) *lru {
 		store := newLRU(CacheStoreOption{CacheSizeEachConn: entryMinSize * Entries})
 		if v, entry := store.Flight("0", "GET", TTL, time.Now()); v.typ != 0 || entry != nil {
@@ -495,7 +495,7 @@ func BenchmarkLRU(b *testing.B) {
 }
 
 func TestEntry(t *testing.T) {
-	defer ShouldNotLeaked(SetupLeakDetection())
+	defer ShouldNotLeak(SetupLeakDetection())
 	t.Run("Wait", func(t *testing.T) {
 		e := cacheEntry{ch: make(chan struct{})}
 		err := errors.New("any")

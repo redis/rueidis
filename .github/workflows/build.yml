@@ -1,5 +1,8 @@
 name: Go Modules Test
 
+permissions:
+  contents: read
+
 on: [push, pull_request]
 
 # https://docs.github.com/en/actions/learn-github-actions/expressions
@@ -82,7 +85,7 @@ jobs:
             done
           fi
 
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5.4.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true

@@ -97,7 +97,7 @@ func ToBlock(c *Completed) {
 	c.cf |= blockTag
 }
 
-// Incomplete represents an incomplete Redis command. It should then be completed by calling the Build().
+// Incomplete represents an incomplete Redis command. It should then be completed by calling Build().
 type Incomplete struct {
 	cs *CommandSlice
 	cf int16 // use int16 instead of uint16 to make a difference with Completed
@@ -184,6 +184,8 @@ func (c Completed) SetSlot(key string) Completed {
 	}
 	return c
 }
+
+var Slot = slot
 
 // Cacheable represents a completed Redis command which supports server-assisted client side caching,
 // and it should be created by the Cache() of command builder.

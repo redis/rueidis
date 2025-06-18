@@ -106,8 +106,14 @@ func TestNewClientMeterError(t *testing.T) {
 	tests := []struct {
 		name string
 	}{
-		{"rueidis_dial_attempt"}, {"rueidis_dial_success"}, {"rueidis_do_cache_miss"},
-		{"rueidis_do_cache_hits"}, {"rueidis_dial_conns"}, {"rueidis_dial_latency"},
+		{"rueidis_dial_attempt"},
+		{"rueidis_dial_success"},
+		{"rueidis_do_cache_miss"},
+		{"rueidis_do_cache_hits"},
+		{"rueidis_dial_conns"},
+		{"rueidis_dial_latency"},
+		{"rueidis_command_duration_seconds"},
+		{"rueidis_command_errors"},
 	}
 
 	for _, tt := range tests {
@@ -244,29 +250,29 @@ func TestTrackDialing(t *testing.T) {
 	})
 }
 
-func int64CountMetric(metrics metricdata.ResourceMetrics, name string) int64 {
+func findMetric(metrics metricdata.ResourceMetrics, name string) metricdata.Aggregation {
 	for _, sm := range metrics.ScopeMetrics {
 		for _, m := range sm.Metrics {
 			if m.Name == name {
-				data, ok := m.Data.(metricdata.Sum[int64])
-				if !ok {
-					return 0
-				}
-				return data.DataPoints[0].Value
+				return m.Data
 			}
 		}
+	}
+	return nil
+}
+
+func int64CountMetric(metrics metricdata.ResourceMetrics, name string) int64 {
+	m := findMetric(metrics, name)
+	if data, ok := m.(metricdata.Sum[int64]); ok {
+		return data.DataPoints[0].Value
 	}
 	return 0
 }
 
 func float64HistogramMetric(metrics metricdata.ResourceMetrics, name string) float64 {
-	for _, sm := range metrics.ScopeMetrics {
-		for _, m := range sm.Metrics {
-			if m.Name == name {
-				data := m.Data.(metricdata.Histogram[float64])
-				return data.DataPoints[0].Sum
-			}
-		}
+	m := findMetric(metrics, name)
+	if data, ok := m.(metricdata.Histogram[float64]); ok {
+		return data.DataPoints[0].Sum
 	}
 	return 0
 }

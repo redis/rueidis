@@ -13,7 +13,7 @@ import (
 var _ rueidis.Client = (*Client)(nil)
 var _ rueidis.DedicatedClient = (*DedicatedClient)(nil)
 
-// ClientOption is optional function parameter for NewClient
+// ClientOption is an optional function parameter for NewClient
 type ClientOption func(c any)
 
 // WithSlotCheck enables the command builder of Client to check if the command built across multiple slots and then panic
@@ -28,7 +28,7 @@ func WithSlotCheck() ClientOption {
 	}
 }
 
-// Client is a mock of Client interface.
+// Client mocks the Client interface.
 type Client struct {
 	ctrl     *gomock.Controller
 	recorder *ClientMockRecorder
@@ -50,7 +50,7 @@ func NewClient(ctrl *gomock.Controller, options ...ClientOption) *Client {
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use.
+// EXPECT returns an object that allows the caller to indicate the expected use.
 func (m *Client) EXPECT() *ClientMockRecorder {
 	return m.recorder
 }
@@ -115,7 +115,7 @@ func (mr *ClientMockRecorder) Dedicated(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Dedicated", reflect.TypeOf((*Client)(nil).Dedicated), arg0)
 }
 
-// Do mocks base method.
+// Do mocks the base method.
 func (m *Client) Do(arg0 context.Context, arg1 rueidis.Completed) rueidis.RedisResult {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Do", arg0, arg1)
@@ -195,7 +195,7 @@ func (mr *ClientMockRecorder) DoMultiStream(arg0 any, arg1 ...any) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoMultiStream", reflect.TypeOf((*Client)(nil).DoMultiStream), varargs...)
 }
 
-// DoMultiCache mocks base method.
+// DoMultiCache mocks the base method.
 func (m *Client) DoMultiCache(arg0 context.Context, arg1 ...rueidis.CacheableTTL) []rueidis.RedisResult {
 	m.ctrl.T.Helper()
 	varargs := []any{arg0}
@@ -214,7 +214,7 @@ func (mr *ClientMockRecorder) DoMultiCache(arg0 any, arg1 ...any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoMultiCache", reflect.TypeOf((*Client)(nil).DoMultiCache), varargs...)
 }
 
-// Nodes mocks base method.
+// Nodes mocks the base method.
 func (m *Client) Nodes() map[string]rueidis.Client {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Nodes")
@@ -242,7 +242,7 @@ func (mr *ClientMockRecorder) Receive(arg0, arg1, arg2 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Receive", reflect.TypeOf((*Client)(nil).Receive), arg0, arg1, arg2)
 }
 
-// DedicatedClient is a mock of DedicatedClient interface.
+// DedicatedClient mocks the DedicatedClient interface.
 type DedicatedClient struct {
 	ctrl     *gomock.Controller
 	recorder *DedicatedClientMockRecorder
@@ -264,7 +264,7 @@ func NewDedicatedClient(ctrl *gomock.Controller, options ...ClientOption) *Dedic
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use.
+// EXPECT returns an object that allows the caller to indicate the expected use.
 func (m *DedicatedClient) EXPECT() *DedicatedClientMockRecorder {
 	return m.recorder
 }
@@ -286,7 +286,7 @@ func (mr *DedicatedClientMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*DedicatedClient)(nil).Close))
 }
 
-// Do mocks base method.
+// Do mocks the base method.
 func (m *DedicatedClient) Do(arg0 context.Context, arg1 rueidis.Completed) rueidis.RedisResult {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Do", arg0, arg1)

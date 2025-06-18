@@ -1684,7 +1684,7 @@ type Z struct {
 	Score  float64
 }
 
-// ZWithKey represents sorted set member including the name of the key where it was popped.
+// ZWithKey represents a sorted set member including the name of the key where it was popped.
 type ZWithKey struct {
 	Key string
 	Z
@@ -1823,7 +1823,7 @@ func (cmd *ClusterSlotsCmd) from(res rueidis.RedisResult) {
 			return
 		}
 		if len(slot) < 2 {
-			cmd.SetErr(fmt.Errorf("got %d, excpected atleast 2", len(slot)))
+			cmd.SetErr(fmt.Errorf("got %d, expected at least 2", len(slot)))
 			return
 		}
 		start, err := slot[0].AsInt64()
@@ -2151,6 +2151,45 @@ type HExpireArgs struct {
 	XX bool
 	GT bool
 	LT bool
+}
+
+// ExpirationType represents an expiration option for the HGETEX command.
+type HGetEXExpirationType string
+
+const (
+	HGetEXExpirationEX      HGetEXExpirationType = "EX"
+	HGetEXExpirationPX      HGetEXExpirationType = "PX"
+	HGetEXExpirationEXAT    HGetEXExpirationType = "EXAT"
+	HGetEXExpirationPXAT    HGetEXExpirationType = "PXAT"
+	HGetEXExpirationPERSIST HGetEXExpirationType = "PERSIST"
+)
+
+type HSetEXCondition string
+
+const (
+	HSetEXFNX HSetEXCondition = "FNX"
+	HSetEXFXX HSetEXCondition = "FXX"
+)
+
+type HGetEXOptions struct {
+	ExpirationType HGetEXExpirationType
+	ExpirationVal  int64
+}
+
+type HSetEXExpirationType string
+
+const (
+	HSetEXExpirationEX      HSetEXExpirationType = "EX"
+	HSetEXExpirationPX      HSetEXExpirationType = "PX"
+	HSetEXExpirationEXAT    HSetEXExpirationType = "EXAT"
+	HSetEXExpirationPXAT    HSetEXExpirationType = "PXAT"
+	HSetEXExpirationKEEPTTL HSetEXExpirationType = "KEEPTTL"
+)
+
+type HSetEXOptions struct {
+	Condition      HSetEXCondition
+	ExpirationType HSetEXExpirationType
+	ExpirationVal  int64
 }
 
 type Sort struct {
@@ -3254,7 +3293,7 @@ func (cmd *JSONCmd) from(res rueidis.RedisResult) {
 		cmd.SetVal(str)
 	// JSON.NUMINCRBY
 	case msg.IsArray():
-		// we set marshaled string to cmd.val
+		// we set the marshaled string to cmd.val
 		// which will be used at cmd.Val()
 		// and also stored parsed result to cmd.expanded,
 		// which will be used at cmd.Expanded()
@@ -3454,6 +3493,7 @@ type FTAggregateOptions struct {
 	WithCursorOptions *FTAggregateWithCursor
 	Params            map[string]interface{}
 	Filter            string
+	Scorer            string
 	Load              []FTAggregateLoad
 	GroupBy           []FTAggregateGroupBy
 	SortBy            []FTAggregateSortBy
@@ -3466,6 +3506,7 @@ type FTAggregateOptions struct {
 	Verbatim          bool
 	LoadAll           bool
 	WithCursor        bool
+	AddScores         bool
 }
 
 type AggregateCmd struct {
@@ -4590,7 +4631,7 @@ const (
 	ClientMulti            ClientFlags = 1 << 3  /* This client is in a MULTI context */
 	ClientBlocked          ClientFlags = 1 << 4  /* The client is waiting in a blocking operation */
 	ClientDirtyCAS         ClientFlags = 1 << 5  /* Watched keys modified. EXEC will fail. */
-	ClientCloseAfterReply  ClientFlags = 1 << 6  /* Close after writing entire reply. */
+	ClientCloseAfterReply  ClientFlags = 1 << 6  /* Close after writing the entire reply. */
 	ClientUnBlocked        ClientFlags = 1 << 7  /* This client was unblocked and is stored in server.unblocked_clients */
 	ClientScript           ClientFlags = 1 << 8  /* This is a non-connected client used by Lua */
 	ClientAsking           ClientFlags = 1 << 9  /* Client issued the ASKING command */
@@ -4599,38 +4640,38 @@ const (
 	ClientDirtyExec        ClientFlags = 1 << 12 /* EXEC will fail for errors while queueing */
 	ClientMasterForceReply ClientFlags = 1 << 13 /* Queue replies even if is master */
 	ClientForceAOF         ClientFlags = 1 << 14 /* Force AOF propagation of current cmd. */
-	ClientForceRepl        ClientFlags = 1 << 15 /* Force replication of current cmd. */
+	ClientForceRepl        ClientFlags = 1 << 15 /* Force replication of the current cmd. */
 	ClientPrePSync         ClientFlags = 1 << 16 /* Instance don't understand PSYNC. */
-	ClientReadOnly         ClientFlags = 1 << 17 /* Cluster client is in read-only state. */
+	ClientReadOnly         ClientFlags = 1 << 17 /* Cluster client is in the read-only state. */
 	ClientPubSub           ClientFlags = 1 << 18 /* Client is in Pub/Sub mode. */
 	ClientPreventAOFProp   ClientFlags = 1 << 19 /* Don't propagate to AOF. */
 	ClientPreventReplProp  ClientFlags = 1 << 20 /* Don't propagate to slaves. */
 	ClientPreventProp      ClientFlags = ClientPreventAOFProp | ClientPreventReplProp
-	ClientPendingWrite     ClientFlags = 1 << 21 /* Client has output to send but a-write handler is yet not installed. */
-	ClientReplyOff         ClientFlags = 1 << 22 /* Don't send replies to client. */
-	ClientReplySkipNext    ClientFlags = 1 << 23 /* Set ClientREPLY_SKIP for next cmd */
+	ClientPendingWrite     ClientFlags = 1 << 21 /* Client has output to send, but a-write handler is yet not installed. */
+	ClientReplyOff         ClientFlags = 1 << 22 /* Don't send replies to a client. */
+	ClientReplySkipNext    ClientFlags = 1 << 23 /* Set ClientREPLY_SKIP for the next cmd */
 	ClientReplySkip        ClientFlags = 1 << 24 /* Don't send just this reply. */
 	ClientLuaDebug         ClientFlags = 1 << 25 /* Run EVAL in debug mode. */
 	ClientLuaDebugSync     ClientFlags = 1 << 26 /* EVAL debugging without fork() */
-	ClientModule           ClientFlags = 1 << 27 /* Non connected client used by some module. */
+	ClientModule           ClientFlags = 1 << 27 /* Non-connected client used by some module. */
 	ClientProtected        ClientFlags = 1 << 28 /* Client should not be freed for now. */
 	ClientExecutingCommand ClientFlags = 1 << 29 /* Indicates that the client is currently in the process of handling
 	   a command. usually this will be marked only during call()
 	   however, blocked clients might have this flag kept until they
 	   will try to reprocess the command. */
 	ClientPendingCommand      ClientFlags = 1 << 30 /* Indicates the client has a fully * parsed command ready for execution. */
-	ClientTracking            ClientFlags = 1 << 31 /* Client enabled keys tracking in order to perform client side caching. */
+	ClientTracking            ClientFlags = 1 << 31 /* Client enabled key tracking in order to perform client side caching. */
 	ClientTrackingBrokenRedir ClientFlags = 1 << 32 /* Target client is invalid. */
 	ClientTrackingBCAST       ClientFlags = 1 << 33 /* Tracking in BCAST mode. */
 	ClientTrackingOptIn       ClientFlags = 1 << 34 /* Tracking in opt-in mode. */
 	ClientTrackingOptOut      ClientFlags = 1 << 35 /* Tracking in opt-out mode. */
-	ClientTrackingCaching     ClientFlags = 1 << 36 /* CACHING yes/no was given, depending on optin/optout mode. */
+	ClientTrackingCaching     ClientFlags = 1 << 36 /* CACHING yes/no was given, depending on opt-in/opt-out mode. */
 	ClientTrackingNoLoop      ClientFlags = 1 << 37 /* Don't send invalidation messages about writes performed by myself.*/
 	ClientInTimeoutTable      ClientFlags = 1 << 38 /* This client is in the timeout table. */
 	ClientProtocolError       ClientFlags = 1 << 39 /* Protocol error chatting with it. */
-	ClientCloseAfterCommand   ClientFlags = 1 << 40 /* Close after executing commands * and writing entire reply. */
+	ClientCloseAfterCommand   ClientFlags = 1 << 40 /* Close after executing commands * and writing the entire reply. */
 	ClientDenyBlocking        ClientFlags = 1 << 41 /* Indicate that the client should not be blocked. currently, turned on inside MULTI, Lua, RM_Call, and AOF client */
-	ClientReplRDBOnly         ClientFlags = 1 << 42 /* This client is a replica that only wants RDB without replication buffer. */
+	ClientReplRDBOnly         ClientFlags = 1 << 42 /* This client is a replica that only wants RDB without a replication buffer. */
 	ClientNoEvict             ClientFlags = 1 << 43 /* This client is protected against client memory eviction. */
 	ClientAllowOOM            ClientFlags = 1 << 44 /* Client used by RM_Call is allowed to fully execute scripts even when in OOM */
 	ClientNoTouch             ClientFlags = 1 << 45 /* This client will not touch LFU/LRU stats. */
@@ -4640,7 +4681,7 @@ const (
 // ClientInfo is redis-server ClientInfo
 type ClientInfo struct {
 	Addr               string        // address/port of the client
-	LAddr              string        // address/port of local address client connected to (bind address)
+	LAddr              string        // address/port of a local address client connected to (bind address)
 	Name               string        // the name set by the client with CLIENT SETNAME
 	Events             string        // file descriptor events (see below)
 	LastCmd            string        // cmd, last command played
@@ -4657,13 +4698,13 @@ type ClientInfo struct {
 	PSub               int           // number of pattern matching subscriptions
 	SSub               int           // redis version 7.0.3, number of shard channel subscriptions
 	Multi              int           // number of commands in a MULTI/EXEC context
-	Watch              int           // redis version 7.4 RC1, number of keys this client is currently watching.
+	Watch              int           // redis version 7.4 RC1, the number of keys this client is currently watching.
 	QueryBuf           int           // qbuf, query buffer length (0 means no query pending)
 	QueryBufFree       int           // qbuf-free, free space of the query buffer (0 means the buffer is full)
 	ArgvMem            int           // incomplete arguments for the next command (already extracted from query buffer)
 	MultiMem           int           // redis version 7.0, memory is used up by buffered multi commands
 	BufferSize         int           // rbs, usable size of buffer
-	BufferPeak         int           // rbp, peak used size of buffer in last 5 sec interval
+	BufferPeak         int           // rbp, peak used size of buffer in the last 5 sec interval
 	OutputBufferLength int           // obl, output buffer length
 	OutputListLength   int           // oll, output list length (replies are queued in this list when the buffer is full)
 	OutputMemory       int           // omem, output buffer memory usage
@@ -5206,7 +5247,7 @@ func (cmd *LCSCmd) from(res rueidis.RedisResult) {
 			for key, value := range msgMap {
 				switch key {
 				case "matches":
-					// read array of matched positions
+					// read an array of matched positions
 					matches, err := cmd.readMatchedPositions(value)
 					if err != nil {
 						cmd.SetErr(err)

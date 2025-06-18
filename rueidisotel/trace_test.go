@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -54,6 +55,7 @@ func (m *mockMeter) Int64UpDownCounter(name string, options ...metricapi.Int64Up
 	}
 	return nil, nil
 }
+
 func (m *mockMeter) Float64Histogram(name string, options ...metricapi.Float64HistogramOption) (metricapi.Float64Histogram, error) {
 	if m.testName == name {
 		return nil, fmt.Errorf("%w: %s", errMocked, m.testName)
@@ -126,8 +128,8 @@ func testWithClient(t *testing.T, client rueidis.Client, exp *tracetest.InMemory
 	}
 	validateTrace(t, exp, "", codes.Ok)
 
-	var emtpyCacheableArr []rueidis.CacheableTTL
-	resps = client.DoMultiCache(ctx, emtpyCacheableArr...)
+	var emptyCacheableArr []rueidis.CacheableTTL
+	resps = client.DoMultiCache(ctx, emptyCacheableArr...)
 	if resps != nil {
 		t.Error("unexpected response : ", resps)
 	}
@@ -272,6 +274,23 @@ func testWithClient(t *testing.T, client rueidis.Client, exp *tracetest.InMemory
 		client.DoMulti(ctx, client.B().Set().Key("key").Value("val").Build(), client.B().Set().Key("key").Value("val").Build())
 		validateTrace(t, exp, "SET SET", codes.Ok)
 	}
+
+	if err := mxp.Collect(ctx, &metrics); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	validateMetrics(t, metrics, "rueidis_command_errors", 6)
+
+	validateMetricNumDataPoints(t, metrics, "rueidis_command_errors", 1)
+	validateMetricNumDataPoints(t, metrics, "rueidis_command_duration_seconds", 1)
+
+	duration := float64HistogramMetric(metrics, "rueidis_command_duration_seconds")
+	if duration == 0 {
+		t.Fatalf("rueidis_command_duration_seconds: got 0, expected > 0")
+	}
+
+	validateMetricHasNoAttribute(t, metrics, "rueidis_command_errors", "operation")
+	validateMetricHasNoAttribute(t, metrics, "rueidis_command_duration_seconds", "operation")
 }
 
 func validateTrace(t *testing.T, exp *tracetest.InMemoryExporter, op string, code codes.Code) {
@@ -286,7 +305,7 @@ func validateTrace(t *testing.T, exp *tracetest.InMemoryExporter, op string, cod
 		t.Fatalf("unexpected custom attr %v", customAttr)
 	}
 	if c := exp.GetSpans().Snapshots()[0].Status().Code; c != code {
-		t.Fatalf("unexpected span statuc code %v", c)
+		t.Fatalf("unexpected span status code %v", c)
 	}
 	exp.Reset()
 }
@@ -320,12 +339,7 @@ func TestWithDBStatement(t *testing.T) {
 	}
 }
 
-func TestWithClientSimple(t *testing.T) {
-	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
-	if err != nil {
-		t.Fatal(err)
-	}
-
+func TestNewClientSimple(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
 	tracerProvider := trace.NewTracerProvider(trace.WithSyncer(exp))
 
@@ -334,14 +348,18 @@ func TestWithClientSimple(t *testing.T) {
 
 	dbStmtFunc := func(cmdTokens []string) string { return strings.Join(cmdTokens, " ") }
 
-	client = WithClient(
-		client,
+	client, err := NewClient(
+		rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}},
 		TraceAttrs(attribute.String("any", "label")),
 		MetricAttrs(attribute.String("any", "label")),
 		WithTracerProvider(tracerProvider),
 		WithMeterProvider(meterProvider),
 		WithDBStatement(dbStmtFunc),
+		WithOperationMetricAttr(),
 	)
+	if err != nil {
+		t.Fatal(err)
+	}
 	defer client.Close()
 
 	cmd := client.B().Set().Key("key").Value("val").Build()
@@ -349,39 +367,164 @@ func TestWithClientSimple(t *testing.T) {
 
 	// Validate trace
 	spans := exp.GetSpans().Snapshots()
+	if len(spans) < 2 {
+		t.Fatalf("expected at least 2 spans, got %d", len(spans))
+	}
+
+	commandSpanIdx := slices.IndexFunc(spans, func(span trace.ReadOnlySpan) bool { return span.Name() == "SET" })
+	if commandSpanIdx == -1 {
+		t.Fatal("could not find SET span")
+	}
+	commandSpan := spans[commandSpanIdx]
+	validateSpanHasAttribute(t, commandSpan, "any", "label")
+
+	dialSpanIdx := slices.IndexFunc(spans, func(span trace.ReadOnlySpan) bool { return span.Name() == "redis.dial" })
+	if dialSpanIdx == -1 {
+		t.Fatal("could not find dial span")
+	}
+	dialSpan := spans[dialSpanIdx]
+	validateSpanHasAttribute(t, dialSpan, "server.address", "127.0.0.1:6379")
+	validateSpanHasAttribute(t, dialSpan, "any", "label")
+
+	metrics := metricdata.ResourceMetrics{}
+	if err := mxp.Collect(context.Background(), &metrics); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	validateMetricNumDataPoints(t, metrics, "rueidis_command_duration_seconds", 1)
+	validateMetricHasAttributes(t, metrics, "rueidis_command_duration_seconds", "operation")
+}
+
+func TestNewClientErrorSpan(t *testing.T) {
+	exp := tracetest.NewInMemoryExporter()
+	tracerProvider := trace.NewTracerProvider(trace.WithSyncer(exp))
+
+	mxp := metric.NewManualReader()
+	meterProvider := metric.NewMeterProvider(metric.WithReader(mxp))
+
+	_, err := NewClient(
+		rueidis.ClientOption{InitAddress: []string{"256.256.256.256:6379"}},
+		TraceAttrs(attribute.String("any", "label")),
+		MetricAttrs(attribute.String("any", "label")),
+		WithTracerProvider(tracerProvider),
+		WithMeterProvider(meterProvider),
+		WithOperationMetricAttr(),
+	)
+	if err == nil {
+		t.Fatal("expected error")
+	}
+
+	spans := exp.GetSpans().Snapshots()
 	if len(spans) != 1 {
 		t.Fatalf("expected 1 span, got %d", len(spans))
 	}
 	span := spans[0]
-	if span.Name() != "SET" {
-		t.Fatalf("unexpected span name: got %s, expected %s", span.Name(), "Set")
+	if span.Name() != "redis.dial" {
+		t.Fatalf("expected span name 'redis.dial', got %s", span.Name())
 	}
-	var found bool
-	for _, attr := range span.Attributes() {
-		if string(attr.Key) == "any" && attr.Value.AsString() == "label" {
-			found = true
-			break
-		}
+	validateSpanHasAttribute(t, span, "any", "label")
+	events := span.Events()
+	if len(events) != 1 {
+		t.Fatalf("expected 1 event, got %d", len(events))
 	}
-	if !found {
-		t.Fatalf("expected attribute 'any: label' not found in span attributes")
+	event := events[0]
+	if event.Name != "exception" {
+		t.Fatalf("expected event name 'exception', got %s", event.Name)
+	}
+}
+
+func validateSpanHasAttribute(t *testing.T, span trace.ReadOnlySpan, key, value string) {
+	t.Helper()
+	if !slices.ContainsFunc(span.Attributes(), func(attr attribute.KeyValue) bool {
+		return string(attr.Key) == key && attr.Value.AsString() == value
+	}) {
+		t.Fatalf("expected attribute '%s: %s' not found in span attributes", key, value)
 	}
 }
 
 func validateMetrics(t *testing.T, metrics metricdata.ResourceMetrics, name string, value int64) {
-	for _, sm := range metrics.ScopeMetrics {
-		for _, m := range sm.Metrics {
-			if m.Name == name {
-				data := m.Data.(metricdata.Sum[int64])
-				metricdatatest.AssertHasAttributes(t, data, attribute.String("any", "label"))
-				if data.DataPoints[0].Value != value {
-					t.Fatalf("unexpected metric value %v", data.DataPoints[0].Value)
+	t.Helper()
+
+	data, ok := findMetric(metrics, name).(metricdata.Sum[int64])
+	if !ok {
+		t.Fatalf("metric %v not found", name)
+	}
+
+	metricdatatest.AssertHasAttributes(t, data, attribute.String("any", "label"))
+	var sum int64
+	for _, dp := range data.DataPoints {
+		sum += dp.Value
+	}
+	if sum != value {
+		t.Fatalf("unexpected value for %v: wanted %v, got %v", name, value, sum)
+	}
+}
+
+func validateMetricHasAttributes(t *testing.T, metrics metricdata.ResourceMetrics, name string, keys ...attribute.Key) {
+	t.Helper()
+
+	switch data := findMetric(metrics, name).(type) {
+	case metricdata.Sum[int64]:
+		for _, dp := range data.DataPoints {
+			for _, key := range keys {
+				_, ok := dp.Attributes.Value(key)
+				if !ok {
+					t.Fatalf("metric %v does not have attribute %v", name, key)
 				}
-				return
 			}
 		}
+	case metricdata.Histogram[float64]:
+		for _, dp := range data.DataPoints {
+			for _, key := range keys {
+				_, ok := dp.Attributes.Value(key)
+				if !ok {
+					t.Fatalf("metric %v does not have attribute %v", name, key)
+				}
+			}
+		}
+	default:
+		t.Fatalf("unexpected metric type for %v: %T", name, data)
 	}
-	t.Fatalf("metrics not found %v", name)
+}
+
+func validateMetricHasNoAttribute(t *testing.T, metrics metricdata.ResourceMetrics, name string, key attribute.Key) {
+	t.Helper()
+
+	switch data := findMetric(metrics, name).(type) {
+	case metricdata.Sum[int64]:
+		for _, dp := range data.DataPoints {
+			_, ok := dp.Attributes.Value(key)
+			if ok {
+				t.Fatalf("metric %v has attribute %v", name, key)
+			}
+		}
+	case metricdata.Histogram[float64]:
+		for _, dp := range data.DataPoints {
+			_, ok := dp.Attributes.Value(key)
+			if ok {
+				t.Fatalf("metric %v has attribute %v", name, key)
+			}
+		}
+	default:
+		t.Fatalf("unexpected metric type for %v: %T", name, data)
+	}
+}
+
+func validateMetricNumDataPoints(t *testing.T, metrics metricdata.ResourceMetrics, name string, num int) {
+	t.Helper()
+
+	switch data := findMetric(metrics, name).(type) {
+	case metricdata.Sum[int64]:
+		if len(data.DataPoints) != num {
+			t.Fatalf("unexpected number of data points for %v: got %d, expected %d", name, len(data.DataPoints), num)
+		}
+	case metricdata.Histogram[float64]:
+		if len(data.DataPoints) != num {
+			t.Fatalf("unexpected number of data points for %v: got %d, expected %d", name, len(data.DataPoints), num)
+		}
+	default:
+		t.Fatalf("unexpected metric type for %v: %T", name, data)
+	}
 }
 
 func ExampleWithClient_openTelemetry() {

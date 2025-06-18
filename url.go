@@ -97,7 +97,7 @@ func ParseURL(str string) (opt ClientOption, err error) {
 		} else {
 			skipVerify, err := strconv.ParseBool(skipVerifyParam)
 			if err != nil {
-				return opt, fmt.Errorf("valkey: invalid skip verify: %q", skipVerifyParam)
+				return opt, fmt.Errorf("redis: invalid skip verify: %q", skipVerifyParam)
 			}
 			opt.TLSConfig.InsecureSkipVerify = skipVerify
 		}

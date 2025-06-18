@@ -90,7 +90,7 @@
     "group": "gears"
   },
   "RG.CONFIGSET": {
-    "summary": "The RG.CONFIGGET command sets the value of one ore more built-in configuration or a user-defined options.",
+    "summary": "The RG.CONFIGGET command sets the value of one or more built-in configuration or a user-defined options.",
     "complexity": [
       "O(1)"
     ],
@@ -164,7 +164,7 @@
     "group": "gears"
   },
   "RG.GETRESULTS": {
-    "summary": "The RG.GETRESULTS command returns the results and errors from of the execution execution details of a function that's in the executions list.",
+    "summary": "The RG.GETRESULTS command returns the results and errors from of the execution details of a function that's in the executions list.",
     "complexity": [
       "O(1)"
     ],

@@ -51,15 +51,41 @@ func WithTracerProvider(provider trace.TracerProvider) Option {
 	}
 }
 
-// WithDBStatement tells the tracing hook to add raw redis commands to db.statement attribute.
+// WithDBStatement tells the tracing hook to add raw redis commands to the db.statement attribute.
 func WithDBStatement(f StatementFunc) Option {
 	return func(o *otelclient) {
 		o.dbStmtFunc = f
 	}
 }
 
-// StatementFunc is a the function that maps a command's tokens to a string to put in the db.statement attribute
+// StatementFunc is the function that maps a command's tokens to a string to put in the db.statement attribute
 type StatementFunc func(cmdTokens []string) string
+
+type commandMetrics struct {
+	duration   metric.Float64Histogram
+	errors     metric.Int64Counter
+	addOpts    []metric.AddOption
+	recordOpts []metric.RecordOption
+	opAttr     bool
+}
+
+func (c *commandMetrics) recordDuration(ctx context.Context, op string, now time.Time) {
+	opts := c.recordOpts
+	if c.opAttr {
+		opts = append(c.recordOpts, metric.WithAttributeSet(attribute.NewSet(attribute.String("operation", op))))
+	}
+	c.duration.Record(ctx, time.Since(now).Seconds(), opts...)
+}
+
+func (c *commandMetrics) recordError(ctx context.Context, op string, err error) {
+	if err != nil && !rueidis.IsRedisNil(err) {
+		opts := c.addOpts
+		if c.opAttr {
+			opts = append(c.addOpts, metric.WithAttributeSet(attribute.NewSet(attribute.String("operation", op))))
+		}
+		c.errors.Add(ctx, 1, opts...)
+	}
+}
 
 type otelclient struct {
 	client          rueidis.Client
@@ -74,6 +100,7 @@ type otelclient struct {
 	addOpts         []metric.AddOption
 	recordOpts      []metric.RecordOption
 	histogramOption HistogramOption
+	commandMetrics
 }
 
 func (o *otelclient) B() rueidis.Builder {
@@ -81,43 +108,58 @@ func (o *otelclient) B() rueidis.Builder {
 }
 
 func (o *otelclient) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult) {
-	ctx, span := o.start(ctx, first(cmd.Commands()), sum(cmd.Commands()))
+	op := first(cmd.Commands())
+	defer o.recordDuration(ctx, op, time.Now())
+	ctx, span := o.start(ctx, op, sum(cmd.Commands()))
 	if o.dbStmtFunc != nil {
 		span.SetAttributes(dbstmt.String(o.dbStmtFunc(cmd.Commands())))
 	}
 
 	resp = o.client.Do(ctx, cmd)
 	o.end(span, resp.Error())
+	o.recordError(ctx, op, resp.Error())
 	return
 }
 
 func (o *otelclient) DoMulti(ctx context.Context, multi ...rueidis.Completed) (resp []rueidis.RedisResult) {
-	ctx, span := o.start(ctx, multiFirst(multi), multiSum(multi))
+	op := multiFirst(multi)
+	defer o.recordDuration(ctx, op, time.Now())
+	ctx, span := o.start(ctx, op, multiSum(multi))
 	resp = o.client.DoMulti(ctx, multi...)
-	o.end(span, firstError(resp))
+	err := firstError(resp)
+	o.end(span, err)
+	o.recordError(ctx, op, err)
 	return
 }
 
 func (o *otelclient) DoStream(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResultStream) {
-	ctx, span := o.start(ctx, first(cmd.Commands()), sum(cmd.Commands()))
+	op := first(cmd.Commands())
+	defer o.recordDuration(ctx, op, time.Now())
+	ctx, span := o.start(ctx, op, sum(cmd.Commands()))
 	if o.dbStmtFunc != nil {
 		span.SetAttributes(dbstmt.String(o.dbStmtFunc(cmd.Commands())))
 	}
 
 	resp = o.client.DoStream(ctx, cmd)
 	o.end(span, resp.Error())
+	o.recordError(ctx, op, resp.Error())
 	return
 }
 
 func (o *otelclient) DoMultiStream(ctx context.Context, multi ...rueidis.Completed) (resp rueidis.MultiRedisResultStream) {
-	ctx, span := o.start(ctx, multiFirst(multi), multiSum(multi))
+	op := multiFirst(multi)
+	defer o.recordDuration(ctx, op, time.Now())
+	ctx, span := o.start(ctx, op, multiSum(multi))
 	resp = o.client.DoMultiStream(ctx, multi...)
 	o.end(span, resp.Error())
+	o.recordError(ctx, op, resp.Error())
 	return
 }
 
 func (o *otelclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
-	ctx, span := o.start(ctx, first(cmd.Commands()), sum(cmd.Commands()))
+	op := first(cmd.Commands())
+	defer o.recordDuration(ctx, op, time.Now())
+	ctx, span := o.start(ctx, op, sum(cmd.Commands()))
 	if o.dbStmtFunc != nil {
 		span.SetAttributes(dbstmt.String(o.dbStmtFunc(cmd.Commands())))
 	}
@@ -131,11 +173,14 @@ func (o *otelclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl tim
 		}
 	}
 	o.end(span, resp.Error())
+	o.recordError(ctx, op, resp.Error())
 	return
 }
 
 func (o *otelclient) DoMultiCache(ctx context.Context, multi ...rueidis.CacheableTTL) (resps []rueidis.RedisResult) {
-	ctx, span := o.start(ctx, multiCacheableFirst(multi), multiCacheableSum(multi))
+	op := multiCacheableFirst(multi)
+	defer o.recordDuration(ctx, op, time.Now())
+	ctx, span := o.start(ctx, op, multiCacheableSum(multi))
 	resps = o.client.DoMultiCache(ctx, multi...)
 	for _, resp := range resps {
 		if resp.NonRedisError() == nil {
@@ -146,17 +191,20 @@ func (o *otelclient) DoMultiCache(ctx context.Context, multi ...rueidis.Cacheabl
 			}
 		}
 	}
-	o.end(span, firstError(resps))
+	err := firstError(resps)
+	o.end(span, err)
+	o.recordError(ctx, op, err)
 	return
 }
 
 func (o *otelclient) Dedicated(fn func(rueidis.DedicatedClient) error) (err error) {
 	return o.client.Dedicated(func(client rueidis.DedicatedClient) error {
 		return fn(&dedicated{
-			client:     client,
-			tAttrs:     o.tAttrs,
-			tracer:     o.tracer,
-			dbStmtFunc: o.dbStmtFunc,
+			client:         client,
+			tAttrs:         o.tAttrs,
+			tracer:         o.tracer,
+			dbStmtFunc:     o.dbStmtFunc,
+			commandMetrics: o.commandMetrics,
 		})
 	})
 }
@@ -164,10 +212,11 @@ func (o *otelclient) Dedicated(fn func(rueidis.DedicatedClient) error) (err erro
 func (o *otelclient) Dedicate() (rueidis.DedicatedClient, func()) {
 	client, cancel := o.client.Dedicate()
 	return &dedicated{
-		client:     client,
-		tAttrs:     o.tAttrs,
-		tracer:     o.tracer,
-		dbStmtFunc: o.dbStmtFunc,
+		client:         client,
+		tAttrs:         o.tAttrs,
+		tracer:         o.tracer,
+		dbStmtFunc:     o.dbStmtFunc,
+		commandMetrics: o.commandMetrics,
 	}, cancel
 }
 
@@ -198,6 +247,7 @@ func (o *otelclient) Nodes() map[string]rueidis.Client {
 			tAttrs:          o.tAttrs,
 			histogramOption: o.histogramOption,
 			dbStmtFunc:      o.dbStmtFunc,
+			commandMetrics:  o.commandMetrics,
 		}
 	}
 	return nodes
@@ -218,6 +268,7 @@ type dedicated struct {
 	tracer     trace.Tracer
 	tAttrs     trace.SpanStartEventOption
 	dbStmtFunc StatementFunc
+	commandMetrics
 }
 
 func (d *dedicated) B() rueidis.Builder {
@@ -225,20 +276,27 @@ func (d *dedicated) B() rueidis.Builder {
 }
 
 func (d *dedicated) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult) {
-	ctx, span := d.start(ctx, first(cmd.Commands()), sum(cmd.Commands()))
+	op := first(cmd.Commands())
+	defer d.recordDuration(ctx, op, time.Now())
+	ctx, span := d.start(ctx, op, sum(cmd.Commands()))
 	if d.dbStmtFunc != nil {
 		span.SetAttributes(dbstmt.String(d.dbStmtFunc(cmd.Commands())))
 	}
 
 	resp = d.client.Do(ctx, cmd)
 	d.end(span, resp.Error())
+	d.recordError(ctx, op, resp.Error())
 	return
 }
 
 func (d *dedicated) DoMulti(ctx context.Context, multi ...rueidis.Completed) (resp []rueidis.RedisResult) {
-	ctx, span := d.start(ctx, multiFirst(multi), multiSum(multi))
+	op := multiFirst(multi)
+	defer d.recordDuration(ctx, op, time.Now())
+	ctx, span := d.start(ctx, op, multiSum(multi))
 	resp = d.client.DoMulti(ctx, multi...)
-	d.end(span, firstError(resp))
+	err := firstError(resp)
+	d.end(span, err)
+	d.recordError(ctx, op, err)
 	return
 }
 
@@ -376,7 +434,7 @@ func endSpan(span trace.Span, err error) {
 	span.End()
 }
 
-// do not record full db.statement to avoid collecting sensitive data
+// do not record the full db.statement to avoid collecting sensitive data
 func attr(op string, size int) trace.SpanStartEventOption {
 	return trace.WithAttributes(dbattr, attribute.String("db.operation", op), attribute.Int("db.stmt_size", size))
 }

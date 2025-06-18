@@ -21,13 +21,13 @@ import (
 )
 
 const LibName = "rueidis"
-const LibVer = "1.0.56"
+const LibVer = "1.0.61"
 
 var noHello = regexp.MustCompile("unknown command .?(HELLO|hello).?")
 
 // See https://github.com/redis/rueidis/pull/691
 func isUnsubReply(msg *RedisMessage) bool {
-	// ex. NOPERM User limiteduser has no permissions to run the 'ping' command
+	// ex. NOPERM User limited-user has no permissions to run the 'ping' command
 	// ex. LOADING server is loading the dataset in memory
 	// ex. BUSY
 	if msg.typ == '-' && (strings.HasPrefix(msg.string(), "LOADING") || strings.HasPrefix(msg.string(), "BUSY") || strings.Contains(msg.string(), "'ping'")) {
@@ -55,14 +55,16 @@ type wire interface {
 	CleanSubscriptions()
 	SetPubSubHooks(hooks PubSubHooks) <-chan error
 	SetOnCloseHook(fn func(error))
+	StopTimer() bool
+	ResetTimer() bool
 }
 
 var _ wire = (*pipe)(nil)
 
 type pipe struct {
 	conn            net.Conn
-	clhks           atomic.Value // closed hook, invoked after the conn is closed
-	pshks           atomic.Value // pubsub hook, registered by the SetPubSubHooks
+	clhks           atomic.Value          // closed hook, invoked after the conn is closed
+	pshks           atomic.Pointer[pshks] // pubsub hook, registered by the SetPubSubHooks
 	queue           queue
 	cache           CacheStore
 	error           atomic.Pointer[errs]
@@ -77,11 +79,13 @@ type pipe struct {
 	psubs           *subs                                      // pubsub pmessage subscriptions
 	pingTimer       *time.Timer                                // timer for background ping
 	info            map[string]RedisMessage
+	lftmTimer       *time.Timer // lifetime timer
 	timeout         time.Duration
 	pinggap         time.Duration
 	maxFlushDelay   time.Duration
-	r2mu            sync.Mutex
 	wrCounter       atomic.Uint64
+	lftm            time.Duration // lifetime
+	r2mu            sync.Mutex
 	version         int32
 	blcksig         int32
 	state           int32
@@ -328,6 +332,10 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 			p.backgroundPing()
 		}
 	}
+	if option.ConnLifetime > 0 {
+		p.lftm = option.ConnLifetime
+		p.lftmTimer = time.AfterFunc(option.ConnLifetime, p.expired)
+	}
 	return p, nil
 }
 
@@ -344,6 +352,7 @@ func (p *pipe) _exit(err error) {
 	p.error.CompareAndSwap(nil, &errs{error: err})
 	atomic.CompareAndSwapInt32(&p.state, 1, 2) // stop accepting new requests
 	_ = p.conn.Close()                         // force both read & write goroutine to exit
+	p.StopTimer()
 	p.clhks.Load().(func(error))(err)
 }
 
@@ -384,7 +393,7 @@ func (p *pipe) _background() {
 	p.nsubs.Close()
 	p.psubs.Close()
 	p.ssubs.Close()
-	if old := p.pshks.Swap(emptypshks).(*pshks); old.close != nil {
+	if old := p.pshks.Swap(emptypshks); old.close != nil {
 		old.close <- err
 		close(old.close)
 	}
@@ -449,8 +458,8 @@ func (p *pipe) _backgroundWrite() (err error) {
 			}
 			ones[0], multi, ch = p.queue.WaitForWrite()
 			if flushDelay != 0 && p.loadWaits() > 1 { // do not delay for sequential usage
-				// Blocking commands are executed in dedicated client which is acquired from pool.
-				// So, there is no sense to wait other commands to be written.
+				// Blocking commands are executed in a dedicated client which is acquired from the pool.
+				// So, there is no sense to wait for other commands to be written.
 				// https://github.com/redis/rueidis/issues/379
 				var blocked bool
 				for i := 0; i < len(multi) && !blocked; i++ {
@@ -483,7 +492,7 @@ func (p *pipe) _backgroundRead() (err error) {
 		resps []RedisResult
 		ch    chan RedisResult
 		ff    int // fulfilled count
-		skip  int // skip rest push messages
+		skip  int // skip the rest push messages
 		ver   = p.version
 		prply bool // push reply
 		unsub bool // unsubscribe notification
@@ -495,6 +504,9 @@ func (p *pipe) _backgroundRead() (err error) {
 
 	defer func() {
 		resp := newErrResult(err)
+		if e := p.Error(); e == errConnExpired {
+			resp = newErrResult(e)
+		}
 		if err != nil && ff < len(multi) {
 			for ; ff < len(resps); ff++ {
 				resps[ff] = resp
@@ -522,8 +534,8 @@ func (p *pipe) _backgroundRead() (err error) {
 		} else if ver == 6 && len(msg.values()) != 0 {
 			// This is a workaround for Redis 6's broken invalidation protocol: https://github.com/redis/redis/issues/8935
 			// When Redis 6 handles MULTI, MGET, or other multi-keys command,
-			// it will send invalidation message immediately if it finds the keys are expired, thus causing the multi-keys command response to be broken.
-			// We fix this by fetching the next message and patch it back to the response.
+			// it will send invalidation messages immediately if it finds the keys are expired, thus causing the multi-keys command response to be broken.
+			// We fix this by fetching the next message and patching it back to the response.
 			i := 0
 			for j, v := range msg.values() {
 				if v.typ == '>' {
@@ -543,11 +555,11 @@ func (p *pipe) _backgroundRead() (err error) {
 		}
 		if ff == len(multi) {
 			ff = 0
-			ones[0], multi, ch, resps, cond = p.queue.NextResultCh() // ch should not be nil, otherwise it must be a protocol bug
+			ones[0], multi, ch, resps, cond = p.queue.NextResultCh() // ch should not be nil; otherwise, it must be a protocol bug
 			if ch == nil {
 				cond.L.Unlock()
 				// Redis will send sunsubscribe notification proactively in the event of slot migration.
-				// We should ignore them and go fetch next message.
+				// We should ignore them and go fetch the next message.
 				// We also treat all the other unsubscribe notifications just like sunsubscribe,
 				// so that we don't need to track how many channels we have subscribed to deal with wildcard unsubscribe command
 				// See https://github.com/redis/rueidis/pull/691
@@ -565,7 +577,7 @@ func (p *pipe) _backgroundRead() (err error) {
 			if multi == nil {
 				multi = ones
 			}
-		} else if ff >= 4 && len(msg.values()) >= 2 && multi[0].IsOptIn() { // if unfulfilled multi commands are lead by opt-in and get success response
+		} else if ff >= 4 && len(msg.values()) >= 2 && multi[0].IsOptIn() { // if unfulfilled multi commands are lead by opt-in and get a success response
 			now := time.Now()
 			if cacheable := Cacheable(multi[ff-1]); cacheable.IsMGet() {
 				cc := cmds.MGetCacheCmd(cacheable)
@@ -591,7 +603,7 @@ func (p *pipe) _backgroundRead() (err error) {
 		}
 		if prply {
 			// Redis will send sunsubscribe notification proactively in the event of slot migration.
-			// We should ignore them and go fetch next message.
+			// We should ignore them and go fetch the next message.
 			// We also treat all the other unsubscribe notifications just like sunsubscribe,
 			// so that we don't need to track how many channels we have subscribed to deal with wildcard unsubscribe command
 			// See https://github.com/redis/rueidis/pull/691
@@ -693,41 +705,60 @@ func (p *pipe) handlePush(values []RedisMessage) (reply bool, unsubscribe bool) 
 		if len(values) >= 3 {
 			m := PubSubMessage{Channel: values[1].string(), Message: values[2].string()}
 			p.nsubs.Publish(values[1].string(), m)
-			p.pshks.Load().(*pshks).hooks.OnMessage(m)
+			p.pshks.Load().hooks.OnMessage(m)
 		}
 	case "pmessage":
 		if len(values) >= 4 {
 			m := PubSubMessage{Pattern: values[1].string(), Channel: values[2].string(), Message: values[3].string()}
 			p.psubs.Publish(values[1].string(), m)
-			p.pshks.Load().(*pshks).hooks.OnMessage(m)
+			p.pshks.Load().hooks.OnMessage(m)
 		}
 	case "smessage":
 		if len(values) >= 3 {
 			m := PubSubMessage{Channel: values[1].string(), Message: values[2].string()}
 			p.ssubs.Publish(values[1].string(), m)
-			p.pshks.Load().(*pshks).hooks.OnMessage(m)
+			p.pshks.Load().hooks.OnMessage(m)
 		}
 	case "unsubscribe":
-		p.nsubs.Unsubscribe(values[1].string())
 		if len(values) >= 3 {
-			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].intlen})
+			s := PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].intlen}
+			p.nsubs.Unsubscribe(s)
+			p.pshks.Load().hooks.OnSubscription(s)
 		}
 		return true, true
 	case "punsubscribe":
-		p.psubs.Unsubscribe(values[1].string())
 		if len(values) >= 3 {
-			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].intlen})
+			s := PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].intlen}
+			p.psubs.Unsubscribe(s)
+			p.pshks.Load().hooks.OnSubscription(s)
 		}
 		return true, true
 	case "sunsubscribe":
-		p.ssubs.Unsubscribe(values[1].string())
 		if len(values) >= 3 {
-			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].intlen})
+			s := PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].intlen}
+			p.ssubs.Unsubscribe(s)
+			p.pshks.Load().hooks.OnSubscription(s)
 		}
 		return true, true
-	case "subscribe", "psubscribe", "ssubscribe":
+	case "subscribe":
 		if len(values) >= 3 {
-			p.pshks.Load().(*pshks).hooks.OnSubscription(PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].intlen})
+			s := PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].intlen}
+			p.nsubs.Confirm(s)
+			p.pshks.Load().hooks.OnSubscription(s)
+		}
+		return true, false
+	case "psubscribe":
+		if len(values) >= 3 {
+			s := PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].intlen}
+			p.psubs.Confirm(s)
+			p.pshks.Load().hooks.OnSubscription(s)
+		}
+		return true, false
+	case "ssubscribe":
+		if len(values) >= 3 {
+			s := PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].intlen}
+			p.ssubs.Confirm(s)
+			p.pshks.Load().hooks.OnSubscription(s)
 		}
 		return true, false
 	}
@@ -748,6 +779,25 @@ func (p *pipe) _r2pipe(ctx context.Context) (r2p *pipe) {
 	}
 	p.r2mu.Unlock()
 	return r2p
+}
+
+type recvCtxKey int
+
+const hookKey recvCtxKey = 0
+
+// WithOnSubscriptionHook attaches a subscription confirmation hook to the provided
+// context and returns a new context for the Receive method.
+//
+// The hook is invoked each time the server sends a subscribe or
+// unsubscribe confirmation, allowing callers to observe the state of a Pub/Sub
+// subscription during the lifetime of a Receive invocation.
+//
+// The hook may be called multiple times because the client can resubscribe after a
+// reconnection. Therefore, the hook implementation must be safe to run more than once.
+// Also, there should not be any blocking operations or another `client.Do()` in the hook
+// since it runs in the same goroutine as the pipeline. Otherwise, the pipeline will be blocked.
+func WithOnSubscriptionHook(ctx context.Context, hook func(PubSubSubscription)) context.Context {
+	return context.WithValue(ctx, hookKey, hook)
 }
 
 func (p *pipe) Receive(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
@@ -775,7 +825,11 @@ func (p *pipe) Receive(ctx context.Context, subscribe Completed, fn func(message
 		panic(wrongreceive)
 	}
 
-	if ch, cancel := sb.Subscribe(args); ch != nil {
+	var hook func(PubSubSubscription)
+	if v := ctx.Value(hookKey); v != nil {
+		hook = v.(func(PubSubSubscription))
+	}
+	if ch, cancel := sb.Subscribe(args, hook); ch != nil {
 		defer cancel()
 		if err := p.Do(ctx, subscribe).Error(); err != nil {
 			return err
@@ -817,7 +871,7 @@ func (p *pipe) SetPubSubHooks(hooks PubSubHooks) <-chan error {
 		return p._r2pipe(context.Background()).SetPubSubHooks(hooks)
 	}
 	if hooks.isZero() {
-		if old := p.pshks.Swap(emptypshks).(*pshks); old.close != nil {
+		if old := p.pshks.Swap(emptypshks); old.close != nil {
 			close(old.close)
 		}
 		return nil
@@ -829,11 +883,11 @@ func (p *pipe) SetPubSubHooks(hooks PubSubHooks) <-chan error {
 		hooks.OnSubscription = func(s PubSubSubscription) {}
 	}
 	ch := make(chan error, 1)
-	if old := p.pshks.Swap(&pshks{hooks: hooks, close: ch}).(*pshks); old.close != nil {
+	if old := p.pshks.Swap(&pshks{hooks: hooks, close: ch}); old.close != nil {
 		close(old.close)
 	}
 	if err := p.Error(); err != nil {
-		if old := p.pshks.Swap(emptypshks).(*pshks); old.close != nil {
+		if old := p.pshks.Swap(emptypshks); old.close != nil {
 			old.close <- err
 			close(old.close)
 		}
@@ -858,8 +912,8 @@ func (p *pipe) Version() int {
 }
 
 func (p *pipe) AZ() string {
-	infoAvaliabilityZone := p.info["availability_zone"]
-	return infoAvaliabilityZone.string()
+	infoAvailabilityZone := p.info["availability_zone"]
+	return infoAvailabilityZone.string()
 }
 
 func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
@@ -882,7 +936,7 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 			return p._r2pipe(ctx).Do(ctx, cmd)
 		}
 	}
-	waits := p.incrWaits() // if this is 1, and background worker is not started, no need to queue
+	waits := p.incrWaits() // if this is 1, and the background worker is not started, no need to queue
 	state := atomic.LoadInt32(&p.state)
 
 	if state == 1 {
@@ -944,7 +998,7 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 
 	cmds.CompletedCS(multi[0]).Verify()
 
-	isOptIn := multi[0].IsOptIn() // len(multi) > 0 should have already been checked by upper layer
+	isOptIn := multi[0].IsOptIn() // len(multi) > 0 should have already been checked by the upper layer
 	noReply := 0
 
 	for _, cmd := range multi {
@@ -986,7 +1040,7 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 		}
 	}
 
-	waits := p.incrWaits() // if this is 1, and background worker is not started, no need to queue
+	waits := p.incrWaits() // if this is 1, and the background worker is not started, no need to queue
 	state := atomic.LoadInt32(&p.state)
 
 	if state == 1 {
@@ -1066,7 +1120,7 @@ func (s *RedisResultStream) Error() error {
 }
 
 // WriteTo reads a redis response from redis and then write it to the given writer.
-// This function is not thread safe and should be called sequentially to read multiple responses.
+// This function is not thread-safe and should be called sequentially to read multiple responses.
 // An io.EOF error will be reported if all responses are read.
 func (s *RedisResultStream) WriteTo(w io.Writer) (n int64, err error) {
 	if err = s.e; err == nil && s.n > 0 {
@@ -1424,7 +1478,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 			}
 		}()
 		last := len(exec) - 1
-		if len(rewritten.Commands()) == len(commands) { // all cache miss
+		if len(rewritten.Commands()) == len(commands) { // all cache misses
 			return newResult(exec[last], nil)
 		}
 		partial = exec[last].values()
@@ -1633,6 +1687,25 @@ func (p *pipe) Close() {
 	p.r2mu.Unlock()
 }
 
+func (p *pipe) StopTimer() bool {
+	if p.lftmTimer == nil {
+		return true
+	}
+	return p.lftmTimer.Stop()
+}
+
+func (p *pipe) ResetTimer() bool {
+	if p.lftmTimer == nil || p.Error() != nil {
+		return true
+	}
+	return p.lftmTimer.Reset(p.lftm)
+}
+
+func (p *pipe) expired() {
+	p.error.CompareAndSwap(nil, errExpired)
+	p.Close()
+}
+
 type pshks struct {
 	hooks PubSubHooks
 	close chan error
@@ -1672,6 +1745,9 @@ const (
 )
 
 var cacheMark = &(RedisMessage{})
-var errClosing = &errs{error: ErrClosing}
+var (
+	errClosing = &errs{error: ErrClosing}
+	errExpired = &errs{error: errConnExpired}
+)
 
 type errs struct{ error }

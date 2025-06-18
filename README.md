@@ -91,7 +91,7 @@ func BenchmarkPipelining(b *testing.B, client rueidis.Client) {
 
 Compared to go-redis, Rueidis has higher throughput across 1, 8, and 64 parallelism settings.
 
-It is even able to achieve **~14x** throughput over go-redis in a local benchmark of Macbook Pro 16" M1 Pro 2021. (see `parallelism(64)-key(16)-value(64)-10`)
+It is even able to achieve **~14x** throughput over go-redis in a local benchmark of MacBook Pro 16" M1 Pro 2021. (see `parallelism(64)-key(16)-value(64)-10`)
 
 ![client_test_set](https://github.com/rueian/rueidis-benchmark/blob/master/client_test_set_10.png)
 
@@ -112,7 +112,7 @@ cmd := client.B().Get().Key("key").Build().ToPipe()
 client.Do(ctx, cmd)
 ```
 
-This allows you to use connection pooling approach by default but opt in auto pipelining for a subset of requests.
+This allows you to use connection pooling approach by default but opt-in auto pipelining for a subset of requests.
 
 ### Manual Pipelining
 
@@ -128,6 +128,30 @@ for _, resp := range client.DoMulti(ctx, cmds...) {
         panic(err)
     }
 }
+```
+
+When using `DoMulti()` to send multiple commands, the original commands are recycled after execution by default.
+If you need to reference them afterward (e.g. to retrieve the key), use the `Pin()` method to prevent recycling.
+
+```golang
+// Create pinned commands to preserve them from being recycled
+cmds := make(rueidis.Commands, 0, 10)
+for i := 0; i < 10; i++ {
+	cmds = append(cmds, client.B().Get().Key(strconv.Itoa(i)).Build().Pin())
+}
+
+// Execute commands and process responses
+for i, resp := range client.DoMulti(context.Background(), cmds...) {
+	fmt.Println(resp.ToString()) // this is the result
+	fmt.Println(cmds[i].Commands()[1]) // this is the corresponding key
+}
+```
+
+Alternatively, you can use the `MGet` and `MGetCache` helper functions to easily map keys to their corresponding responses.
+
+```golang
+val, err := MGet(client, ctx, []string{"k1", "k2"})
+fmt.Println(val["k1"].ToString()) // this is the k1 value
 ```
 
 ## [Server-Assisted Client-Side Caching](https://redis.io/docs/manual/client-side-caching/)
@@ -253,7 +277,12 @@ To receive messages from channels, `client.Receive()` should be used. It support
 
 ```golang
 err = client.Receive(context.Background(), client.B().Subscribe().Channel("ch1", "ch2").Build(), func(msg rueidis.PubSubMessage) {
-    // Handle the message. Note that if you want to call another `client.Do()` here, you need to do it in another goroutine or the `client` will be blocked.
+    // Handle the message. If you need to perform heavy processing or issue
+    // additional commands, do that in a separate goroutine to avoid
+    // blocking the pipeline, e.g.:
+    //   go func() {
+    //       // long work or client.Do(...)
+    //   }()
 })
 ```
 
@@ -270,6 +299,28 @@ While the `client.Receive()` call is blocking, the `Client` is still able to acc
 and they are sharing the same TCP connection. If your message handler may take some time to complete, it is recommended
 to use the `client.Receive()` inside a `client.Dedicated()` for not blocking other concurrent requests.
 
+#### Subscription confirmations
+
+Use `rueidis.WithOnSubscriptionHook` when you need to observe subscribe / unsubscribe confirmations that the server sends during the lifetime of a `client.Receive()`.
+
+The hook can be triggered multiple times because the `client.Receive()` may automatically reconnect and resubscribe.
+
+```go
+ctx := rueidis.WithOnSubscriptionHook(context.Background(), func(s rueidis.PubSubSubscription) {
+    // This hook runs in the pipeline goroutine. If you need to perform
+    // heavy work or invoke additional commands, do it in another
+    // goroutine to avoid blocking the pipeline, for example:
+    //   go func() {
+    //       // long work or client.Do(...)
+    //   }()
+    fmt.Printf("%s %s (count %d)\n", s.Kind, s.Channel, s.Count)
+})
+
+err := client.Receive(ctx, client.B().Subscribe().Channel("news").Build(), func(m rueidis.PubSubMessage) {
+    // ...
+})
+```
+
 ### Alternative PubSub Hooks
 
 The `client.Receive()` requires users to provide a subscription command in advance.
@@ -281,7 +332,12 @@ defer cancel()
 
 wait := c.SetPubSubHooks(rueidis.PubSubHooks{
 	OnMessage: func(m rueidis.PubSubMessage) {
-		// Handle the message. Note that if you want to call another `c.Do()` here, you need to do it in another goroutine or the `c` will be blocked.
+		// Handle the message. If you need to perform heavy processing or issue
+		// additional commands, do that in a separate goroutine to avoid
+		// blocking the pipeline, e.g.:
+		//   go func() {
+		//       // long work or client.Do(...)
+		//   }()
 	}
 })
 c.Do(ctx, c.B().Subscribe().Channel("ch").Build())
@@ -380,6 +436,19 @@ You can create a new redis client using `NewClient` and provide several options.
 // Connect to a single redis node:
 client, err := rueidis.NewClient(rueidis.ClientOption{
     InitAddress: []string{"127.0.0.1:6379"},
+})
+
+// Connect to a standalone redis with replicas
+client, err := rueidis.NewClient(rueidis.ClientOption{
+    InitAddress: []string{"127.0.0.1:6379"},
+    Standalone: rueidis.StandaloneOption{
+        // Note that these addresses must be online and cannot be promoted.
+        // An example use case is the reader endpoint provided by cloud vendors.
+        ReplicaAddress: []string{"reader_endpoint:port"},
+    },
+    SendToReplicas: func(cmd rueidis.Completed) bool {
+        return cmd.IsReadOnly()
+    },
 })
 
 // Connect to a redis cluster

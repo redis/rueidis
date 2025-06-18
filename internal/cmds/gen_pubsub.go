@@ -169,6 +169,16 @@ func (b Builder) PubsubShardnumsub() (c PubsubShardnumsub) {
 }
 
 func (c PubsubShardnumsub) Channel(channel ...string) PubsubShardnumsubChannel {
+	if c.ks&NoSlot == NoSlot {
+		for _, k := range channel {
+			c.ks = NoSlot | slot(k)
+			break
+		}
+	} else {
+		for _, k := range channel {
+			c.ks = check(c.ks, slot(k))
+		}
+	}
 	c.cs.s = append(c.cs.s, channel...)
 	return (PubsubShardnumsubChannel)(c)
 }
@@ -181,6 +191,16 @@ func (c PubsubShardnumsub) Build() Completed {
 type PubsubShardnumsubChannel Incomplete
 
 func (c PubsubShardnumsubChannel) Channel(channel ...string) PubsubShardnumsubChannel {
+	if c.ks&NoSlot == NoSlot {
+		for _, k := range channel {
+			c.ks = NoSlot | slot(k)
+			break
+		}
+	} else {
+		for _, k := range channel {
+			c.ks = check(c.ks, slot(k))
+		}
+	}
 	c.cs.s = append(c.cs.s, channel...)
 	return c
 }

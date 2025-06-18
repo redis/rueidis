@@ -10,6 +10,7 @@ import (
 	"github.com/redis/rueidis"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -37,6 +38,14 @@ func WithMeterProvider(provider metric.MeterProvider) Option {
 	}
 }
 
+// WithOperationMetricAttr sets the operation name as an attribute for duration and error metrics.
+// This may cause memory usage to increase with the number of commands used.
+func WithOperationMetricAttr() Option {
+	return func(cli *otelclient) {
+		cli.commandMetrics.opAttr = true
+	}
+}
+
 type HistogramOption struct {
 	Buckets []float64
 }
@@ -48,6 +57,11 @@ type dialMetrics struct {
 	latency    metric.Float64Histogram
 	addOpts    []metric.AddOption
 	recordOpts []metric.RecordOption
+}
+
+type dialTracer struct {
+	trace.Tracer
+	tAttrs trace.SpanStartEventOption
 }
 
 // WithHistogramOption sets the HistogramOption.
@@ -108,7 +122,7 @@ func NewClient(clientOption rueidis.ClientOption, opts ...Option) (rueidis.Clien
 		return nil, err
 	}
 
-	clientOption.DialCtxFn = trackDialing(metrics, clientOption.DialCtxFn)
+	clientOption.DialCtxFn = trackDialing(metrics, dialTracer{Tracer: oclient.tracer, tAttrs: oclient.tAttrs}, clientOption.DialCtxFn)
 
 	cli, err := rueidis.NewClient(clientOption)
 	if err != nil {
@@ -149,19 +163,39 @@ func newClient(opts ...Option) (*otelclient, error) {
 	if err != nil {
 		return nil, err
 	}
+	cli.commandMetrics.addOpts = cli.addOpts
+	cli.commandMetrics.recordOpts = cli.recordOpts
+	cli.commandMetrics.duration, err = cli.meter.Float64Histogram(
+		"rueidis_command_duration_seconds",
+		metric.WithUnit("s"),
+		metric.WithExplicitBucketBoundaries(defaultHistogramBuckets...),
+	)
+	if err != nil {
+		return nil, err
+	}
+	cli.commandMetrics.errors, err = cli.meter.Int64Counter("rueidis_command_errors")
+	if err != nil {
+		return nil, err
+	}
 	return cli, nil
 }
 
-func trackDialing(m dialMetrics, dialFn func(context.Context, string, *net.Dialer, *tls.Config) (conn net.Conn, err error)) func(context.Context, string, *net.Dialer, *tls.Config) (conn net.Conn, err error) {
-	return func(ctx context.Context, network string, dialer *net.Dialer, tlsConfig *tls.Config) (conn net.Conn, err error) {
+func trackDialing(m dialMetrics, t dialTracer, dialFn func(context.Context, string, *net.Dialer, *tls.Config) (conn net.Conn, err error)) func(context.Context, string, *net.Dialer, *tls.Config) (conn net.Conn, err error) {
+	return func(ctx context.Context, dst string, dialer *net.Dialer, tlsConfig *tls.Config) (conn net.Conn, err error) {
+		ctx, span := t.Start(ctx, "redis.dial", kind, trace.WithAttributes(dbattr, attribute.String("server.address", dst)), t.tAttrs)
+		defer span.End()
+
 		m.attempt.Add(ctx, 1, m.addOpts...)
 
 		start := time.Now()
 
-		conn, err = dialFn(ctx, network, dialer, tlsConfig)
+		conn, err = dialFn(ctx, dst, dialer, tlsConfig)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			return nil, err
 		}
+		span.SetStatus(codes.Ok, "")
 
 		// Use floating point division for higher precision (instead of Seconds method).
 		m.latency.Record(ctx, float64(time.Since(start))/float64(time.Second), m.recordOpts...)
