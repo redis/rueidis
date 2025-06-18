@@ -491,7 +491,6 @@ func TestCreateAndAliasIndex(t *testing.T) {
 	repo := NewHashRepository("hashalias", HashTestStruct{}, client)
 
 	t.Run("CreateAndAliasIndex", func(t *testing.T) {
-		// Step 1: Create initial index and alias
 		err := repo.CreateAndAliasIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
 			return schema.FieldName("Val").Text().Build()
 		})
@@ -499,7 +498,6 @@ func TestCreateAndAliasIndex(t *testing.T) {
 			t.Fatalf("failed to create and alias index: %v", err)
 		}
 
-		// Step 2: Verify alias points to initial index (hashalias_v1)
 		verifyAliasTarget(t, ctx, client, repo.IndexName(), repo.IndexName()+"_v1")
 
 		// Step 3: Create new index version and update alias
@@ -510,7 +508,6 @@ func TestCreateAndAliasIndex(t *testing.T) {
 			t.Fatalf("failed to create and alias new index version: %v", err)
 		}
 
-		// Step 4: Verify alias now points to the updated index (e.g., hashalias_v2)
 		verifyAliasTarget(t, ctx, client, repo.IndexName(), repo.IndexName()+"_v2")
 	})
 }

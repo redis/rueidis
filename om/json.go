@@ -169,13 +169,13 @@ func (r *JSONRepository[T]) CreateAndAliasIndex(ctx context.Context, cmdFn func(
 		if !ok {
 			return fmt.Errorf("index_name not found in FT.INFO response")
 		}
-
 		currentIndex, err = message.ToString()
 		if err != nil {
 			return fmt.Errorf("failed to convert index_name to string: %w", err)
 		}
 	}
 
+	// Compute new index version name
 	newIndex := alias + "_v1"
 	if aliasExists && currentIndex != "" {
 		lastVersionIndex := strings.LastIndex(currentIndex, "_v")
@@ -187,12 +187,17 @@ func (r *JSONRepository[T]) CreateAndAliasIndex(ctx context.Context, cmdFn func(
 		}
 	}
 
-	// Create the new index
-	if err := r.client.Do(ctx, cmdFn(r.client.B().FtCreate().Index(newIndex).OnJson().Prefix(1).Prefix(r.prefix+":").Schema())).Error(); err != nil {
-		return err
+	// Create the new index with schema
+	createCmd := r.client.B().FtCreate().
+		Index(newIndex).
+		OnJson().
+		Prefix(1).
+		Prefix(r.prefix + ":")
+	if err := r.client.Do(ctx, cmdFn(createCmd.Schema())).Error(); err != nil {
+		return fmt.Errorf("failed to create index %s: %w", newIndex, err)
 	}
 
-	// Update or add the alias
+	// Set alias to point to new index
 	var aliasErr error
 	if aliasExists {
 		aliasErr = r.client.Do(ctx, r.client.B().FtAliasupdate().Alias(alias).Index(newIndex).Build()).Error()
@@ -204,7 +209,7 @@ func (r *JSONRepository[T]) CreateAndAliasIndex(ctx context.Context, cmdFn func(
 		return fmt.Errorf("failed to update alias: %w", aliasErr)
 	}
 
-	// Drop the old index if it exists and differs from the new one
+	// Drop old index if it's different from the new one
 	if aliasExists && currentIndex != "" && currentIndex != newIndex {
 		if err := r.client.Do(ctx, r.client.B().FtDropindex().Index(currentIndex).Build()).Error(); err != nil {
 			return fmt.Errorf("failed to drop old index: %w", err)
