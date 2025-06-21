@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"reflect"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -394,8 +395,8 @@ func TestSentinelClientInit(t *testing.T) {
 		if client.sConn == nil {
 			t.Fatalf("unexpected nil sentinel conn")
 		}
-		if client.mConn.Load() == nil {
-			t.Fatalf("unexpected nil slave conn")
+		if client.rConn.Load() == nil {
+			t.Fatalf("unexpected nil replica conn")
 		}
 		client.Close()
 	})
@@ -602,6 +603,366 @@ func TestSentinelClientInit(t *testing.T) {
 		}
 		client.Close()
 	})
+
+	t.Run("replica only and SendToReplicas is set", func(t *testing.T) {
+		_, err := newSentinelClient(
+			&ClientOption{InitAddress: []string{":0"}, ReplicaOnly: true, SendToReplicas: func(cmd Completed) bool { return true }},
+			func(dst string, opt *ClientOption) conn {
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+
+		if err == nil {
+			t.Fatalf("expected error but got nil")
+		}
+
+		if !errors.Is(err, ErrReplicaOnlyConflict) {
+			t.Fatalf("expected ErrReplicaOnlyConflict but got %v", err)
+		}
+	})
+
+	t.Run("SendToReplicas is set", func(t *testing.T) {
+		sentinelWithMasterAndReplica := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{
+					s: []RedisResult{
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.0.1"),
+									strmsg('+', "port"), strmsg('+', "0"),
+								}),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								strmsg('+', "127.0.1.0"),
+								strmsg('+', "10"),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.1.1"),
+									strmsg('+', "port"), strmsg('+', "11"),
+								}),
+							}),
+						},
+					},
+				}
+			},
+		}
+
+		client, err := newSentinelClient(
+			&ClientOption{
+				InitAddress:    []string{"127.0.0.1:0"},
+				SendToReplicas: func(cmd Completed) bool { return true },
+			},
+			func(dst string, opt *ClientOption) conn {
+				if dst == "127.0.0.1:0" {
+					return sentinelWithMasterAndReplica
+				}
+				if dst == "127.0.1.0:10" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "master")})}
+						},
+					}
+				}
+				if dst == "127.0.1.1:11" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "slave")})}
+						},
+					}
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+		if client.sAddr != "127.0.0.1:0" && err == nil {
+			t.Fatalf("expected error but got nil with sentinel %s", client.sAddr)
+		}
+
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if client.sConn == nil {
+			t.Fatalf("unexpected nil sentinel conn")
+		}
+		if client.mConn.Load() == nil {
+			t.Fatalf("unexpected nil master conn")
+		}
+		if client.rConn.Load() == nil {
+			t.Fatalf("unexpected nil replica conn")
+		}
+		client.Close()
+	})
+
+	t.Run("sentinel disconnect SendToReplicas is set", func(t *testing.T) {
+		trigger := make(chan error)
+		disconnect := int32(0)
+		s0closed := int32(0)
+		r1closed := int32(0)
+		s0 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				if atomic.LoadInt32(&disconnect) == 1 {
+					return newErrResult(errors.New("die"))
+				}
+				return RedisResult{}
+			},
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{
+					s: []RedisResult{
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.0.2"),
+									strmsg('+', "port"), strmsg('+', "0"),
+								}),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								strmsg('+', "127.0.1.0"),
+								strmsg('+', "10"),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.1.1"),
+									strmsg('+', "port"), strmsg('+', "11"),
+								}),
+							}),
+						},
+					},
+				}
+			},
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+				if err, ok := <-trigger; ok {
+					return err
+				}
+				return ErrClosing
+			},
+			CloseFn: func() {
+				atomic.StoreInt32(&s0closed, 1)
+			},
+		}
+		s1 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{
+					s: []RedisResult{
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.0.3"),
+									strmsg('+', "port"), strmsg('+', "0"),
+								}),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								strmsg('+', "127.0.1.0"),
+								strmsg('+', "10"),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.1.1"),
+									strmsg('+', "port"), strmsg('+', "11"),
+								}),
+							}),
+						},
+					},
+				}
+			},
+		}
+		s2 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{
+					s: []RedisResult{
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.0.1"),
+									strmsg('+', "port"), strmsg('+', "0"),
+								}),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								strmsg('+', "127.0.1.0"),
+								strmsg('+', "10"),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.1.2"),
+									strmsg('+', "port"), strmsg('+', "12"),
+								}),
+							}),
+						},
+					},
+				}
+			},
+		}
+		m := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "master")})}
+			},
+		}
+		r1 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				if atomic.LoadInt32(&disconnect) == 1 {
+					return newErrResult(errors.New("die"))
+				}
+				return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "slave")})}
+			},
+			CloseFn: func() {
+				atomic.StoreInt32(&r1closed, 1)
+			},
+			ErrorFn: func() error {
+				if atomic.LoadInt32(&disconnect) == 1 {
+					return errClosing
+				}
+				return nil
+			},
+		}
+		r2 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "slave")})}
+			},
+		}
+		client, err := newSentinelClient(
+			&ClientOption{
+				InitAddress:    []string{"127.0.0.1:0"},
+				SendToReplicas: func(cmd Completed) bool { return true },
+			},
+			func(dst string, opt *ClientOption) conn {
+				if dst == "127.0.0.1:0" {
+					return s0
+				}
+				if dst == "127.0.0.2:0" {
+					return s1
+				}
+				if dst == "127.0.0.3:0" {
+					return s2
+				}
+				if dst == "127.0.1.0:10" {
+					return m
+				}
+				if dst == "127.0.1.1:11" {
+					return r1
+				}
+				if dst == "127.0.1.2:12" {
+					return r2
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		atomic.StoreInt32(&disconnect, 1)
+		trigger <- errors.New("reconnect")
+		close(trigger)
+		for {
+			t.Log("wait switch master and replica")
+			if client.mConn.Load().(*mockConn) == m && client.rConn.Load().(*mockConn) == r2 {
+				break
+			}
+		}
+		if atomic.LoadInt32(&s0closed) != 1 {
+			t.Fatalf("s0 not closed")
+		}
+		if atomic.LoadInt32(&r1closed) != 1 {
+			t.Fatalf("r1 not closed")
+		}
+		client.Close()
+	})
+
+	t.Run("Init no nodes ReplicaOnly", func(t *testing.T) {
+		if _, err := newSentinelClient(
+			&ClientOption{InitAddress: []string{}, ReplicaOnly: true},
+			func(dst string, opt *ClientOption) conn { return nil },
+			newRetryer(defaultRetryDelayFn),
+		); err != ErrNoAddr {
+			t.Fatalf("unexpected err %v", err)
+		}
+	})
+
+	t.Run("Init no nodes SendToReplicas, no master", func(t *testing.T) {
+		if _, err := newSentinelClient(
+			&ClientOption{InitAddress: []string{}, SendToReplicas: func(cmd Completed) bool { return true }},
+			func(dst string, opt *ClientOption) conn { return nil },
+			newRetryer(defaultRetryDelayFn),
+		); err != ErrNoAddr {
+			t.Fatalf("unexpected err %v", err)
+		}
+	})
+
+	t.Run("Init no nodes SendToReplicas, no replica", func(t *testing.T) {
+		sentinelWithOnlyMaster := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				return &redisresults{
+					s: []RedisResult{
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.0.1"),
+									strmsg('+', "port"), strmsg('+', "0"),
+								}),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								strmsg('+', "127.0.1.0"),
+								strmsg('+', "10"),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{}),
+						},
+					},
+				}
+			},
+		}
+
+		_, err := newSentinelClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				SendToReplicas: func(cmd Completed) bool {
+					return cmd.IsReadOnly()
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				if dst == "127.0.0.1:0" {
+					return sentinelWithOnlyMaster
+				}
+				if dst == "127.0.1.0:10" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "master")})}
+						},
+					}
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+		if !strings.Contains(err.Error(), "not enough ready replicas") {
+			t.Fatalf("unexpected err %v", err)
+		}
+	})
 }
 
 func TestSentinelRefreshAfterClose(t *testing.T) {
@@ -689,7 +1050,7 @@ func TestSentinelSwitchAfterClose(t *testing.T) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	client.Close()
-	if err := client._switchTarget(":1"); err != nil {
+	if err := client._switchTarget(":1", true); err != nil {
 		t.Fatalf("unexpected err %v", err)
 	}
 }
@@ -1994,4 +2355,1220 @@ func TestSentinelClientConnLifetime(t *testing.T) {
 			t.Fatalf("unexpected response %v", err)
 		}
 	})
+}
+
+func TestSendToReplicasSentinelClientDelegate(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	sentinelWithMasterAndReplica := &mockConn{
+		DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			return &redisresults{
+				s: []RedisResult{
+					{
+						val: slicemsg('*', []RedisMessage{
+							slicemsg('%', []RedisMessage{
+								strmsg('+', "ip"), strmsg('+', "127.0.0.1"),
+								strmsg('+', "port"), strmsg('+', "0"),
+							}),
+						}),
+					},
+					{
+						val: slicemsg('*', []RedisMessage{
+							strmsg('+', "127.0.1.0"),
+							strmsg('+', "10"),
+						}),
+					},
+					{
+						val: slicemsg('*', []RedisMessage{
+							slicemsg('%', []RedisMessage{
+								strmsg('+', "ip"), strmsg('+', "127.0.1.1"),
+								strmsg('+', "port"), strmsg('+', "11"),
+							}),
+						}),
+					},
+				},
+			}
+		},
+	}
+
+	setup := func() (*sentinelClient, *mockConn, *mockConn) {
+		m := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "master")})}
+			},
+		}
+		r := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "slave")})}
+			},
+		}
+		client, err := newSentinelClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				SendToReplicas: func(cmd Completed) bool {
+					return cmd.IsReadOnly()
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				if dst == "127.0.0.1:0" {
+					return sentinelWithMasterAndReplica
+				}
+				if dst == "127.0.1.0:10" {
+					return m
+				}
+				if dst == "127.0.1.1:11" {
+					return r
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		return client, m, r
+	}
+
+	t.Run("Delegate MGetCache to master", func(t *testing.T) {
+		disabledCacheClient, err := newSentinelClient(
+			&ClientOption{
+				InitAddress:  []string{"127.0.0.1:0"},
+				DisableCache: true,
+				SendToReplicas: func(cmd Completed) bool {
+					return false
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				if dst == "127.0.0.1:0" {
+					return sentinelWithMasterAndReplica
+				}
+				if dst == "127.0.1.0:10" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							if cmd == cmds.RoleCmd {
+								return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "master")})}
+							}
+
+							if !reflect.DeepEqual(cmd.Commands(), []string{"MGET", "key1", "key2"}) {
+								t.Fatalf("unexpected command %v", cmd)
+							}
+
+							return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "v1"), strmsg('+', "v2")})}
+						},
+					}
+				}
+				if dst == "127.0.1.1:11" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "slave")})}
+						},
+					}
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		defer disabledCacheClient.Close()
+
+		keys := []string{"key1", "key2"}
+		ret, err := MGetCache(disabledCacheClient, context.Background(), time.Second, keys)
+		if err != nil {
+			t.Fatalf("unexpected error %v", err)
+		}
+
+		expected := map[string]RedisMessage{
+			"key1": strmsg('+', "v1"),
+			"key2": strmsg('+', "v2"),
+		}
+		if !reflect.DeepEqual(ret, expected) {
+			t.Fatalf("unexpected result %v, expected %v", ret, expected)
+		}
+	})
+
+	t.Run("Delegate MGetCache to replica", func(t *testing.T) {
+		disabledCacheClient, err := newSentinelClient(
+			&ClientOption{
+				InitAddress:  []string{"127.0.0.1:0"},
+				DisableCache: true,
+				SendToReplicas: func(cmd Completed) bool {
+					return true
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				if dst == "127.0.0.1:0" {
+					return sentinelWithMasterAndReplica
+				}
+				if dst == "127.0.1.0:10" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "master")})}
+						},
+					}
+				}
+				if dst == "127.0.1.1:11" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							if cmd == cmds.RoleCmd {
+								return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "slave")})}
+							}
+
+							if !reflect.DeepEqual(cmd.Commands(), []string{"MGET", "key1", "key2"}) {
+								t.Fatalf("unexpected command %v", cmd)
+							}
+
+							return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "v1"), strmsg('+', "v2")})}
+						},
+					}
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		defer disabledCacheClient.Close()
+
+		keys := []string{"key1", "key2"}
+		ret, err := MGetCache(disabledCacheClient, context.Background(), time.Second, keys)
+		if err != nil {
+			t.Fatalf("unexpected error %v", err)
+		}
+
+		expected := map[string]RedisMessage{
+			"key1": strmsg('+', "v1"),
+			"key2": strmsg('+', "v2"),
+		}
+		if !reflect.DeepEqual(ret, expected) {
+			t.Fatalf("unexpected result %v, expected %v", ret, expected)
+		}
+	})
+
+	t.Run("Nodes", func(t *testing.T) {
+		client, m, r := setup()
+		defer client.Close()
+
+		m.AddrFn = func() string { return "127.0.1.0:10" }
+		r.AddrFn = func() string { return "127.0.1.1:11" }
+
+		nodes := client.Nodes()
+		if len(nodes) != 2 || nodes["127.0.1.0:10"] == nil || nodes["127.0.1.1:11"] == nil {
+			t.Fatalf("unexpected nodes")
+		}
+	})
+
+	t.Run("Delegate Do to master", func(t *testing.T) {
+		client, m, _ := setup()
+		defer client.Close()
+
+		c := client.B().Set().Key("key").Value("value").Build()
+		m.DoFn = func(cmd Completed) RedisResult {
+			if !reflect.DeepEqual(cmd.Commands(), c.Commands()) {
+				t.Fatalf("unexpected command %v", cmd)
+			}
+			return newResult(strmsg('+', "Do"), nil)
+		}
+		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "Do" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate Do to replica", func(t *testing.T) {
+		client, _, r := setup()
+		defer client.Close()
+
+		c := client.B().Get().Key("key").Build()
+		r.DoFn = func(cmd Completed) RedisResult {
+			if !reflect.DeepEqual(cmd.Commands(), c.Commands()) {
+				t.Fatalf("unexpected command %v", cmd)
+			}
+			return newResult(strmsg('+', "Do"), nil)
+		}
+		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "Do" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoCache to master", func(t *testing.T) {
+		client, err := newSentinelClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				SendToReplicas: func(cmd Completed) bool {
+					return false
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				if dst == "127.0.0.1:0" {
+					return sentinelWithMasterAndReplica
+				}
+				if dst == "127.0.1.0:10" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "master")})}
+						},
+						DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
+							if !reflect.DeepEqual(cmd.Commands(), []string{"GET", "key"}) {
+								t.Fatalf("unexpected command %v", cmd)
+							}
+
+							return newResult(strmsg('+', "DoCache"), nil)
+						},
+					}
+				}
+				if dst == "127.0.1.1:11" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "slave")})}
+						},
+					}
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		defer client.Close()
+
+		c := client.B().Get().Key("key").Cache()
+		if v, err := client.DoCache(context.Background(), c, 100).ToString(); err != nil || v != "DoCache" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoCache to replica", func(t *testing.T) {
+		client, _, r := setup()
+		defer client.Close()
+
+		c := client.B().Get().Key("key").Cache()
+		r.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
+			if !reflect.DeepEqual(cmd.Commands(), c.Commands()) || ttl != 100 {
+				t.Fatalf("unexpected command %v, %v", cmd, ttl)
+			}
+			return newResult(strmsg('+', "DoCache"), nil)
+		}
+		if v, err := client.DoCache(context.Background(), c, 100).ToString(); err != nil || v != "DoCache" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoStream to master", func(t *testing.T) {
+		client, m, _ := setup()
+		defer client.Close()
+
+		c := client.B().Set().Key("key").Value("value").Build()
+		m.DoStreamFn = func(cmd Completed) RedisResultStream {
+			return RedisResultStream{
+				e: errors.New("DoStream"),
+			}
+		}
+		if s := client.DoStream(context.Background(), c); s.Error().Error() != "DoStream" {
+			t.Fatalf("unexpected response %v", s.Error())
+		}
+	})
+
+	t.Run("Delegate DoStream to replica", func(t *testing.T) {
+		client, _, r := setup()
+		defer client.Close()
+
+		c := client.B().Get().Key("Do").Build()
+		r.DoStreamFn = func(cmd Completed) RedisResultStream {
+			return RedisResultStream{
+				e: errors.New("DoStream"),
+			}
+		}
+		if s := client.DoStream(context.Background(), c); s.Error().Error() != "DoStream" {
+			t.Fatalf("unexpected response %v", s.Error())
+		}
+	})
+
+	t.Run("Delegate DoMulti to master", func(t *testing.T) {
+		client, m, _ := setup()
+		defer client.Close()
+
+		c1 := client.B().Set().Key("key1").Value("value1").Build()
+		c2 := client.B().Get().Key("key2").Build()
+		m.DoMultiFn = func(cmd ...Completed) *redisresults {
+			if !reflect.DeepEqual(cmd[0].Commands(), c1.Commands()) {
+				t.Fatalf("unexpected command %v", cmd[0])
+			}
+			if !reflect.DeepEqual(cmd[1].Commands(), c2.Commands()) {
+				t.Fatalf("unexpected command %v", cmd[1])
+			}
+			return &redisresults{
+				s: []RedisResult{
+					newResult(strmsg('+', "DoMulti"), nil),
+					newResult(strmsg('+', "value2"), nil),
+				},
+			}
+		}
+		resps := client.DoMulti(context.Background(), c1, c2)
+		if v, err := resps[0].ToString(); err != nil || v != "DoMulti" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); err != nil || v != "value2" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoMulti to replica", func(t *testing.T) {
+		client, _, r := setup()
+		defer client.Close()
+
+		c1 := client.B().Get().Key("key1").Build()
+		c2 := client.B().Get().Key("key2").Build()
+		r.DoMultiFn = func(cmd ...Completed) *redisresults {
+			if !reflect.DeepEqual(cmd[0].Commands(), c1.Commands()) {
+				t.Fatalf("unexpected command %v", cmd[0])
+			}
+			if !reflect.DeepEqual(cmd[1].Commands(), c2.Commands()) {
+				t.Fatalf("unexpected command %v", cmd[1])
+			}
+			return &redisresults{
+				s: []RedisResult{newResult(strmsg('+', "value1"), nil), newResult(strmsg('+', "value2"), nil)},
+			}
+		}
+		resps := client.DoMulti(context.Background(), c1, c2)
+		if v, err := resps[0].ToString(); err != nil || v != "value1" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); err != nil || v != "value2" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoMultiStream to master", func(t *testing.T) {
+		client, m, _ := setup()
+		defer client.Close()
+
+		c1 := client.B().Set().Key("key1").Value("value1").Build()
+		c2 := client.B().Get().Key("key2").Build()
+		m.DoMultiStreamFn = func(cmd ...Completed) MultiRedisResultStream {
+			return MultiRedisResultStream{
+				e: errors.New("DoMultiStream"),
+			}
+		}
+		if s := client.DoMultiStream(context.Background(), c1, c2); s.Error().Error() != "DoMultiStream" {
+			t.Fatalf("unexpected response %v", s.Error())
+		}
+	})
+
+	t.Run("Delete DoMultiStream to replica", func(t *testing.T) {
+		client, _, r := setup()
+		defer client.Close()
+
+		c1 := client.B().Get().Key("key1").Build()
+		c2 := client.B().Get().Key("key2").Build()
+		r.DoMultiStreamFn = func(cmd ...Completed) MultiRedisResultStream {
+			return MultiRedisResultStream{
+				e: errors.New("DoMultiStream"),
+			}
+		}
+		if s := client.DoMultiStream(context.Background(), c1, c2); s.Error().Error() != "DoMultiStream" {
+			t.Fatalf("unexpected response %v", s.Error())
+		}
+	})
+
+	t.Run("Delegate DoMultiCache to master", func(t *testing.T) {
+		client, err := newSentinelClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				SendToReplicas: func(cmd Completed) bool {
+					return false
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				if dst == "127.0.0.1:0" {
+					return sentinelWithMasterAndReplica
+				}
+				if dst == "127.0.1.0:10" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "master")})}
+						},
+						DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
+							if !reflect.DeepEqual(multi[0].Cmd.Commands(), []string{"GET", "key1"}) || multi[0].TTL != 100 {
+								t.Fatalf("unexpected command %v, %v", multi[0].Cmd, multi[0].TTL)
+							}
+							if !reflect.DeepEqual(multi[1].Cmd.Commands(), []string{"GET", "key2"}) || multi[1].TTL != 100 {
+								t.Fatalf("unexpected command %v, %v", multi[1].Cmd, multi[1].TTL)
+							}
+							return &redisresults{
+								s: []RedisResult{newResult(strmsg('+', "value1"), nil), newResult(strmsg('+', "value2"), nil)},
+							}
+						},
+					}
+				}
+				if dst == "127.0.1.1:11" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "slave")})}
+						},
+					}
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		defer client.Close()
+
+		c1 := client.B().Get().Key("key1").Cache()
+		c2 := client.B().Get().Key("key2").Cache()
+		resps := client.DoMultiCache(context.Background(), CT(c1, 100), CT(c2, 100))
+		if v, err := resps[0].ToString(); v != "value1" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); v != "value2" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoMultiCache to replica", func(t *testing.T) {
+		client, _, r := setup()
+		defer client.Close()
+
+		c1 := client.B().Get().Key("key1").Cache()
+		c2 := client.B().Get().Key("key2").Cache()
+		r.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
+			if !reflect.DeepEqual(multi[0].Cmd.Commands(), c1.Commands()) || multi[0].TTL != 100 {
+				t.Fatalf("unexpected command %v, %v", multi[0].Cmd, multi[0].TTL)
+			}
+			if !reflect.DeepEqual(multi[1].Cmd.Commands(), c2.Commands()) || multi[1].TTL != 100 {
+				t.Fatalf("unexpected command %v, %v", multi[1].Cmd, multi[1].TTL)
+			}
+			return &redisresults{
+				s: []RedisResult{
+					newResult(strmsg('+', "value1"), nil),
+					newResult(strmsg('+', "value2"), nil),
+				},
+			}
+		}
+		resps := client.DoMultiCache(context.Background(), CT(c1, 100), CT(c2, 100))
+		if v, err := resps[0].ToString(); v != "value1" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); v != "value2" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate Receive to master", func(t *testing.T) {
+		client, m, _ := setup()
+		defer client.Close()
+
+		c := client.B().Subscribe().Channel("ch").Build()
+		hdl := func(message PubSubMessage) {}
+		m.ReceiveFn = func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+			if !reflect.DeepEqual(subscribe.Commands(), c.Commands()) {
+				t.Fatalf("unexpected command %v", subscribe)
+			}
+			return nil
+		}
+		if err := client.Receive(context.Background(), c, hdl); err != nil {
+			t.Fatalf("unexpected response %v", err)
+		}
+	})
+
+	t.Run("Delegate Receive to replica", func(t *testing.T) {
+		client, err := newSentinelClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				SendToReplicas: func(cmd Completed) bool {
+					return true
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				if dst == "127.0.0.1:0" {
+					return sentinelWithMasterAndReplica
+				}
+				if dst == "127.0.1.0:10" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "master")})}
+						},
+					}
+				}
+				if dst == "127.0.1.1:11" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "slave")})}
+						},
+						ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+							return nil
+						},
+					}
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		defer client.Close()
+
+		c := client.B().Subscribe().Channel("ch").Build()
+		if err := client.Receive(context.Background(), c, func(message PubSubMessage) {}); err != nil {
+			t.Fatalf("unexpected response %v", err)
+		}
+	})
+
+	t.Run("Delegate Close", func(t *testing.T) {
+		client, m, r := setup()
+		defer client.Close()
+
+		masterCalled := false
+		replicaCalled := false
+		m.CloseFn = func() { masterCalled = true }
+		r.CloseFn = func() { replicaCalled = true }
+		client.Close()
+		if !masterCalled || !replicaCalled {
+			t.Fatalf("Close is not delegated")
+		}
+	})
+
+	t.Run("Dedicate Delegate", func(t *testing.T) {
+		client, m, _ := setup()
+		defer client.Close()
+
+		w := &mockWire{
+			DoFn: func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "Delegate"), nil)
+			},
+			DoMultiFn: func(cmd ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{newResult(strmsg('+', "Delegate"), nil)}}
+			},
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+				return ErrClosing
+			},
+			ErrorFn: func() error {
+				return ErrClosing
+			},
+		}
+		m.AcquireFn = func() wire {
+			return w
+		}
+		stored := false
+		m.StoreFn = func(ww wire) {
+			if ww != w {
+				t.Fatalf("received unexpected wire %v", ww)
+			}
+			stored = true
+		}
+		c, cancel := client.Dedicate()
+		if v, err := c.Do(context.Background(), c.B().Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v := c.DoMulti(context.Background()); len(v) != 0 {
+			t.Fatalf("received unexpected response %v", v)
+		}
+		for _, resp := range c.DoMulti(context.Background(), c.B().Get().Key("a").Build()) {
+			if v, err := resp.ToString(); err != nil || v != "Delegate" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+		if err := c.Receive(context.Background(), c.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
+			t.Fatalf("unexpected ret %v", err)
+		}
+		cancel()
+		if !stored {
+			t.Fatalf("Dedicated desn't put back the wire")
+		}
+	})
+}
+
+func TestReplicaOnlySentinelClientDelegate(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	sentinelWithMasterAndReplica := &mockConn{
+		DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			return &redisresults{
+				s: []RedisResult{
+					{
+						val: slicemsg('*', []RedisMessage{
+							slicemsg('%', []RedisMessage{
+								strmsg('+', "ip"), strmsg('+', "127.0.0.1"),
+								strmsg('+', "port"), strmsg('+', "0"),
+							}),
+						}),
+					},
+					{
+						val: slicemsg('*', []RedisMessage{
+							slicemsg('%', []RedisMessage{
+								strmsg('+', "ip"), strmsg('+', "127.0.1.1"),
+								strmsg('+', "port"), strmsg('+', "11"),
+							}),
+						}),
+					},
+				},
+			}
+		},
+	}
+
+	setup := func() (*sentinelClient, *mockConn, *mockConn) {
+		m := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "master")})}
+			},
+		}
+		r := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "slave")})}
+			},
+		}
+		client, err := newSentinelClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				ReplicaOnly: true,
+			},
+			func(dst string, opt *ClientOption) conn {
+				if dst == "127.0.0.1:0" {
+					return sentinelWithMasterAndReplica
+				}
+				if dst == "127.0.1.0:10" {
+					return m
+				}
+				if dst == "127.0.1.1:11" {
+					return r
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		return client, m, r
+	}
+
+	t.Run("Delegate MGetCache", func(t *testing.T) {
+		disabledCacheClient, err := newSentinelClient(
+			&ClientOption{
+				InitAddress:  []string{"127.0.0.1:0"},
+				DisableCache: true,
+				ReplicaOnly:  true,
+			},
+			func(dst string, opt *ClientOption) conn {
+				if dst == "127.0.0.1:0" {
+					return sentinelWithMasterAndReplica
+				}
+				if dst == "127.0.1.0:10" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "master")})}
+						},
+					}
+				}
+				if dst == "127.0.1.1:11" {
+					return &mockConn{
+						DoFn: func(cmd Completed) RedisResult {
+							if cmd == cmds.RoleCmd {
+								return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "slave")})}
+							}
+
+							if !reflect.DeepEqual(cmd.Commands(), []string{"MGET", "key1", "key2"}) {
+								t.Fatalf("unexpected command %v", cmd)
+							}
+
+							return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "v1"), strmsg('+', "v2")})}
+						},
+					}
+				}
+				return nil
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		defer disabledCacheClient.Close()
+
+		keys := []string{"key1", "key2"}
+		ret, err := MGetCache(disabledCacheClient, context.Background(), time.Second, keys)
+		if err != nil {
+			t.Fatalf("unexpected error %v", err)
+		}
+
+		expected := map[string]RedisMessage{
+			"key1": strmsg('+', "v1"),
+			"key2": strmsg('+', "v2"),
+		}
+		if !reflect.DeepEqual(ret, expected) {
+			t.Fatalf("unexpected result %v, expected %v", ret, expected)
+		}
+	})
+
+	t.Run("Nodes", func(t *testing.T) {
+		client, _, r := setup()
+		defer client.Close()
+
+		r.AddrFn = func() string { return "127.0.1.1:11" }
+
+		nodes := client.Nodes()
+		if len(nodes) != 1 || nodes["127.0.1.1:11"] == nil {
+			t.Fatalf("unexpected nodes")
+		}
+	})
+
+	t.Run("Delegate Do", func(t *testing.T) {
+		client, _, r := setup()
+		defer client.Close()
+
+		c := client.B().Get().Key("key").Build()
+		r.DoFn = func(cmd Completed) RedisResult {
+			if !reflect.DeepEqual(cmd.Commands(), c.Commands()) {
+				t.Fatalf("unexpected command %v", cmd)
+			}
+			return newResult(strmsg('+', "Do"), nil)
+		}
+		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "Do" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoCache", func(t *testing.T) {
+		client, _, r := setup()
+		defer client.Close()
+
+		c := client.B().Get().Key("key").Cache()
+		r.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
+			if !reflect.DeepEqual(cmd.Commands(), c.Commands()) || ttl != 100 {
+				t.Fatalf("unexpected command %v, %v", cmd, ttl)
+			}
+			return newResult(strmsg('+', "DoCache"), nil)
+		}
+		if v, err := client.DoCache(context.Background(), c, 100).ToString(); err != nil || v != "DoCache" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate DoStream", func(t *testing.T) {
+		client, _, r := setup()
+		defer client.Close()
+
+		c := client.B().Get().Key("Do").Build()
+		r.DoStreamFn = func(cmd Completed) RedisResultStream {
+			return RedisResultStream{
+				e: errors.New("DoStream"),
+			}
+		}
+		if s := client.DoStream(context.Background(), c); s.Error().Error() != "DoStream" {
+			t.Fatalf("unexpected response %v", s.Error())
+		}
+	})
+
+	t.Run("Delegate DoMulti", func(t *testing.T) {
+		client, _, r := setup()
+		defer client.Close()
+
+		c1 := client.B().Get().Key("key1").Build()
+		c2 := client.B().Get().Key("key2").Build()
+		r.DoMultiFn = func(cmd ...Completed) *redisresults {
+			if !reflect.DeepEqual(cmd[0].Commands(), c1.Commands()) {
+				t.Fatalf("unexpected command %v", cmd[0])
+			}
+			if !reflect.DeepEqual(cmd[1].Commands(), c2.Commands()) {
+				t.Fatalf("unexpected command %v", cmd[1])
+			}
+			return &redisresults{
+				s: []RedisResult{newResult(strmsg('+', "value1"), nil), newResult(strmsg('+', "value2"), nil)},
+			}
+		}
+		resps := client.DoMulti(context.Background(), c1, c2)
+		if v, err := resps[0].ToString(); err != nil || v != "value1" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); err != nil || v != "value2" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delete DoMultiStream", func(t *testing.T) {
+		client, _, r := setup()
+		defer client.Close()
+
+		c1 := client.B().Get().Key("key1").Build()
+		c2 := client.B().Get().Key("key2").Build()
+		r.DoMultiStreamFn = func(cmd ...Completed) MultiRedisResultStream {
+			return MultiRedisResultStream{
+				e: errors.New("DoMultiStream"),
+			}
+		}
+		if s := client.DoMultiStream(context.Background(), c1, c2); s.Error().Error() != "DoMultiStream" {
+			t.Fatalf("unexpected response %v", s.Error())
+		}
+	})
+
+	t.Run("Delegate DoMultiCache", func(t *testing.T) {
+		client, _, r := setup()
+		defer client.Close()
+
+		c1 := client.B().Get().Key("key1").Cache()
+		c2 := client.B().Get().Key("key2").Cache()
+		r.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
+			if !reflect.DeepEqual(multi[0].Cmd.Commands(), c1.Commands()) || multi[0].TTL != 100 {
+				t.Fatalf("unexpected command %v, %v", multi[0].Cmd, multi[0].TTL)
+			}
+			if !reflect.DeepEqual(multi[1].Cmd.Commands(), c2.Commands()) || multi[1].TTL != 100 {
+				t.Fatalf("unexpected command %v, %v", multi[1].Cmd, multi[1].TTL)
+			}
+			return &redisresults{
+				s: []RedisResult{
+					newResult(strmsg('+', "value1"), nil),
+					newResult(strmsg('+', "value2"), nil),
+				},
+			}
+		}
+		resps := client.DoMultiCache(context.Background(), CT(c1, 100), CT(c2, 100))
+		if v, err := resps[0].ToString(); v != "value1" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); v != "value2" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Delegate Receive", func(t *testing.T) {
+		client, _, r := setup()
+		defer client.Close()
+
+		r.ReceiveFn = func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+			return nil
+		}
+
+		c := client.B().Subscribe().Channel("ch").Build()
+		if err := client.Receive(context.Background(), c, func(message PubSubMessage) {}); err != nil {
+			t.Fatalf("unexpected response %v", err)
+		}
+	})
+
+	t.Run("Delegate Close", func(t *testing.T) {
+		client, _, r := setup()
+		defer client.Close()
+
+		replicaCalled := false
+		r.CloseFn = func() { replicaCalled = true }
+		client.Close()
+		if !replicaCalled {
+			t.Fatalf("Close is not delegated")
+		}
+	})
+
+	t.Run("Dedicated Delegate", func(t *testing.T) {
+		client, _, r := setup()
+		defer client.Close()
+
+		w := &mockWire{
+			DoFn: func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "Delegate"), nil)
+			},
+			DoMultiFn: func(cmd ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{newResult(strmsg('+', "Delegate"), nil)}}
+			},
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+				return ErrClosing
+			},
+			ErrorFn: func() error {
+				return ErrClosing
+			},
+		}
+		r.AcquireFn = func() wire {
+			return w
+		}
+		stored := false
+		r.StoreFn = func(ww wire) {
+			if ww != w {
+				t.Fatalf("received unexpected wire %v", ww)
+			}
+			stored = true
+		}
+		if err := client.Dedicated(func(c DedicatedClient) error {
+			if v, err := c.Do(context.Background(), c.B().Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+			if v := c.DoMulti(context.Background()); len(v) != 0 {
+				t.Fatalf("received unexpected response %v", v)
+			}
+			for _, resp := range c.DoMulti(context.Background(), c.B().Get().Key("a").Build()) {
+				if v, err := resp.ToString(); err != nil || v != "Delegate" {
+					t.Fatalf("unexpected response %v %v", v, err)
+				}
+			}
+			if err := c.Receive(context.Background(), c.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
+				t.Fatalf("unexpected ret %v", err)
+			}
+			return nil
+		}); err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if !stored {
+			t.Fatalf("Dedicated desn't put back the wire")
+		}
+	})
+
+	t.Run("Dedicate Delegate", func(t *testing.T) {
+		client, _, r := setup()
+		defer client.Close()
+
+		w := &mockWire{
+			DoFn: func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "Delegate"), nil)
+			},
+			DoMultiFn: func(cmd ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{newResult(strmsg('+', "Delegate"), nil)}}
+			},
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+				return ErrClosing
+			},
+			ErrorFn: func() error {
+				return ErrClosing
+			},
+		}
+		r.AcquireFn = func() wire {
+			return w
+		}
+		stored := false
+		r.StoreFn = func(ww wire) {
+			if ww != w {
+				t.Fatalf("received unexpected wire %v", ww)
+			}
+			stored = true
+		}
+		c, cancel := client.Dedicate()
+		if v, err := c.Do(context.Background(), c.B().Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v := c.DoMulti(context.Background()); len(v) != 0 {
+			t.Fatalf("received unexpected response %v", v)
+		}
+		for _, resp := range c.DoMulti(context.Background(), c.B().Get().Key("a").Build()) {
+			if v, err := resp.ToString(); err != nil || v != "Delegate" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+		if err := c.Receive(context.Background(), c.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
+			t.Fatalf("unexpected ret %v", err)
+		}
+		cancel()
+		if !stored {
+			t.Fatalf("Dedicated desn't put back the wire")
+		}
+	})
+}
+
+func TestSentinelSendToReplicasClientPubSub(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	var sCount, sClose, mClose, r1Close, r2Close int32
+
+	messages := make(chan PubSubMessage)
+
+	s := &mockConn{
+		DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			count := atomic.AddInt32(&sCount, 1)
+			remainder := (count - 1) % 3
+			if remainder == 0 {
+				return &redisresults{
+					s: []RedisResult{
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.0.1"),
+									strmsg('+', "port"), strmsg('+', "0"),
+								}),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								strmsg('+', "127.0.1.0"),
+								strmsg('+', "10"),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.1.1"),
+									strmsg('+', "port"), strmsg('+', "11"),
+								}),
+							}),
+						},
+					},
+				}
+			} else if remainder == 1 {
+				return &redisresults{
+					s: []RedisResult{
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.0.1"),
+									strmsg('+', "port"), strmsg('+', "0"),
+								}),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								strmsg('+', "127.0.1.0"),
+								strmsg('+', "10"),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.1.2"),
+									strmsg('+', "port"), strmsg('+', "12"),
+								}),
+							}),
+						},
+					},
+				}
+			} else {
+				return &redisresults{
+					s: []RedisResult{
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.0.1"),
+									strmsg('+', "port"), strmsg('+', "0"),
+								}),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								strmsg('+', "127.0.1.0"),
+								strmsg('+', "10"),
+							}),
+						},
+						{
+							val: slicemsg('*', []RedisMessage{
+								slicemsg('%', []RedisMessage{
+									strmsg('+', "ip"), strmsg('+', "127.0.1.1"),
+									strmsg('+', "port"), strmsg('+', "11"),
+								}),
+							}),
+						},
+					},
+				}
+			}
+		},
+		ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+			for msg := range messages {
+				fn(msg)
+			}
+			return ErrClosing
+		},
+		CloseFn: func() { atomic.AddInt32(&sClose, 1) },
+	}
+	m := &mockConn{
+		DoFn: func(cmd Completed) RedisResult {
+			if cmd == cmds.RoleCmd {
+				return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "master")})}
+			}
+			return RedisResult{val: strmsg('+', "OK")}
+		},
+		CloseFn: func() {
+			atomic.AddInt32(&mClose, 1)
+		},
+	}
+	r1 := &mockConn{
+		DoFn: func(cmd Completed) RedisResult {
+			if cmd == cmds.RoleCmd {
+				return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "slave")})}
+			}
+			return RedisResult{val: strmsg('+', "r1")}
+		},
+		CloseFn: func() { atomic.AddInt32(&r1Close, 1) },
+	}
+	r2 := &mockConn{
+		DoFn: func(cmd Completed) RedisResult {
+			if cmd == cmds.RoleCmd {
+				return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "slave")})}
+			}
+			return RedisResult{val: strmsg('+', "r2")}
+		},
+		CloseFn: func() { atomic.AddInt32(&r2Close, 1) },
+	}
+
+	client, err := newSentinelClient(
+		&ClientOption{
+			InitAddress: []string{"127.0.0.1:0"},
+			Sentinel: SentinelOption{
+				MasterSet: "sendtoreplicas",
+			},
+			SendToReplicas: func(cmd Completed) bool {
+				return true
+			},
+		},
+		func(dst string, opt *ClientOption) conn {
+			if dst == "127.0.0.1:0" {
+				return s
+			}
+			if dst == "127.0.1.0:10" {
+				return m
+			}
+			if dst == "127.0.1.1:11" {
+				return r1
+			}
+			if dst == "127.0.1.2:12" {
+				return r2
+			}
+			return nil
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	// switch to new slave by reboot
+	messages <- PubSubMessage{Channel: "+reboot", Message: "slave 127:0.0.1:0 0 1 @ sendtoreplicas 0 0"}
+
+	for atomic.LoadInt32(&r1Close) < 1 {
+		t.Log("wait old replica1 to be close", atomic.LoadInt32(&r1Close))
+		time.Sleep(time.Millisecond * 100)
+	}
+
+	resp := client.Do(context.Background(), client.B().Get().Key("k").Build())
+	if err := resp.Error(); err != nil {
+		t.Fatalf("unexpected resp %v", err)
+	}
+	if v, err := resp.ToString(); v != "r2" {
+		t.Fatalf("unexpected resp %v %v", v, err)
+	}
+
+	// switch to old slave
+	messages <- PubSubMessage{Channel: "+slave", Message: "slave 127.0.0.1:0 0 1 @ sendtoreplicas 0 0"}
+
+	for atomic.LoadInt32(&r2Close) < 1 {
+		t.Log("wait old replica2 to be close", atomic.LoadInt32(&r2Close))
+		time.Sleep(time.Millisecond * 100)
+	}
+
+	resp = client.Do(context.Background(), client.B().Get().Key("k").Build())
+	if err := resp.Error(); err != nil {
+		t.Fatalf("unexpected resp %v", err)
+	}
+	if v, err := resp.ToString(); v != "r1" {
+		t.Fatalf("unexpected resp %v %v", v, err)
+	}
+
+	close(messages)
+	client.Close()
+
+	for atomic.LoadInt32(&sClose) < 1 {
+		t.Log("wait sentinel to be close", atomic.LoadInt32(&sClose))
+		time.Sleep(time.Millisecond * 100)
+	}
+	for atomic.LoadInt32(&mClose) < 1 {
+		t.Log("wait master to be close", atomic.LoadInt32(&mClose))
+		time.Sleep(time.Millisecond * 100)
+	}
 }

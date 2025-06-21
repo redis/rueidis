@@ -86,7 +86,6 @@ type ClientOption struct {
 	OnInvalidations func([]RedisMessage)
 
 	// SendToReplicas is a function that returns true if the command should be sent to replicas.
-	// currently only used for cluster client.
 	// NOTE: This function can't be used with the ReplicaOnly option.
 	SendToReplicas func(cmd Completed) bool
 
