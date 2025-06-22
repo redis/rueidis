@@ -574,16 +574,12 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 	count := conncountp.Get(len(c.conns), len(c.conns))
 
 	if !init && c.rslots != nil && c.opt.SendToReplicas != nil {
-		var destination []conn
-		var stackDestination [32]conn
-		if len(multi) <= len(stackDestination) {
-			destination = stackDestination[:len(multi)]
-		} else {
-			destination = make([]conn, len(multi))
-		}
+		var bm bitmap
+		bm.Init(len(multi))
 		for i, cmd := range multi {
 			var cc conn
 			if c.opt.SendToReplicas(cmd) {
+				bm.Set(i)
 				cc = c.rslots[cmd.Slot()]
 			} else {
 				cc = c.pslots[cmd.Slot()]
@@ -591,7 +587,6 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 			if cc == nil {
 				return nil, false
 			}
-			destination[i] = cc
 			count.m[cc]++
 		}
 
@@ -602,7 +597,12 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 		conncountp.Put(count)
 
 		for i, cmd := range multi {
-			cc := destination[i]
+			var cc conn
+			if bm.Get(i) {
+				cc = c.rslots[cmd.Slot()]
+			} else {
+				cc = c.pslots[cmd.Slot()]
+			}
 			re := retries.m[cc]
 			re.commands = append(re.commands, cmd)
 			re.cIndexes = append(re.cIndexes, i)
