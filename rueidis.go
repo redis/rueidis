@@ -100,7 +100,7 @@ type ClientOption struct {
 
 	// ReplicaSelector selects a replica node when `SendToReplicas` returns true.
 	// If the function is set, the client will send the selected command to the replica node.
-	// Returned value is the index of the replica node in the replica slice.
+	// The Returned value is the index of the replica node in the replica slice.
 	// If the returned value is out of range, the primary node will be selected.
 	// If the primary node does not have any replica, the primary node will be selected
 	// and the function will not be called.
@@ -136,7 +136,7 @@ type ClientOption struct {
 	// Rueidis will connect to them one by one and issue a CLUSTER SLOT command to initialize the cluster client until success.
 	// If len(InitAddress) == 1 and the address is not running in cluster mode, rueidis will fall back to the single client mode.
 	// If ClientOption.Sentinel.MasterSet is set, then InitAddress will be used to connect sentinels
-	// You can bypass this behaviour by using ClientOption.ForceSingleClient.
+	// You can bypass this behavior by using ClientOption.ForceSingleClient.
 	InitAddress []string
 
 	// ClientTrackingOptions will be appended to the CLIENT TRACKING ON command when the connection is established.
@@ -154,7 +154,7 @@ type ClientOption struct {
 
 	// RingScaleEachConn sets the size of the ring buffer in each connection to (2 ^ RingScaleEachConn).
 	// The default is RingScaleEachConn, which results in having a ring of size 2^10 for each connection.
-	// Reduce this value can reduce the memory consumption of each connection at the cost of potential throughput degradation.
+	// Reducing this value can reduce the memory consumption of each connection at the cost of potential throughput degradation.
 	// Values smaller than 8 are typically not recommended.
 	RingScaleEachConn int
 
@@ -185,9 +185,9 @@ type ClientOption struct {
 
 	// ConnWriteTimeout is a read/write timeout for each connection. If specified,
 	// it is used to control the maximum duration waits for responses to pipeline commands.
-	// Also, ConnWriteTimeout is applied net.Conn.SetDeadline and periodic PING to redis
-	// Since the Dialer.KeepAlive will not be triggered if there is data in the outgoing buffer,
-	// ConnWriteTimeout should be set in order to detect local congestion or unresponsive redis server.
+	// Also, ConnWriteTimeout is applied net.Conn.SetDeadline and periodic PINGs,
+	// since the Dialer.KeepAlive will not be triggered if there is data in the outgoing buffer.
+	// ConnWriteTimeout should be set to detect local congestion or unresponsive redis server.
 	// This default is ClientOption.Dialer.KeepAlive * (9+1), where 9 is the default of tcp_keepalive_probes on Linux.
 	ConnWriteTimeout time.Duration
 
