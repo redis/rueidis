@@ -63,29 +63,27 @@ var _ wire = (*pipe)(nil)
 
 type pipe struct {
 	conn            net.Conn
-	clhks           atomic.Value          // closed hook, invoked after the conn is closed
-	pshks           atomic.Pointer[pshks] // pubsub hook, registered by the SetPubSubHooks
+	clhks           atomic.Value // closed hook, invoked after the conn is closed
 	queue           queue
 	cache           CacheStore
+	pshks           atomic.Pointer[pshks] // pubsub hook, registered by the SetPubSubHooks
 	error           atomic.Pointer[errs]
 	r               *bufio.Reader
 	w               *bufio.Writer
 	close           chan struct{}
 	onInvalidations func([]RedisMessage)
-	r2psFn          func(context.Context) (p *pipe, err error) // func to build pipe for resp2 pubsub
-	r2pipe          *pipe                                      // internal pipe for resp2 pubsub only
-	ssubs           *subs                                      // pubsub smessage subscriptions
-	nsubs           *subs                                      // pubsub  message subscriptions
-	psubs           *subs                                      // pubsub pmessage subscriptions
-	pingTimer       *time.Timer                                // timer for background ping
-	info            map[string]RedisMessage
+	ssubs           *subs // pubsub smessage subscriptions
+	nsubs           *subs // pubsub  message subscriptions
+	psubs           *subs // pubsub pmessage subscriptions
+	r2p             *r2p
+	pingTimer       *time.Timer // timer for background ping
 	lftmTimer       *time.Timer // lifetime timer
+	info            map[string]RedisMessage
 	timeout         time.Duration
 	pinggap         time.Duration
 	maxFlushDelay   time.Duration
-	wrCounter       atomic.Uint64
 	lftm            time.Duration // lifetime
-	r2mu            sync.Mutex
+	wrCounter       atomic.Uint64
 	version         int32
 	blcksig         int32
 	state           int32
@@ -129,11 +127,6 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 		p.psubs = newSubs()
 		p.ssubs = newSubs()
 		p.close = make(chan struct{})
-	}
-	if !r2ps {
-		p.r2psFn = func(ctx context.Context) (p *pipe, err error) {
-			return _newPipe(ctx, connFn, option, true, nobg)
-		}
 	}
 	if !nobg && !option.DisableCache {
 		cacheStoreFn := option.NewCacheStoreFn
@@ -321,6 +314,13 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 				if i == helloIndex {
 					p.info, err = r.AsMap()
 				}
+			}
+		}
+		if !r2ps {
+			p.r2p = &r2p{
+				f: func(ctx context.Context) (p *pipe, err error) {
+					return _newPipe(ctx, connFn, option, true, nobg)
+				},
 			}
 		}
 	}
@@ -765,22 +765,6 @@ func (p *pipe) handlePush(values []RedisMessage) (reply bool, unsubscribe bool) 
 	return false, false
 }
 
-func (p *pipe) _r2pipe(ctx context.Context) (r2p *pipe) {
-	p.r2mu.Lock()
-	if p.r2pipe != nil {
-		r2p = p.r2pipe
-	} else {
-		var err error
-		if r2p, err = p.r2psFn(ctx); err != nil {
-			r2p = epipeFn(err)
-		} else {
-			p.r2pipe = r2p
-		}
-	}
-	p.r2mu.Unlock()
-	return r2p
-}
-
 type recvCtxKey int
 
 const hookKey recvCtxKey = 0
@@ -805,8 +789,8 @@ func (p *pipe) Receive(ctx context.Context, subscribe Completed, fn func(message
 		return p.Error()
 	}
 
-	if p.version < 6 && p.r2psFn != nil {
-		return p._r2pipe(ctx).Receive(ctx, subscribe, fn)
+	if p.r2p != nil {
+		return p.r2p.pipe(ctx).Receive(ctx, subscribe, fn)
 	}
 
 	cmds.CompletedCS(subscribe).Verify()
@@ -867,8 +851,8 @@ func (p *pipe) CleanSubscriptions() {
 }
 
 func (p *pipe) SetPubSubHooks(hooks PubSubHooks) <-chan error {
-	if p.version < 6 && p.r2psFn != nil {
-		return p._r2pipe(context.Background()).SetPubSubHooks(hooks)
+	if p.r2p != nil {
+		return p.r2p.pipe(context.Background()).SetPubSubHooks(hooks)
 	}
 	if hooks.isZero() {
 		if old := p.pshks.Swap(emptypshks); old.close != nil {
@@ -932,8 +916,8 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	}
 
 	if cmd.NoReply() {
-		if p.version < 6 && p.r2psFn != nil {
-			return p._r2pipe(ctx).Do(ctx, cmd)
+		if p.r2p != nil {
+			return p.r2p.pipe(ctx).Do(ctx, cmd)
 		}
 	}
 	waits := p.incrWaits() // if this is 1, and the background worker is not started, no need to queue
@@ -1013,9 +997,9 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 				resp.s[i] = newErrResult(ErrRESP2PubSubMixed)
 			}
 			return resp
-		} else if p.r2psFn != nil {
+		} else if p.r2p != nil {
 			resultsp.Put(resp)
-			return p._r2pipe(ctx).DoMulti(ctx, multi...)
+			return p.r2p.pipe(ctx).DoMulti(ctx, multi...)
 		}
 	}
 
@@ -1680,11 +1664,9 @@ func (p *pipe) Close() {
 	if p.conn != nil {
 		p.conn.Close()
 	}
-	p.r2mu.Lock()
-	if p.r2pipe != nil {
-		p.r2pipe.Close()
+	if p.r2p != nil {
+		p.r2p.Close()
 	}
-	p.r2mu.Unlock()
 }
 
 func (p *pipe) StopTimer() bool {
@@ -1704,6 +1686,41 @@ func (p *pipe) ResetTimer() bool {
 func (p *pipe) expired() {
 	p.error.CompareAndSwap(nil, errExpired)
 	p.Close()
+}
+
+type r2p struct {
+	f func(context.Context) (p *pipe, err error) // func to build pipe for resp2 pubsub
+	p *pipe                                      // internal pipe for resp2 pubsub only
+	m sync.RWMutex
+}
+
+func (r *r2p) pipe(ctx context.Context) (r2p *pipe) {
+	r.m.RLock()
+	r2p = r.p
+	r.m.RUnlock()
+	if r2p == nil {
+		r.m.Lock()
+		if r.p != nil {
+			r2p = r.p
+		} else {
+			var err error
+			if r2p, err = r.f(ctx); err != nil {
+				r2p = epipeFn(err)
+			} else {
+				r.p = r2p
+			}
+		}
+		r.m.Unlock()
+	}
+	return r2p
+}
+
+func (r *r2p) Close() {
+	r.m.RLock()
+	if r.p != nil {
+		r.p.Close()
+	}
+	r.m.RUnlock()
 }
 
 type pshks struct {
