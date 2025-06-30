@@ -2,9 +2,11 @@ package om
 
 import (
 	"context"
+	"fmt"
 	"github.com/oklog/ulid/v2"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/redis/rueidis"
@@ -144,6 +146,78 @@ func (r *HashRepository[T]) AlterIndex(ctx context.Context, cmdFn func(alter FtA
 // You can use the cmdFn parameter to mutate the index construction command.
 func (r *HashRepository[T]) CreateIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) rueidis.Completed) error {
 	return r.client.Do(ctx, cmdFn(r.client.B().FtCreate().Index(r.idx).OnHash().Prefix(1).Prefix(r.prefix+":").Schema())).Error()
+}
+
+// CreateAndAliasIndex creates a new index, aliases it, and drops the old index if needed.
+func (r *HashRepository[T]) CreateAndAliasIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) rueidis.Completed) error {
+	alias := r.idx
+
+	var currentIndex string
+	aliasExists := false
+	infoCmd := r.client.B().FtInfo().Index(alias).Build()
+	infoResp, err := r.client.Do(ctx, infoCmd).ToMap()
+	if err != nil {
+		if strings.Contains(err.Error(), "Unknown index name") {
+			// This is expected when the alias doesn't exist yet
+			aliasExists = false
+		} else {
+			// This is an unexpected error (network, connection, etc.)
+			return fmt.Errorf("failed to check if index exists: %w", err)
+		}
+	} else {
+		aliasExists = true
+	}
+
+	if aliasExists {
+		message, ok := infoResp["index_name"]
+		if !ok {
+			return fmt.Errorf("index_name not found in FT.INFO response")
+		}
+
+		currentIndex, err = message.ToString()
+		if err != nil {
+			return fmt.Errorf("failed to convert index_name to string: %w", err)
+		}
+	}
+
+	newIndex := alias + "_v1"
+	if aliasExists && currentIndex != "" {
+		// Find the last occurrence of "_v" followed by digits
+		lastVersionIndex := strings.LastIndex(currentIndex, "_v")
+		if lastVersionIndex != -1 && lastVersionIndex+2 < len(currentIndex) {
+			versionStr := currentIndex[lastVersionIndex+2:]
+			if version, err := strconv.Atoi(versionStr); err == nil {
+				newIndex = fmt.Sprintf("%s_v%d", alias, version+1)
+			}
+		}
+	}
+
+	// Create the new index
+	cmd := r.client.B().FtCreate().Index(newIndex).OnHash().Prefix(1).Prefix(r.prefix + ":")
+	if err := r.client.Do(ctx, cmdFn(cmd.Schema())).Error(); err != nil {
+		return err
+	}
+
+	// Update or add the alias
+	var aliasErr error
+	if aliasExists {
+		aliasErr = r.client.Do(ctx, r.client.B().FtAliasupdate().Alias(alias).Index(newIndex).Build()).Error()
+	} else {
+		aliasErr = r.client.Do(ctx, r.client.B().FtAliasadd().Alias(alias).Index(newIndex).Build()).Error()
+	}
+
+	if aliasErr != nil {
+		return fmt.Errorf("failed to update alias: %w", aliasErr)
+	}
+
+	// Drop the old index if it exists and differs from the new one
+	if aliasExists && currentIndex != "" && currentIndex != newIndex {
+		if err := r.client.Do(ctx, r.client.B().FtDropindex().Index(currentIndex).Build()).Error(); err != nil {
+			return fmt.Errorf("failed to drop old index: %w", err)
+		}
+	}
+
+	return nil
 }
 
 // DropIndex uses FT.DROPINDEX from the RediSearch module to drop the index whose name is `hashidx:{prefix}`

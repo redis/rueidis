@@ -448,3 +448,33 @@ func TestNewJSONTTLRepository(t *testing.T) {
 		}
 	})
 }
+
+func TestCreateAndAliasIndex_JSON(t *testing.T) {
+	ctx := context.Background()
+
+	client := setup(t)
+	client.Do(ctx, client.B().Flushall().Build())
+	defer client.Close()
+
+	repo := NewJSONRepository("jsonalias", JSONTestStruct{}, client)
+
+	t.Run("CreateAndAliasIndex_JSON", func(t *testing.T) {
+		err := repo.CreateAndAliasIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
+			return schema.FieldName("$.val").As("val").Text().Build()
+		})
+		if err != nil {
+			t.Fatalf("failed to create and alias JSON index: %v", err)
+		}
+
+		verifyAliasTarget(t, ctx, client, repo.IndexName(), repo.IndexName()+"_v1")
+
+		err = repo.CreateAndAliasIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
+			return schema.FieldName("$.val").As("val").Text().Build()
+		})
+		if err != nil {
+			t.Fatalf("failed to create and alias new JSON index version: %v", err)
+		}
+
+		verifyAliasTarget(t, ctx, client, repo.IndexName(), repo.IndexName()+"_v2")
+	})
+}
