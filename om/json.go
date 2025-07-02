@@ -67,7 +67,7 @@ func (r *JSONRepository[T]) FetchCache(ctx context.Context, id string, ttl time.
 
 func (r *JSONRepository[T]) decode(record string) (*T, error) {
 	var v T
-	if err := json.NewDecoder(strings.NewReader(record)).Decode(&v); err != nil {
+	if err := json.Unmarshal([]byte(record), &v); err != nil {
 		return nil, err
 	}
 	return &v, nil
