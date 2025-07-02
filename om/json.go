@@ -49,7 +49,7 @@ func (r *JSONRepository[T]) NewEntity() *T {
 
 // Fetch an entity whose name is `{prefix}:{id}`
 func (r *JSONRepository[T]) Fetch(ctx context.Context, id string) (v *T, err error) {
-	record, err := r.client.Do(ctx, r.client.B().JsonGet().Key(key(r.prefix, id)).Path(".").Build()).ToString()
+	record, err := r.client.Do(ctx, r.client.B().JsonGet().Key(key(r.prefix, id)).Path(".").Build()).AsBytes()
 	if err == nil {
 		v, err = r.decode(record)
 	}
@@ -58,16 +58,16 @@ func (r *JSONRepository[T]) Fetch(ctx context.Context, id string) (v *T, err err
 
 // FetchCache is like Fetch, but it uses the client side caching mechanism.
 func (r *JSONRepository[T]) FetchCache(ctx context.Context, id string, ttl time.Duration) (v *T, err error) {
-	record, err := r.client.DoCache(ctx, r.client.B().JsonGet().Key(key(r.prefix, id)).Path(".").Cache(), ttl).ToString()
+	record, err := r.client.DoCache(ctx, r.client.B().JsonGet().Key(key(r.prefix, id)).Path(".").Cache(), ttl).AsBytes()
 	if err == nil {
 		v, err = r.decode(record)
 	}
 	return v, err
 }
 
-func (r *JSONRepository[T]) decode(record string) (*T, error) {
+func (r *JSONRepository[T]) decode(record []byte) (*T, error) {
 	var v T
-	if err := json.NewDecoder(strings.NewReader(record)).Decode(&v); err != nil {
+	if err := json.Unmarshal(record, &v); err != nil {
 		return nil, err
 	}
 	return &v, nil
@@ -154,7 +154,7 @@ func (r *JSONRepository[T]) DropIndex(ctx context.Context) error {
 // It returns three values:
 // 1. total count of match results inside the redis, and note that it might be larger than the returned search result.
 // 2. the search result, and note that its length might be smaller than the first return value.
-// 3. error if any
+// 3. error, if any,
 // You can use the cmdFn parameter to mutate the search command.
 func (r *JSONRepository[T]) Search(ctx context.Context, cmdFn func(search FtSearchIndex) rueidis.Completed) (n int64, s []*T, err error) {
 	n, resp, err := r.client.Do(ctx, cmdFn(r.client.B().FtSearch().Index(r.idx))).AsFtSearch()
@@ -164,7 +164,7 @@ func (r *JSONRepository[T]) Search(ctx context.Context, cmdFn func(search FtSear
 			doc := v.Doc["$"]
 			doc = strings.TrimPrefix(doc, "[") // supports dialect 3
 			doc = strings.TrimSuffix(doc, "]")
-			if s[i], err = r.decode(doc); err != nil {
+			if s[i], err = r.decode([]byte(doc)); err != nil {
 				return 0, nil, err
 			}
 		}
