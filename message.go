@@ -774,12 +774,11 @@ func (m *RedisMessage) AsBytes() (bs []byte, err error) {
 
 // DecodeJSON check if the message is a redis string response and treat it as JSON, then unmarshal it into the provided value
 func (m *RedisMessage) DecodeJSON(v any) (err error) {
-	str, err := m.ToString()
+	b, err := m.AsBytes()
 	if err != nil {
 		return err
 	}
-	decoder := json.NewDecoder(strings.NewReader(str))
-	return decoder.Decode(v)
+	return json.Unmarshal(b, v)
 }
 
 // AsInt64 check if the message is a redis string response and parse it as int64
