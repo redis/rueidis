@@ -363,7 +363,11 @@
           "AND",
           "OR",
           "XOR",
-          "NOT"
+          "NOT",
+          "DIFF",
+          "DIFF1",
+          "ANDOR",
+          "ONE"
         ]
       },
       {
