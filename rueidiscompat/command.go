@@ -4711,6 +4711,9 @@ type ClientInfo struct {
 	TotalMemory        int           // tot-mem, total memory consumed by this client in its various buffers
 	Redir              int64         // client id of current client tracking redirection
 	Resp               int           // redis version 7.0, client RESP protocol version
+	TotalNetIn         int64         // tot-net-in, total network bytes read from the client connection
+	TotalNetOut        int64         // tot-net-out, total network bytes sent to the client connection
+	TotalCmds          int64         // tot-cmds, number of commands executed by the client connection
 }
 
 type ClientInfoCmd struct {
@@ -4857,6 +4860,12 @@ func stringToClientInfo(txt string) (*ClientInfo, error) {
 			info.LibName = val
 		case "lib-ver":
 			info.LibVer = val
+		case "tot-net-in":
+			info.TotalNetIn, err = strconv.ParseInt(val, 10, 64)
+		case "tot-net-out":
+			info.TotalNetOut, err = strconv.ParseInt(val, 10, 64)
+		case "tot-cmds":
+			info.TotalCmds, err = strconv.ParseInt(val, 10, 64)
 		}
 
 		if err != nil {
