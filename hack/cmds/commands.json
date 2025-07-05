@@ -6027,6 +6027,48 @@
     "since": "5.0.0",
     "group": "stream"
   },
+  "XACKDEL": {
+    "summary": "Acknowledges specified message IDs in a consumer group and attempts to delete corresponding stream entries.",
+    "complexity": "O(1) for each message ID processed.",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "group",
+        "type": "string"
+      },
+      {
+        "name": "action",
+        "type": "enum",
+        "enum": ["KEEPREF", "DELREF", "ACKED"],
+        "optional": true
+      },
+      {
+        "name": "ids-block",
+        "type": "block",
+        "arguments": [
+          {
+            "name": "ids",
+            "type": "pure-token",
+            "token": "IDS"
+          },
+          {
+            "name": "numids",
+            "type": "integer"
+          },
+          {
+            "name": "id",
+            "type": "string",
+            "multiple": true
+          }
+        ]
+      }
+    ],
+    "since": "8.2.0",
+    "group": "stream"
+  },
   "XADD": {
     "summary": "Appends a new entry to a stream",
     "complexity": "O(1) when adding a new entry, O(N) when trimming where N being the number of entries evicted.",
