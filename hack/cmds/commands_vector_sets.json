@@ -314,6 +314,11 @@
         "optional": true
       },
       {
+        "command": "WITHATTRIBS",
+        "type": "command",
+        "optional": true
+      },
+      {
         "command": "COUNT",
         "name": "num",
         "type": "integer",

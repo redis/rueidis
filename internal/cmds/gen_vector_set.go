@@ -726,6 +726,11 @@ func (c VsimQueryTypeEleElement) Withscores() VsimWithscores {
 	return (VsimWithscores)(c)
 }
 
+func (c VsimQueryTypeEleElement) Withattribs() VsimWithattribs {
+	c.cs.s = append(c.cs.s, "WITHATTRIBS")
+	return (VsimWithattribs)(c)
+}
+
 func (c VsimQueryTypeEleElement) Count(num int64) VsimCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(num, 10))
 	return (VsimCount)(c)
@@ -773,6 +778,11 @@ type VsimQueryTypeFp32Vector Incomplete
 func (c VsimQueryTypeFp32Vector) Withscores() VsimWithscores {
 	c.cs.s = append(c.cs.s, "WITHSCORES")
 	return (VsimWithscores)(c)
+}
+
+func (c VsimQueryTypeFp32Vector) Withattribs() VsimWithattribs {
+	c.cs.s = append(c.cs.s, "WITHATTRIBS")
+	return (VsimWithattribs)(c)
 }
 
 func (c VsimQueryTypeFp32Vector) Count(num int64) VsimCount {
@@ -833,6 +843,11 @@ func (c VsimQueryTypeValuesVector) Withscores() VsimWithscores {
 	return (VsimWithscores)(c)
 }
 
+func (c VsimQueryTypeValuesVector) Withattribs() VsimWithattribs {
+	c.cs.s = append(c.cs.s, "WITHATTRIBS")
+	return (VsimWithattribs)(c)
+}
+
 func (c VsimQueryTypeValuesVector) Count(num int64) VsimCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(num, 10))
 	return (VsimCount)(c)
@@ -880,7 +895,49 @@ func (c VsimTruth) Build() Completed {
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
+type VsimWithattribs Incomplete
+
+func (c VsimWithattribs) Count(num int64) VsimCount {
+	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(num, 10))
+	return (VsimCount)(c)
+}
+
+func (c VsimWithattribs) Ef(searchExplorationFactor int64) VsimEf {
+	c.cs.s = append(c.cs.s, "EF", strconv.FormatInt(searchExplorationFactor, 10))
+	return (VsimEf)(c)
+}
+
+func (c VsimWithattribs) Filter(expression string) VsimFilter {
+	c.cs.s = append(c.cs.s, "FILTER", expression)
+	return (VsimFilter)(c)
+}
+
+func (c VsimWithattribs) FilterEf(maxFilteringEffort int64) VsimFilterEf {
+	c.cs.s = append(c.cs.s, "FILTER-EF", strconv.FormatInt(maxFilteringEffort, 10))
+	return (VsimFilterEf)(c)
+}
+
+func (c VsimWithattribs) Truth() VsimTruth {
+	c.cs.s = append(c.cs.s, "TRUTH")
+	return (VsimTruth)(c)
+}
+
+func (c VsimWithattribs) Nothread() VsimNothread {
+	c.cs.s = append(c.cs.s, "NOTHREAD")
+	return (VsimNothread)(c)
+}
+
+func (c VsimWithattribs) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
 type VsimWithscores Incomplete
+
+func (c VsimWithscores) Withattribs() VsimWithattribs {
+	c.cs.s = append(c.cs.s, "WITHATTRIBS")
+	return (VsimWithattribs)(c)
+}
 
 func (c VsimWithscores) Count(num int64) VsimCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(num, 10))
