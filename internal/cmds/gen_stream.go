@@ -66,45 +66,6 @@ func (c Xadd) Key(key string) XaddKey {
 	return (XaddKey)(c)
 }
 
-type XaddAcked Incomplete
-
-func (c XaddAcked) Maxlen() XaddTrimStrategyMaxlen {
-	c.cs.s = append(c.cs.s, "MAXLEN")
-	return (XaddTrimStrategyMaxlen)(c)
-}
-
-func (c XaddAcked) Minid() XaddTrimStrategyMinid {
-	c.cs.s = append(c.cs.s, "MINID")
-	return (XaddTrimStrategyMinid)(c)
-}
-
-func (c XaddAcked) Id(id string) XaddId {
-	c.cs.s = append(c.cs.s, id)
-	return (XaddId)(c)
-}
-
-type XaddDelref Incomplete
-
-func (c XaddDelref) Acked() XaddAcked {
-	c.cs.s = append(c.cs.s, "ACKED")
-	return (XaddAcked)(c)
-}
-
-func (c XaddDelref) Maxlen() XaddTrimStrategyMaxlen {
-	c.cs.s = append(c.cs.s, "MAXLEN")
-	return (XaddTrimStrategyMaxlen)(c)
-}
-
-func (c XaddDelref) Minid() XaddTrimStrategyMinid {
-	c.cs.s = append(c.cs.s, "MINID")
-	return (XaddTrimStrategyMinid)(c)
-}
-
-func (c XaddDelref) Id(id string) XaddId {
-	c.cs.s = append(c.cs.s, id)
-	return (XaddId)(c)
-}
-
 type XaddFieldValue Incomplete
 
 func (c XaddFieldValue) FieldValue(field string, value string) XaddFieldValue {
@@ -130,16 +91,6 @@ func (c XaddKey) Nomkstream() XaddNomkstream {
 	return (XaddNomkstream)(c)
 }
 
-func (c XaddKey) Delref() XaddDelref {
-	c.cs.s = append(c.cs.s, "DELREF")
-	return (XaddDelref)(c)
-}
-
-func (c XaddKey) Acked() XaddAcked {
-	c.cs.s = append(c.cs.s, "ACKED")
-	return (XaddAcked)(c)
-}
-
 func (c XaddKey) Maxlen() XaddTrimStrategyMaxlen {
 	c.cs.s = append(c.cs.s, "MAXLEN")
 	return (XaddTrimStrategyMaxlen)(c)
@@ -156,16 +107,6 @@ func (c XaddKey) Id(id string) XaddId {
 }
 
 type XaddNomkstream Incomplete
-
-func (c XaddNomkstream) Delref() XaddDelref {
-	c.cs.s = append(c.cs.s, "DELREF")
-	return (XaddDelref)(c)
-}
-
-func (c XaddNomkstream) Acked() XaddAcked {
-	c.cs.s = append(c.cs.s, "ACKED")
-	return (XaddAcked)(c)
-}
 
 func (c XaddNomkstream) Maxlen() XaddTrimStrategyMaxlen {
 	c.cs.s = append(c.cs.s, "MAXLEN")
@@ -184,6 +125,21 @@ func (c XaddNomkstream) Id(id string) XaddId {
 
 type XaddTrimLimit Incomplete
 
+func (c XaddTrimLimit) Keepref() XaddTrimReferenceKeepref {
+	c.cs.s = append(c.cs.s, "KEEPREF")
+	return (XaddTrimReferenceKeepref)(c)
+}
+
+func (c XaddTrimLimit) Delref() XaddTrimReferenceDelref {
+	c.cs.s = append(c.cs.s, "DELREF")
+	return (XaddTrimReferenceDelref)(c)
+}
+
+func (c XaddTrimLimit) Acked() XaddTrimReferenceAcked {
+	c.cs.s = append(c.cs.s, "ACKED")
+	return (XaddTrimReferenceAcked)(c)
+}
+
 func (c XaddTrimLimit) Id(id string) XaddId {
 	c.cs.s = append(c.cs.s, id)
 	return (XaddId)(c)
@@ -201,6 +157,27 @@ type XaddTrimOperatorExact Incomplete
 func (c XaddTrimOperatorExact) Threshold(threshold string) XaddTrimThreshold {
 	c.cs.s = append(c.cs.s, threshold)
 	return (XaddTrimThreshold)(c)
+}
+
+type XaddTrimReferenceAcked Incomplete
+
+func (c XaddTrimReferenceAcked) Id(id string) XaddId {
+	c.cs.s = append(c.cs.s, id)
+	return (XaddId)(c)
+}
+
+type XaddTrimReferenceDelref Incomplete
+
+func (c XaddTrimReferenceDelref) Id(id string) XaddId {
+	c.cs.s = append(c.cs.s, id)
+	return (XaddId)(c)
+}
+
+type XaddTrimReferenceKeepref Incomplete
+
+func (c XaddTrimReferenceKeepref) Id(id string) XaddId {
+	c.cs.s = append(c.cs.s, id)
+	return (XaddId)(c)
 }
 
 type XaddTrimStrategyMaxlen Incomplete
@@ -242,6 +219,21 @@ type XaddTrimThreshold Incomplete
 func (c XaddTrimThreshold) Limit(count int64) XaddTrimLimit {
 	c.cs.s = append(c.cs.s, "LIMIT", strconv.FormatInt(count, 10))
 	return (XaddTrimLimit)(c)
+}
+
+func (c XaddTrimThreshold) Keepref() XaddTrimReferenceKeepref {
+	c.cs.s = append(c.cs.s, "KEEPREF")
+	return (XaddTrimReferenceKeepref)(c)
+}
+
+func (c XaddTrimThreshold) Delref() XaddTrimReferenceDelref {
+	c.cs.s = append(c.cs.s, "DELREF")
+	return (XaddTrimReferenceDelref)(c)
+}
+
+func (c XaddTrimThreshold) Acked() XaddTrimReferenceAcked {
+	c.cs.s = append(c.cs.s, "ACKED")
+	return (XaddTrimReferenceAcked)(c)
 }
 
 func (c XaddTrimThreshold) Id(id string) XaddId {

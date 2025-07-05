@@ -6041,16 +6041,6 @@
         "optional": true
       },
       {
-        "command": "DELREF",
-        "type": "command",
-        "optional": true
-      },
-      {
-        "command": "ACKED",
-        "type": "command",
-        "optional": true
-      },
-      {
         "name": "trim",
         "type": "block",
         "optional": true,
@@ -6080,6 +6070,16 @@
             "command": "LIMIT",
             "name": "count",
             "type": "integer",
+            "optional": true
+          },
+          {
+            "name": "reference",
+            "type": "enum",
+            "enum": [
+              "KEEPREF",
+              "DELREF",
+              "ACKED"
+            ],
             "optional": true
           }
         ]
