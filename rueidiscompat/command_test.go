@@ -1151,3 +1151,35 @@ func TestCommandErrorHandling(t *testing.T) {
 		})
 	}
 }
+
+func TestClientInfoParsing(t *testing.T) {
+	// Test case with the new fields
+	testData := "id=123 addr=127.0.0.1:6379 fd=5 name= age=10 idle=5 flags=N db=0 sub=0 psub=0 multi=-1 qbuf=0 qbuf-free=32768 obl=0 oll=0 omem=0 events=r cmd=ping user=default redir=-1 resp=3 lib-name=redis-go lib-ver=8.0.0 tot-net-in=1024 tot-net-out=2048 tot-cmds=100"
+
+	info, err := stringToClientInfo(testData)
+	if err != nil {
+		t.Fatalf("Failed to parse client info: %v", err)
+	}
+
+	// Verify the new fields are parsed correctly
+	if info.TotalNetIn != 1024 {
+		t.Errorf("Expected TotalNetIn to be 1024, got %d", info.TotalNetIn)
+	}
+
+	if info.TotalNetOut != 2048 {
+		t.Errorf("Expected TotalNetOut to be 2048, got %d", info.TotalNetOut)
+	}
+
+	if info.TotalCmds != 100 {
+		t.Errorf("Expected TotalCmds to be 100, got %d", info.TotalCmds)
+	}
+
+	// Verify other fields are still parsed correctly
+	if info.ID != 123 {
+		t.Errorf("Expected ID to be 123, got %d", info.ID)
+	}
+
+	if info.Addr != "127.0.0.1:6379" {
+		t.Errorf("Expected Addr to be '127.0.0.1:6379', got '%s'", info.Addr)
+	}
+}
