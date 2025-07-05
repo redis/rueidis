@@ -66,6 +66,45 @@ func (c Xadd) Key(key string) XaddKey {
 	return (XaddKey)(c)
 }
 
+type XaddAcked Incomplete
+
+func (c XaddAcked) Maxlen() XaddTrimStrategyMaxlen {
+	c.cs.s = append(c.cs.s, "MAXLEN")
+	return (XaddTrimStrategyMaxlen)(c)
+}
+
+func (c XaddAcked) Minid() XaddTrimStrategyMinid {
+	c.cs.s = append(c.cs.s, "MINID")
+	return (XaddTrimStrategyMinid)(c)
+}
+
+func (c XaddAcked) Id(id string) XaddId {
+	c.cs.s = append(c.cs.s, id)
+	return (XaddId)(c)
+}
+
+type XaddDelref Incomplete
+
+func (c XaddDelref) Acked() XaddAcked {
+	c.cs.s = append(c.cs.s, "ACKED")
+	return (XaddAcked)(c)
+}
+
+func (c XaddDelref) Maxlen() XaddTrimStrategyMaxlen {
+	c.cs.s = append(c.cs.s, "MAXLEN")
+	return (XaddTrimStrategyMaxlen)(c)
+}
+
+func (c XaddDelref) Minid() XaddTrimStrategyMinid {
+	c.cs.s = append(c.cs.s, "MINID")
+	return (XaddTrimStrategyMinid)(c)
+}
+
+func (c XaddDelref) Id(id string) XaddId {
+	c.cs.s = append(c.cs.s, id)
+	return (XaddId)(c)
+}
+
 type XaddFieldValue Incomplete
 
 func (c XaddFieldValue) FieldValue(field string, value string) XaddFieldValue {
@@ -91,6 +130,16 @@ func (c XaddKey) Nomkstream() XaddNomkstream {
 	return (XaddNomkstream)(c)
 }
 
+func (c XaddKey) Delref() XaddDelref {
+	c.cs.s = append(c.cs.s, "DELREF")
+	return (XaddDelref)(c)
+}
+
+func (c XaddKey) Acked() XaddAcked {
+	c.cs.s = append(c.cs.s, "ACKED")
+	return (XaddAcked)(c)
+}
+
 func (c XaddKey) Maxlen() XaddTrimStrategyMaxlen {
 	c.cs.s = append(c.cs.s, "MAXLEN")
 	return (XaddTrimStrategyMaxlen)(c)
@@ -107,6 +156,16 @@ func (c XaddKey) Id(id string) XaddId {
 }
 
 type XaddNomkstream Incomplete
+
+func (c XaddNomkstream) Delref() XaddDelref {
+	c.cs.s = append(c.cs.s, "DELREF")
+	return (XaddDelref)(c)
+}
+
+func (c XaddNomkstream) Acked() XaddAcked {
+	c.cs.s = append(c.cs.s, "ACKED")
+	return (XaddAcked)(c)
+}
 
 func (c XaddNomkstream) Maxlen() XaddTrimStrategyMaxlen {
 	c.cs.s = append(c.cs.s, "MAXLEN")

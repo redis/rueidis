@@ -6041,6 +6041,16 @@
         "optional": true
       },
       {
+        "command": "DELREF",
+        "type": "command",
+        "optional": true
+      },
+      {
+        "command": "ACKED",
+        "type": "command",
+        "optional": true
+      },
+      {
         "name": "trim",
         "type": "block",
         "optional": true,
