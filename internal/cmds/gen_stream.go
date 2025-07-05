@@ -48,6 +48,100 @@ func (c XackKey) Group(group string) XackGroup {
 	return (XackGroup)(c)
 }
 
+type Xackdel Incomplete
+
+func (b Builder) Xackdel() (c Xackdel) {
+	c = Xackdel{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "XACKDEL")
+	return c
+}
+
+func (c Xackdel) Key(key string) XackdelKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (XackdelKey)(c)
+}
+
+type XackdelActionAcked Incomplete
+
+func (c XackdelActionAcked) Ids() XackdelIdsBlockIds {
+	c.cs.s = append(c.cs.s, "IDS")
+	return (XackdelIdsBlockIds)(c)
+}
+
+type XackdelActionDelref Incomplete
+
+func (c XackdelActionDelref) Ids() XackdelIdsBlockIds {
+	c.cs.s = append(c.cs.s, "IDS")
+	return (XackdelIdsBlockIds)(c)
+}
+
+type XackdelActionKeepref Incomplete
+
+func (c XackdelActionKeepref) Ids() XackdelIdsBlockIds {
+	c.cs.s = append(c.cs.s, "IDS")
+	return (XackdelIdsBlockIds)(c)
+}
+
+type XackdelGroup Incomplete
+
+func (c XackdelGroup) Keepref() XackdelActionKeepref {
+	c.cs.s = append(c.cs.s, "KEEPREF")
+	return (XackdelActionKeepref)(c)
+}
+
+func (c XackdelGroup) Delref() XackdelActionDelref {
+	c.cs.s = append(c.cs.s, "DELREF")
+	return (XackdelActionDelref)(c)
+}
+
+func (c XackdelGroup) Acked() XackdelActionAcked {
+	c.cs.s = append(c.cs.s, "ACKED")
+	return (XackdelActionAcked)(c)
+}
+
+func (c XackdelGroup) Ids() XackdelIdsBlockIds {
+	c.cs.s = append(c.cs.s, "IDS")
+	return (XackdelIdsBlockIds)(c)
+}
+
+type XackdelIdsBlockId Incomplete
+
+func (c XackdelIdsBlockId) Id(id ...string) XackdelIdsBlockId {
+	c.cs.s = append(c.cs.s, id...)
+	return c
+}
+
+func (c XackdelIdsBlockId) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type XackdelIdsBlockIds Incomplete
+
+func (c XackdelIdsBlockIds) Numids(numids int64) XackdelIdsBlockNumids {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(numids, 10))
+	return (XackdelIdsBlockNumids)(c)
+}
+
+type XackdelIdsBlockNumids Incomplete
+
+func (c XackdelIdsBlockNumids) Id(id ...string) XackdelIdsBlockId {
+	c.cs.s = append(c.cs.s, id...)
+	return (XackdelIdsBlockId)(c)
+}
+
+type XackdelKey Incomplete
+
+func (c XackdelKey) Group(group string) XackdelGroup {
+	c.cs.s = append(c.cs.s, group)
+	return (XackdelGroup)(c)
+}
+
 type Xadd Incomplete
 
 func (b Builder) Xadd() (c Xadd) {
