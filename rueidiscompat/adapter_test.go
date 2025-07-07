@@ -2564,18 +2564,18 @@ func testAdapter(resp3 bool) {
 			})
 
 			It("should HStrLen", func() {
-				hSet := client.HSet(ctx, "hash", "key", "hello")
+				hSet := adapter.HSet(ctx, "hash", "key", "hello")
 				Expect(hSet.Err()).NotTo(HaveOccurred())
 
-				hStrLen := client.HStrLen(ctx, "hash", "key")
+				hStrLen := adapter.HStrLen(ctx, "hash", "key")
 				Expect(hStrLen.Err()).NotTo(HaveOccurred())
 				Expect(hStrLen.Val()).To(Equal(int64(len("hello"))))
 
-				nonHStrLen := client.HStrLen(ctx, "hash", "keyNon")
+				nonHStrLen := adapter.HStrLen(ctx, "hash", "keyNon")
 				Expect(hStrLen.Err()).NotTo(HaveOccurred())
 				Expect(nonHStrLen.Val()).To(Equal(int64(0)))
 
-				hDel := client.HDel(ctx, "hash", "key")
+				hDel := adapter.HDel(ctx, "hash", "key")
 				Expect(hDel.Err()).NotTo(HaveOccurred())
 				Expect(hDel.Val()).To(Equal(int64(1)))
 			})
