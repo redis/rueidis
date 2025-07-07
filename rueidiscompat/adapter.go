@@ -162,7 +162,7 @@ type CoreCmdable interface {
 	HVals(ctx context.Context, key string) *StringSliceCmd
 	HRandField(ctx context.Context, key string, count int64) *StringSliceCmd
 	HRandFieldWithValues(ctx context.Context, key string, count int64) *KeyValueSliceCmd
-	HStrLen(ctx context.Context, key string, field ...string) *IntCmd
+	HStrLen(ctx context.Context, key string, field string) *IntCmd
 	HExpire(ctx context.Context, key string, expiration time.Duration, fields ...string) *IntSliceCmd
 	HExpireWithArgs(ctx context.Context, key string, expiration time.Duration, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd
 	HPExpire(ctx context.Context, key string, expiration time.Duration, fields ...string) *IntSliceCmd
