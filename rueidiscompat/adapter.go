@@ -162,6 +162,7 @@ type CoreCmdable interface {
 	HVals(ctx context.Context, key string) *StringSliceCmd
 	HRandField(ctx context.Context, key string, count int64) *StringSliceCmd
 	HRandFieldWithValues(ctx context.Context, key string, count int64) *KeyValueSliceCmd
+	HStrLen(ctx context.Context, key string, field ...string) *IntCmd
 	HExpire(ctx context.Context, key string, expiration time.Duration, fields ...string) *IntSliceCmd
 	HExpireWithArgs(ctx context.Context, key string, expiration time.Duration, expirationArgs HExpireArgs, fields ...string) *IntSliceCmd
 	HPExpire(ctx context.Context, key string, expiration time.Duration, fields ...string) *IntSliceCmd
@@ -1558,6 +1559,12 @@ func (c *Compat) HPTTL(ctx context.Context, key string, fields ...string) *IntSl
 	cmd := c.client.B().Hpttl().Key(key).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntSliceCmd(resp)
+}
+
+func (c *Compat) HStrLen(ctx context.Context, key string, field string) *IntCmd {
+	cmd := c.client.B().Hstrlen().Key(key).Field(field).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
 }
 
 func (c *Compat) HGetDel(ctx context.Context, key string, fields ...string) *StringSliceCmd {
