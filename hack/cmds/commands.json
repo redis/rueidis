@@ -6071,6 +6071,16 @@
             "name": "count",
             "type": "integer",
             "optional": true
+          },
+          {
+            "name": "reference",
+            "type": "enum",
+            "enum": [
+              "KEEPREF",
+              "DELREF",
+              "ACKED"
+            ],
+            "optional": true
           }
         ]
       },
