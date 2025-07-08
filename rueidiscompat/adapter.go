@@ -1567,6 +1567,12 @@ func (c *Compat) HStrLen(ctx context.Context, key string, field string) *IntCmd 
 	return newIntCmd(resp)
 }
 
+func (c CacheCompat) HStrLen(ctx context.Context, key, field string) *IntCmd {
+	cmd := c.client.B().Hstrlen().Key(key).Field(field).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newIntCmd(resp)
+}
+
 func (c *Compat) HGetDel(ctx context.Context, key string, fields ...string) *StringSliceCmd {
 	cmd := c.client.B().Hgetdel().Key(key).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
 	resp := c.client.Do(ctx, cmd)
