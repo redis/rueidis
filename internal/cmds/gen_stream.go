@@ -1447,6 +1447,21 @@ func (c XtrimKey) Minid() XtrimTrimStrategyMinid {
 
 type XtrimTrimLimit Incomplete
 
+func (c XtrimTrimLimit) Keepref() XtrimTrimReferenceKeepref {
+	c.cs.s = append(c.cs.s, "KEEPREF")
+	return (XtrimTrimReferenceKeepref)(c)
+}
+
+func (c XtrimTrimLimit) Delref() XtrimTrimReferenceDelref {
+	c.cs.s = append(c.cs.s, "DELREF")
+	return (XtrimTrimReferenceDelref)(c)
+}
+
+func (c XtrimTrimLimit) Acked() XtrimTrimReferenceAcked {
+	c.cs.s = append(c.cs.s, "ACKED")
+	return (XtrimTrimReferenceAcked)(c)
+}
+
 func (c XtrimTrimLimit) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
@@ -1464,6 +1479,27 @@ type XtrimTrimOperatorExact Incomplete
 func (c XtrimTrimOperatorExact) Threshold(threshold string) XtrimTrimThreshold {
 	c.cs.s = append(c.cs.s, threshold)
 	return (XtrimTrimThreshold)(c)
+}
+
+type XtrimTrimReferenceAcked Incomplete
+
+func (c XtrimTrimReferenceAcked) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type XtrimTrimReferenceDelref Incomplete
+
+func (c XtrimTrimReferenceDelref) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type XtrimTrimReferenceKeepref Incomplete
+
+func (c XtrimTrimReferenceKeepref) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 type XtrimTrimStrategyMaxlen Incomplete
@@ -1505,6 +1541,21 @@ type XtrimTrimThreshold Incomplete
 func (c XtrimTrimThreshold) Limit(count int64) XtrimTrimLimit {
 	c.cs.s = append(c.cs.s, "LIMIT", strconv.FormatInt(count, 10))
 	return (XtrimTrimLimit)(c)
+}
+
+func (c XtrimTrimThreshold) Keepref() XtrimTrimReferenceKeepref {
+	c.cs.s = append(c.cs.s, "KEEPREF")
+	return (XtrimTrimReferenceKeepref)(c)
+}
+
+func (c XtrimTrimThreshold) Delref() XtrimTrimReferenceDelref {
+	c.cs.s = append(c.cs.s, "DELREF")
+	return (XtrimTrimReferenceDelref)(c)
+}
+
+func (c XtrimTrimThreshold) Acked() XtrimTrimReferenceAcked {
+	c.cs.s = append(c.cs.s, "ACKED")
+	return (XtrimTrimReferenceAcked)(c)
 }
 
 func (c XtrimTrimThreshold) Build() Completed {
