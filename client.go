@@ -30,10 +30,14 @@ func newSingleClient(opt *ClientOption, prev conn, connFn connFn, retryer retryH
 
 	conn := connFn(opt.InitAddress[0], opt)
 	conn.Override(prev)
-	if err := conn.Dial(); err != nil {
-		return nil, err
+	err := conn.Dial()
+	if err != nil {
+		if !opt.ForceSingleClient {
+			return nil, err
+		}
 	}
-	return newSingleClientWithConn(conn, cmds.NewBuilder(cmds.NoSlot), !opt.DisableRetry, opt.DisableCache, retryer, opt.ConnLifetime > 0), nil
+	// return a singleClient instance even when Dial fails if ForceSingleClient is true.
+	return newSingleClientWithConn(conn, cmds.NewBuilder(cmds.NoSlot), !opt.DisableRetry, opt.DisableCache, retryer, opt.ConnLifetime > 0), err
 }
 
 func newSingleClientWithConn(conn conn, builder Builder, retry, disableCache bool, retryer retryHandler, hasLftm bool) *singleClient {

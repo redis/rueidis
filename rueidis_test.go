@@ -242,6 +242,54 @@ func TestFallBackSingleClient(t *testing.T) {
 	<-done
 }
 
+func TestForceSingleClientInitialDialError(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ln.Close()
+
+	_, port, _ := net.SplitHostPort(ln.Addr().String())
+	client, err := NewClient(ClientOption{
+		InitAddress:       []string{"127.0.0.1:" + port},
+		ForceSingleClient: true,
+		Dialer:            net.Dialer{Timeout: time.Second / 10},
+	})
+	if client == nil || err == nil {
+		t.Fatal(err)
+	}
+	// discard NewClient dial attempt
+	if _, err := ln.Accept(); err != nil {
+		t.Errorf("unexpected error result: %v", err)
+	}
+
+	done := make(chan struct{})
+	go func() {
+		mock, err := accept(t, ln)
+		if err != nil {
+			return
+		}
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+			ReplyError("UNKNOWN COMMAND")
+		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+			ReplyError("UNKNOWN COMMAND")
+		mock.Expect("PING").ReplyString("OK")
+		mock.Close()
+		close(done)
+	}()
+
+	val, err := client.Do(context.Background(), client.B().Ping().Build()).ToMessage()
+	if err != nil {
+		t.Errorf("unexpected error result: %v", err)
+	}
+	if str, _ := val.ToString(); str != "OK" {
+		t.Errorf("unexpected result: %v", str)
+	}
+	client.Close()
+	<-done
+}
+
 func TestForceSingleClient(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
