@@ -6,6 +6,10 @@ import "testing"
 
 func stream0(s Builder) {
 	s.Xack().Key("1").Group("1").Id("1").Id("1").Build()
+	s.Xackdel().Key("1").Group("1").Keepref().Ids().Numids(1).Id("1").Id("1").Build()
+	s.Xackdel().Key("1").Group("1").Delref().Ids().Numids(1).Id("1").Id("1").Build()
+	s.Xackdel().Key("1").Group("1").Acked().Ids().Numids(1).Id("1").Id("1").Build()
+	s.Xackdel().Key("1").Group("1").Ids().Numids(1).Id("1").Id("1").Build()
 	s.Xadd().Key("1").Nomkstream().Maxlen().Exact().Threshold("1").Limit(1).Keepref().Id("1").FieldValue().FieldValue("1", "1").FieldValue("1", "1").Build()
 	s.Xadd().Key("1").Nomkstream().Maxlen().Exact().Threshold("1").Limit(1).Delref().Id("1").FieldValue().FieldValue("1", "1").FieldValue("1", "1").Build()
 	s.Xadd().Key("1").Nomkstream().Maxlen().Exact().Threshold("1").Limit(1).Acked().Id("1").FieldValue().FieldValue("1", "1").FieldValue("1", "1").Build()
