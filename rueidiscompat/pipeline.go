@@ -751,6 +751,12 @@ func (c *Pipeline) HPTTL(ctx context.Context, key string, fields ...string) *Int
 	return ret
 }
 
+func (c *Pipeline) HStrLen(ctx context.Context, key string, field string) *IntCmd {
+	ret := c.comp.HStrLen(ctx, key, field)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) HGetDel(ctx context.Context, key string, fields ...string) *StringSliceCmd {
 	ret := c.comp.HGetDel(ctx, key, fields...)
 	c.rets = append(c.rets, ret)

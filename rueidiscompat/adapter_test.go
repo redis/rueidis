@@ -2563,6 +2563,32 @@ func testAdapter(resp3 bool) {
 				))
 			})
 
+			It("should HStrLen", func() {
+				hSet := adapter.HSet(ctx, "hash", "key", "hello")
+				Expect(hSet.Err()).NotTo(HaveOccurred())
+
+				hStrLen := adapter.HStrLen(ctx, "hash", "key")
+				Expect(hStrLen.Err()).NotTo(HaveOccurred())
+				Expect(hStrLen.Val()).To(Equal(int64(len("hello"))))
+
+				nonHStrLen := adapter.HStrLen(ctx, "hash", "keyNon")
+				Expect(hStrLen.Err()).NotTo(HaveOccurred())
+				Expect(nonHStrLen.Val()).To(Equal(int64(0)))
+
+				hDel := adapter.HDel(ctx, "hash", "key")
+				Expect(hDel.Err()).NotTo(HaveOccurred())
+				Expect(hDel.Val()).To(Equal(int64(1)))
+			})
+
+			It("should HStrLen", func() {
+				hSet := adapter.HSet(ctx, "hash", "field", "hello")
+				Expect(hSet.Err()).NotTo(HaveOccurred())
+
+				hStrLen := adapter.Cache(time.Hour).HStrLen(ctx, "hash", "field")
+				Expect(hStrLen.Err()).NotTo(HaveOccurred())
+				Expect(hStrLen.Val()).To(Equal(int64(5)))
+			})
+
 			It("should HExpire", Label("hash-expiration", "NonRedisEnterprise"), func() {
 				res, err := adapter.HExpire(ctx, "no_such_key", 10*time.Second, "field1", "field2", "field3").Result()
 				Expect(err).To(BeNil())
