@@ -659,6 +659,93 @@ func (c XdelKey) Id(id ...string) XdelId {
 	return (XdelId)(c)
 }
 
+type Xdelex Incomplete
+
+func (b Builder) Xdelex() (c Xdelex) {
+	c = Xdelex{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "XDELEX")
+	return c
+}
+
+func (c Xdelex) Key(key string) XdelexKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (XdelexKey)(c)
+}
+
+type XdelexConditionAcked Incomplete
+
+func (c XdelexConditionAcked) Ids() XdelexIds {
+	c.cs.s = append(c.cs.s, "IDS")
+	return (XdelexIds)(c)
+}
+
+type XdelexConditionDelref Incomplete
+
+func (c XdelexConditionDelref) Ids() XdelexIds {
+	c.cs.s = append(c.cs.s, "IDS")
+	return (XdelexIds)(c)
+}
+
+type XdelexConditionKeepref Incomplete
+
+func (c XdelexConditionKeepref) Ids() XdelexIds {
+	c.cs.s = append(c.cs.s, "IDS")
+	return (XdelexIds)(c)
+}
+
+type XdelexId Incomplete
+
+func (c XdelexId) Id(id ...string) XdelexId {
+	c.cs.s = append(c.cs.s, id...)
+	return c
+}
+
+func (c XdelexId) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type XdelexIds Incomplete
+
+func (c XdelexIds) Numids(numids int64) XdelexNumids {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(numids, 10))
+	return (XdelexNumids)(c)
+}
+
+type XdelexKey Incomplete
+
+func (c XdelexKey) Keepref() XdelexConditionKeepref {
+	c.cs.s = append(c.cs.s, "KEEPREF")
+	return (XdelexConditionKeepref)(c)
+}
+
+func (c XdelexKey) Delref() XdelexConditionDelref {
+	c.cs.s = append(c.cs.s, "DELREF")
+	return (XdelexConditionDelref)(c)
+}
+
+func (c XdelexKey) Acked() XdelexConditionAcked {
+	c.cs.s = append(c.cs.s, "ACKED")
+	return (XdelexConditionAcked)(c)
+}
+
+func (c XdelexKey) Ids() XdelexIds {
+	c.cs.s = append(c.cs.s, "IDS")
+	return (XdelexIds)(c)
+}
+
+type XdelexNumids Incomplete
+
+func (c XdelexNumids) Id(id ...string) XdelexId {
+	c.cs.s = append(c.cs.s, id...)
+	return (XdelexId)(c)
+}
+
 type XgroupCreate Incomplete
 
 func (b Builder) XgroupCreate() (c XgroupCreate) {

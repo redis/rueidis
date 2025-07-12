@@ -6278,6 +6278,54 @@
     "since": "5.0.0",
     "group": "stream"
   },
+  "XDELEX": {
+    "summary": "Deletes one or multiple entries from the stream.",
+    "complexity": "O(1) for each single item to delete in the stream, regardless of the stream size",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "condition",
+        "type": "oneof",
+        "optional": true,
+        "arguments": [
+          {
+            "name": "keepref",
+            "type": "pure-token",
+            "token": "KEEPREF"
+          },
+          {
+            "name": "delref",
+            "type": "pure-token",
+            "token": "DELREF"
+          },
+          {
+            "name": "acked",
+            "type": "pure-token",
+            "token": "ACKED"
+          }
+        ]
+      },
+      {
+        "name": "ids",
+        "type": "pure-token",
+        "token": "IDS"
+      },
+      {
+        "name": "numids",
+        "type": "integer"
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "multiple": true
+      }
+    ],
+    "since": "8.2.0",
+    "group": "stream"
+  },
   "XGROUP CREATE": {
     "summary": "Create a consumer group.",
     "complexity": "O(1)",
