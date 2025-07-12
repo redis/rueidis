@@ -155,6 +155,7 @@ type CoreCmdable interface {
 	HIncrByFloat(ctx context.Context, key, field string, incr float64) *FloatCmd
 	HKeys(ctx context.Context, key string) *StringSliceCmd
 	HLen(ctx context.Context, key string) *IntCmd
+	HStrLen(ctx context.Context, key, field string) *IntCmd
 	HMGet(ctx context.Context, key string, fields ...string) *SliceCmd
 	HSet(ctx context.Context, key string, values ...any) *IntCmd
 	HMSet(ctx context.Context, key string, values ...any) *BoolCmd
@@ -1380,6 +1381,12 @@ func (c *Compat) HKeys(ctx context.Context, key string) *StringSliceCmd {
 
 func (c *Compat) HLen(ctx context.Context, key string) *IntCmd {
 	cmd := c.client.B().Hlen().Key(key).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) HStrLen(ctx context.Context, key, field string) *IntCmd {
+	cmd := c.client.B().Hstrlen().Key(key).Field(field).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
@@ -6046,6 +6053,12 @@ func (c CacheCompat) HKeys(ctx context.Context, key string) *StringSliceCmd {
 
 func (c CacheCompat) HLen(ctx context.Context, key string) *IntCmd {
 	cmd := c.client.B().Hlen().Key(key).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newIntCmd(resp)
+}
+
+func (c CacheCompat) HStrLen(ctx context.Context, key, field string) *IntCmd {
+	cmd := c.client.B().Hstrlen().Key(key).Field(field).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newIntCmd(resp)
 }

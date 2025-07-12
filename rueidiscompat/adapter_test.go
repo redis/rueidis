@@ -3860,6 +3860,15 @@ func testAdapter(resp3 bool) {
 			Expect(sMembers.Err()).NotTo(HaveOccurred())
 			Expect(sMembers.Val()).To(HaveLen(5))
 		})
+
+		It("should HStrLen", func() {
+			hSet := adapter.HSet(ctx, "hash", "field", "hello")
+			Expect(hSet.Err()).NotTo(HaveOccurred())
+
+			hStrLen := adapter.HStrLen(ctx, "hash", "field")
+			Expect(hStrLen.Err()).NotTo(HaveOccurred())
+			Expect(hStrLen.Val()).To(Equal(int64(5)))
+		})
 	})
 
 	Describe("sorted sets", func() {
@@ -8033,6 +8042,15 @@ func testAdapterCache(resp3 bool) {
 			// err = adapter.Cache(time.Hour).HVals(ctx, "hash").ScanSlice(&slice)
 			// Expect(err).NotTo(HaveOccurred())
 			// Expect(slice).To(Equal([]string{"hello1", "hello2"}))
+		})
+
+		It("should HStrLen", func() {
+			hSet := adapter.HSet(ctx, "hash", "field", "hello")
+			Expect(hSet.Err()).NotTo(HaveOccurred())
+
+			hStrLen := adapter.Cache(time.Hour).HStrLen(ctx, "hash", "field")
+			Expect(hStrLen.Err()).NotTo(HaveOccurred())
+			Expect(hStrLen.Val()).To(Equal(int64(5)))
 		})
 	})
 
