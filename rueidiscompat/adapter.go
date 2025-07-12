@@ -444,7 +444,7 @@ type SearchCmdable interface {
 	FTAliasAdd(ctx context.Context, index string, alias string) *StatusCmd
 	FTAliasDel(ctx context.Context, alias string) *StatusCmd
 	FTAliasUpdate(ctx context.Context, index string, alias string) *StatusCmd
-	FTAlter(ctx context.Context, index string, skipInitalScan bool, definition []interface{}) *StatusCmd
+	FTAlter(ctx context.Context, index string, skipInitialScan bool, definition []interface{}) *StatusCmd
 	FTConfigGet(ctx context.Context, option string) *MapMapStringInterfaceCmd
 	FTConfigSet(ctx context.Context, option string, value interface{}) *StatusCmd
 	FTCreate(ctx context.Context, index string, options *FTCreateOptions, schema ...*FieldSchema) *StatusCmd
@@ -5256,9 +5256,9 @@ func (c *Compat) FTAliasUpdate(ctx context.Context, index string, alias string) 
 // For more information, please refer to the Redis documentation:
 // [FT.ALTER]: (https://redis.io/commands/ft.alter/)
 // see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L815
-func (c *Compat) FTAlter(ctx context.Context, index string, skipInitalScan bool, definition []interface{}) *StatusCmd {
+func (c *Compat) FTAlter(ctx context.Context, index string, skipInitialScan bool, definition []interface{}) *StatusCmd {
 	_cmd := cmds.Incomplete(c.client.B().FtAlter().Index(index))
-	if skipInitalScan {
+	if skipInitialScan {
 		_cmd = cmds.Incomplete(cmds.FtAlterIndex(_cmd).Skipinitialscan())
 	}
 	if len(definition) != 2 {

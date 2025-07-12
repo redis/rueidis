@@ -3012,8 +3012,8 @@ func (c *Pipeline) FTAliasUpdate(ctx context.Context, index string, alias string
 	return ret
 }
 
-func (c *Pipeline) FTAlter(ctx context.Context, index string, skipInitalScan bool, definition []interface{}) *StatusCmd {
-	ret := c.comp.FTAlter(ctx, index, skipInitalScan, definition)
+func (c *Pipeline) FTAlter(ctx context.Context, index string, skipInitialScan bool, definition []interface{}) *StatusCmd {
+	ret := c.comp.FTAlter(ctx, index, skipInitialScan, definition)
 	c.rets = append(c.rets, ret)
 	return ret
 }
