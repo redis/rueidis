@@ -631,6 +631,12 @@ func (c *Pipeline) HLen(ctx context.Context, key string) *IntCmd {
 	return ret
 }
 
+func (c *Pipeline) HStrLen(ctx context.Context, key, field string) *IntCmd {
+	ret := c.comp.HStrLen(ctx, key, field)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) HMGet(ctx context.Context, key string, fields ...string) *SliceCmd {
 	ret := c.comp.HMGet(ctx, key, fields...)
 	c.rets = append(c.rets, ret)

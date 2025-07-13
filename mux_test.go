@@ -140,8 +140,8 @@ func TestNewMuxPipelineMultiplex(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 	for _, v := range []int{-1, 0, 1, 2} {
 		m := makeMux("", &ClientOption{PipelineMultiplex: v}, func(_ context.Context, dst string, opt *ClientOption) (net.Conn, error) { return nil, nil })
-		if (v < 0 && len(m.wire) != 1) || (v >= 0 && len(m.wire) != 1<<v) {
-			t.Fatalf("unexpected len(m.wire): %v", len(m.wire))
+		if (v < 0 && len(m.muxwires) != 1) || (v >= 0 && len(m.muxwires) != 1<<v) {
+			t.Fatalf("unexpected len(m.muxwires): %v", len(m.muxwires))
 		}
 	}
 }
