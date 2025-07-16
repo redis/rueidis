@@ -3,6 +3,7 @@ package om
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -144,6 +145,80 @@ func (r *JSONRepository[T]) AlterIndex(ctx context.Context, cmdFn func(alter FtA
 func (r *JSONRepository[T]) CreateIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) rueidis.Completed) error {
 	return r.client.Do(ctx, cmdFn(r.client.B().FtCreate().Index(r.idx).OnJson().Prefix(1).Prefix(r.prefix+":").Schema())).Error()
 }
+
+// CreateAndAliasIndex creates a new index, aliases it, and drops the old index if needed.
+func (r *JSONRepository[T]) CreateAndAliasIndex(ctx context.Context, cmdFn func(schema FtCreateSchema) rueidis.Completed) error {
+	alias := r.idx
+
+	var currentIndex string
+	aliasExists := false
+	infoCmd := r.client.B().FtInfo().Index(alias).Build()
+	infoResp, err := r.client.Do(ctx, infoCmd).ToMap()
+	if err != nil {
+		if strings.Contains(err.Error(), "Unknown index name") {
+			aliasExists = false
+		} else {
+			return fmt.Errorf("failed to check if index exists: %w", err)
+		}
+	} else {
+		aliasExists = true
+	}
+
+	if aliasExists {
+		message, ok := infoResp["index_name"]
+		if !ok {
+			return fmt.Errorf("index_name not found in FT.INFO response")
+		}
+		currentIndex, err = message.ToString()
+		if err != nil {
+			return fmt.Errorf("failed to convert index_name to string: %w", err)
+		}
+	}
+
+	// Compute new index version name
+	newIndex := alias + "_v1"
+	if aliasExists && currentIndex != "" {
+		lastVersionIndex := strings.LastIndex(currentIndex, "_v")
+		if lastVersionIndex != -1 && lastVersionIndex+2 < len(currentIndex) {
+			versionStr := currentIndex[lastVersionIndex+2:]
+			if version, err := strconv.Atoi(versionStr); err == nil {
+				newIndex = fmt.Sprintf("%s_v%d", alias, version+1)
+			}
+		}
+	}
+
+	// Create the new index with schema
+	createCmd := r.client.B().FtCreate().
+		Index(newIndex).
+		OnJson().
+		Prefix(1).
+		Prefix(r.prefix + ":")
+	if err := r.client.Do(ctx, cmdFn(createCmd.Schema())).Error(); err != nil {
+		return fmt.Errorf("failed to create index %s: %w", newIndex, err)
+	}
+
+	// Set alias to point to new index
+	var aliasErr error
+	if aliasExists {
+		aliasErr = r.client.Do(ctx, r.client.B().FtAliasupdate().Alias(alias).Index(newIndex).Build()).Error()
+	} else {
+		aliasErr = r.client.Do(ctx, r.client.B().FtAliasadd().Alias(alias).Index(newIndex).Build()).Error()
+	}
+
+	if aliasErr != nil {
+		return fmt.Errorf("failed to update alias: %w", aliasErr)
+	}
+
+	// Drop old index if it's different from the new one
+	if aliasExists && currentIndex != "" && currentIndex != newIndex {
+		if err := r.client.Do(ctx, r.client.B().FtDropindex().Index(currentIndex).Build()).Error(); err != nil {
+			return fmt.Errorf("failed to drop old index: %w", err)
+		}
+	}
+
+	return nil
+}
+
 
 // DropIndex uses FT.DROPINDEX from the RediSearch module to drop the index whose name is `jsonidx:{prefix}`
 func (r *JSONRepository[T]) DropIndex(ctx context.Context) error {

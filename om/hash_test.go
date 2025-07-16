@@ -479,3 +479,60 @@ func TestNewHashRepositoryTTL(t *testing.T) {
 		}
 	})
 }
+
+// TestCreateAndAliasIndex tests the CreateAndAliasIndex method of HashRepository.
+func TestCreateAndAliasIndex(t *testing.T) {
+	ctx := context.Background()
+
+	client := setup(t)
+	client.Do(ctx, client.B().Flushall().Build())
+	defer client.Close()
+
+	repo := NewHashRepository("hashalias", HashTestStruct{}, client)
+
+	t.Run("CreateAndAliasIndex", func(t *testing.T) {
+		err := repo.CreateAndAliasIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
+			return schema.FieldName("Val").Text().Build()
+		})
+		if err != nil {
+			t.Fatalf("failed to create and alias index: %v", err)
+		}
+
+		verifyAliasTarget(t, ctx, client, repo.IndexName(), repo.IndexName()+"_v1")
+
+		// Step 3: Create new index version and update alias
+		err = repo.CreateAndAliasIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
+			return schema.FieldName("Val").Text().Build()
+		})
+		if err != nil {
+			t.Fatalf("failed to create and alias new index version: %v", err)
+		}
+
+		verifyAliasTarget(t, ctx, client, repo.IndexName(), repo.IndexName()+"_v2")
+	})
+}
+
+// Helper to verify that alias points to the expected index name
+func verifyAliasTarget(t *testing.T, ctx context.Context, client rueidis.Client, aliasName string, expectedIndex string) {
+	t.Helper()
+
+	infoCmd := client.B().FtInfo().Index(aliasName).Build()
+	infoResp, err := client.Do(ctx, infoCmd).ToMap()
+	if err != nil {
+		t.Fatalf("failed to fetch index info: %v", err)
+	}
+
+	indexMsg, ok := infoResp["index_name"]
+	if !ok {
+		t.Fatalf("FT.INFO response missing index_name field")
+	}
+
+	actualIndex, err := (&indexMsg).ToString()
+	if err != nil {
+		t.Fatalf("failed to convert index_name to string: %v", err)
+	}
+
+	if actualIndex != expectedIndex {
+		t.Fatalf("alias does not point to the expected index. expected=%s got=%s", expectedIndex, actualIndex)
+	}
+}
