@@ -185,32 +185,30 @@ type pool struct {
 
 type pipe struct {
 	conn            net.Conn
-	error           atomic.Pointer[errs]
-	clhks           atomic.Value          // closed hook, invoked after the conn is closed
-	pshks           atomic.Pointer[pshks] // pubsub hook, registered by the SetPubSubHooks
+	clhks           atomic.Value // closed hook, invoked after the conn is closed
 	queue           any
-	cache           rueidis.CacheStore
+	cache           any
+	pshks           atomic.Pointer[pshks] // pubsub hook, registered by the SetPubSubHooks
+	error           atomic.Pointer[errs]
 	r               *bufio.Reader
 	w               *bufio.Writer
 	close           chan struct{}
 	onInvalidations func([]rueidis.RedisMessage)
-	r2psFn          func() (p *pipe, err error) // func to build pipe for resp2 pubsub
-	r2pipe          *pipe                       // internal pipe for resp2 pubsub only
-	ssubs           *any                        // pubsub smessage subscriptions
-	nsubs           *any                        // pubsub  message subscriptions
-	psubs           *any                        // pubsub pmessage subscriptions
-	pingTimer       *time.Timer
+	ssubs           *any // pubsub smessage subscriptions
+	nsubs           *any // pubsub  message subscriptions
+	psubs           *any // pubsub pmessage subscriptions
+	r2p             *any
+	pingTimer       *time.Timer // timer for background ping
+	lftmTimer       *time.Timer // lifetime timer
 	info            map[string]rueidis.RedisMessage
 	timeout         time.Duration
 	pinggap         time.Duration
 	maxFlushDelay   time.Duration
-	r2mu            sync.Mutex
+	lftm            time.Duration // lifetime
+	wrCounter       atomic.Uint64
 	version         int32
-	_               [10]int32
 	blcksig         int32
 	state           int32
-	waits           int32
-	recvs           int32
 	bgState         int32
 	r2ps            bool // identify this pipe is used for resp2 pubsub or not
 	noNoDelay       bool
