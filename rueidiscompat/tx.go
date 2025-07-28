@@ -46,6 +46,7 @@ func (c *TxPipeline) Exec(ctx context.Context) ([]Cmder, error) {
 		err = TxFailedErr
 	}
 	for i, r := range results {
+		rets[i].SetErr(nil)
 		rets[i].from(*(*rueidis.RedisResult)(unsafe.Pointer(&proxyresult{
 			err: resp[i+1].NonRedisError(),
 			val: r,
