@@ -9,8 +9,8 @@ replace github.com/redis/rueidis => ../
 replace github.com/redis/rueidis/mock => ../mock
 
 require (
-	github.com/redis/rueidis v1.0.63
-	github.com/redis/rueidis/mock v1.0.63
+	github.com/redis/rueidis v1.0.64
+	github.com/redis/rueidis/mock v1.0.64
 	go.uber.org/mock v0.5.0
 )
 
