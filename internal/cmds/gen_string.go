@@ -96,6 +96,38 @@ func (c DecrbyKey) Decrement(decrement int64) DecrbyDecrement {
 	return (DecrbyDecrement)(c)
 }
 
+type Delifeq Incomplete
+
+func (b Builder) Delifeq() (c Delifeq) {
+	c = Delifeq{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "DELIFEQ")
+	return c
+}
+
+func (c Delifeq) Key(key string) DelifeqKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (DelifeqKey)(c)
+}
+
+type DelifeqKey Incomplete
+
+func (c DelifeqKey) Value(value string) DelifeqValue {
+	c.cs.s = append(c.cs.s, value)
+	return (DelifeqValue)(c)
+}
+
+type DelifeqValue Incomplete
+
+func (c DelifeqValue) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
 type Get Incomplete
 
 func (b Builder) Get() (c Get) {

@@ -11,6 +11,7 @@ func string0(s Builder) {
 	s.Append().Key("1").Value("1").Build()
 	s.Decr().Key("1").Build()
 	s.Decrby().Key("1").Decrement(1).Build()
+	s.Delifeq().Key("1").Value("1").Build()
 	s.Get().Key("1").Build()
 	s.Get().Key("1").Cache()
 	s.Getdel().Key("1").Build()

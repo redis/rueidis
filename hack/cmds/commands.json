@@ -1062,6 +1062,7 @@
     "since": "7.0.0",
     "group": "cluster"
   },
+  
   "CLUSTER FAILOVER": {
     "summary": "Forces a replica to perform a manual failover of its master.",
     "complexity": "O(1)",
@@ -1576,6 +1577,24 @@
     ],
     "since": "1.0.0",
     "group": "generic"
+  },
+  "DELIFEQ": {
+    "summary": "Delete key if value matches string.",
+    "complexity": "O(1)",
+    "group": "string",
+    "since": "9.0.0",
+    "arity": 3,
+    "function": "delifeqCommand",
+    "arguments": [
+        {
+            "name": "key",
+            "type": "key"
+        },
+        {
+            "name": "value",
+            "type": "string"
+        }
+    ]
   },
   "DISCARD": {
     "summary": "Discard all commands issued after MULTI",
