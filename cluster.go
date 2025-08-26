@@ -20,6 +20,7 @@ var ErrReplicaOnlyConflict = errors.New("ReplicaOnly conflicts with SendToReplic
 var ErrInvalidShardsRefreshInterval = errors.New("ShardsRefreshInterval must be greater than or equal to 0")
 var ErrReplicaOnlyConflictWithReplicaSelector = errors.New("ReplicaOnly conflicts with ReplicaSelector option")
 var ErrSendToReplicasNotSet = errors.New("SendToReplicas must be set when ReplicaSelector is set")
+var ErrSendToReplicasNotSetWithRouteRandomly = errors.New("SendToReplicas must be set when RouteRandomly is set")
 
 type clusterClient struct {
 	pslots       [16384]conn
@@ -30,7 +31,7 @@ type clusterClient struct {
 	connFn       connFn
 	stopCh       chan struct{}
 	sc           call
-	rslots       []conn
+	rslots       []nodes
 	mu           sync.RWMutex
 	stop         uint32
 	cmd          Builder
@@ -70,9 +71,11 @@ func newClusterClient(opt *ClientOption, connFn connFn, retryer retryHandler) (*
 	if opt.ReplicaSelector != nil && opt.SendToReplicas == nil {
 		return nil, ErrSendToReplicasNotSet
 	}
-
 	if opt.SendToReplicas != nil && opt.ReplicaSelector == nil {
 		opt.ReplicaSelector = replicaOnlySelector
+	}
+	if opt.RouteRandomly && opt.SendToReplicas == nil {
+		return nil, ErrSendToReplicasNotSetWithRouteRandomly
 	}
 
 	if opt.SendToReplicas != nil {
@@ -245,7 +248,7 @@ func (c *clusterClient) _refresh() (err error) {
 	c.mu.RUnlock()
 
 	pslots := [16384]conn{}
-	var rslots []conn
+	var rslots []nodes
 	for master, g := range groups {
 		switch {
 		case c.opt.ReplicaOnly && len(g.nodes) > 1:
@@ -257,7 +260,7 @@ func (c *clusterClient) _refresh() (err error) {
 			}
 		case c.rOpt != nil:
 			if len(rslots) == 0 { // lazy init
-				rslots = make([]conn, 16384)
+				rslots = make([]nodes, 16384)
 			}
 			if len(g.nodes) > 1 {
 				n := len(g.nodes) - 1
@@ -279,11 +282,24 @@ func (c *clusterClient) _refresh() (err error) {
 				for _, slot := range g.slots {
 					for i := slot[0]; i <= slot[1] && i >= 0 && i < 16384; i++ {
 						pslots[i] = conns[master].conn
-						rIndex := c.opt.ReplicaSelector(uint16(i), g.nodes[1:])
-						if rIndex >= 0 && rIndex < n {
-							rslots[i] = conns[g.nodes[1+rIndex].Addr].conn
+						var replicas nodes
+						if c.opt.RouteRandomly {
+							for _, node := range g.nodes {
+								node.conn = conns[node.Addr].conn
+								replicas = append(replicas, node)
+							}
+							rslots[i] = replicas
 						} else {
-							rslots[i] = conns[master].conn
+							rIndex := c.opt.ReplicaSelector(uint16(i), g.nodes[1:]) // exclude master node
+							if rIndex >= 0 && rIndex < n {
+								node := g.nodes[1+rIndex]
+								node.conn = conns[g.nodes[1+rIndex].Addr].conn
+								rslots[i] = nodes{node}
+							} else {
+								node := g.nodes[0] // fallback to master
+								node.conn = conns[master].conn
+								rslots[i] = nodes{node}
+							}
 						}
 					}
 				}
@@ -291,7 +307,9 @@ func (c *clusterClient) _refresh() (err error) {
 				for _, slot := range g.slots {
 					for i := slot[0]; i <= slot[1] && i >= 0 && i < 16384; i++ {
 						pslots[i] = conns[master].conn
-						rslots[i] = conns[master].conn
+						node := g.nodes[0]
+						node.conn = conns[master].conn
+						rslots[i] = nodes{node}
 					}
 				}
 			}
@@ -443,7 +461,18 @@ func (c *clusterClient) _pick(slot uint16, toReplica bool) (p conn) {
 			break
 		}
 	} else if toReplica && c.rslots != nil {
-		p = c.rslots[slot]
+		if c.opt.RouteRandomly {
+			nodes := c.rslots[slot]
+			n := len(nodes)
+			rIndex := c.opt.ReplicaSelector(slot, nodes)
+			if rIndex >= 0 && rIndex < n {
+				p = c.rslots[slot][rIndex].conn
+			} else {
+				p = c.pslots[slot]
+			}
+		} else {
+			p = c.rslots[slot][0].conn
+		}
 	} else {
 		p = c.pslots[slot]
 	}
@@ -575,12 +604,26 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 
 	if !init && c.rslots != nil && c.opt.SendToReplicas != nil {
 		var bm bitmap
+		var rSlotSelected [16384]conn
 		bm.Init(len(multi))
 		for i, cmd := range multi {
 			var cc conn
-			if c.opt.SendToReplicas(cmd) {
+			slot := cmd.Slot()
+			if c.opt.SendToReplicas(cmd) && c.opt.RouteRandomly {
 				bm.Set(i)
-				cc = c.rslots[cmd.Slot()]
+				nodes := c.rslots[slot]
+				n := len(nodes)
+				rIndex := c.opt.ReplicaSelector(slot, nodes)
+				if rIndex >= 0 && rIndex < n {
+					cc = nodes[rIndex].conn
+				} else {
+					cc = c.pslots[cmd.Slot()]
+				}
+				rSlotSelected[slot] = cc
+			} else if c.opt.SendToReplicas(cmd) {
+				bm.Set(i)
+				cc = c.rslots[slot][0].conn
+				rSlotSelected[slot] = cc
 			} else {
 				cc = c.pslots[cmd.Slot()]
 			}
@@ -599,7 +642,7 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 		for i, cmd := range multi {
 			var cc conn
 			if bm.Get(i) {
-				cc = c.rslots[cmd.Slot()]
+				cc = rSlotSelected[cmd.Slot()]
 			} else {
 				cc = c.pslots[cmd.Slot()]
 			}
@@ -1044,10 +1087,18 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 		}
 		for i, cmd := range multi {
 			var p conn
-			if c.opt.SendToReplicas(Completed(cmd.Cmd)) {
-				p = c.rslots[cmd.Cmd.Slot()]
+			slot := cmd.Cmd.Slot()
+			if c.opt.SendToReplicas(Completed(cmd.Cmd)) && c.opt.RouteRandomly {
+				rIndex := c.opt.ReplicaSelector(slot, c.rslots[slot])
+				if rIndex >= 0 && rIndex < len(c.rslots[slot]) {
+					p = c.rslots[slot][rIndex].conn
+				} else {
+					p = c.pslots[slot]
+				}
+			} else if c.opt.SendToReplicas(Completed(cmd.Cmd)) {
+				p = c.rslots[slot][0].conn
 			} else {
-				p = c.pslots[cmd.Cmd.Slot()]
+				p = c.pslots[slot]
 			}
 			if p == nil {
 				return nil

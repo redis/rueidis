@@ -242,6 +242,12 @@ type ClientOption struct {
 	// EnableReplicaAZInfo enables the client to load the replica node's availability zone.
 	// If true, the client will set the `AZ` field in `ReplicaInfo`.
 	EnableReplicaAZInfo bool
+
+	// RouteRandomly routes read only command's traffic randomly between master and replica nodes.
+	// Enabling it alongside client side caching can result in higher memory usage due to 
+	// individual cache store against each connection.
+	// Only works when SendToReplicas return true
+	RouteRandomly bool
 }
 
 // SentinelOption contains MasterSet,
@@ -280,6 +286,7 @@ type StandaloneOption struct {
 type ReplicaInfo struct {
 	Addr string
 	AZ   string
+	conn conn
 }
 
 type ClientMode string
