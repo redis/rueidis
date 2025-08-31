@@ -2497,7 +2497,7 @@
     "group": "geo"
   },
   "GEOSEARCH": {
-    "summary": "Query a sorted set representing a geospatial index to fetch members inside an area of a box or a circle.",
+    "summary": "Query a sorted set representing a geospatial index to fetch members inside an area of a box, a circle or a polygon.",
     "complexity": "O(N+log(M)) where N is the number of elements in the grid-aligned bounding box area around the shape provided as the filter and M is the number of items inside the shape",
     "arguments": [
       {
@@ -2577,6 +2577,34 @@
               }
             ],
             "optional": true
+          },
+          {
+            "type": "block",
+            "name": "polygon",
+            "since": "9.0.0",
+            "arguments": [
+              {
+                "token": "BYPOLYGON",
+                "name": "num-vertices",
+                "type": "integer"
+              },
+              {
+                "name": "vertices",
+                "type": "block",
+                "multiple": true,
+                "arguments": [
+                  {
+                    "name": "longitude",
+                    "type": "double"
+                  },
+                  {
+                    "name": "latitude",
+                    "type": "double"
+                  }
+                ]
+              }
+            ],
+            "optional": true
           }
         ]
       },
@@ -2638,7 +2666,7 @@
     "group": "geo"
   },
   "GEOSEARCHSTORE": {
-    "summary": "Query a sorted set representing a geospatial index to fetch members inside an area of a box or a circle, and store the result in another key.",
+    "summary": "Query a sorted set representing a geospatial index to fetch members inside an area of a box, a circle or a polygon, and store the result in another key.",
     "complexity": "O(N+log(M)) where N is the number of elements in the grid-aligned bounding box area around the shape provided as the filter and M is the number of items inside the shape",
     "arguments": [
       {
@@ -2718,6 +2746,34 @@
                   "km",
                   "ft",
                   "mi"
+                ]
+              }
+            ],
+            "optional": true
+          },
+          {
+            "type": "block",
+            "name": "polygon",
+            "since": "9.0.0",
+            "arguments": [
+              {
+                "token": "BYPOLYGON",
+                "name": "num-vertices",
+                "type": "integer"
+              },
+              {
+                "name": "vertices",
+                "type": "block",
+                "multiple": true,
+                "arguments": [
+                  {
+                    "name": "longitude",
+                    "type": "double"
+                  },
+                  {
+                    "name": "latitude",
+                    "type": "double"
+                  }
                 ]
               }
             ],
