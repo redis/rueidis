@@ -381,7 +381,8 @@ func (p *pipe) _background() {
 		default:
 			p.incrWaits()
 			go func() {
-				<-p.queue.PutOne(cmds.PingCmd) // avoid _backgroundWrite hanging at p.queue.WaitForWrite()
+				ch, _ := p.queue.PutOne(context.Background(), cmds.PingCmd) // avoid _backgroundWrite hanging at p.queue.WaitForWrite()
+				<-ch
 				p.decrWaits()
 			}()
 		}
@@ -951,7 +952,12 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	return resp
 
 queue:
-	ch := p.queue.PutOne(cmd)
+	ch, err := p.queue.PutOne(ctx, cmd)
+	if err != nil {
+		p.decrWaitsAndIncrRecvs()
+		return newErrResult(err)
+	}
+
 	if ctxCh := ctx.Done(); ctxCh == nil {
 		resp = <-ch
 	} else {
@@ -1057,7 +1063,17 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 	return resp
 
 queue:
-	ch := p.queue.PutMulti(multi, resp.s)
+	ch, err := p.queue.PutMulti(ctx, multi, resp.s)
+	if err != nil {
+		errResult := newErrResult(err)
+		for i := 0; i < len(resp.s); i++ {
+			resp.s[i] = errResult
+		}
+
+		p.decrWaitsAndIncrRecvs()
+		return resp
+	}
+
 	if ctxCh := ctx.Done(); ctxCh == nil {
 		<-ch
 	} else {
@@ -1076,9 +1092,9 @@ abort:
 		p.decrWaitsAndIncrRecvs()
 	}(resp, ch)
 	resp = resultsp.Get(len(multi), len(multi))
-	err := newErrResult(ctx.Err())
+	errResult := newErrResult(ctx.Err())
 	for i := 0; i < len(resp.s); i++ {
-		resp.s[i] = err
+		resp.s[i] = errResult
 	}
 	return resp
 }
@@ -1644,7 +1660,7 @@ func (p *pipe) Close() {
 		}
 		if block == 1 && (stopping1 || stopping2) { // make sure there is no block cmd
 			p.incrWaits()
-			ch := p.queue.PutOne(cmds.PingCmd)
+			ch, _ := p.queue.PutOne(context.Background(), cmds.PingCmd)
 			select {
 			case <-ch:
 				p.decrWaits()

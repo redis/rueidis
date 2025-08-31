@@ -1,8 +1,11 @@
 package rueidis
 
 import (
+	"context"
 	"runtime"
 	"strconv"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -21,7 +24,7 @@ func TestRing(t *testing.T) {
 		}
 
 		for cmd := range fixture {
-			go ring.PutOne(cmds.NewCompleted([]string{cmd}))
+			go ring.PutOne(context.Background(), cmds.NewCompleted([]string{cmd}))
 		}
 
 		for len(fixture) != 0 {
@@ -53,7 +56,7 @@ func TestRing(t *testing.T) {
 
 		base := [][]string{{"a"}, {"b"}, {"c"}, {"d"}}
 		for cmd := range fixture {
-			go ring.PutMulti(cmds.NewMultiCompleted(append([][]string{{cmd}}, base...)), nil)
+			go ring.PutMulti(context.Background(), cmds.NewMultiCompleted(append([][]string{{cmd}}, base...)), nil)
 		}
 
 		for len(fixture) != 0 {
@@ -89,7 +92,7 @@ func TestRing(t *testing.T) {
 			cond.Signal()
 		}
 
-		ring.PutOne(cmds.NewCompleted([]string{"0"}))
+		ring.PutOne(context.Background(), cmds.NewCompleted([]string{"0"}))
 		if one, _, _ := ring.NextWriteCmd(); len(one.Commands()) == 0 || one.Commands()[0] != "0" {
 			t.Fatalf("NextWriteCmd should returns next cmd")
 		}
@@ -100,7 +103,7 @@ func TestRing(t *testing.T) {
 			cond.Signal()
 		}
 
-		ring.PutMulti(cmds.NewMultiCompleted([][]string{{"0"}}), nil)
+		ring.PutMulti(context.Background(), cmds.NewMultiCompleted([][]string{{"0"}}), nil)
 		if _, multi, _ := ring.NextWriteCmd(); len(multi) == 0 || multi[0].Commands()[0] != "0" {
 			t.Fatalf("NextWriteCmd should returns next cmd")
 		}
@@ -117,7 +120,7 @@ func TestRing(t *testing.T) {
 		if one, _, ch := ring.NextWriteCmd(); ch == nil {
 			go func() {
 				time.Sleep(time.Millisecond * 100)
-				ring.PutOne(cmds.PingCmd)
+				ring.PutOne(context.Background(), cmds.PingCmd)
 			}()
 			if one, _, ch = ring.WaitForWrite(); ch != nil && one.Commands()[0] == cmds.PingCmd.Commands()[0] {
 				return
@@ -131,12 +134,202 @@ func TestRing(t *testing.T) {
 		if _, _, ch := ring.NextWriteCmd(); ch == nil {
 			go func() {
 				time.Sleep(time.Millisecond * 100)
-				ring.PutMulti([]Completed{cmds.PingCmd}, nil)
+				ring.PutMulti(context.Background(), []Completed{cmds.PingCmd}, nil)
 			}()
 			if _, multi, ch := ring.WaitForWrite(); ch != nil && multi[0].Commands()[0] == cmds.PingCmd.Commands()[0] {
 				return
 			}
 		}
 		t.Fatal("Should sleep")
+	})
+
+	t.Run("PutOne Context Is Done", func(t *testing.T) {
+		ring := newRing(1)
+		ctx, cancel := context.WithCancel(context.Background())
+
+		for i := 0; i < (1 << 1); i++ {
+			ring.PutOne(context.Background(), cmds.NewCompleted([]string{strconv.Itoa(i)}))
+		}
+		for i := 0; i < (1 << 1); i++ {
+			ring.NextWriteCmd()
+		}
+
+		ready := make(chan struct{}, 1)
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			ready <- struct{}{}
+
+			time.Sleep(time.Millisecond * 100) // wait for PutOne to be called.
+
+			for i := 0; i < (1 << 1); i++ {
+				_, _, _, _, cond := ring.NextResultCh()
+				cond.L.Unlock()
+				cond.Signal()
+			}
+		}()
+
+		cancel()
+		<-ready
+		ch, err := ring.PutOne(ctx, cmds.NewCompleted([]string{"should_fail"}))
+		if err != context.Canceled {
+			t.Fatalf("Expected context.Canceled error, got %v", err)
+		}
+		if ch != nil {
+			t.Fatal("Expected nil channel on context cancellation")
+		}
+		wg.Wait()
+	})
+
+	t.Run("PutMulti Context Is Done", func(t *testing.T) {
+		ring := newRing(1)
+		ctx, cancel := context.WithCancel(context.Background())
+
+		for i := 0; i < (1 << 1); i++ {
+			ring.PutMulti(context.Background(), cmds.NewMultiCompleted([][]string{{strconv.Itoa(i)}}), nil)
+		}
+		for i := 0; i < (1 << 1); i++ {
+			ring.NextWriteCmd()
+		}
+
+		ready := make(chan struct{}, 1)
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			ready <- struct{}{}
+
+			time.Sleep(time.Millisecond * 100) // wait for PutOne to be called.
+
+			for i := 0; i < (1 << 1); i++ {
+				_, _, _, _, cond := ring.NextResultCh()
+				cond.L.Unlock()
+				cond.Signal()
+			}
+		}()
+
+		cancel()
+		<-ready
+		ch, err := ring.PutMulti(ctx, cmds.NewMultiCompleted([][]string{{"should_fail"}}), nil)
+		if err != context.Canceled {
+			t.Fatalf("Expected context.Canceled error, got %v", err)
+		}
+		if ch != nil {
+			t.Fatal("Expected nil channel on context cancellation")
+		}
+
+		wg.Wait()
+	})
+
+	t.Run("PutOne Context Is Done and Wake up other goroutines", func(t *testing.T) {
+		ring := newRing(1)
+		ctx, cancel := context.WithCancel(context.Background())
+
+		for i := 0; i < (1 << 1); i++ {
+			ring.PutOne(context.Background(), cmds.NewCompleted([]string{strconv.Itoa(i)}))
+		}
+		for i := 0; i < (1 << 1); i++ {
+			ring.NextWriteCmd()
+		}
+
+		ready := make(chan struct{}, 1)
+		putOneCalled := make(chan struct{}, 1)
+		cnt := int32(0)
+		var wg sync.WaitGroup
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+
+			<-putOneCalled
+			ready <- struct{}{}
+
+			time.Sleep(time.Millisecond * 100) // wait for PutOne to be called.
+
+			for i := 0; i < (1 << 1); i++ {
+				_, _, _, _, cond := ring.NextResultCh()
+				cond.L.Unlock()
+				cond.Signal()
+			}
+		}()
+		go func() {
+			defer wg.Done()
+
+			putOneCalled <- struct{}{}
+			_, _ = ring.PutOne(context.Background(), cmds.NewCompleted([]string{"should_success"}))
+			atomic.AddInt32(&cnt, 1)
+		}()
+
+		cancel()
+		<-ready
+		ch, err := ring.PutOne(ctx, cmds.NewCompleted([]string{"should_fail"}))
+		if err != context.Canceled {
+			t.Fatalf("Expected context.Canceled error, got %v", err)
+		}
+		if ch != nil {
+			t.Fatal("Expected nil channel on context cancellation")
+		}
+		wg.Wait()
+
+		if atomic.LoadInt32(&cnt) != 1 {
+			t.Fatalf("Expected 1, got %d", cnt)
+		}
+	})
+
+	t.Run("PutMulti Context Is Done and Wake up other goroutines", func(t *testing.T) {
+		ring := newRing(1)
+		ctx, cancel := context.WithCancel(context.Background())
+
+		for i := 0; i < (1 << 1); i++ {
+			ring.PutMulti(context.Background(), cmds.NewMultiCompleted([][]string{{strconv.Itoa(i)}}), nil)
+		}
+		for i := 0; i < (1 << 1); i++ {
+			ring.NextWriteCmd()
+		}
+
+		ready := make(chan struct{}, 1)
+		putOneCalled := make(chan struct{}, 1)
+		cnt := int32(0)
+		var wg sync.WaitGroup
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+
+			<-putOneCalled
+			ready <- struct{}{}
+
+			time.Sleep(time.Millisecond * 100) // wait for PutOne to be called.
+
+			for i := 0; i < (1 << 1); i++ {
+				_, _, _, _, cond := ring.NextResultCh()
+				cond.L.Unlock()
+				cond.Signal()
+			}
+		}()
+		go func() {
+			defer wg.Done()
+
+			putOneCalled <- struct{}{}
+			_, _ = ring.PutMulti(ctx, cmds.NewMultiCompleted([][]string{{"should_success"}}), nil)
+			atomic.AddInt32(&cnt, 1)
+		}()
+
+		cancel()
+		<-ready
+		ch, err := ring.PutMulti(ctx, cmds.NewMultiCompleted([][]string{{"should_fail"}}), nil)
+		if err != context.Canceled {
+			t.Fatalf("Expected context.Canceled error, got %v", err)
+		}
+		if ch != nil {
+			t.Fatal("Expected nil channel on context cancellation")
+		}
+
+		wg.Wait()
+
+		if atomic.LoadInt32(&cnt) != 1 {
+			t.Fatalf("Expected 1, got %d", cnt)
+		}
 	})
 }
