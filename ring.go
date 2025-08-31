@@ -62,6 +62,7 @@ func (r *ring) PutOne(ctx context.Context, m Completed) (chan RedisResult, error
 			select {
 			case <-ctxCh:
 				n.c1.L.Unlock()
+				n.c1.Signal()
 				return nil, ctx.Err()
 			default:
 			}
@@ -87,6 +88,7 @@ func (r *ring) PutMulti(ctx context.Context, m []Completed, resps []RedisResult)
 			select {
 			case <-ctxCh:
 				n.c1.L.Unlock()
+				n.c1.Signal()
 				return nil, ctx.Err()
 			default:
 			}
