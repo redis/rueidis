@@ -158,22 +158,22 @@ func TestRing(t *testing.T) {
 		go func() {
 			defer wg.Done()
 
-			cancel()
-			ch, err := ring.PutOne(ctx, cmds.NewCompleted([]string{"should_fail"}))
-			if err != context.Canceled {
-				t.Fatalf("Expected context.Canceled error, got %v", err)
-			}
-			if ch != nil {
-				t.Fatal("Expected nil channel on context cancellation")
+			time.Sleep(time.Millisecond * 100) // wait for PutOne to be called.
+
+			for i := 0; i < (1 << 1); i++ {
+				_, _, _, _, cond := ring.NextResultCh()
+				cond.L.Unlock()
+				cond.Signal()
 			}
 		}()
 
-		time.Sleep(time.Millisecond * 50) // Wait for goroutine to start
-
-		for i := 0; i < (1 << 1); i++ {
-			_, _, _, _, cond := ring.NextResultCh()
-			cond.L.Unlock()
-			cond.Signal()
+		cancel()
+		ch, err := ring.PutOne(ctx, cmds.NewCompleted([]string{"should_fail"}))
+		if err != context.Canceled {
+			t.Fatalf("Expected context.Canceled error, got %v", err)
+		}
+		if ch != nil {
+			t.Fatal("Expected nil channel on context cancellation")
 		}
 		wg.Wait()
 	})
@@ -194,23 +194,24 @@ func TestRing(t *testing.T) {
 		go func() {
 			defer wg.Done()
 
-			cancel()
-			ch, err := ring.PutMulti(ctx, cmds.NewMultiCompleted([][]string{{"should_fail"}}), nil)
-			if err != context.Canceled {
-				t.Fatalf("Expected context.Canceled error, got %v", err)
-			}
-			if ch != nil {
-				t.Fatal("Expected nil channel on context cancellation")
+			time.Sleep(time.Millisecond * 100) // wait for PutOne to be called.
+
+			for i := 0; i < (1 << 1); i++ {
+				_, _, _, _, cond := ring.NextResultCh()
+				cond.L.Unlock()
+				cond.Signal()
 			}
 		}()
 
-		time.Sleep(time.Millisecond * 50) // Wait for goroutine to start
-
-		for i := 0; i < (1 << 1); i++ {
-			_, _, _, _, cond := ring.NextResultCh()
-			cond.L.Unlock()
-			cond.Signal()
+		cancel()
+		ch, err := ring.PutMulti(ctx, cmds.NewMultiCompleted([][]string{{"should_fail"}}), nil)
+		if err != context.Canceled {
+			t.Fatalf("Expected context.Canceled error, got %v", err)
 		}
+		if ch != nil {
+			t.Fatal("Expected nil channel on context cancellation")
+		}
+
 		wg.Wait()
 	})
 }
