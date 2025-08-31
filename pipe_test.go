@@ -3501,7 +3501,7 @@ func TestPubSub(t *testing.T) {
 
 			p, mock, _, _ := setup(t, ClientOption{})
 			atomic.StoreInt32(&p.state, 1)
-			p.queue.PutOne(push)
+			p.queue.PutOne(context.Background(), push)
 			_, _, ch := p.queue.NextWriteCmd()
 			go func() {
 				mock.Expect().Reply(strmsg(
@@ -3531,8 +3531,8 @@ func TestPubSub(t *testing.T) {
 
 			p, mock, _, _ := setup(t, ClientOption{})
 			atomic.StoreInt32(&p.state, 1)
-			p.queue.PutOne(push)
-			p.queue.PutOne(cmds.PingCmd)
+			p.queue.PutOne(context.Background(), push)
+			p.queue.PutOne(context.Background(), cmds.PingCmd)
 			_, _, ch := p.queue.NextWriteCmd()
 			_, _, _ = p.queue.NextWriteCmd()
 			go func() {
@@ -3824,7 +3824,7 @@ func TestPubSub(t *testing.T) {
 
 			p, mock, _, _ := setup(t, ClientOption{})
 			atomic.StoreInt32(&p.state, 1)
-			p.queue.PutOne(builder.Get().Key("a").Build())
+			p.queue.PutOne(context.Background(), builder.Get().Key("a").Build())
 			p.queue.NextWriteCmd()
 			go func() {
 				mock.Expect().Reply(slicemsg(
@@ -3854,7 +3854,7 @@ func TestPubSub(t *testing.T) {
 
 			p, mock, _, _ := setup(t, ClientOption{})
 			atomic.StoreInt32(&p.state, 1)
-			p.queue.PutOne(cmd)
+			p.queue.PutOne(context.Background(), cmd)
 			p.queue.NextWriteCmd()
 			go func() {
 				mock.Expect().Reply(strmsg('+', "QUEUED"))

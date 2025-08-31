@@ -1,6 +1,7 @@
 package rueidis
 
 import (
+	"context"
 	"sync"
 	"sync/atomic"
 
@@ -8,8 +9,8 @@ import (
 )
 
 type queue interface {
-	PutOne(m Completed) chan RedisResult
-	PutMulti(m []Completed, resps []RedisResult) chan RedisResult
+	PutOne(ctx context.Context, m Completed) (chan RedisResult, error)
+	PutMulti(ctx context.Context, m []Completed, resps []RedisResult) (chan RedisResult, error)
 	NextWriteCmd() (Completed, []Completed, chan RedisResult)
 	WaitForWrite() (Completed, []Completed, chan RedisResult)
 	NextResultCh() (Completed, []Completed, chan RedisResult, []RedisResult, *sync.Cond)
@@ -53,12 +54,21 @@ type node struct {
 	slept bool
 }
 
-func (r *ring) PutOne(m Completed) chan RedisResult {
+func (r *ring) PutOne(ctx context.Context, m Completed) (chan RedisResult, error) {
 	n := &r.store[atomic.AddUint32(&r.write, 1)&r.mask]
 	n.c1.L.Lock()
 	for n.mark != 0 {
+		if ctxCh := ctx.Done(); ctxCh != nil {
+			select {
+			case <-ctxCh:
+				n.c1.L.Unlock()
+				return nil, ctx.Err()
+			default:
+			}
+		}
 		n.c1.Wait()
 	}
+
 	n.one = m
 	n.mark = 1
 	s := n.slept
@@ -66,13 +76,21 @@ func (r *ring) PutOne(m Completed) chan RedisResult {
 	if s {
 		n.c2.Broadcast()
 	}
-	return n.ch
+	return n.ch, nil
 }
 
-func (r *ring) PutMulti(m []Completed, resps []RedisResult) chan RedisResult {
+func (r *ring) PutMulti(ctx context.Context, m []Completed, resps []RedisResult) (chan RedisResult, error) {
 	n := &r.store[atomic.AddUint32(&r.write, 1)&r.mask]
 	n.c1.L.Lock()
 	for n.mark != 0 {
+		if ctxCh := ctx.Done(); ctxCh != nil {
+			select {
+			case <-ctxCh:
+				n.c1.L.Unlock()
+				return nil, ctx.Err()
+			default:
+			}
+		}
 		n.c1.Wait()
 	}
 	n.multi = m
@@ -83,7 +101,7 @@ func (r *ring) PutMulti(m []Completed, resps []RedisResult) chan RedisResult {
 	if s {
 		n.c2.Broadcast()
 	}
-	return n.ch
+	return n.ch, nil
 }
 
 // NextWriteCmd should be only called by one dedicated thread
