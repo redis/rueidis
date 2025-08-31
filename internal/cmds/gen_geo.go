@@ -2289,11 +2289,91 @@ func (c GeosearchCircleBoxUnitFt) NumVertices(numVertices int64) GeosearchCircle
 	return (GeosearchCirclePolygonNumVertices)(c)
 }
 
+func (c GeosearchCircleBoxUnitFt) Asc() GeosearchOrderAsc {
+	c.cs.s = append(c.cs.s, "ASC")
+	return (GeosearchOrderAsc)(c)
+}
+
+func (c GeosearchCircleBoxUnitFt) Desc() GeosearchOrderDesc {
+	c.cs.s = append(c.cs.s, "DESC")
+	return (GeosearchOrderDesc)(c)
+}
+
+func (c GeosearchCircleBoxUnitFt) Count(count int64) GeosearchCountCount {
+	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
+	return (GeosearchCountCount)(c)
+}
+
+func (c GeosearchCircleBoxUnitFt) Withcoord() GeosearchWithcoord {
+	c.cs.s = append(c.cs.s, "WITHCOORD")
+	return (GeosearchWithcoord)(c)
+}
+
+func (c GeosearchCircleBoxUnitFt) Withdist() GeosearchWithdist {
+	c.cs.s = append(c.cs.s, "WITHDIST")
+	return (GeosearchWithdist)(c)
+}
+
+func (c GeosearchCircleBoxUnitFt) Withhash() GeosearchWithhash {
+	c.cs.s = append(c.cs.s, "WITHHASH")
+	return (GeosearchWithhash)(c)
+}
+
+func (c GeosearchCircleBoxUnitFt) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+func (c GeosearchCircleBoxUnitFt) Cache() Cacheable {
+	c.cs.Build()
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
 type GeosearchCircleBoxUnitKm Incomplete
 
 func (c GeosearchCircleBoxUnitKm) NumVertices(numVertices int64) GeosearchCirclePolygonNumVertices {
 	c.cs.s = append(c.cs.s, "BYPOLYGON", strconv.FormatInt(numVertices, 10))
 	return (GeosearchCirclePolygonNumVertices)(c)
+}
+
+func (c GeosearchCircleBoxUnitKm) Asc() GeosearchOrderAsc {
+	c.cs.s = append(c.cs.s, "ASC")
+	return (GeosearchOrderAsc)(c)
+}
+
+func (c GeosearchCircleBoxUnitKm) Desc() GeosearchOrderDesc {
+	c.cs.s = append(c.cs.s, "DESC")
+	return (GeosearchOrderDesc)(c)
+}
+
+func (c GeosearchCircleBoxUnitKm) Count(count int64) GeosearchCountCount {
+	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
+	return (GeosearchCountCount)(c)
+}
+
+func (c GeosearchCircleBoxUnitKm) Withcoord() GeosearchWithcoord {
+	c.cs.s = append(c.cs.s, "WITHCOORD")
+	return (GeosearchWithcoord)(c)
+}
+
+func (c GeosearchCircleBoxUnitKm) Withdist() GeosearchWithdist {
+	c.cs.s = append(c.cs.s, "WITHDIST")
+	return (GeosearchWithdist)(c)
+}
+
+func (c GeosearchCircleBoxUnitKm) Withhash() GeosearchWithhash {
+	c.cs.s = append(c.cs.s, "WITHHASH")
+	return (GeosearchWithhash)(c)
+}
+
+func (c GeosearchCircleBoxUnitKm) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+func (c GeosearchCircleBoxUnitKm) Cache() Cacheable {
+	c.cs.Build()
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 type GeosearchCircleBoxUnitM Incomplete
@@ -2303,11 +2383,91 @@ func (c GeosearchCircleBoxUnitM) NumVertices(numVertices int64) GeosearchCircleP
 	return (GeosearchCirclePolygonNumVertices)(c)
 }
 
+func (c GeosearchCircleBoxUnitM) Asc() GeosearchOrderAsc {
+	c.cs.s = append(c.cs.s, "ASC")
+	return (GeosearchOrderAsc)(c)
+}
+
+func (c GeosearchCircleBoxUnitM) Desc() GeosearchOrderDesc {
+	c.cs.s = append(c.cs.s, "DESC")
+	return (GeosearchOrderDesc)(c)
+}
+
+func (c GeosearchCircleBoxUnitM) Count(count int64) GeosearchCountCount {
+	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
+	return (GeosearchCountCount)(c)
+}
+
+func (c GeosearchCircleBoxUnitM) Withcoord() GeosearchWithcoord {
+	c.cs.s = append(c.cs.s, "WITHCOORD")
+	return (GeosearchWithcoord)(c)
+}
+
+func (c GeosearchCircleBoxUnitM) Withdist() GeosearchWithdist {
+	c.cs.s = append(c.cs.s, "WITHDIST")
+	return (GeosearchWithdist)(c)
+}
+
+func (c GeosearchCircleBoxUnitM) Withhash() GeosearchWithhash {
+	c.cs.s = append(c.cs.s, "WITHHASH")
+	return (GeosearchWithhash)(c)
+}
+
+func (c GeosearchCircleBoxUnitM) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+func (c GeosearchCircleBoxUnitM) Cache() Cacheable {
+	c.cs.Build()
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
 type GeosearchCircleBoxUnitMi Incomplete
 
 func (c GeosearchCircleBoxUnitMi) NumVertices(numVertices int64) GeosearchCirclePolygonNumVertices {
 	c.cs.s = append(c.cs.s, "BYPOLYGON", strconv.FormatInt(numVertices, 10))
 	return (GeosearchCirclePolygonNumVertices)(c)
+}
+
+func (c GeosearchCircleBoxUnitMi) Asc() GeosearchOrderAsc {
+	c.cs.s = append(c.cs.s, "ASC")
+	return (GeosearchOrderAsc)(c)
+}
+
+func (c GeosearchCircleBoxUnitMi) Desc() GeosearchOrderDesc {
+	c.cs.s = append(c.cs.s, "DESC")
+	return (GeosearchOrderDesc)(c)
+}
+
+func (c GeosearchCircleBoxUnitMi) Count(count int64) GeosearchCountCount {
+	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
+	return (GeosearchCountCount)(c)
+}
+
+func (c GeosearchCircleBoxUnitMi) Withcoord() GeosearchWithcoord {
+	c.cs.s = append(c.cs.s, "WITHCOORD")
+	return (GeosearchWithcoord)(c)
+}
+
+func (c GeosearchCircleBoxUnitMi) Withdist() GeosearchWithdist {
+	c.cs.s = append(c.cs.s, "WITHDIST")
+	return (GeosearchWithdist)(c)
+}
+
+func (c GeosearchCircleBoxUnitMi) Withhash() GeosearchWithhash {
+	c.cs.s = append(c.cs.s, "WITHHASH")
+	return (GeosearchWithhash)(c)
+}
+
+func (c GeosearchCircleBoxUnitMi) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+func (c GeosearchCircleBoxUnitMi) Cache() Cacheable {
+	c.cs.Build()
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 type GeosearchCircleCircleByradius Incomplete
@@ -2344,6 +2504,46 @@ func (c GeosearchCircleCircleUnitFt) NumVertices(numVertices int64) GeosearchCir
 	return (GeosearchCirclePolygonNumVertices)(c)
 }
 
+func (c GeosearchCircleCircleUnitFt) Asc() GeosearchOrderAsc {
+	c.cs.s = append(c.cs.s, "ASC")
+	return (GeosearchOrderAsc)(c)
+}
+
+func (c GeosearchCircleCircleUnitFt) Desc() GeosearchOrderDesc {
+	c.cs.s = append(c.cs.s, "DESC")
+	return (GeosearchOrderDesc)(c)
+}
+
+func (c GeosearchCircleCircleUnitFt) Count(count int64) GeosearchCountCount {
+	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
+	return (GeosearchCountCount)(c)
+}
+
+func (c GeosearchCircleCircleUnitFt) Withcoord() GeosearchWithcoord {
+	c.cs.s = append(c.cs.s, "WITHCOORD")
+	return (GeosearchWithcoord)(c)
+}
+
+func (c GeosearchCircleCircleUnitFt) Withdist() GeosearchWithdist {
+	c.cs.s = append(c.cs.s, "WITHDIST")
+	return (GeosearchWithdist)(c)
+}
+
+func (c GeosearchCircleCircleUnitFt) Withhash() GeosearchWithhash {
+	c.cs.s = append(c.cs.s, "WITHHASH")
+	return (GeosearchWithhash)(c)
+}
+
+func (c GeosearchCircleCircleUnitFt) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+func (c GeosearchCircleCircleUnitFt) Cache() Cacheable {
+	c.cs.Build()
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
 type GeosearchCircleCircleUnitKm Incomplete
 
 func (c GeosearchCircleCircleUnitKm) Bybox(width float64) GeosearchCircleBoxBybox {
@@ -2354,6 +2554,46 @@ func (c GeosearchCircleCircleUnitKm) Bybox(width float64) GeosearchCircleBoxBybo
 func (c GeosearchCircleCircleUnitKm) NumVertices(numVertices int64) GeosearchCirclePolygonNumVertices {
 	c.cs.s = append(c.cs.s, "BYPOLYGON", strconv.FormatInt(numVertices, 10))
 	return (GeosearchCirclePolygonNumVertices)(c)
+}
+
+func (c GeosearchCircleCircleUnitKm) Asc() GeosearchOrderAsc {
+	c.cs.s = append(c.cs.s, "ASC")
+	return (GeosearchOrderAsc)(c)
+}
+
+func (c GeosearchCircleCircleUnitKm) Desc() GeosearchOrderDesc {
+	c.cs.s = append(c.cs.s, "DESC")
+	return (GeosearchOrderDesc)(c)
+}
+
+func (c GeosearchCircleCircleUnitKm) Count(count int64) GeosearchCountCount {
+	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
+	return (GeosearchCountCount)(c)
+}
+
+func (c GeosearchCircleCircleUnitKm) Withcoord() GeosearchWithcoord {
+	c.cs.s = append(c.cs.s, "WITHCOORD")
+	return (GeosearchWithcoord)(c)
+}
+
+func (c GeosearchCircleCircleUnitKm) Withdist() GeosearchWithdist {
+	c.cs.s = append(c.cs.s, "WITHDIST")
+	return (GeosearchWithdist)(c)
+}
+
+func (c GeosearchCircleCircleUnitKm) Withhash() GeosearchWithhash {
+	c.cs.s = append(c.cs.s, "WITHHASH")
+	return (GeosearchWithhash)(c)
+}
+
+func (c GeosearchCircleCircleUnitKm) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+func (c GeosearchCircleCircleUnitKm) Cache() Cacheable {
+	c.cs.Build()
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 type GeosearchCircleCircleUnitM Incomplete
@@ -2368,6 +2608,46 @@ func (c GeosearchCircleCircleUnitM) NumVertices(numVertices int64) GeosearchCirc
 	return (GeosearchCirclePolygonNumVertices)(c)
 }
 
+func (c GeosearchCircleCircleUnitM) Asc() GeosearchOrderAsc {
+	c.cs.s = append(c.cs.s, "ASC")
+	return (GeosearchOrderAsc)(c)
+}
+
+func (c GeosearchCircleCircleUnitM) Desc() GeosearchOrderDesc {
+	c.cs.s = append(c.cs.s, "DESC")
+	return (GeosearchOrderDesc)(c)
+}
+
+func (c GeosearchCircleCircleUnitM) Count(count int64) GeosearchCountCount {
+	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
+	return (GeosearchCountCount)(c)
+}
+
+func (c GeosearchCircleCircleUnitM) Withcoord() GeosearchWithcoord {
+	c.cs.s = append(c.cs.s, "WITHCOORD")
+	return (GeosearchWithcoord)(c)
+}
+
+func (c GeosearchCircleCircleUnitM) Withdist() GeosearchWithdist {
+	c.cs.s = append(c.cs.s, "WITHDIST")
+	return (GeosearchWithdist)(c)
+}
+
+func (c GeosearchCircleCircleUnitM) Withhash() GeosearchWithhash {
+	c.cs.s = append(c.cs.s, "WITHHASH")
+	return (GeosearchWithhash)(c)
+}
+
+func (c GeosearchCircleCircleUnitM) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+func (c GeosearchCircleCircleUnitM) Cache() Cacheable {
+	c.cs.Build()
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
 type GeosearchCircleCircleUnitMi Incomplete
 
 func (c GeosearchCircleCircleUnitMi) Bybox(width float64) GeosearchCircleBoxBybox {
@@ -2378,6 +2658,46 @@ func (c GeosearchCircleCircleUnitMi) Bybox(width float64) GeosearchCircleBoxBybo
 func (c GeosearchCircleCircleUnitMi) NumVertices(numVertices int64) GeosearchCirclePolygonNumVertices {
 	c.cs.s = append(c.cs.s, "BYPOLYGON", strconv.FormatInt(numVertices, 10))
 	return (GeosearchCirclePolygonNumVertices)(c)
+}
+
+func (c GeosearchCircleCircleUnitMi) Asc() GeosearchOrderAsc {
+	c.cs.s = append(c.cs.s, "ASC")
+	return (GeosearchOrderAsc)(c)
+}
+
+func (c GeosearchCircleCircleUnitMi) Desc() GeosearchOrderDesc {
+	c.cs.s = append(c.cs.s, "DESC")
+	return (GeosearchOrderDesc)(c)
+}
+
+func (c GeosearchCircleCircleUnitMi) Count(count int64) GeosearchCountCount {
+	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
+	return (GeosearchCountCount)(c)
+}
+
+func (c GeosearchCircleCircleUnitMi) Withcoord() GeosearchWithcoord {
+	c.cs.s = append(c.cs.s, "WITHCOORD")
+	return (GeosearchWithcoord)(c)
+}
+
+func (c GeosearchCircleCircleUnitMi) Withdist() GeosearchWithdist {
+	c.cs.s = append(c.cs.s, "WITHDIST")
+	return (GeosearchWithdist)(c)
+}
+
+func (c GeosearchCircleCircleUnitMi) Withhash() GeosearchWithhash {
+	c.cs.s = append(c.cs.s, "WITHHASH")
+	return (GeosearchWithhash)(c)
+}
+
+func (c GeosearchCircleCircleUnitMi) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+func (c GeosearchCircleCircleUnitMi) Cache() Cacheable {
+	c.cs.Build()
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 type GeosearchCirclePolygonNumVertices Incomplete
