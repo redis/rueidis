@@ -224,20 +224,14 @@ func (c *clusterClient) _refresh() (err error) {
 	groups := result.parse(c.opt.TLSConfig != nil)
 	conns := make(map[string]connrole, len(groups))
 	for master, g := range groups {
-		mConn := c.connFn(master, c.opt)
-		conns[master] = connrole{conn: mConn}
-		g.nodes[0].conn = mConn
+		conns[master] = connrole{conn: c.connFn(master, c.opt)}
 		if c.rOpt != nil {
-			for i, nodeInfo := range g.nodes[1:] {
-				rConn := c.connFn(nodeInfo.Addr, c.rOpt)
-				conns[nodeInfo.Addr] = connrole{conn: rConn}
-				g.nodes[1+i].conn = rConn
+			for _, nodeInfo := range g.nodes[1:] {
+				conns[nodeInfo.Addr] = connrole{conn: c.connFn(nodeInfo.Addr, c.rOpt)}
 			}
 		} else {
-			for i, nodeInfo := range g.nodes[1:] {
-				rConn := c.connFn(nodeInfo.Addr, c.opt)
-				conns[nodeInfo.Addr] = connrole{conn: rConn}
-				g.nodes[1+i].conn = rConn
+			for _, nodeInfo := range g.nodes[1:] {
+				conns[nodeInfo.Addr] = connrole{conn: c.connFn(nodeInfo.Addr, c.opt)}
 			}
 		}
 	}
@@ -267,6 +261,12 @@ func (c *clusterClient) _refresh() (err error) {
 	wslots := [16384]conn{}
 	var rslots [][]NodeInfo
 	for master, g := range groups {
+
+		for i, nodeInfo := range g.nodes {
+			conn := conns[nodeInfo.Addr].conn
+			g.nodes[i].conn = conn
+		}
+
 		switch {
 		case c.opt.ReplicaOnly && len(g.nodes) > 1:
 			nodesCount := len(g.nodes)
