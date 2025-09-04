@@ -1070,16 +1070,16 @@ func TestClusterClientInit(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 
-		if client.pslots[0] != client.conns["127.0.0.1:0"].conn {
+		if client.wslots[0] != client.conns["127.0.0.1:0"].conn {
 			t.Fatalf("unexpected node assigned to pslot 0")
 		}
-		if client.pslots[8192] != client.conns["127.0.0.1:0"].conn {
+		if client.wslots[8192] != client.conns["127.0.0.1:0"].conn {
 			t.Fatalf("unexpected node assigned to pslot 8192")
 		}
-		if client.pslots[8193] != client.conns["127.0.1.1:0"].conn {
+		if client.wslots[8193] != client.conns["127.0.1.1:0"].conn {
 			t.Fatalf("unexpected node assigned to pslot 8193")
 		}
-		if client.pslots[16383] != client.conns["127.0.1.1:0"].conn {
+		if client.wslots[16383] != client.conns["127.0.1.1:0"].conn {
 			t.Fatalf("unexpected node assigned to pslot 16383")
 		}
 		if client.rslots[0][0].conn != client.conns["127.0.0.1:0"].conn {
@@ -1141,16 +1141,16 @@ func TestClusterClientInit(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 
-		if client.pslots[0] != client.conns["127.0.0.1:0"].conn {
+		if client.wslots[0] != client.conns["127.0.0.1:0"].conn {
 			t.Fatalf("unexpected node assigned to pslot 0")
 		}
-		if client.pslots[8192] != client.conns["127.0.0.1:0"].conn {
+		if client.wslots[8192] != client.conns["127.0.0.1:0"].conn {
 			t.Fatalf("unexpected node assigned to pslot 8192")
 		}
-		if client.pslots[8193] != client.conns["127.0.2.1:0"].conn {
+		if client.wslots[8193] != client.conns["127.0.2.1:0"].conn {
 			t.Fatalf("unexpected node assigned to pslot 8193")
 		}
-		if client.pslots[16383] != client.conns["127.0.2.1:0"].conn {
+		if client.wslots[16383] != client.conns["127.0.2.1:0"].conn {
 			t.Fatalf("unexpected node assigned to pslot 16383")
 		}
 		if client.rslots[0][0].conn != client.conns["127.0.1.1:1"].conn {
@@ -1205,7 +1205,7 @@ func TestClusterClientInit(t *testing.T) {
 				SendToReplicas: func(cmd Completed) bool {
 					return true
 				},
-				ReplicaSelector: func(slot uint16, replicas []ReplicaInfo) int {
+				ReplicaSelector: func(slot uint16, replicas []NodeInfo) int {
 					return 0
 				},
 			},
@@ -1219,16 +1219,16 @@ func TestClusterClientInit(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 
-		if client.pslots[0] != client.conns["127.0.0.1:0"].conn {
+		if client.wslots[0] != client.conns["127.0.0.1:0"].conn {
 			t.Fatalf("unexpected node assigned to pslot 0")
 		}
-		if client.pslots[8192] != client.conns["127.0.0.1:0"].conn {
+		if client.wslots[8192] != client.conns["127.0.0.1:0"].conn {
 			t.Fatalf("unexpected node assigned to pslot 8192")
 		}
-		if client.pslots[8193] != client.conns["127.0.1.1:0"].conn {
+		if client.wslots[8193] != client.conns["127.0.1.1:0"].conn {
 			t.Fatalf("unexpected node assigned to pslot 8193")
 		}
-		if client.pslots[16383] != client.conns["127.0.1.1:0"].conn {
+		if client.wslots[16383] != client.conns["127.0.1.1:0"].conn {
 			t.Fatalf("unexpected node assigned to pslot 16383")
 		}
 		if client.rslots[0][0].conn != client.conns["127.0.0.1:0"].conn {
@@ -1284,7 +1284,7 @@ func TestClusterClientInit(t *testing.T) {
 				SendToReplicas: func(cmd Completed) bool {
 					return true
 				},
-				ReplicaSelector: func(slot uint16, replicas []ReplicaInfo) int {
+				ReplicaSelector: func(slot uint16, replicas []NodeInfo) int {
 					return 1
 				},
 			},
@@ -1306,16 +1306,16 @@ func TestClusterClientInit(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 
-		if client.pslots[0] != primaryNodeConn {
+		if client.wslots[0] != primaryNodeConn {
 			t.Fatalf("unexpected node assigned to pslot 0")
 		}
-		if client.pslots[8192] != primaryNodeConn {
+		if client.wslots[8192] != primaryNodeConn {
 			t.Fatalf("unexpected node assigned to pslot 8192")
 		}
-		if client.pslots[8193] != primaryNodeConn {
+		if client.wslots[8193] != primaryNodeConn {
 			t.Fatalf("unexpected node assigned to pslot 8193")
 		}
-		if client.pslots[16383] != primaryNodeConn {
+		if client.wslots[16383] != primaryNodeConn {
 			t.Fatalf("unexpected node assigned to pslot 16383")
 		}
 		if client.rslots[0][0].conn != replicaNodeConn2 {
@@ -1371,7 +1371,7 @@ func TestClusterClientInit(t *testing.T) {
 				SendToReplicas: func(cmd Completed) bool {
 					return true
 				},
-				ReplicaSelector: func(slot uint16, replicas []ReplicaInfo) int {
+				ReplicaSelector: func(slot uint16, replicas []NodeInfo) int {
 					return -1
 				},
 			},
@@ -1393,16 +1393,16 @@ func TestClusterClientInit(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 
-		if client.pslots[0] != primaryNodeConn {
+		if client.wslots[0] != primaryNodeConn {
 			t.Fatalf("unexpected node assigned to pslot 0")
 		}
-		if client.pslots[8192] != primaryNodeConn {
+		if client.wslots[8192] != primaryNodeConn {
 			t.Fatalf("unexpected node assigned to pslot 8192")
 		}
-		if client.pslots[8193] != primaryNodeConn {
+		if client.wslots[8193] != primaryNodeConn {
 			t.Fatalf("unexpected node assigned to pslot 8193")
 		}
-		if client.pslots[16383] != primaryNodeConn {
+		if client.wslots[16383] != primaryNodeConn {
 			t.Fatalf("unexpected node assigned to pslot 16383")
 		}
 		if client.rslots[0][0].conn != primaryNodeConn {
@@ -1470,7 +1470,7 @@ func TestClusterClientInit(t *testing.T) {
 				SendToReplicas: func(cmd Completed) bool {
 					return true
 				},
-				ReplicaSelector: func(slot uint16, replicas []ReplicaInfo) int {
+				ReplicaSelector: func(slot uint16, replicas []NodeInfo) int {
 					for i, replica := range replicas {
 						if replica.AZ == "us-west-1b" {
 							return i
@@ -1498,16 +1498,16 @@ func TestClusterClientInit(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 
-		if client.pslots[0] != primaryNodeConn {
+		if client.wslots[0] != primaryNodeConn {
 			t.Fatalf("unexpected node assigned to pslot 0")
 		}
-		if client.pslots[8192] != primaryNodeConn {
+		if client.wslots[8192] != primaryNodeConn {
 			t.Fatalf("unexpected node assigned to pslot 8192")
 		}
-		if client.pslots[8193] != primaryNodeConn {
+		if client.wslots[8193] != primaryNodeConn {
 			t.Fatalf("unexpected node assigned to pslot 8193")
 		}
-		if client.pslots[16383] != primaryNodeConn {
+		if client.wslots[16383] != primaryNodeConn {
 			t.Fatalf("unexpected node assigned to pslot 16383")
 		}
 		if client.rslots[0][0].conn != replicaNodeConn2 {
@@ -1563,7 +1563,7 @@ func TestClusterClientInit(t *testing.T) {
 				SendToReplicas: func(cmd Completed) bool {
 					return true
 				},
-				ReplicaSelector: func(slot uint16, replicas []ReplicaInfo) int {
+				ReplicaSelector: func(slot uint16, replicas []NodeInfo) int {
 					return 1
 				},
 				RouteRandomly: true,
@@ -1587,7 +1587,7 @@ func TestClusterClientInit(t *testing.T) {
 		}
 
 		for i := 0; i < 16384; i++ {
-			if client.pslots[i] != primaryNodeConn {
+			if client.wslots[i] != primaryNodeConn {
 				t.Fatalf("unexpected node assigned to pslot %d", i)
 			}
 		}
@@ -5887,16 +5887,16 @@ func TestClusterClientReplicaOnly_PickReplica(t *testing.T) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	t.Run("replicas should be picked", func(t *testing.T) {
-		if client.pslots[0] != client.conns["127.0.1.1:1"].conn {
+		if client.wslots[0] != client.conns["127.0.1.1:1"].conn {
 			t.Fatalf("unexpected replica node assigned to slot 0")
 		}
-		if client.pslots[8192] != client.conns["127.0.1.1:1"].conn {
+		if client.wslots[8192] != client.conns["127.0.1.1:1"].conn {
 			t.Fatalf("unexpected replica node assigned to slot 8192")
 		}
-		if client.pslots[8193] != client.conns["127.0.3.1:1"].conn {
+		if client.wslots[8193] != client.conns["127.0.3.1:1"].conn {
 			t.Fatalf("unexpected replica node assigned to slot 8193")
 		}
-		if client.pslots[16383] != client.conns["127.0.3.1:1"].conn {
+		if client.wslots[16383] != client.conns["127.0.3.1:1"].conn {
 			t.Fatalf("unexpected replica node assigned to slot 16383")
 		}
 	})
@@ -5926,16 +5926,16 @@ func TestClusterClientReplicaOnly_PickMasterIfNoReplica(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 
-		if client.pslots[0] != client.conns["127.0.1.1:1"].conn {
+		if client.wslots[0] != client.conns["127.0.1.1:1"].conn {
 			t.Fatalf("unexpected replica node assigned to slot 0")
 		}
-		if client.pslots[8192] != client.conns["127.0.1.1:1"].conn {
+		if client.wslots[8192] != client.conns["127.0.1.1:1"].conn {
 			t.Fatalf("unexpected replica node assigned to slot 8192")
 		}
-		if client.pslots[8193] != client.conns["127.0.3.1:1"].conn {
+		if client.wslots[8193] != client.conns["127.0.3.1:1"].conn {
 			t.Fatalf("unexpected replica node assigned to slot 8193")
 		}
-		if client.pslots[16383] != client.conns["127.0.3.1:1"].conn {
+		if client.wslots[16383] != client.conns["127.0.3.1:1"].conn {
 			t.Fatalf("unexpected replica node assigned to slot 16383")
 		}
 	})
@@ -5963,13 +5963,13 @@ func TestClusterClientReplicaOnly_PickMasterIfNoReplica(t *testing.T) {
 		}
 
 		for slot := 0; slot < 8193; slot++ {
-			if client.pslots[slot] == client.conns["127.0.0.2:1"].conn {
+			if client.wslots[slot] == client.conns["127.0.0.2:1"].conn {
 				continue
 			}
-			if client.pslots[slot] == client.conns["127.0.0.3:2"].conn {
+			if client.wslots[slot] == client.conns["127.0.0.3:2"].conn {
 				continue
 			}
-			if client.pslots[slot] == client.conns["127.0.0.4:3"].conn {
+			if client.wslots[slot] == client.conns["127.0.0.4:3"].conn {
 				continue
 			}
 
@@ -5977,13 +5977,13 @@ func TestClusterClientReplicaOnly_PickMasterIfNoReplica(t *testing.T) {
 		}
 
 		for slot := 8193; slot < 16384; slot++ {
-			if client.pslots[slot] == client.conns["127.0.1.2:1"].conn {
+			if client.wslots[slot] == client.conns["127.0.1.2:1"].conn {
 				continue
 			}
-			if client.pslots[slot] == client.conns["127.0.1.3:2"].conn {
+			if client.wslots[slot] == client.conns["127.0.1.3:2"].conn {
 				continue
 			}
-			if client.pslots[slot] == client.conns["127.0.1.4:3"].conn {
+			if client.wslots[slot] == client.conns["127.0.1.4:3"].conn {
 				continue
 			}
 
@@ -6678,7 +6678,7 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 			SendToReplicas: func(cmd Completed) bool {
 				return cmd.IsReadOnly()
 			},
-			ReplicaSelector: func(slot uint16, replicas []ReplicaInfo) int {
+			ReplicaSelector: func(slot uint16, replicas []NodeInfo) int {
 				return 0
 			},
 		},
@@ -7218,7 +7218,7 @@ func TestClusterClient_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T
 			SendToReplicas: func(cmd Completed) bool {
 				return true
 			},
-			ReplicaSelector: func(slot uint16, replicas []ReplicaInfo) int {
+			ReplicaSelector: func(slot uint16, replicas []NodeInfo) int {
 				return -1
 			},
 		},

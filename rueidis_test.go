@@ -168,7 +168,7 @@ func TestNewClusterClientError(t *testing.T) {
 		client, err := NewClient(ClientOption{
 			InitAddress: []string{"127.0.0.1:" + port},
 			ReplicaOnly: true,
-			ReplicaSelector: func(slot uint16, replicas []ReplicaInfo) int {
+			ReplicaSelector: func(slot uint16, replicas []NodeInfo) int {
 				return 0
 			},
 		})
@@ -191,7 +191,7 @@ func TestNewClusterClientError(t *testing.T) {
 		_, port, _ := net.SplitHostPort(ln.Addr().String())
 		client, err := NewClient(ClientOption{
 			InitAddress: []string{"127.0.0.1:" + port},
-			ReplicaSelector: func(slot uint16, replicas []ReplicaInfo) int {
+			ReplicaSelector: func(slot uint16, replicas []NodeInfo) int {
 				return 0
 			},
 		})

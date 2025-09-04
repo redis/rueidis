@@ -19,11 +19,12 @@ var ErrNoSlot = errors.New("the slot has no redis node")
 var ErrReplicaOnlyConflict = errors.New("ReplicaOnly conflicts with SendToReplicas option")
 var ErrInvalidShardsRefreshInterval = errors.New("ShardsRefreshInterval must be greater than or equal to 0")
 var ErrReplicaOnlyConflictWithReplicaSelector = errors.New("ReplicaOnly conflicts with ReplicaSelector option")
+var ErrReplicaOnlyConflictWithRouteRandomly = errors.New("ReplicaOnly conflicts with RouteRandomly option")
 var ErrSendToReplicasNotSet = errors.New("SendToReplicas must be set when ReplicaSelector is set")
 var ErrSendToReplicasNotSetWithRouteRandomly = errors.New("SendToReplicas must be set when RouteRandomly is set")
 
 type clusterClient struct {
-	pslots       [16384]conn
+	wslots       [16384]conn
 	retryHandler retryHandler
 	opt          *ClientOption
 	rOpt         *ClientOption
@@ -31,7 +32,7 @@ type clusterClient struct {
 	connFn       connFn
 	stopCh       chan struct{}
 	sc           call
-	rslots       []nodes
+	rslots       [][]NodeInfo
 	mu           sync.RWMutex
 	stop         uint32
 	cmd          Builder
@@ -46,8 +47,12 @@ type connrole struct {
 	//replica bool <- this field is removed because a server may have mixed roles at the same time in the future. https://github.com/valkey-io/valkey/issues/1372
 }
 
-var replicaOnlySelector = func(_ uint16, replicas []ReplicaInfo) int {
+var replicaOnlySelector = func(_ uint16, replicas []NodeInfo) int {
 	return util.FastRand(len(replicas))
+}
+
+var readNodeSelector = func(_ uint16, nodes []NodeInfo) int {
+	return util.FastRand(len(nodes))
 }
 
 func newClusterClient(opt *ClientOption, connFn connFn, retryer retryHandler) (*clusterClient, error) {
@@ -68,6 +73,9 @@ func newClusterClient(opt *ClientOption, connFn connFn, retryer retryHandler) (*
 	if opt.ReplicaOnly && opt.ReplicaSelector != nil {
 		return nil, ErrReplicaOnlyConflictWithReplicaSelector
 	}
+	if opt.ReplicaOnly && opt.RouteRandomly {
+		return nil, ErrReplicaOnlyConflictWithRouteRandomly
+	}
 	if opt.ReplicaSelector != nil && opt.SendToReplicas == nil {
 		return nil, ErrSendToReplicasNotSet
 	}
@@ -76,6 +84,9 @@ func newClusterClient(opt *ClientOption, connFn connFn, retryer retryHandler) (*
 	}
 	if opt.RouteRandomly && opt.SendToReplicas == nil {
 		return nil, ErrSendToReplicasNotSetWithRouteRandomly
+	}
+	if opt.RouteRandomly && opt.ReadNodeSelector == nil {
+		opt.ReadNodeSelector = readNodeSelector
 	}
 
 	if opt.SendToReplicas != nil {
@@ -213,14 +224,20 @@ func (c *clusterClient) _refresh() (err error) {
 	groups := result.parse(c.opt.TLSConfig != nil)
 	conns := make(map[string]connrole, len(groups))
 	for master, g := range groups {
-		conns[master] = connrole{conn: c.connFn(master, c.opt)}
+		mConn := c.connFn(master, c.opt)
+		conns[master] = connrole{conn: mConn}
+		g.nodes[0].conn = mConn
 		if c.rOpt != nil {
 			for _, nodeInfo := range g.nodes[1:] {
-				conns[nodeInfo.Addr] = connrole{conn: c.connFn(nodeInfo.Addr, c.rOpt)}
+				rConn := c.connFn(nodeInfo.Addr, c.rOpt)
+				conns[nodeInfo.Addr] = connrole{conn: rConn}
+				nodeInfo.conn = rConn
 			}
 		} else {
 			for _, nodeInfo := range g.nodes[1:] {
-				conns[nodeInfo.Addr] = connrole{conn: c.connFn(nodeInfo.Addr, c.opt)}
+				rConn := c.connFn(nodeInfo.Addr, c.opt)
+				conns[nodeInfo.Addr] = connrole{conn: rConn}
+				nodeInfo.conn = rConn
 			}
 		}
 	}
@@ -247,20 +264,20 @@ func (c *clusterClient) _refresh() (err error) {
 	}
 	c.mu.RUnlock()
 
-	pslots := [16384]conn{}
-	var rslots []nodes
+	wslots := [16384]conn{}
+	var rslots [][]NodeInfo
 	for master, g := range groups {
 		switch {
 		case c.opt.ReplicaOnly && len(g.nodes) > 1:
 			nodesCount := len(g.nodes)
 			for _, slot := range g.slots {
 				for i := slot[0]; i <= slot[1] && i >= 0 && i < 16384; i++ {
-					pslots[i] = conns[g.nodes[1+util.FastRand(nodesCount-1)].Addr].conn
+					wslots[i] = conns[g.nodes[1+util.FastRand(nodesCount-1)].Addr].conn
 				}
 			}
 		case c.rOpt != nil:
 			if len(rslots) == 0 { // lazy init
-				rslots = make([]nodes, 16384)
+				rslots = make([][]NodeInfo, 16384)
 			}
 			if len(g.nodes) > 1 {
 				n := len(g.nodes) - 1
@@ -270,7 +287,7 @@ func (c *clusterClient) _refresh() (err error) {
 					for i := 1; i <= n; i += 4 { // batch AZ() for every 4 connections
 						for j := i; j <= i+4 && j <= n; j++ {
 							wg.Add(1)
-							go func(wg *sync.WaitGroup, conn conn, info *ReplicaInfo) {
+							go func(wg *sync.WaitGroup, conn conn, info *NodeInfo) {
 								info.AZ = conn.AZ()
 								wg.Done()
 							}(&wg, conns[g.nodes[j].Addr].conn, &g.nodes[j])
@@ -281,23 +298,16 @@ func (c *clusterClient) _refresh() (err error) {
 
 				for _, slot := range g.slots {
 					for i := slot[0]; i <= slot[1] && i >= 0 && i < 16384; i++ {
-						pslots[i] = conns[master].conn
-						var replicas nodes
+						wslots[i] = conns[master].conn
 						if c.opt.RouteRandomly {
-							for _, node := range g.nodes {
-								node.conn = conns[node.Addr].conn
-								replicas = append(replicas, node)
-							}
-							rslots[i] = replicas
+							rslots[i] = g.nodes
 						} else {
 							rIndex := c.opt.ReplicaSelector(uint16(i), g.nodes[1:]) // exclude master node
 							if rIndex >= 0 && rIndex < n {
 								node := g.nodes[1+rIndex]
-								node.conn = conns[g.nodes[1+rIndex].Addr].conn
 								rslots[i] = nodes{node}
 							} else {
 								node := g.nodes[0] // fallback to master
-								node.conn = conns[master].conn
 								rslots[i] = nodes{node}
 							}
 						}
@@ -306,9 +316,8 @@ func (c *clusterClient) _refresh() (err error) {
 			} else {
 				for _, slot := range g.slots {
 					for i := slot[0]; i <= slot[1] && i >= 0 && i < 16384; i++ {
-						pslots[i] = conns[master].conn
+						wslots[i] = conns[master].conn
 						node := g.nodes[0]
-						node.conn = conns[master].conn
 						rslots[i] = nodes{node}
 					}
 				}
@@ -316,14 +325,14 @@ func (c *clusterClient) _refresh() (err error) {
 		default:
 			for _, slot := range g.slots {
 				for i := slot[0]; i <= slot[1] && i >= 0 && i < 16384; i++ {
-					pslots[i] = conns[master].conn
+					wslots[i] = conns[master].conn
 				}
 			}
 		}
 	}
 
 	c.mu.Lock()
-	c.pslots = pslots
+	c.wslots = wslots
 	c.rslots = rslots
 	c.conns = conns
 	c.mu.Unlock()
@@ -354,7 +363,7 @@ func (c *clusterClient) nodes() []string {
 	return nodes
 }
 
-type nodes []ReplicaInfo
+type nodes []NodeInfo
 
 type group struct {
 	nodes nodes
@@ -386,7 +395,7 @@ func parseSlots(slots RedisMessage, defaultAddr string) map[string]group {
 			g.nodes = make(nodes, 0, len(v.values())-2)
 			for i := 2; i < len(v.values()); i++ {
 				if dst := parseEndpoint(defaultAddr, v.values()[i].values()[0].string(), v.values()[i].values()[1].intlen); dst != "" {
-					g.nodes = append(g.nodes, ReplicaInfo{Addr: dst})
+					g.nodes = append(g.nodes, NodeInfo{Addr: dst})
 				}
 			}
 		}
@@ -429,7 +438,7 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 				if dictRole := dict["role"]; dictRole.string() == "master" {
 					m = len(g.nodes)
 				}
-				g.nodes = append(g.nodes, ReplicaInfo{Addr: dst})
+				g.nodes = append(g.nodes, NodeInfo{Addr: dst})
 			}
 		}
 		if m >= 0 {
@@ -463,18 +472,17 @@ func (c *clusterClient) _pick(slot uint16, toReplica bool) (p conn) {
 	} else if toReplica && c.rslots != nil {
 		if c.opt.RouteRandomly {
 			nodes := c.rslots[slot]
-			n := len(nodes)
-			rIndex := c.opt.ReplicaSelector(slot, nodes)
-			if rIndex >= 0 && rIndex < n {
+			rIndex := c.opt.ReadNodeSelector(slot, nodes)
+			if rIndex >= 0 && rIndex < len(nodes) {
 				p = c.rslots[slot][rIndex].conn
 			} else {
-				p = c.pslots[slot]
+				p = c.wslots[slot]
 			}
 		} else {
 			p = c.rslots[slot][0].conn
 		}
 	} else {
-		p = c.pslots[slot]
+		p = c.wslots[slot]
 	}
 	c.mu.RUnlock()
 	return p
@@ -505,7 +513,7 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn, slot uint16, mode 
 		cc = connrole{conn: p}
 		c.conns[addr] = cc
 		if mode == RedirectMove {
-			c.pslots[slot] = p
+			c.wslots[slot] = p
 		}
 	} else if prev == cc.conn {
 		// try reconnection if the MOVED redirects to the same host,
@@ -519,7 +527,7 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn, slot uint16, mode 
 		cc = connrole{conn: p}
 		c.conns[addr] = cc
 		if mode == RedirectMove { // MOVED should always point to the primary.
-			c.pslots[slot] = p
+			c.wslots[slot] = p
 		}
 	}
 	c.mu.Unlock()
@@ -612,12 +620,11 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 			if c.opt.SendToReplicas(cmd) && c.opt.RouteRandomly {
 				bm.Set(i)
 				nodes := c.rslots[slot]
-				n := len(nodes)
-				rIndex := c.opt.ReplicaSelector(slot, nodes)
-				if rIndex >= 0 && rIndex < n {
+				rIndex := c.opt.ReadNodeSelector(slot, nodes)
+				if rIndex >= 0 && rIndex < len(nodes) {
 					cc = nodes[rIndex].conn
 				} else {
-					cc = c.pslots[cmd.Slot()]
+					cc = c.wslots[cmd.Slot()]
 				}
 				rSlotSelected[slot] = cc
 			} else if c.opt.SendToReplicas(cmd) {
@@ -625,7 +632,7 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 				cc = c.rslots[slot][0].conn
 				rSlotSelected[slot] = cc
 			} else {
-				cc = c.pslots[cmd.Slot()]
+				cc = c.wslots[cmd.Slot()]
 			}
 			if cc == nil {
 				return nil, false
@@ -644,7 +651,7 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 			if bm.Get(i) {
 				cc = rSlotSelected[cmd.Slot()]
 			} else {
-				cc = c.pslots[cmd.Slot()]
+				cc = c.wslots[cmd.Slot()]
 			}
 			re := retries.m[cc]
 			re.commands = append(re.commands, cmd)
@@ -664,7 +671,7 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 		} else if init && last != cmd.Slot() {
 			panic(panicMixCxSlot)
 		}
-		cc := c.pslots[cmd.Slot()]
+		cc := c.wslots[cmd.Slot()]
 		if cc == nil {
 			return nil, false
 		}
@@ -673,7 +680,7 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 
 	if last == cmds.InitSlot {
 		// if all commands have no slots, such as INFO, we pick a non-nil slot.
-		for i, cc := range c.pslots {
+		for i, cc := range c.wslots {
 			if cc != nil {
 				last = uint16(i)
 				count.m[cc] = inits
@@ -684,7 +691,7 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 			return nil, false
 		}
 	} else if init {
-		cc := c.pslots[last]
+		cc := c.wslots[last]
 		count.m[cc] += inits
 	}
 
@@ -697,9 +704,9 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 	for i, cmd := range multi {
 		var cc conn
 		if cmd.Slot() != cmds.InitSlot {
-			cc = c.pslots[cmd.Slot()]
+			cc = c.wslots[cmd.Slot()]
 		} else {
-			cc = c.pslots[last]
+			cc = c.wslots[last]
 		}
 		re := retries.m[cc]
 		re.commands = append(re.commands, cmd)
@@ -1056,7 +1063,7 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 	count := conncountp.Get(len(c.conns), len(c.conns))
 	if c.opt.SendToReplicas == nil || c.rslots == nil {
 		for _, cmd := range multi {
-			p := c.pslots[cmd.Cmd.Slot()]
+			p := c.wslots[cmd.Cmd.Slot()]
 			if p == nil {
 				return nil
 			}
@@ -1070,7 +1077,7 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 		conncountp.Put(count)
 
 		for i, cmd := range multi {
-			cc := c.pslots[cmd.Cmd.Slot()]
+			cc := c.wslots[cmd.Cmd.Slot()]
 			re := retries.m[cc]
 			re.commands = append(re.commands, cmd)
 			re.cIndexes = append(re.cIndexes, i)
@@ -1089,16 +1096,16 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 			var p conn
 			slot := cmd.Cmd.Slot()
 			if c.opt.SendToReplicas(Completed(cmd.Cmd)) && c.opt.RouteRandomly {
-				rIndex := c.opt.ReplicaSelector(slot, c.rslots[slot])
+				rIndex := c.opt.ReadNodeSelector(slot, c.rslots[slot])
 				if rIndex >= 0 && rIndex < len(c.rslots[slot]) {
 					p = c.rslots[slot][rIndex].conn
 				} else {
-					p = c.pslots[slot]
+					p = c.wslots[slot]
 				}
 			} else if c.opt.SendToReplicas(Completed(cmd.Cmd)) {
 				p = c.rslots[slot][0].conn
 			} else {
-				p = c.pslots[slot]
+				p = c.wslots[slot]
 			}
 			if p == nil {
 				return nil
