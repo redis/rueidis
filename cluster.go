@@ -228,16 +228,16 @@ func (c *clusterClient) _refresh() (err error) {
 		conns[master] = connrole{conn: mConn}
 		g.nodes[0].conn = mConn
 		if c.rOpt != nil {
-			for _, nodeInfo := range g.nodes[1:] {
+			for i, nodeInfo := range g.nodes[1:] {
 				rConn := c.connFn(nodeInfo.Addr, c.rOpt)
 				conns[nodeInfo.Addr] = connrole{conn: rConn}
-				nodeInfo.conn = rConn
+				g.nodes[1+i].conn = rConn
 			}
 		} else {
-			for _, nodeInfo := range g.nodes[1:] {
+			for i, nodeInfo := range g.nodes[1:] {
 				rConn := c.connFn(nodeInfo.Addr, c.opt)
 				conns[nodeInfo.Addr] = connrole{conn: rConn}
-				nodeInfo.conn = rConn
+				g.nodes[1+i].conn = rConn
 			}
 		}
 	}
