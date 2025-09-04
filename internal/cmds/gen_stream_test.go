@@ -105,6 +105,9 @@ func stream0(s Builder) {
 	s.Xtrim().Key("1").Maxlen().Exact().Threshold("1").Keepref().Build()
 	s.Xtrim().Key("1").Maxlen().Exact().Threshold("1").Delref().Build()
 	s.Xtrim().Key("1").Maxlen().Exact().Threshold("1").Acked().Build()
+}
+
+func stream1(s Builder) {
 	s.Xtrim().Key("1").Maxlen().Exact().Threshold("1").Build()
 	s.Xtrim().Key("1").Maxlen().Almost().Threshold("1").Build()
 	s.Xtrim().Key("1").Maxlen().Threshold("1").Build()
@@ -116,9 +119,11 @@ func stream0(s Builder) {
 func TestCommand_InitSlot_stream(t *testing.T) {
 	var s = NewBuilder(InitSlot)
 	t.Run("0", func(t *testing.T) { stream0(s) })
+	t.Run("1", func(t *testing.T) { stream1(s) })
 }
 
 func TestCommand_NoSlot_stream(t *testing.T) {
 	var s = NewBuilder(NoSlot)
 	t.Run("0", func(t *testing.T) { stream0(s) })
+	t.Run("1", func(t *testing.T) { stream1(s) })
 }

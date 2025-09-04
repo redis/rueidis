@@ -1,11 +1,11 @@
 
 # rueidislimiter
 
-This module provides an interface for token bucket rate limiting with precise control over limits and time windows. Inspired by GitHub's approach to scaling their API with a sharded, replicated rate limiter in Redis ([github.blog](https://github.blog/engineering/infrastructure/how-we-scaled-github-api-sharded-replicated-rate-limiter-redis/)).
+This module provides an interface for fixed window rate limiting with precise control over limits and time windows. Inspired by GitHub's approach to scaling their API with a sharded, replicated rate limiter in Redis ([github.blog](https://github.blog/engineering/infrastructure/how-we-scaled-github-api-sharded-replicated-rate-limiter-redis/)).
 
 ## Features
 
-- **Token Bucket Algorithm**: Implements a token bucket algorithm to control the number of actions (e.g., API requests) a user can perform within a specified time window.
+- **Fixed Window Algorithm**: Implements a fixed window algorithm to control the number of actions (e.g., API requests) a user can perform within a specified time window.
 - **Customizable Limits**: Allows configuration of request limits and time windows to suit various application requirements.
 - **Distributed Rate Limiting**: Leverages Redis to maintain rate limit counters, ensuring consistency across distributed environments.
 - **Reset Information**: Provides `ResetAtMs` timestamps to inform clients when they can retry requests.
