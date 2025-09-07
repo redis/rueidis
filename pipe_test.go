@@ -4219,7 +4219,7 @@ func TestExitOnRingFullAndConnError(t *testing.T) {
 	p.background()
 
 	// fill the ring
-	for i := 0; i < len(p.queue.(*ring).store); i++ {
+	for i := 0; i < p.queue.(*ring).size; i++ {
 		go func() {
 			if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 				t.Errorf("unexpected result, expected io err, got %v", err)
@@ -4227,7 +4227,7 @@ func TestExitOnRingFullAndConnError(t *testing.T) {
 		}()
 	}
 	// let writer loop over the ring
-	for i := 0; i < len(p.queue.(*ring).store); i++ {
+	for i := 0; i < p.queue.(*ring).size; i++ {
 		mock.Expect("GET", "a")
 	}
 
@@ -4249,7 +4249,7 @@ func TestExitOnRingFullAndPingTimeout(t *testing.T) {
 	p.background()
 
 	// fill the ring
-	for i := 0; i < len(p.queue.(*ring).store); i++ {
+	for i := 0; i < p.queue.(*ring).size; i++ {
 		go func() {
 			if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); !errors.Is(err, os.ErrDeadlineExceeded) {
 				t.Errorf("unexpected result, expected context.DeadlineExceeded, got %v", err)
@@ -4257,7 +4257,7 @@ func TestExitOnRingFullAndPingTimeout(t *testing.T) {
 		}()
 	}
 	// let writer loop over the ring
-	for i := 0; i < len(p.queue.(*ring).store); i++ {
+	for i := 0; i < p.queue.(*ring).size; i++ {
 		mock.Expect("GET", "a")
 	}
 

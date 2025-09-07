@@ -2,10 +2,6 @@ package rueidis
 
 import (
 	"context"
-	"sync"
-	"sync/atomic"
-
-	"golang.org/x/sys/cpu"
 )
 
 type queue interface {
@@ -13,7 +9,7 @@ type queue interface {
 	PutMulti(ctx context.Context, m []Completed, resps []RedisResult) (chan RedisResult, error)
 	NextWriteCmd() (Completed, []Completed, chan RedisResult)
 	WaitForWrite() (Completed, []Completed, chan RedisResult)
-	NextResultCh() (Completed, []Completed, chan RedisResult, []RedisResult, *sync.Cond)
+	NextResultCh() (node, chan<- node)
 }
 
 var _ queue = (*ring)(nil)
@@ -22,138 +18,98 @@ func newRing(factor int) *ring {
 	if factor <= 0 {
 		factor = DefaultRingScale
 	}
-	r := &ring{store: make([]node, 2<<(factor-1))}
-	r.mask = uint32(len(r.store) - 1)
-	for i := range r.store {
-		m := &sync.Mutex{}
-		r.store[i].c1 = sync.NewCond(m)
-		r.store[i].c2 = sync.NewCond(m)
-		r.store[i].ch = make(chan RedisResult) // this channel can't be buffered
+	size := 2 << (factor - 1)
+
+	r := &ring{
+		f:    make(chan node, size),
+		r:    make(chan node, size),
+		w:    make(chan node, size),
+		size: size,
+	}
+	for i := 0; i < size; i++ {
+		r.f <- node{
+			ch: make(chan RedisResult),
+		}
 	}
 	return r
 }
 
 type ring struct {
-	store []node // store's size must be 2^N to work with the mask
-	_     cpu.CacheLinePad
-	write uint32
-	_     cpu.CacheLinePad
-	read1 uint32
-	read2 uint32
-	mask  uint32
+	f    chan node
+	r    chan node
+	w    chan node
+	size int
 }
 
 type node struct {
-	c1    *sync.Cond
-	c2    *sync.Cond
 	ch    chan RedisResult
 	one   Completed
 	multi []Completed
 	resps []RedisResult
-	mark  uint32
-	slept bool
+}
+
+func (n *node) reset() {
+	n.one = Completed{}
+	n.multi = nil
+	n.resps = nil
 }
 
 func (r *ring) PutOne(ctx context.Context, m Completed) (chan RedisResult, error) {
-	n := &r.store[atomic.AddUint32(&r.write, 1)&r.mask]
-	n.c1.L.Lock()
-	for n.mark != 0 {
-		if ctxCh := ctx.Done(); ctxCh != nil {
-			select {
-			case <-ctxCh:
-				n.c1.L.Unlock()
-				n.c1.Signal()
-				return nil, ctx.Err()
-			default:
-			}
-		}
-		n.c1.Wait()
-	}
+	select {
+	case n := <-r.f:
+		n.one = m
 
-	n.one = m
-	n.mark = 1
-	s := n.slept
-	n.c1.L.Unlock()
-	if s {
-		n.c2.Broadcast()
+		r.w <- n
+
+		return n.ch, nil
+	case <-ctx.Done():
+		return nil, ctx.Err()
 	}
-	return n.ch, nil
 }
 
 func (r *ring) PutMulti(ctx context.Context, m []Completed, resps []RedisResult) (chan RedisResult, error) {
-	n := &r.store[atomic.AddUint32(&r.write, 1)&r.mask]
-	n.c1.L.Lock()
-	for n.mark != 0 {
-		if ctxCh := ctx.Done(); ctxCh != nil {
-			select {
-			case <-ctxCh:
-				n.c1.L.Unlock()
-				n.c1.Signal()
-				return nil, ctx.Err()
-			default:
-			}
-		}
-		n.c1.Wait()
+	select {
+	case n := <-r.f:
+		n.multi, n.resps = m, resps
+
+		r.w <- n
+
+		return n.ch, nil
+	case <-ctx.Done():
+		return nil, ctx.Err()
 	}
-	n.multi = m
-	n.resps = resps
-	n.mark = 1
-	s := n.slept
-	n.c1.L.Unlock()
-	if s {
-		n.c2.Broadcast()
-	}
-	return n.ch, nil
 }
 
 // NextWriteCmd should be only called by one dedicated thread
 func (r *ring) NextWriteCmd() (one Completed, multi []Completed, ch chan RedisResult) {
-	r.read1++
-	p := r.read1 & r.mask
-	n := &r.store[p]
-	n.c1.L.Lock()
-	if n.mark == 1 {
+	select {
+	case n := <-r.w:
 		one, multi, ch = n.one, n.multi, n.ch
-		n.mark = 2
-	} else {
-		r.read1--
+
+		r.r <- n
+
+		return
+	default:
+		return
 	}
-	n.c1.L.Unlock()
-	return
 }
 
 // WaitForWrite should be only called by one dedicated thread
 func (r *ring) WaitForWrite() (one Completed, multi []Completed, ch chan RedisResult) {
-	r.read1++
-	p := r.read1 & r.mask
-	n := &r.store[p]
-	n.c1.L.Lock()
-	for n.mark != 1 {
-		n.slept = true
-		n.c2.Wait() // c1 and c2 share the same mutex
-		n.slept = false
-	}
+	n := <-r.w
 	one, multi, ch = n.one, n.multi, n.ch
-	n.mark = 2
-	n.c1.L.Unlock()
+
+	r.r <- n
+
 	return
 }
 
 // NextResultCh should be only called by one dedicated thread
-func (r *ring) NextResultCh() (one Completed, multi []Completed, ch chan RedisResult, resps []RedisResult, cond *sync.Cond) {
-	r.read2++
-	p := r.read2 & r.mask
-	n := &r.store[p]
-	cond = n.c1
-	n.c1.L.Lock()
-	if n.mark == 2 {
-		one, multi, ch, resps = n.one, n.multi, n.ch, n.resps
-		n.mark = 0
-		n.one = Completed{}
-		n.multi = nil
-		n.resps = nil
-	} else {
-		r.read2--
+func (r *ring) NextResultCh() (node, chan<- node) {
+	select {
+	case n := <-r.r:
+		return n, r.f
+	default:
+		return node{}, nil
 	}
-	return
 }

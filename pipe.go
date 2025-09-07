@@ -402,7 +402,6 @@ func (p *pipe) _background() {
 	var (
 		resps []RedisResult
 		ch    chan RedisResult
-		cond  *sync.Cond
 	)
 
 	// clean up cache and free pending calls
@@ -420,16 +419,17 @@ func (p *pipe) _background() {
 			_, _, _ = p.queue.NextWriteCmd()
 		default:
 		}
-		if _, _, ch, resps, cond = p.queue.NextResultCh(); ch != nil {
+		n, f := p.queue.NextResultCh()
+		ch, resps = n.ch, n.resps
+		if ch != nil {
 			for i := range resps {
 				resps[i] = resp
 			}
 			ch <- resp
-			cond.L.Unlock()
-			cond.Signal()
+
+			n.reset()
+			f <- n
 		} else {
-			cond.L.Unlock()
-			cond.Signal()
 			runtime.Gosched()
 		}
 	}
@@ -487,7 +487,8 @@ func (p *pipe) _backgroundWrite() (err error) {
 func (p *pipe) _backgroundRead() (err error) {
 	var (
 		msg   RedisMessage
-		cond  *sync.Cond
+		n     node
+		f     chan<- node
 		ones  = make([]Completed, 1)
 		multi []Completed
 		resps []RedisResult
@@ -513,8 +514,9 @@ func (p *pipe) _backgroundRead() (err error) {
 				resps[ff] = resp
 			}
 			ch <- resp
-			cond.L.Unlock()
-			cond.Signal()
+
+			n.reset()
+			f <- n
 		}
 	}()
 
@@ -556,9 +558,9 @@ func (p *pipe) _backgroundRead() (err error) {
 		}
 		if ff == len(multi) {
 			ff = 0
-			ones[0], multi, ch, resps, cond = p.queue.NextResultCh() // ch should not be nil; otherwise, it must be a protocol bug
+			n, f = p.queue.NextResultCh()
+			ones[0], multi, ch, resps = n.one, n.multi, n.ch, n.resps // ch should not be nil; otherwise, it must be a protocol bug
 			if ch == nil {
-				cond.L.Unlock()
 				// Redis will send sunsubscribe notification proactively in the event of slot migration.
 				// We should ignore them and go fetch the next message.
 				// We also treat all the other unsubscribe notifications just like sunsubscribe,
@@ -639,8 +641,9 @@ func (p *pipe) _backgroundRead() (err error) {
 		}
 		if ff++; ff == len(multi) {
 			ch <- resp
-			cond.L.Unlock()
-			cond.Signal()
+
+			n.reset()
+			f <- n
 		}
 	}
 }
