@@ -721,6 +721,27 @@ func TestClusterClientInit(t *testing.T) {
 		}
 	})
 
+	t.Run("Init ReadNodeSelector and ReplicaSelector both should not be set", func(t *testing.T) {
+		client, err := newClusterClient(
+			&ClientOption{
+				InitAddress: []string{":0"},
+				SendToReplicas: func(cmd Completed) bool {
+					return true
+				},
+				ReadNodeSelector: DefaultReadNodeSelector},
+			func(dst string, opt *ClientOption) conn {
+				return &mockConn{DialFn: func() error { return nil }}
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if client.opt.ReplicaSelector != nil {
+			t.Fatal("unexpected ReplicaSelector set")
+		}
+	})
+
 	t.Run("Refresh err", func(t *testing.T) {
 		v := errors.New("refresh err")
 		if _, err := newClusterClient(
@@ -1524,7 +1545,7 @@ func TestClusterClientInit(t *testing.T) {
 		}
 	})
 
-	t.Run("Refresh cluster which has multi replicas with RouteRandomly option", func(t *testing.T) {
+	t.Run("Refresh cluster which has multi replicas with ReadNodeSelector option", func(t *testing.T) {
 		primaryNodeConn := &mockConn{
 			DoFn: func(cmd Completed) RedisResult {
 				if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
@@ -1563,10 +1584,7 @@ func TestClusterClientInit(t *testing.T) {
 				SendToReplicas: func(cmd Completed) bool {
 					return true
 				},
-				ReplicaSelector: func(slot uint16, replicas []NodeInfo) int {
-					return 1
-				},
-				RouteRandomly: true,
+				ReadNodeSelector: DefaultReadNodeSelector,
 			},
 			func(dst string, opt *ClientOption) conn {
 				switch {
@@ -8209,6 +8227,1735 @@ func TestClusterClient_SendToAlternatePrimaryAndReplicaNodes(t *testing.T) {
 			SendToReplicas: func(cmd Completed) bool {
 				nextNode++
 				return (nextNode/2)%2 == 0
+			},
+		},
+		func(dst string, opt *ClientOption) conn {
+			if dst == "127.0.0.1:0" || dst == "127.0.2.1:0" { // primary nodes
+				return primaryNodeConn
+			} else { // replica nodes
+				return replicaNodeConn
+			}
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	t.Run("DoMulti Multi Slot", func(t *testing.T) {
+		c1 := client.B().Get().Key("K1{a}").Build()
+		c2 := client.B().Get().Key("K2{b}").Build()
+		resps := client.DoMulti(context.Background(), c1, c2)
+		if v, err := resps[0].ToString(); err != nil || v != "GET K1{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); err != nil || v != "GET K2{b}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMulti Multi Slot Large", func(t *testing.T) {
+		var cmds []Completed
+		for i := 0; i < 500; i++ {
+			cmds = append(cmds, client.B().Get().Key("K1{a}").Build())
+		}
+		resps := client.DoMulti(context.Background(), cmds...)
+		for _, resp := range resps {
+			if v, err := resp.ToString(); err != nil || v != "GET K1{a}" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+	})
+
+	t.Run("DoMultiCache Multi Slot", func(t *testing.T) {
+		c1 := client.B().Get().Key("K1{a}").Cache()
+		c2 := client.B().Get().Key("K2{b}").Cache()
+		resps := client.DoMultiCache(context.Background(), CT(c1, time.Second), CT(c2, time.Second))
+		if v, err := resps[0].ToString(); err != nil || v != "GET K1{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); err != nil || v != "GET K2{b}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMultiCache Multi Slot Large", func(t *testing.T) {
+		var cmds []CacheableTTL
+		for i := 0; i < 500; i++ {
+			cmds = append(cmds, CT(client.B().Get().Key("K1{a}").Cache(), time.Second))
+		}
+		resps := client.DoMultiCache(context.Background(), cmds...)
+		for _, resp := range resps {
+			if v, err := resp.ToString(); err != nil || v != "GET K1{a}" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+	})
+}
+
+func TestClusterClient_ReadNodeSelector_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	primaryNodeConn := &mockConn{
+		DoOverride: map[string]func(cmd Completed) RedisResult{
+			"CLUSTER SLOTS": func(cmd Completed) RedisResult {
+				return slotsMultiResp
+			},
+			"GET Do": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "GET Do"), nil)
+			},
+			"GET K1{a}": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "GET K1{a}"), nil)
+			},
+			"GET K2{a}": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "GET K2{a}"), nil)
+			},
+			"INFO": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "INFO"), nil)
+			},
+		},
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			resps := make([]RedisResult, len(multi))
+			for i, cmd := range multi {
+				resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+			}
+			return &redisresults{s: resps}
+		},
+		DoCacheOverride: map[string]func(cmd Cacheable, ttl time.Duration) RedisResult{
+			"GET DoCache": func(cmd Cacheable, ttl time.Duration) RedisResult {
+				return newResult(strmsg('+', "GET DoCache"), nil)
+			},
+			"GET K1{a}": func(cmd Cacheable, ttl time.Duration) RedisResult {
+				return newResult(strmsg('+', "GET K1{a}"), nil)
+			},
+			"GET K2{a}": func(cmd Cacheable, ttl time.Duration) RedisResult {
+				return newResult(strmsg('+', "GET K2{a}"), nil)
+			},
+		},
+		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
+			resps := make([]RedisResult, len(multi))
+			for i, cmd := range multi {
+				resps[i] = newResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
+			}
+			return &redisresults{s: resps}
+		},
+	}
+	replicaNodeConn := &mockConn{}
+
+	client, err := newClusterClient(
+		&ClientOption{
+			InitAddress: []string{"127.0.0.1:0"},
+			SendToReplicas: func(cmd Completed) bool {
+				return true
+			},
+			ReadNodeSelector: func(slot uint16, nodes []NodeInfo) int {
+				return 0
+			},
+		},
+		func(dst string, opt *ClientOption) conn {
+			if dst == "127.0.0.1:0" || dst == "127.0.2.1:0" { // primary nodes
+				return primaryNodeConn
+			} else { // replica nodes
+				return replicaNodeConn
+			}
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	t.Run("Do", func(t *testing.T) {
+		c := client.B().Get().Key("Do").Build()
+		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "GET Do" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMulti Single Slot", func(t *testing.T) {
+		c1 := client.B().Get().Key("K1{a}").Build()
+		c2 := client.B().Get().Key("K2{a}").Build()
+		resps := client.DoMulti(context.Background(), c1, c2)
+		if v, err := resps[0].ToString(); err != nil || v != "GET K1{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); err != nil || v != "GET K2{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMulti Single Slot + Init Slot", func(t *testing.T) {
+		c1 := client.B().Get().Key("K1{a}").Build()
+		c2 := client.B().Info().Build()
+		resps := client.DoMulti(context.Background(), c1, c2)
+		if v, err := resps[0].ToString(); err != nil || v != "GET K1{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); err != nil || v != "INFO" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMulti Cross Slot + Init Slot", func(t *testing.T) {
+		defer func() {
+			if err := recover(); err != panicMixCxSlot {
+				t.Errorf("DoMulti should panic if Cross Slot + Init Slot")
+			}
+		}()
+		c1 := client.B().Get().Key("K1{a}").Build()
+		c2 := client.B().Get().Key("K1{b}").Build()
+		c3 := client.B().Info().Build()
+		client.DoMulti(context.Background(), c1, c2, c3)
+	})
+
+	t.Run("DoMulti Multi Slot", func(t *testing.T) {
+		multi := make([]Completed, 500)
+		for i := 0; i < len(multi); i++ {
+			multi[i] = client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Build()
+		}
+		resps := client.DoMulti(context.Background(), multi...)
+		for i := 0; i < len(multi); i++ {
+			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+	})
+
+	t.Run("DoCache", func(t *testing.T) {
+		c := client.B().Get().Key("DoCache").Cache()
+		if v, err := client.DoCache(context.Background(), c, 100).ToString(); err != nil || v != "GET DoCache" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMultiCache Single Slot", func(t *testing.T) {
+		c1 := client.B().Get().Key("K1{a}").Cache()
+		c2 := client.B().Get().Key("K2{a}").Cache()
+		resps := client.DoMultiCache(context.Background(), CT(c1, time.Second), CT(c2, time.Second))
+		if v, err := resps[0].ToString(); err != nil || v != "GET K1{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); err != nil || v != "GET K2{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMultiCache Multi Slot", func(t *testing.T) {
+		multi := make([]CacheableTTL, 500)
+		for i := 0; i < len(multi); i++ {
+			multi[i] = CT(client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Cache(), time.Second)
+		}
+		resps := client.DoMultiCache(context.Background(), multi...)
+		for i := 0; i < len(multi); i++ {
+			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+	})
+
+	t.Run("Receive", func(t *testing.T) {
+		c := client.B().Subscribe().Channel("ch").Build()
+		hdl := func(message PubSubMessage) {}
+		primaryNodeConn.ReceiveFn = func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+			if !reflect.DeepEqual(subscribe.Commands(), c.Commands()) {
+				t.Fatalf("unexpected command %v", subscribe)
+			}
+			return nil
+		}
+		replicaNodeConn.ReceiveFn = func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+			if !reflect.DeepEqual(subscribe.Commands(), c.Commands()) {
+				t.Fatalf("unexpected command %v", subscribe)
+			}
+			return nil
+		}
+
+		if err := client.Receive(context.Background(), c, hdl); err != nil {
+			t.Fatalf("unexpected response %v", err)
+		}
+	})
+
+	t.Run("Receive Redis Err", func(t *testing.T) {
+		c := client.B().Subscribe().Channel("ch").Build()
+		e := &RedisError{}
+		primaryNodeConn.ReceiveFn = func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+			return e
+		}
+		replicaNodeConn.ReceiveFn = func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+			return e
+		}
+		if err := client.Receive(context.Background(), c, func(message PubSubMessage) {}); err != e {
+			t.Fatalf("unexpected response %v", err)
+		}
+	})
+
+	t.Run("Dedicated Err", func(t *testing.T) {
+		v := errors.New("fn err")
+		if err := client.Dedicated(func(client DedicatedClient) error {
+			return v
+		}); err != v {
+			t.Fatalf("unexpected err %v", err)
+		}
+	})
+
+	t.Run("Dedicated Cross Slot Err", func(t *testing.T) {
+		defer func() {
+			if err := recover(); err != panicMsgCxSlot {
+				t.Errorf("Dedicated should panic if cross slots is used")
+			}
+		}()
+		primaryNodeConn.AcquireFn = func() wire { return &mockWire{} }
+		client.Dedicated(func(c DedicatedClient) error {
+			c.Do(context.Background(), c.B().Get().Key("a").Build()).Error()
+			return c.Do(context.Background(), c.B().Get().Key("b").Build()).Error()
+		})
+	})
+
+	t.Run("Dedicated Cross Slot Err Multi", func(t *testing.T) {
+		defer func() {
+			if err := recover(); err != panicMsgCxSlot {
+				t.Errorf("Dedicated should panic if cross slots is used")
+			}
+		}()
+		primaryNodeConn.AcquireFn = func() wire {
+			return &mockWire{
+				DoMultiFn: func(multi ...Completed) *redisresults {
+					return &redisresults{s: []RedisResult{
+						newResult(strmsg('+', "OK"), nil),
+						newResult(strmsg('+', "OK"), nil),
+						newResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
+					}}
+				},
+			}
+		}
+		client.Dedicated(func(c DedicatedClient) (err error) {
+			c.DoMulti(
+				context.Background(),
+				c.B().Multi().Build(),
+				c.B().Get().Key("a").Build(),
+				c.B().Exec().Build(),
+			)
+			c.DoMulti(
+				context.Background(),
+				c.B().Multi().Build(),
+				c.B().Get().Key("b").Build(),
+				c.B().Exec().Build(),
+			)
+			return nil
+		})
+	})
+
+	t.Run("Dedicated Multi Cross Slot Err", func(t *testing.T) {
+		primaryNodeConn.AcquireFn = func() wire { return &mockWire{} }
+		err := client.Dedicated(func(c DedicatedClient) (err error) {
+			defer func() {
+				err = errors.New(recover().(string))
+			}()
+			c.DoMulti(
+				context.Background(),
+				c.B().Get().Key("a").Build(),
+				c.B().Get().Key("b").Build(),
+			)
+			return nil
+		})
+		if err == nil || err.Error() != panicMsgCxSlot {
+			t.Errorf("Multi should panic if cross slots is used")
+		}
+	})
+
+	t.Run("Dedicated Receive Redis Err", func(t *testing.T) {
+		e := &RedisError{}
+		w := &mockWire{
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+				return e
+			},
+		}
+		primaryNodeConn.AcquireFn = func() wire {
+			return w
+		}
+		if err := client.Dedicated(func(c DedicatedClient) error {
+			return c.Receive(context.Background(), c.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {})
+		}); err != e {
+			t.Fatalf("unexpected err %v", err)
+		}
+	})
+
+	t.Run("Dedicated", func(t *testing.T) {
+		closed := false
+		w := &mockWire{
+			DoFn: func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "Delegate"), nil)
+			},
+			DoMultiFn: func(cmd ...Completed) *redisresults {
+				if len(cmd) == 4 {
+					return &redisresults{s: []RedisResult{
+						newResult(strmsg('+', "OK"), nil),
+						newResult(strmsg('+', "OK"), nil),
+						newResult(strmsg('+', "OK"), nil),
+						newResult(slicemsg('*', []RedisMessage{
+							strmsg('+', "Delegate0"),
+							strmsg('+', "Delegate1"),
+						}), nil),
+					}}
+				}
+				return &redisresults{s: []RedisResult{
+					newResult(strmsg('+', "Delegate0"), nil),
+					newResult(strmsg('+', "Delegate1"), nil),
+				}}
+			},
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+				return ErrClosing
+			},
+			SetPubSubHooksFn: func(hooks PubSubHooks) <-chan error {
+				ch := make(chan error, 1)
+				ch <- ErrClosing
+				close(ch)
+				return ch
+			},
+			ErrorFn: func() error {
+				return ErrClosing
+			},
+			CloseFn: func() {
+				closed = true
+			},
+		}
+		primaryNodeConn.AcquireFn = func() wire {
+			return w
+		}
+		stored := false
+		primaryNodeConn.StoreFn = func(ww wire) {
+			if ww != w {
+				t.Fatalf("received unexpected wire %v", ww)
+			}
+			stored = true
+		}
+		if err := client.Dedicated(func(c DedicatedClient) error {
+			ch := c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}})
+			if v, err := c.Do(context.Background(), c.B().Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+			if v := c.DoMulti(context.Background()); len(v) != 0 {
+				t.Fatalf("received unexpected response %v", v)
+			}
+			for i, resp := range c.DoMulti(
+				context.Background(),
+				c.B().Info().Build(),
+				c.B().Info().Build(),
+			) {
+				if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
+					t.Fatalf("unexpected response %v %v", v, err)
+				}
+			}
+			for i, resp := range c.DoMulti(
+				context.Background(),
+				c.B().Get().Key("a").Build(),
+				c.B().Get().Key("a").Build(),
+			) {
+				if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
+					t.Fatalf("unexpected response %v %v", v, err)
+				}
+			}
+			for i, resp := range c.DoMulti(
+				context.Background(),
+				c.B().Multi().Build(),
+				c.B().Get().Key("a").Build(),
+				c.B().Get().Key("a").Build(),
+				c.B().Exec().Build(),
+			)[3].val.values() {
+				if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
+					t.Fatalf("unexpected response %v %v", v, err)
+				}
+			}
+			if err := c.Receive(context.Background(), c.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
+				t.Fatalf("unexpected ret %v", err)
+			}
+			if err := <-ch; err != ErrClosing {
+				t.Fatalf("unexpected ret %v", err)
+			}
+			if err := <-c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}}); err != ErrClosing {
+				t.Fatalf("unexpected ret %v", err)
+			}
+			c.Close()
+			return nil
+		}); err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if !stored {
+			t.Fatalf("Dedicated doesn't put back the wire")
+		}
+		if !closed {
+			t.Fatalf("Dedicated doesn't delegate Close")
+		}
+	})
+
+	t.Run("Dedicate", func(t *testing.T) {
+		closed := false
+		w := &mockWire{
+			DoFn: func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "Delegate"), nil)
+			},
+			DoMultiFn: func(cmd ...Completed) *redisresults {
+				if len(cmd) == 4 {
+					return &redisresults{s: []RedisResult{
+						newResult(strmsg('+', "OK"), nil),
+						newResult(strmsg('+', "OK"), nil),
+						newResult(strmsg('+', "OK"), nil),
+						newResult(slicemsg('*', []RedisMessage{
+							strmsg('+', "Delegate0"),
+							strmsg('+', "Delegate1"),
+						}), nil),
+					}}
+				}
+				return &redisresults{s: []RedisResult{
+					newResult(strmsg('+', "Delegate0"), nil),
+					newResult(strmsg('+', "Delegate1"), nil),
+				}}
+			},
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+				return ErrClosing
+			},
+			SetPubSubHooksFn: func(hooks PubSubHooks) <-chan error {
+				ch := make(chan error, 1)
+				ch <- ErrClosing
+				close(ch)
+				return ch
+			},
+			ErrorFn: func() error {
+				return ErrClosing
+			},
+			CloseFn: func() {
+				closed = true
+			},
+		}
+		primaryNodeConn.AcquireFn = func() wire {
+			return w
+		}
+		stored := false
+		primaryNodeConn.StoreFn = func(ww wire) {
+			if ww != w {
+				t.Fatalf("received unexpected wire %v", ww)
+			}
+			stored = true
+		}
+		c, cancel := client.Dedicate()
+		ch := c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}})
+		if v, err := c.Do(context.Background(), c.B().Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v := c.DoMulti(context.Background()); len(v) != 0 {
+			t.Fatalf("received unexpected response %v", v)
+		}
+		for i, resp := range c.DoMulti(
+			context.Background(),
+			c.B().Info().Build(),
+			c.B().Info().Build(),
+		) {
+			if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+		for i, resp := range c.DoMulti(
+			context.Background(),
+			c.B().Get().Key("a").Build(),
+			c.B().Get().Key("a").Build(),
+		) {
+			if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+		for i, resp := range c.DoMulti(
+			context.Background(),
+			c.B().Multi().Build(),
+			c.B().Get().Key("a").Build(),
+			c.B().Get().Key("a").Build(),
+			c.B().Exec().Build(),
+		)[3].val.values() {
+			if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+		if err := c.Receive(context.Background(), c.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
+			t.Fatalf("unexpected ret %v", err)
+		}
+		if err := <-ch; err != ErrClosing {
+			t.Fatalf("unexpected ret %v", err)
+		}
+		if err := <-c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}}); err != ErrClosing {
+			t.Fatalf("unexpected ret %v", err)
+		}
+		c.Close()
+		cancel()
+
+		if !stored {
+			t.Fatalf("Dedicated doesn't put back the wire")
+		}
+		if !closed {
+			t.Fatalf("Dedicated doesn't delegate Close")
+		}
+	})
+}
+
+func TestClusterClient_ReadNodeSelector_SendToOnlyPrimaryNodeWhenIndexIsOutOfRange(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	primaryNodeConn := &mockConn{
+		DoOverride: map[string]func(cmd Completed) RedisResult{
+			"CLUSTER SLOTS": func(cmd Completed) RedisResult {
+				return slotsMultiResp
+			},
+			"GET Do": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "GET Do"), nil)
+			},
+			"GET K1{a}": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "GET K1{a}"), nil)
+			},
+			"GET K2{a}": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "GET K2{a}"), nil)
+			},
+			"INFO": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "INFO"), nil)
+			},
+		},
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			resps := make([]RedisResult, len(multi))
+			for i, cmd := range multi {
+				resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+			}
+			return &redisresults{s: resps}
+		},
+		DoCacheOverride: map[string]func(cmd Cacheable, ttl time.Duration) RedisResult{
+			"GET DoCache": func(cmd Cacheable, ttl time.Duration) RedisResult {
+				return newResult(strmsg('+', "GET DoCache"), nil)
+			},
+			"GET K1{a}": func(cmd Cacheable, ttl time.Duration) RedisResult {
+				return newResult(strmsg('+', "GET K1{a}"), nil)
+			},
+			"GET K2{a}": func(cmd Cacheable, ttl time.Duration) RedisResult {
+				return newResult(strmsg('+', "GET K2{a}"), nil)
+			},
+		},
+		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
+			resps := make([]RedisResult, len(multi))
+			for i, cmd := range multi {
+				resps[i] = newResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
+			}
+			return &redisresults{s: resps}
+		},
+	}
+	replicaNodeConn := &mockConn{}
+
+	client, err := newClusterClient(
+		&ClientOption{
+			InitAddress: []string{"127.0.0.1:0"},
+			SendToReplicas: func(cmd Completed) bool {
+				return true
+			},
+			ReadNodeSelector: func(slot uint16, nodes []NodeInfo) int {
+				return -1
+			},
+		},
+		func(dst string, opt *ClientOption) conn {
+			if dst == "127.0.0.1:0" || dst == "127.0.2.1:0" { // primary nodes
+				return primaryNodeConn
+			} else { // replica nodes
+				return replicaNodeConn
+			}
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	t.Run("Do", func(t *testing.T) {
+		c := client.B().Get().Key("Do").Build()
+		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "GET Do" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMulti Single Slot", func(t *testing.T) {
+		c1 := client.B().Get().Key("K1{a}").Build()
+		c2 := client.B().Get().Key("K2{a}").Build()
+		resps := client.DoMulti(context.Background(), c1, c2)
+		if v, err := resps[0].ToString(); err != nil || v != "GET K1{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); err != nil || v != "GET K2{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMulti Single Slot + Init Slot", func(t *testing.T) {
+		c1 := client.B().Get().Key("K1{a}").Build()
+		c2 := client.B().Info().Build()
+		resps := client.DoMulti(context.Background(), c1, c2)
+		if v, err := resps[0].ToString(); err != nil || v != "GET K1{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); err != nil || v != "INFO" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMulti Cross Slot + Init Slot", func(t *testing.T) {
+		defer func() {
+			if err := recover(); err != panicMixCxSlot {
+				t.Errorf("DoMulti should panic if Cross Slot + Init Slot")
+			}
+		}()
+		c1 := client.B().Get().Key("K1{a}").Build()
+		c2 := client.B().Get().Key("K1{b}").Build()
+		c3 := client.B().Info().Build()
+		client.DoMulti(context.Background(), c1, c2, c3)
+	})
+
+	t.Run("DoMulti Multi Slot", func(t *testing.T) {
+		multi := make([]Completed, 500)
+		for i := 0; i < len(multi); i++ {
+			multi[i] = client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Build()
+		}
+		resps := client.DoMulti(context.Background(), multi...)
+		for i := 0; i < len(multi); i++ {
+			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+	})
+
+	t.Run("DoCache", func(t *testing.T) {
+		c := client.B().Get().Key("DoCache").Cache()
+		if v, err := client.DoCache(context.Background(), c, 100).ToString(); err != nil || v != "GET DoCache" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMultiCache Single Slot", func(t *testing.T) {
+		c1 := client.B().Get().Key("K1{a}").Cache()
+		c2 := client.B().Get().Key("K2{a}").Cache()
+		resps := client.DoMultiCache(context.Background(), CT(c1, time.Second), CT(c2, time.Second))
+		if v, err := resps[0].ToString(); err != nil || v != "GET K1{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); err != nil || v != "GET K2{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMultiCache Multi Slot", func(t *testing.T) {
+		multi := make([]CacheableTTL, 500)
+		for i := 0; i < len(multi); i++ {
+			multi[i] = CT(client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Cache(), time.Second)
+		}
+		resps := client.DoMultiCache(context.Background(), multi...)
+		for i := 0; i < len(multi); i++ {
+			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+	})
+
+	t.Run("Receive", func(t *testing.T) {
+		c := client.B().Subscribe().Channel("ch").Build()
+		hdl := func(message PubSubMessage) {}
+		primaryNodeConn.ReceiveFn = func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+			if !reflect.DeepEqual(subscribe.Commands(), c.Commands()) {
+				t.Fatalf("unexpected command %v", subscribe)
+			}
+			return nil
+		}
+		replicaNodeConn.ReceiveFn = func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+			if !reflect.DeepEqual(subscribe.Commands(), c.Commands()) {
+				t.Fatalf("unexpected command %v", subscribe)
+			}
+			return nil
+		}
+
+		if err := client.Receive(context.Background(), c, hdl); err != nil {
+			t.Fatalf("unexpected response %v", err)
+		}
+	})
+
+	t.Run("Receive Redis Err", func(t *testing.T) {
+		c := client.B().Subscribe().Channel("ch").Build()
+		e := &RedisError{}
+		primaryNodeConn.ReceiveFn = func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+			return e
+		}
+		replicaNodeConn.ReceiveFn = func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+			return e
+		}
+		if err := client.Receive(context.Background(), c, func(message PubSubMessage) {}); err != e {
+			t.Fatalf("unexpected response %v", err)
+		}
+	})
+
+	t.Run("Dedicated Err", func(t *testing.T) {
+		v := errors.New("fn err")
+		if err := client.Dedicated(func(client DedicatedClient) error {
+			return v
+		}); err != v {
+			t.Fatalf("unexpected err %v", err)
+		}
+	})
+
+	t.Run("Dedicated Cross Slot Err", func(t *testing.T) {
+		defer func() {
+			if err := recover(); err != panicMsgCxSlot {
+				t.Errorf("Dedicated should panic if cross slots is used")
+			}
+		}()
+		primaryNodeConn.AcquireFn = func() wire { return &mockWire{} }
+		client.Dedicated(func(c DedicatedClient) error {
+			c.Do(context.Background(), c.B().Get().Key("a").Build()).Error()
+			return c.Do(context.Background(), c.B().Get().Key("b").Build()).Error()
+		})
+	})
+
+	t.Run("Dedicated Cross Slot Err Multi", func(t *testing.T) {
+		defer func() {
+			if err := recover(); err != panicMsgCxSlot {
+				t.Errorf("Dedicated should panic if cross slots is used")
+			}
+		}()
+		primaryNodeConn.AcquireFn = func() wire {
+			return &mockWire{
+				DoMultiFn: func(multi ...Completed) *redisresults {
+					return &redisresults{s: []RedisResult{
+						newResult(strmsg('+', "OK"), nil),
+						newResult(strmsg('+', "OK"), nil),
+						newResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
+					}}
+				},
+			}
+		}
+		client.Dedicated(func(c DedicatedClient) (err error) {
+			c.DoMulti(
+				context.Background(),
+				c.B().Multi().Build(),
+				c.B().Get().Key("a").Build(),
+				c.B().Exec().Build(),
+			)
+			c.DoMulti(
+				context.Background(),
+				c.B().Multi().Build(),
+				c.B().Get().Key("b").Build(),
+				c.B().Exec().Build(),
+			)
+			return nil
+		})
+	})
+
+	t.Run("Dedicated Multi Cross Slot Err", func(t *testing.T) {
+		primaryNodeConn.AcquireFn = func() wire { return &mockWire{} }
+		err := client.Dedicated(func(c DedicatedClient) (err error) {
+			defer func() {
+				err = errors.New(recover().(string))
+			}()
+			c.DoMulti(
+				context.Background(),
+				c.B().Get().Key("a").Build(),
+				c.B().Get().Key("b").Build(),
+			)
+			return nil
+		})
+		if err == nil || err.Error() != panicMsgCxSlot {
+			t.Errorf("Multi should panic if cross slots is used")
+		}
+	})
+
+	t.Run("Dedicated Receive Redis Err", func(t *testing.T) {
+		e := &RedisError{}
+		w := &mockWire{
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+				return e
+			},
+		}
+		primaryNodeConn.AcquireFn = func() wire {
+			return w
+		}
+		if err := client.Dedicated(func(c DedicatedClient) error {
+			return c.Receive(context.Background(), c.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {})
+		}); err != e {
+			t.Fatalf("unexpected err %v", err)
+		}
+	})
+
+	t.Run("Dedicated", func(t *testing.T) {
+		closed := false
+		w := &mockWire{
+			DoFn: func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "Delegate"), nil)
+			},
+			DoMultiFn: func(cmd ...Completed) *redisresults {
+				if len(cmd) == 4 {
+					return &redisresults{s: []RedisResult{
+						newResult(strmsg('+', "OK"), nil),
+						newResult(strmsg('+', "OK"), nil),
+						newResult(strmsg('+', "OK"), nil),
+						newResult(slicemsg('*', []RedisMessage{
+							strmsg('+', "Delegate0"),
+							strmsg('+', "Delegate1"),
+						}), nil),
+					}}
+				}
+				return &redisresults{s: []RedisResult{
+					newResult(strmsg('+', "Delegate0"), nil),
+					newResult(strmsg('+', "Delegate1"), nil),
+				}}
+			},
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+				return ErrClosing
+			},
+			SetPubSubHooksFn: func(hooks PubSubHooks) <-chan error {
+				ch := make(chan error, 1)
+				ch <- ErrClosing
+				close(ch)
+				return ch
+			},
+			ErrorFn: func() error {
+				return ErrClosing
+			},
+			CloseFn: func() {
+				closed = true
+			},
+		}
+		primaryNodeConn.AcquireFn = func() wire {
+			return w
+		}
+		stored := false
+		primaryNodeConn.StoreFn = func(ww wire) {
+			if ww != w {
+				t.Fatalf("received unexpected wire %v", ww)
+			}
+			stored = true
+		}
+		if err := client.Dedicated(func(c DedicatedClient) error {
+			ch := c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}})
+			if v, err := c.Do(context.Background(), c.B().Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+			if v := c.DoMulti(context.Background()); len(v) != 0 {
+				t.Fatalf("received unexpected response %v", v)
+			}
+			for i, resp := range c.DoMulti(
+				context.Background(),
+				c.B().Info().Build(),
+				c.B().Info().Build(),
+			) {
+				if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
+					t.Fatalf("unexpected response %v %v", v, err)
+				}
+			}
+			for i, resp := range c.DoMulti(
+				context.Background(),
+				c.B().Get().Key("a").Build(),
+				c.B().Get().Key("a").Build(),
+			) {
+				if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
+					t.Fatalf("unexpected response %v %v", v, err)
+				}
+			}
+			for i, resp := range c.DoMulti(
+				context.Background(),
+				c.B().Multi().Build(),
+				c.B().Get().Key("a").Build(),
+				c.B().Get().Key("a").Build(),
+				c.B().Exec().Build(),
+			)[3].val.values() {
+				if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
+					t.Fatalf("unexpected response %v %v", v, err)
+				}
+			}
+			if err := c.Receive(context.Background(), c.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
+				t.Fatalf("unexpected ret %v", err)
+			}
+			if err := <-ch; err != ErrClosing {
+				t.Fatalf("unexpected ret %v", err)
+			}
+			if err := <-c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}}); err != ErrClosing {
+				t.Fatalf("unexpected ret %v", err)
+			}
+			c.Close()
+			return nil
+		}); err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if !stored {
+			t.Fatalf("Dedicated doesn't put back the wire")
+		}
+		if !closed {
+			t.Fatalf("Dedicated doesn't delegate Close")
+		}
+	})
+
+	t.Run("Dedicate", func(t *testing.T) {
+		closed := false
+		w := &mockWire{
+			DoFn: func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "Delegate"), nil)
+			},
+			DoMultiFn: func(cmd ...Completed) *redisresults {
+				if len(cmd) == 4 {
+					return &redisresults{s: []RedisResult{
+						newResult(strmsg('+', "OK"), nil),
+						newResult(strmsg('+', "OK"), nil),
+						newResult(strmsg('+', "OK"), nil),
+						newResult(slicemsg('*', []RedisMessage{
+							strmsg('+', "Delegate0"),
+							strmsg('+', "Delegate1"),
+						}), nil),
+					}}
+				}
+				return &redisresults{s: []RedisResult{
+					newResult(strmsg('+', "Delegate0"), nil),
+					newResult(strmsg('+', "Delegate1"), nil),
+				}}
+			},
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+				return ErrClosing
+			},
+			SetPubSubHooksFn: func(hooks PubSubHooks) <-chan error {
+				ch := make(chan error, 1)
+				ch <- ErrClosing
+				close(ch)
+				return ch
+			},
+			ErrorFn: func() error {
+				return ErrClosing
+			},
+			CloseFn: func() {
+				closed = true
+			},
+		}
+		primaryNodeConn.AcquireFn = func() wire {
+			return w
+		}
+		stored := false
+		primaryNodeConn.StoreFn = func(ww wire) {
+			if ww != w {
+				t.Fatalf("received unexpected wire %v", ww)
+			}
+			stored = true
+		}
+		c, cancel := client.Dedicate()
+		ch := c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}})
+		if v, err := c.Do(context.Background(), c.B().Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v := c.DoMulti(context.Background()); len(v) != 0 {
+			t.Fatalf("received unexpected response %v", v)
+		}
+		for i, resp := range c.DoMulti(
+			context.Background(),
+			c.B().Info().Build(),
+			c.B().Info().Build(),
+		) {
+			if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+		for i, resp := range c.DoMulti(
+			context.Background(),
+			c.B().Get().Key("a").Build(),
+			c.B().Get().Key("a").Build(),
+		) {
+			if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+		for i, resp := range c.DoMulti(
+			context.Background(),
+			c.B().Multi().Build(),
+			c.B().Get().Key("a").Build(),
+			c.B().Get().Key("a").Build(),
+			c.B().Exec().Build(),
+		)[3].val.values() {
+			if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+		if err := c.Receive(context.Background(), c.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
+			t.Fatalf("unexpected ret %v", err)
+		}
+		if err := <-ch; err != ErrClosing {
+			t.Fatalf("unexpected ret %v", err)
+		}
+		if err := <-c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}}); err != ErrClosing {
+			t.Fatalf("unexpected ret %v", err)
+		}
+		c.Close()
+		cancel()
+
+		if !stored {
+			t.Fatalf("Dedicated doesn't put back the wire")
+		}
+		if !closed {
+			t.Fatalf("Dedicated doesn't delegate Close")
+		}
+	})
+}
+
+func TestClusterClient_ReadNodeSelector_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	primaryNodeConn := &mockConn{
+		DoOverride: map[string]func(cmd Completed) RedisResult{
+			"CLUSTER SLOTS": func(cmd Completed) RedisResult {
+				return slotsMultiResp
+			},
+			"INFO": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "INFO"), nil)
+			},
+			"SET Do V": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "SET Do V"), nil)
+			},
+			"SET K2{a} V2{a}": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "SET K2{a} V2{a}"), nil)
+			},
+		},
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			resps := make([]RedisResult, len(multi))
+			for i, cmd := range multi {
+				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "SET K1") {
+					resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+					continue
+				}
+				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "SET K2") {
+					resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+					continue
+				}
+				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "MULTI") {
+					resps[i] = newResult(strmsg('+', "MULTI"), nil)
+					continue
+				}
+				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "EXEC") {
+					resps[i] = newResult(strmsg('+', "EXEC"), nil)
+					continue
+				}
+
+				return &redisresults{
+					s: []RedisResult{},
+				}
+			}
+			return &redisresults{s: resps}
+		},
+	}
+	replicaNodeConn := &mockConn{
+		DoOverride: map[string]func(cmd Completed) RedisResult{
+			"GET Do": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "GET Do"), nil)
+			},
+			"GET K1{a}": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "GET K1{a}"), nil)
+			},
+			"GET K2{a}": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "GET K2{a}"), nil)
+			},
+		},
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			resps := make([]RedisResult, len(multi))
+			for i, cmd := range multi {
+				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "GET K1") {
+					resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+					continue
+				}
+
+				return &redisresults{
+					s: []RedisResult{},
+				}
+			}
+			return &redisresults{s: resps}
+		},
+		DoCacheOverride: map[string]func(cmd Cacheable, ttl time.Duration) RedisResult{
+			"GET DoCache": func(cmd Cacheable, ttl time.Duration) RedisResult {
+				return newResult(strmsg('+', "GET DoCache"), nil)
+			},
+			"GET K1{a}": func(cmd Cacheable, ttl time.Duration) RedisResult {
+				return newResult(strmsg('+', "GET K1{a}"), nil)
+			},
+			"GET K2{a}": func(cmd Cacheable, ttl time.Duration) RedisResult {
+				return newResult(strmsg('+', "GET K2{a}"), nil)
+			},
+		},
+		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
+			resps := make([]RedisResult, len(multi))
+			for i, cmd := range multi {
+				if strings.HasPrefix(strings.Join(cmd.Cmd.Commands(), " "), "GET K1") {
+					resps[i] = newResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
+					continue
+				}
+
+				return &redisresults{
+					s: []RedisResult{},
+				}
+			}
+			return &redisresults{s: resps}
+		},
+	}
+
+	client, err := newClusterClient(
+		&ClientOption{
+			InitAddress: []string{"127.0.0.1:0"},
+			SendToReplicas: func(cmd Completed) bool {
+				return cmd.IsReadOnly()
+			},
+			ReadNodeSelector: func(slot uint16, nodes []NodeInfo) int {
+				return 1
+			},
+		},
+		func(dst string, opt *ClientOption) conn {
+			if dst == "127.0.0.1:0" || dst == "127.0.2.1:0" { // primary node
+				return primaryNodeConn
+			} else { // replica node
+				return replicaNodeConn
+			}
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	t.Run("Do read operation", func(t *testing.T) {
+		c := client.B().Get().Key("Do").Build()
+		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "GET Do" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("Do write operation", func(t *testing.T) {
+		c := client.B().Set().Key("Do").Value("V").Build()
+		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "SET Do V" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMulti Single Slot All Read Operations", func(t *testing.T) {
+		c1 := client.B().Get().Key("K1{a}").Build()
+		c2 := client.B().Get().Key("K2{a}").Build()
+		resps := client.DoMulti(context.Background(), c1, c2)
+		if v, err := resps[0].ToString(); err != nil || v != "GET K1{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); err != nil || v != "GET K2{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMulti Single Slot Read Operation And Write Operation", func(t *testing.T) {
+		c1 := client.B().Get().Key("K1{a}").Build()
+		c2 := client.B().Set().Key("K2{a}").Value("V2{a}").Build()
+		resps := client.DoMulti(context.Background(), c1, c2)
+		if v, err := resps[0].ToString(); err != nil || v != "GET K1{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); err != nil || v != "SET K2{a} V2{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMulti Single Slot Operations + Init Slot", func(t *testing.T) {
+		c1 := client.B().Multi().Build()
+		c2 := client.B().Set().Key("K1{a}").Value("V1{a}").Build()
+		c3 := client.B().Set().Key("K2{a}").Value("V2{a}").Build()
+		c4 := client.B().Exec().Build()
+		resps := client.DoMulti(context.Background(), c1, c2, c3, c4)
+		if v, err := resps[0].ToString(); err != nil || v != "MULTI" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); err != nil || v != "SET K1{a} V1{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[2].ToString(); err != nil || v != "SET K2{a} V2{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[3].ToString(); err != nil || v != "EXEC" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMulti Cross Slot + Init Slot", func(t *testing.T) {
+		defer func() {
+			if err := recover(); err != panicMixCxSlot {
+				t.Errorf("DoMulti should panic if Cross Slot + Init Slot")
+			}
+		}()
+		c1 := client.B().Get().Key("K1{a}").Build()
+		c2 := client.B().Get().Key("K1{b}").Build()
+		c3 := client.B().Info().Build()
+		client.DoMulti(context.Background(), c1, c2, c3)
+	})
+
+	t.Run("DoMulti Multi Slot All Read Operations", func(t *testing.T) {
+		multi := make([]Completed, 500)
+		for i := 0; i < len(multi); i++ {
+			multi[i] = client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Build()
+		}
+		resps := client.DoMulti(context.Background(), multi...)
+		for i := 0; i < len(multi); i++ {
+			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+	})
+	t.Run("DoMulti Multi Slot Read & Write Operations", func(t *testing.T) {
+		multi := make([]Completed, 500)
+		for i := 0; i < len(multi); i++ {
+			if i%2 == 0 {
+				multi[i] = client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Build()
+			} else {
+				multi[i] = client.B().Set().Key(fmt.Sprintf("K2{%d}", i)).Value(fmt.Sprintf("V2{%d}", i)).Build()
+			}
+		}
+		resps := client.DoMulti(context.Background(), multi...)
+		for i := 0; i < len(multi); i++ {
+			if i%2 == 0 {
+				if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
+					t.Fatalf("unexpected response %v %v", v, err)
+				}
+			} else {
+				if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("SET K2{%d} V2{%d}", i, i) {
+					t.Fatalf("unexpected response %v %v", v, err)
+				}
+			}
+		}
+	})
+
+	t.Run("DoCache Operation", func(t *testing.T) {
+		c := client.B().Get().Key("DoCache").Cache()
+		if v, err := client.DoCache(context.Background(), c, 100).ToString(); err != nil || v != "GET DoCache" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMultiCache Single Slot", func(t *testing.T) {
+		c1 := client.B().Get().Key("K1{a}").Cache()
+		c2 := client.B().Get().Key("K2{a}").Cache()
+		resps := client.DoMultiCache(context.Background(), CT(c1, time.Second), CT(c2, time.Second))
+		if v, err := resps[0].ToString(); err != nil || v != "GET K1{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v, err := resps[1].ToString(); err != nil || v != "GET K2{a}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	})
+
+	t.Run("DoMultiCache Multi Slot", func(t *testing.T) {
+		multi := make([]CacheableTTL, 500)
+		for i := 0; i < len(multi); i++ {
+			multi[i] = CT(client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Cache(), time.Second)
+		}
+		resps := client.DoMultiCache(context.Background(), multi...)
+		for i := 0; i < len(multi); i++ {
+			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+	})
+
+	t.Run("Receive", func(t *testing.T) {
+		c := client.B().Subscribe().Channel("ch").Build()
+		hdl := func(message PubSubMessage) {}
+		primaryNodeConn.ReceiveFn = func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+			if !reflect.DeepEqual(subscribe.Commands(), c.Commands()) {
+				t.Fatalf("unexpected command %v", subscribe)
+			}
+			return nil
+		}
+		replicaNodeConn.ReceiveFn = func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+			if !reflect.DeepEqual(subscribe.Commands(), c.Commands()) {
+				t.Fatalf("unexpected command %v", subscribe)
+			}
+			return nil
+		}
+		if err := client.Receive(context.Background(), c, hdl); err != nil {
+			t.Fatalf("unexpected response %v", err)
+		}
+	})
+
+	t.Run("Receive Redis Err", func(t *testing.T) {
+		c := client.B().Ssubscribe().Channel("ch").Build()
+		e := &RedisError{}
+		primaryNodeConn.ReceiveFn = func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+			return e
+		}
+		replicaNodeConn.ReceiveFn = func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+			return e
+		}
+		if err := client.Receive(context.Background(), c, func(message PubSubMessage) {}); err != e {
+			t.Fatalf("unexpected response %v", err)
+		}
+	})
+
+	t.Run("Dedicated Cross Slot Err", func(t *testing.T) {
+		defer func() {
+			if err := recover(); err != panicMsgCxSlot {
+				t.Errorf("Dedicated should panic if cross slots is used")
+			}
+		}()
+		primaryNodeConn.AcquireFn = func() wire { return &mockWire{} }
+		client.Dedicated(func(c DedicatedClient) error {
+			c.Do(context.Background(), c.B().Get().Key("a").Build()).Error()
+			return c.Do(context.Background(), c.B().Get().Key("b").Build()).Error()
+		})
+	})
+
+	t.Run("Dedicated Cross Slot Err Multi", func(t *testing.T) {
+		defer func() {
+			if err := recover(); err != panicMsgCxSlot {
+				t.Errorf("Dedicated should panic if cross slots is used")
+			}
+		}()
+		primaryNodeConn.AcquireFn = func() wire {
+			return &mockWire{
+				DoMultiFn: func(multi ...Completed) *redisresults {
+					return &redisresults{s: []RedisResult{
+						newResult(strmsg('+', "OK"), nil),
+						newResult(strmsg('+', "OK"), nil),
+						newResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
+					}}
+				},
+			}
+		}
+		client.Dedicated(func(c DedicatedClient) (err error) {
+			c.DoMulti(
+				context.Background(),
+				c.B().Multi().Build(),
+				c.B().Get().Key("a").Build(),
+				c.B().Exec().Build(),
+			)
+			c.DoMulti(
+				context.Background(),
+				c.B().Multi().Build(),
+				c.B().Get().Key("b").Build(),
+				c.B().Exec().Build(),
+			)
+			return nil
+		})
+	})
+
+	t.Run("Dedicated Multi Cross Slot Err", func(t *testing.T) {
+		primaryNodeConn.AcquireFn = func() wire { return &mockWire{} }
+		err := client.Dedicated(func(c DedicatedClient) (err error) {
+			defer func() {
+				err = errors.New(recover().(string))
+			}()
+			c.DoMulti(
+				context.Background(),
+				c.B().Get().Key("a").Build(),
+				c.B().Get().Key("b").Build(),
+			)
+			return nil
+		})
+		if err == nil || err.Error() != panicMsgCxSlot {
+			t.Errorf("Multi should panic if cross slots is used")
+		}
+	})
+
+	t.Run("Dedicated Receive Redis Err", func(t *testing.T) {
+		e := &RedisError{}
+		w := &mockWire{
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+				return e
+			},
+		}
+		primaryNodeConn.AcquireFn = func() wire { return w }
+		replicaNodeConn.AcquireFn = func() wire { return w } // Subscribe can work on replicas
+		if err := client.Dedicated(func(c DedicatedClient) error {
+			return c.Receive(context.Background(), c.B().Subscribe().Channel("a").Build(), func(msg PubSubMessage) {})
+		}); err != e {
+			t.Fatalf("unexpected err %v", err)
+		}
+	})
+
+	t.Run("Dedicated", func(t *testing.T) {
+		closed := false
+		w := &mockWire{
+			DoFn: func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "Delegate"), nil)
+			},
+			DoMultiFn: func(cmd ...Completed) *redisresults {
+				if len(cmd) == 4 {
+					return &redisresults{s: []RedisResult{
+						newResult(strmsg('+', "OK"), nil),
+						newResult(strmsg('+', "OK"), nil),
+						newResult(strmsg('+', "OK"), nil),
+						newResult(slicemsg('*', []RedisMessage{
+							strmsg('+', "Delegate0"),
+							strmsg('+', "Delegate1"),
+						}), nil),
+					}}
+				}
+				return &redisresults{s: []RedisResult{
+					newResult(strmsg('+', "Delegate0"), nil),
+					newResult(strmsg('+', "Delegate1"), nil),
+				}}
+			},
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+				return ErrClosing
+			},
+			SetPubSubHooksFn: func(hooks PubSubHooks) <-chan error {
+				ch := make(chan error, 1)
+				ch <- ErrClosing
+				close(ch)
+				return ch
+			},
+			ErrorFn: func() error {
+				return ErrClosing
+			},
+			CloseFn: func() {
+				closed = true
+			},
+		}
+		primaryNodeConn.AcquireFn = func() wire {
+			return w
+		}
+		stored := false
+		primaryNodeConn.StoreFn = func(ww wire) {
+			if ww != w {
+				t.Fatalf("received unexpected wire %v", ww)
+			}
+			stored = true
+		}
+		if err := client.Dedicated(func(c DedicatedClient) error {
+			ch := c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}})
+			if v, err := c.Do(context.Background(), c.B().Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+			if v := c.DoMulti(context.Background()); len(v) != 0 {
+				t.Fatalf("received unexpected response %v", v)
+			}
+			for i, resp := range c.DoMulti(
+				context.Background(),
+				c.B().Info().Build(),
+				c.B().Info().Build(),
+			) {
+				if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
+					t.Fatalf("unexpected response %v %v", v, err)
+				}
+			}
+			for i, resp := range c.DoMulti(
+				context.Background(),
+				c.B().Get().Key("a").Build(),
+				c.B().Get().Key("a").Build(),
+			) {
+				if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
+					t.Fatalf("unexpected response %v %v", v, err)
+				}
+			}
+			for i, resp := range c.DoMulti(
+				context.Background(),
+				c.B().Multi().Build(),
+				c.B().Get().Key("a").Build(),
+				c.B().Get().Key("a").Build(),
+				c.B().Exec().Build(),
+			)[3].val.values() {
+				if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
+					t.Fatalf("unexpected response %v %v", v, err)
+				}
+			}
+			if err := c.Receive(context.Background(), c.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
+				t.Fatalf("unexpected ret %v", err)
+			}
+			if err := <-ch; err != ErrClosing {
+				t.Fatalf("unexpected ret %v", err)
+			}
+			if err := <-c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}}); err != ErrClosing {
+				t.Fatalf("unexpected ret %v", err)
+			}
+			c.Close()
+			return nil
+		}); err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		if !stored {
+			t.Fatalf("Dedicated doesn't put back the wire")
+		}
+		if !closed {
+			t.Fatalf("Dedicated doesn't delegate Close")
+		}
+	})
+
+	t.Run("Dedicate", func(t *testing.T) {
+		closed := false
+		w := &mockWire{
+			DoFn: func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "Delegate"), nil)
+			},
+			DoMultiFn: func(cmd ...Completed) *redisresults {
+				if len(cmd) == 4 {
+					return &redisresults{s: []RedisResult{
+						newResult(strmsg('+', "OK"), nil),
+						newResult(strmsg('+', "OK"), nil),
+						newResult(strmsg('+', "OK"), nil),
+						newResult(slicemsg('*', []RedisMessage{
+							strmsg('+', "Delegate0"),
+							strmsg('+', "Delegate1"),
+						}), nil),
+					}}
+				}
+				return &redisresults{s: []RedisResult{
+					newResult(strmsg('+', "Delegate0"), nil),
+					newResult(strmsg('+', "Delegate1"), nil),
+				}}
+			},
+			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+				return ErrClosing
+			},
+			SetPubSubHooksFn: func(hooks PubSubHooks) <-chan error {
+				ch := make(chan error, 1)
+				ch <- ErrClosing
+				close(ch)
+				return ch
+			},
+			ErrorFn: func() error {
+				return ErrClosing
+			},
+			CloseFn: func() {
+				closed = true
+			},
+		}
+		primaryNodeConn.AcquireFn = func() wire {
+			return w
+		}
+		stored := false
+		primaryNodeConn.StoreFn = func(ww wire) {
+			if ww != w {
+				t.Fatalf("received unexpected wire %v", ww)
+			}
+			stored = true
+		}
+		c, cancel := client.Dedicate()
+		ch := c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}})
+		if v, err := c.Do(context.Background(), c.B().Get().Key("a").Build()).ToString(); err != nil || v != "Delegate" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if v := c.DoMulti(context.Background()); len(v) != 0 {
+			t.Fatalf("received unexpected response %v", v)
+		}
+		for i, resp := range c.DoMulti(
+			context.Background(),
+			c.B().Info().Build(),
+			c.B().Info().Build(),
+		) {
+			if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+		for i, resp := range c.DoMulti(
+			context.Background(),
+			c.B().Get().Key("a").Build(),
+			c.B().Get().Key("a").Build(),
+		) {
+			if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+		for i, resp := range c.DoMulti(
+			context.Background(),
+			c.B().Multi().Build(),
+			c.B().Get().Key("a").Build(),
+			c.B().Get().Key("a").Build(),
+			c.B().Exec().Build(),
+		)[3].val.values() {
+			if v, err := resp.ToString(); err != nil || v != "Delegate"+strconv.Itoa(i) {
+				t.Fatalf("unexpected response %v %v", v, err)
+			}
+		}
+		if err := c.Receive(context.Background(), c.B().Ssubscribe().Channel("a").Build(), func(msg PubSubMessage) {}); err != ErrClosing {
+			t.Fatalf("unexpected ret %v", err)
+		}
+		if err := <-ch; err != ErrClosing {
+			t.Fatalf("unexpected ret %v", err)
+		}
+		if err := <-c.SetPubSubHooks(PubSubHooks{OnMessage: func(m PubSubMessage) {}}); err != ErrClosing {
+			t.Fatalf("unexpected ret %v", err)
+		}
+		c.Close()
+		cancel()
+
+		if !stored {
+			t.Fatalf("Dedicated doesn't put back the wire")
+		}
+		if !closed {
+			t.Fatalf("Dedicated doesn't delegate Close")
+		}
+	})
+}
+
+func TestClusterClient_ReadNodeSelector_SendToAlternatePrimaryAndReplicaNodes(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	primaryNodeConn := &mockConn{
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			resps := make([]RedisResult, len(multi))
+			for i, cmd := range multi {
+				resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+			}
+			return &redisresults{s: resps}
+		},
+		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
+			resps := make([]RedisResult, len(multi))
+			for i, cmd := range multi {
+				resps[i] = newResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
+			}
+			return &redisresults{s: resps}
+		},
+		DoOverride: map[string]func(cmd Completed) RedisResult{
+			"CLUSTER SLOTS": func(cmd Completed) RedisResult {
+				return slotsMultiResp
+			},
+			"INFO": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "INFO"), nil)
+			},
+			"GET K1{a}": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "GET K1{a}"), nil)
+			},
+			"GET K2{b}": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "GET K2{b}"), nil)
+			},
+		},
+	}
+	replicaNodeConn := &mockConn{
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			resps := make([]RedisResult, len(multi))
+			for i, cmd := range multi {
+				resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+			}
+			return &redisresults{s: resps}
+		},
+		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
+			resps := make([]RedisResult, len(multi))
+			for i, cmd := range multi {
+				resps[i] = newResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
+			}
+			return &redisresults{s: resps}
+		},
+		DoOverride: map[string]func(cmd Completed) RedisResult{
+			"GET Do": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "GET Do"), nil)
+			},
+			"GET K1{a}": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "GET K1{a}"), nil)
+			},
+			"GET K2{b}": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "GET K2{b}"), nil)
+			},
+		},
+		DoCacheOverride: map[string]func(cmd Cacheable, ttl time.Duration) RedisResult{
+			"GET DoCache": func(cmd Cacheable, ttl time.Duration) RedisResult {
+				return newResult(strmsg('+', "GET DoCache"), nil)
+			},
+		},
+	}
+
+	nextNode := -1
+	client, err := newClusterClient(
+		&ClientOption{
+			InitAddress: []string{"127.0.0.1:0"},
+			ReadNodeSelector: func(_ uint16, _ []NodeInfo) int  {
+				nextNode++
+				return (nextNode/2)%2
 			},
 		},
 		func(dst string, opt *ClientOption) conn {
