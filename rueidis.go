@@ -244,15 +244,12 @@ type ClientOption struct {
 	// If true, the client will set the `AZ` field in `ReplicaInfo`.
 	EnableReplicaAZInfo bool
 
-	// RouteRandomly routes read only command's traffic randomly between master and replica nodes.
-	// Enabling it alongside client side caching can result in higher memory usage due to
-	// individual cache store against each connection.
-	// Only works when SendToReplicas return true
-	RouteRandomly bool
-
 	// ReadNodeSelector returns index of node selected for a read only command.
+	// If set, ReadNodeSelector is prioritized over ReplicaSelector.
 	// If the returned index is out of range, the primary node will be selected.
-	// The function is called only when RouteRandomly is true and SendToReplicas returns true.
+	// The function is called only when SendToReplicas returns true.
+	// Each NodeInfo must not be modified.
+	// NOTE: This function can't be used with ReplicaSelector option.
 	ReadNodeSelector func(slot uint16, nodes []NodeInfo) int
 }
 

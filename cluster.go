@@ -19,9 +19,9 @@ var ErrNoSlot = errors.New("the slot has no redis node")
 var ErrReplicaOnlyConflict = errors.New("ReplicaOnly conflicts with SendToReplicas option")
 var ErrInvalidShardsRefreshInterval = errors.New("ShardsRefreshInterval must be greater than or equal to 0")
 var ErrReplicaOnlyConflictWithReplicaSelector = errors.New("ReplicaOnly conflicts with ReplicaSelector option")
-var ErrReplicaOnlyConflictWithRouteRandomly = errors.New("ReplicaOnly conflicts with RouteRandomly option")
+var ErrReplicaOnlyConflictWithReadNodeSelector = errors.New("ReplicaOnly conflicts with ReadNodeSelector option")
+var ErrReplicaSelectorConflictWithReadNodeSelector = errors.New("either set ReplicaSelector or ReadNodeSelector, not both")
 var ErrSendToReplicasNotSet = errors.New("SendToReplicas must be set when ReplicaSelector is set")
-var ErrSendToReplicasNotSetWithRouteRandomly = errors.New("SendToReplicas must be set when RouteRandomly is set")
 
 type clusterClient struct {
 	wslots       [16384]conn
@@ -51,7 +51,7 @@ var replicaOnlySelector = func(_ uint16, replicas []NodeInfo) int {
 	return util.FastRand(len(replicas))
 }
 
-var readNodeSelector = func(_ uint16, nodes []NodeInfo) int {
+var DefaultReadNodeSelector = func(_ uint16, nodes []NodeInfo) int {
 	return util.FastRand(len(nodes))
 }
 
@@ -73,20 +73,17 @@ func newClusterClient(opt *ClientOption, connFn connFn, retryer retryHandler) (*
 	if opt.ReplicaOnly && opt.ReplicaSelector != nil {
 		return nil, ErrReplicaOnlyConflictWithReplicaSelector
 	}
-	if opt.ReplicaOnly && opt.RouteRandomly {
-		return nil, ErrReplicaOnlyConflictWithRouteRandomly
+	if opt.ReplicaOnly && opt.ReadNodeSelector != nil {
+		return nil, ErrReplicaOnlyConflictWithReadNodeSelector
+	}
+	if opt.ReplicaSelector != nil && opt.ReadNodeSelector != nil {
+		return nil, ErrReplicaSelectorConflictWithReadNodeSelector
 	}
 	if opt.ReplicaSelector != nil && opt.SendToReplicas == nil {
 		return nil, ErrSendToReplicasNotSet
 	}
-	if opt.SendToReplicas != nil && opt.ReplicaSelector == nil {
+	if opt.SendToReplicas != nil && opt.ReplicaSelector == nil && opt.ReadNodeSelector == nil {
 		opt.ReplicaSelector = replicaOnlySelector
-	}
-	if opt.RouteRandomly && opt.SendToReplicas == nil {
-		return nil, ErrSendToReplicasNotSetWithRouteRandomly
-	}
-	if opt.RouteRandomly && opt.ReadNodeSelector == nil {
-		opt.ReadNodeSelector = readNodeSelector
 	}
 
 	if opt.SendToReplicas != nil {
@@ -299,7 +296,7 @@ func (c *clusterClient) _refresh() (err error) {
 				for _, slot := range g.slots {
 					for i := slot[0]; i <= slot[1] && i >= 0 && i < 16384; i++ {
 						wslots[i] = conns[master].conn
-						if c.opt.RouteRandomly {
+						if c.opt.ReadNodeSelector != nil {
 							rslots[i] = g.nodes
 						} else {
 							rIndex := c.opt.ReplicaSelector(uint16(i), g.nodes[1:]) // exclude master node
@@ -470,7 +467,7 @@ func (c *clusterClient) _pick(slot uint16, toReplica bool) (p conn) {
 			break
 		}
 	} else if toReplica && c.rslots != nil {
-		if c.opt.RouteRandomly {
+		if c.opt.ReadNodeSelector != nil {
 			nodes := c.rslots[slot]
 			rIndex := c.opt.ReadNodeSelector(slot, nodes)
 			if rIndex >= 0 && rIndex < len(nodes) {
@@ -617,7 +614,7 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 		for i, cmd := range multi {
 			var cc conn
 			slot := cmd.Slot()
-			if c.opt.SendToReplicas(cmd) && c.opt.RouteRandomly {
+			if c.opt.SendToReplicas(cmd) && c.opt.ReadNodeSelector != nil {
 				bm.Set(i)
 				nodes := c.rslots[slot]
 				rIndex := c.opt.ReadNodeSelector(slot, nodes)
@@ -1095,7 +1092,7 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 		for i, cmd := range multi {
 			var p conn
 			slot := cmd.Cmd.Slot()
-			if c.opt.SendToReplicas(Completed(cmd.Cmd)) && c.opt.RouteRandomly {
+			if c.opt.SendToReplicas(Completed(cmd.Cmd)) && c.opt.ReadNodeSelector != nil {
 				rIndex := c.opt.ReadNodeSelector(slot, c.rslots[slot])
 				if rIndex >= 0 && rIndex < len(c.rslots[slot]) {
 					p = c.rslots[slot][rIndex].conn
