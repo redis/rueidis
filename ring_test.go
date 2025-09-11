@@ -31,10 +31,11 @@ func TestRing(t *testing.T) {
 				runtime.Gosched()
 				continue
 			}
-			n, f := ring.NextResultCh()
-			cmd2, ch := n.one, n.ch
-			n.reset()
-			f <- n
+			c, cond, _ := ring.NextResultCh()
+			cmd2 := c.one
+			ch := c.ch
+			cond.L.Unlock()
+			cond.Signal()
 			if cmd1.Commands()[0] != cmd2.Commands()[0] {
 				t.Fatalf("cmds read by NextWriteCmd and NextResultCh is not the same one")
 			}
@@ -64,10 +65,11 @@ func TestRing(t *testing.T) {
 				runtime.Gosched()
 				continue
 			}
-			n, f := ring.NextResultCh()
-			cmd2, ch := n.multi, n.ch
-			n.reset()
-			f <- n
+			c, cond, _ := ring.NextResultCh()
+			cmd2 := c.multi
+			ch := c.ch
+			cond.L.Unlock()
+			cond.Signal()
 			for j := 0; j < len(cmd1); j++ {
 				if cmd1[j].Commands()[0] != cmd2[j].Commands()[0] {
 					t.Fatalf("cmds read by NextWriteCmd and NextResultCh is not the same one")
@@ -85,36 +87,39 @@ func TestRing(t *testing.T) {
 		if one, multi, _ := ring.NextWriteCmd(); !one.IsEmpty() || multi != nil {
 			t.Fatalf("NextWriteCmd should returns nil if empty")
 		}
-		n, f := ring.NextResultCh()
-		one, multi, ch := n.one, n.multi, n.ch
+		c, cond, _ := ring.NextResultCh()
+		one, multi, ch := c.one, c.multi, c.ch
 		if !one.IsEmpty() || multi != nil || ch != nil {
 			t.Fatalf("NextResultCh should returns nil if not NextWriteCmd yet")
+		} else {
+			cond.L.Unlock()
+			cond.Signal()
 		}
 
 		ring.PutOne(context.Background(), cmds.NewCompleted([]string{"0"}))
 		if one, _, _ := ring.NextWriteCmd(); len(one.Commands()) == 0 || one.Commands()[0] != "0" {
 			t.Fatalf("NextWriteCmd should returns next cmd")
 		}
-		n, f = ring.NextResultCh()
-		one, multi, ch = n.one, n.multi, n.ch
+		c, cond, _ = ring.NextResultCh()
+		one, multi, ch = c.one, c.multi, c.ch
 		if len(one.Commands()) == 0 || one.Commands()[0] != "0" || ch == nil {
 			t.Fatalf("NextResultCh should returns next cmd after NextWriteCmd")
 		} else {
-			n.reset()
-			f <- n
+			cond.L.Unlock()
+			cond.Signal()
 		}
 
 		ring.PutMulti(context.Background(), cmds.NewMultiCompleted([][]string{{"0"}}), nil)
 		if _, multi, _ := ring.NextWriteCmd(); len(multi) == 0 || multi[0].Commands()[0] != "0" {
 			t.Fatalf("NextWriteCmd should returns next cmd")
 		}
-		n, f = ring.NextResultCh()
-		multi, ch = n.multi, n.ch
+		c, cond, _ = ring.NextResultCh()
+		multi, ch = c.multi, c.ch
 		if len(multi) == 0 || multi[0].Commands()[0] != "0" || ch == nil {
 			t.Fatalf("NextResultCh should returns next cmd after NextWriteCmd")
 		} else {
-			n.reset()
-			f <- n
+			cond.L.Unlock()
+			cond.Signal()
 		}
 	})
 
@@ -144,55 +149,5 @@ func TestRing(t *testing.T) {
 			}
 		}
 		t.Fatal("Should sleep")
-	})
-
-	t.Run("PutOne Context Is Done", func(t *testing.T) {
-		ring := newRing(1)
-		for i := 0; i < (1 << 1); i++ {
-			ring.PutOne(context.Background(), cmds.NewCompleted([]string{strconv.Itoa(i)}))
-		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-		defer cancel()
-
-		_, err := ring.PutOne(ctx, cmds.NewCompleted([]string{"should_fail"}))
-		if err != context.DeadlineExceeded {
-			t.Fatalf("Expected context.DeadlineExceeded error, got %v", err)
-		}
-
-		for i := 0; i < (1 << 1); i++ {
-			ring.NextWriteCmd()
-		}
-		for i := 0; i < (1 << 1); i++ {
-			n, f := ring.NextResultCh()
-
-			n.reset()
-			f <- n
-		}
-	})
-
-	t.Run("PutMulti Context Is Done", func(t *testing.T) {
-		ring := newRing(1)
-		for i := 0; i < (1 << 1); i++ {
-			ring.PutMulti(context.Background(), cmds.NewMultiCompleted([][]string{{strconv.Itoa(i)}}), nil)
-		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-		defer cancel()
-
-		_, err := ring.PutMulti(ctx, cmds.NewMultiCompleted([][]string{{"should_fail"}}), nil)
-		if err != context.DeadlineExceeded {
-			t.Fatalf("Expected context.Canceled error, got %v", err)
-		}
-
-		for i := 0; i < (1 << 1); i++ {
-			ring.NextWriteCmd()
-		}
-		for i := 0; i < (1 << 1); i++ {
-			n, f := ring.NextResultCh()
-
-			n.reset()
-			f <- n
-		}
 	})
 }

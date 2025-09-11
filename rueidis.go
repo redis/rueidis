@@ -16,6 +16,20 @@ import (
 	"github.com/redis/rueidis/internal/util"
 )
 
+// QueueType defines the type of queue implementation to use for command pipelining
+type QueueType uint8
+
+const (
+	// QueueTypeRing uses the default ring buffer with mutex/condition variables
+	// This provides the best raw performance with atomic operations and condition variables
+	// but does not support context cancellation when the buffer is full
+	QueueTypeRing QueueType = iota
+	// QueueTypeFlowBuffer uses a channel-based lock-free implementation
+	// This provides context cancellation support even when the buffer is full
+	// but is slower than QueueTypeRing and requires more memory
+	QueueTypeFlowBuffer
+)
+
 const (
 	// DefaultCacheBytes is the default value of ClientOption.CacheSizeEachConn, which is 128 MiB
 	DefaultCacheBytes = 128 * (1 << 20)
@@ -157,6 +171,9 @@ type ClientOption struct {
 	// Reducing this value can reduce the memory consumption of each connection at the cost of potential throughput degradation.
 	// Values smaller than 8 are typically not recommended.
 	RingScaleEachConn int
+
+	// QueueType selects the circular queue implementation for command pipelining.
+	QueueType QueueType
 
 	// ReadBufferEachConn is the size of the bufio.NewReaderSize for each connection, default to DefaultReadBuffer (0.5 MiB).
 	ReadBufferEachConn int
