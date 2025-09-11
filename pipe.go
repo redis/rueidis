@@ -446,9 +446,6 @@ func (p *pipe) _background() {
 			if cond != nil {
 				cond.L.Unlock()
 				cond.Signal()
-			} else if f != nil {
-				cmd.reset()
-				f <- cmd
 			}
 			runtime.Gosched()
 		}
