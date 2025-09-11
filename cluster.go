@@ -609,7 +609,7 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 
 	if !init && c.rslots != nil && c.opt.SendToReplicas != nil {
 		var bm bitmap
-		var rSlotSelected [16384]conn
+		itor := make(map[int]int, 0)
 		bm.Init(len(multi))
 		for i, cmd := range multi {
 			var cc conn
@@ -618,16 +618,15 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 				bm.Set(i)
 				nodes := c.rslots[slot]
 				rIndex := c.opt.ReadNodeSelector(slot, nodes)
-				if rIndex >= 0 && rIndex < len(nodes) {
-					cc = nodes[rIndex].conn
-				} else {
-					cc = c.wslots[cmd.Slot()]
+				if rIndex < 0 || rIndex >= len(nodes) {
+					rIndex = 0 // default to primary conn
 				}
-				rSlotSelected[slot] = cc
+				itor[i] = rIndex
+				cc = nodes[rIndex].conn
 			} else if c.opt.SendToReplicas(cmd) {
 				bm.Set(i)
+				itor[i] = 0
 				cc = c.rslots[slot][0].conn
-				rSlotSelected[slot] = cc
 			} else {
 				cc = c.wslots[cmd.Slot()]
 			}
@@ -646,7 +645,7 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 		for i, cmd := range multi {
 			var cc conn
 			if bm.Get(i) {
-				cc = rSlotSelected[cmd.Slot()]
+				cc = c.rslots[cmd.Slot()][itor[i]].conn
 			} else {
 				cc = c.wslots[cmd.Slot()]
 			}
