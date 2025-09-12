@@ -4268,14 +4268,16 @@ func TestExitOnRingFullAndPingTimeout(t *testing.T) {
 
 func TestExitOnFlowBufferFullAndConnError(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
+	os.Setenv("RUEIDIS_QUEUE_TYPE", "flowbuffer")
+	defer os.Unsetenv("RUEIDIS_QUEUE_TYPE")
+
 	p, mock, _, closeConn := setup(t, ClientOption{
 		RingScaleEachConn: 1,
-		QueueType:         QueueTypeFlowBuffer,
 	})
 	p.background()
 
 	// fill the buffer
-	for i := 0; i < p.queue.(*flowBuffer).size; i++ {
+	for i := 0; i < 2; i++ {
 		go func() {
 			if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 				t.Errorf("unexpected result, expected io err, got %v", err)
@@ -4283,7 +4285,7 @@ func TestExitOnFlowBufferFullAndConnError(t *testing.T) {
 		}()
 	}
 	// let writer loop over the buffer
-	for i := 0; i < p.queue.(*flowBuffer).size; i++ {
+	for i := 0; i < 2; i++ {
 		mock.Expect("GET", "a")
 	}
 
@@ -4297,16 +4299,18 @@ func TestExitOnFlowBufferFullAndConnError(t *testing.T) {
 
 func TestExitOnFlowBufferFullAndPingTimeout(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
+	os.Setenv("RUEIDIS_QUEUE_TYPE", "flowbuffer")
+	defer os.Unsetenv("RUEIDIS_QUEUE_TYPE")
+
 	p, mock, _, _ := setup(t, ClientOption{
 		RingScaleEachConn: 1,
-		QueueType:         QueueTypeFlowBuffer,
 		ConnWriteTimeout:  500 * time.Millisecond,
 		Dialer:            net.Dialer{KeepAlive: 500 * time.Millisecond},
 	})
 	p.background()
 
 	// fill the buffer
-	for i := 0; i < p.queue.(*flowBuffer).size; i++ {
+	for i := 0; i < 2; i++ {
 		go func() {
 			if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); !errors.Is(err, os.ErrDeadlineExceeded) {
 				t.Errorf("unexpected result, expected context.DeadlineExceeded, got %v", err)
@@ -4314,7 +4318,7 @@ func TestExitOnFlowBufferFullAndPingTimeout(t *testing.T) {
 		}()
 	}
 	// let writer loop over the buffer
-	for i := 0; i < p.queue.(*flowBuffer).size; i++ {
+	for i := 0; i < 2; i++ {
 		mock.Expect("GET", "a")
 	}
 

@@ -2,14 +2,12 @@ package rueidis
 
 import (
 	"context"
-	"sync"
 )
 
 type flowBuffer struct {
-	f    chan queuedCmd
-	r    chan queuedCmd
-	w    chan queuedCmd
-	size int
+	f chan queuedCmd
+	r chan queuedCmd
+	w chan queuedCmd
 }
 
 var _ queue = (*flowBuffer)(nil)
@@ -21,10 +19,9 @@ func newFlowBuffer(factor int) *flowBuffer {
 	size := 2 << (factor - 1)
 
 	r := &flowBuffer{
-		f:    make(chan queuedCmd, size),
-		r:    make(chan queuedCmd, size),
-		w:    make(chan queuedCmd, size),
-		size: size,
+		f: make(chan queuedCmd, size),
+		r: make(chan queuedCmd, size),
+		w: make(chan queuedCmd, size),
 	}
 	for i := 0; i < size; i++ {
 		r.f <- queuedCmd{
@@ -85,11 +82,15 @@ func (b *flowBuffer) WaitForWrite() (one Completed, multi []Completed, ch chan R
 }
 
 // NextResultCh should be only called by one dedicated thread
-func (b *flowBuffer) NextResultCh() (queuedCmd, *sync.Cond, chan<- queuedCmd) {
+func (b *flowBuffer) NextResultCh() (queuedCmd, func()) {
 	select {
 	case cmd := <-b.r:
-		return cmd, nil, b.f
+		done := func() {
+			cmd.reset()
+			b.f <- cmd
+		}
+		return cmd, done
 	default:
-		return queuedCmd{}, nil, nil
+		return queuedCmd{}, func() {}
 	}
 }

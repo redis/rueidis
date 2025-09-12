@@ -17,17 +17,23 @@ import (
 )
 
 // QueueType defines the type of queue implementation to use for command pipelining
-type QueueType uint8
+// If you want to use the ring buffer, you can set the "RUEIDIS_QUEUE_TYPE" environment variable to "ring" or empty string.
+// If you want to use the flow buffer, you can set the "RUEIDIS_QUEUE_TYPE" environment variable to "flowbuffer".
+type QueueType string
+
+const (
+	queueTypeEnvVar = "RUEIDIS_QUEUE_TYPE"
+)
 
 const (
 	// QueueTypeRing uses the default ring buffer with mutex/condition variables
 	// This provides the best raw performance with atomic operations and condition variables
 	// but does not support context cancellation when the buffer is full
-	QueueTypeRing QueueType = iota
+	QueueTypeRing QueueType = "ring"
 	// QueueTypeFlowBuffer uses a channel-based lock-free implementation
 	// This provides context cancellation support even when the buffer is full
 	// but is slower than QueueTypeRing and requires more memory
-	QueueTypeFlowBuffer
+	QueueTypeFlowBuffer = "flowbuffer"
 )
 
 const (
@@ -171,9 +177,6 @@ type ClientOption struct {
 	// Reducing this value can reduce the memory consumption of each connection at the cost of potential throughput degradation.
 	// Values smaller than 8 are typically not recommended.
 	RingScaleEachConn int
-
-	// QueueType selects the circular queue implementation for command pipelining.
-	QueueType QueueType
 
 	// ReadBufferEachConn is the size of the bufio.NewReaderSize for each connection, default to DefaultReadBuffer (0.5 MiB).
 	ReadBufferEachConn int

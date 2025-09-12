@@ -122,7 +122,8 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 		optIn: isOptIn(option.ClientTrackingOptions),
 	}
 	if !nobg {
-		switch option.QueueType {
+		queueType := os.Getenv(queueTypeEnvVar)
+		switch queueType {
 		case QueueTypeFlowBuffer:
 			p.queue = newFlowBuffer(option.RingScaleEachConn)
 		default:
@@ -408,8 +409,7 @@ func (p *pipe) _background() {
 		resps []RedisResult
 		ch    chan RedisResult
 		cmd   queuedCmd
-		cond  *sync.Cond
-		f     chan<- queuedCmd
+		done  func()
 	)
 
 	// clean up cache and free pending calls
@@ -427,7 +427,7 @@ func (p *pipe) _background() {
 			_, _, _ = p.queue.NextWriteCmd()
 		default:
 		}
-		cmd, cond, f = p.queue.NextResultCh()
+		cmd, done = p.queue.NextResultCh()
 		ch, resps = cmd.ch, cmd.resps
 		if ch != nil {
 			for i := range resps {
@@ -435,18 +435,9 @@ func (p *pipe) _background() {
 			}
 			ch <- resp
 
-			if cond != nil {
-				cond.L.Unlock()
-				cond.Signal()
-			} else {
-				cmd.reset()
-				f <- cmd
-			}
+			done()
 		} else {
-			if cond != nil {
-				cond.L.Unlock()
-				cond.Signal()
-			}
+			done()
 			runtime.Gosched()
 		}
 	}
@@ -505,8 +496,7 @@ func (p *pipe) _backgroundRead() (err error) {
 	var (
 		msg   RedisMessage
 		cmd   queuedCmd
-		cond  *sync.Cond
-		f     chan<- queuedCmd
+		done  func()
 		ones  = make([]Completed, 1)
 		multi []Completed
 		resps []RedisResult
@@ -533,13 +523,7 @@ func (p *pipe) _backgroundRead() (err error) {
 			}
 			ch <- resp
 
-			if cond != nil {
-				cond.L.Unlock()
-				cond.Signal()
-			} else {
-				cmd.reset()
-				f <- cmd
-			}
+			done()
 		}
 	}()
 
@@ -581,12 +565,10 @@ func (p *pipe) _backgroundRead() (err error) {
 		}
 		if ff == len(multi) {
 			ff = 0
-			cmd, cond, f = p.queue.NextResultCh()
+			cmd, done = p.queue.NextResultCh()
 			ones[0], multi, ch, resps = cmd.one, cmd.multi, cmd.ch, cmd.resps // ch should not be nil; otherwise, it must be a protocol bug
 			if ch == nil {
-				if cond != nil {
-					cond.L.Unlock()
-				}
+				done()
 
 				// Redis will send sunsubscribe notification proactively in the event of slot migration.
 				// We should ignore them and go fetch the next message.
@@ -669,13 +651,7 @@ func (p *pipe) _backgroundRead() (err error) {
 		if ff++; ff == len(multi) {
 			ch <- resp
 
-			if cond != nil {
-				cond.L.Unlock()
-				cond.Signal()
-			} else {
-				cmd.reset()
-				f <- cmd
-			}
+			done()
 		}
 	}
 }
