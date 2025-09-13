@@ -122,9 +122,9 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 		optIn: isOptIn(option.ClientTrackingOptions),
 	}
 	if !nobg {
-		queueType := os.Getenv(queueTypeEnvVar)
-		switch queueType {
-		case QueueTypeFlowBuffer:
+		qType := os.Getenv(queueTypeEnvVar)
+		switch qType {
+		case queueTypeFlowBuffer:
 			p.queue = newFlowBuffer(option.RingScaleEachConn)
 		default:
 			p.queue = newRing(option.RingScaleEachConn)
