@@ -31,9 +31,10 @@ func TestFlowBuffer(t *testing.T) {
 				runtime.Gosched()
 				continue
 			}
-			c, done := buffer.NextResultCh()
+			c, _, f := buffer.NextResultCh()
 			cmd2, ch := c.one, c.ch
-			done()
+			c.reset()
+			f <- c
 			if cmd1.Commands()[0] != cmd2.Commands()[0] {
 				t.Fatalf("cmds read by NextWriteCmd and NextResultCh is not the same one")
 			}
@@ -63,9 +64,10 @@ func TestFlowBuffer(t *testing.T) {
 				runtime.Gosched()
 				continue
 			}
-			c, done := buffer.NextResultCh()
+			c, _, f := buffer.NextResultCh()
 			cmd2, ch := c.multi, c.ch
-			done()
+			c.reset()
+			f <- c
 			for j := 0; j < len(cmd1); j++ {
 				if cmd1[j].Commands()[0] != cmd2[j].Commands()[0] {
 					t.Fatalf("cmds read by NextWriteCmd and NextResultCh is not the same one")
@@ -83,7 +85,7 @@ func TestFlowBuffer(t *testing.T) {
 		if one, multi, _ := buffer.NextWriteCmd(); !one.IsEmpty() || multi != nil {
 			t.Fatalf("NextWriteCmd should returns nil if empty")
 		}
-		c, done := buffer.NextResultCh()
+		c, _, f := buffer.NextResultCh()
 		one, multi, ch := c.one, c.multi, c.ch
 		if !one.IsEmpty() || multi != nil || ch != nil {
 			t.Fatalf("NextResultCh should returns nil if not NextWriteCmd yet")
@@ -93,24 +95,26 @@ func TestFlowBuffer(t *testing.T) {
 		if one, _, _ := buffer.NextWriteCmd(); len(one.Commands()) == 0 || one.Commands()[0] != "0" {
 			t.Fatalf("NextWriteCmd should returns next cmd")
 		}
-		c, done = buffer.NextResultCh()
+		c, _, f = buffer.NextResultCh()
 		one, multi, ch = c.one, c.multi, c.ch
 		if len(one.Commands()) == 0 || one.Commands()[0] != "0" || ch == nil {
 			t.Fatalf("NextResultCh should returns next cmd after NextWriteCmd")
 		} else {
-			done()
+			c.reset()
+			f <- c
 		}
 
 		buffer.PutMulti(context.Background(), cmds.NewMultiCompleted([][]string{{"0"}}), nil)
 		if _, multi, _ := buffer.NextWriteCmd(); len(multi) == 0 || multi[0].Commands()[0] != "0" {
 			t.Fatalf("NextWriteCmd should returns next cmd")
 		}
-		c, done = buffer.NextResultCh()
+		c, _, f = buffer.NextResultCh()
 		multi, ch = c.multi, c.ch
 		if len(multi) == 0 || multi[0].Commands()[0] != "0" || ch == nil {
 			t.Fatalf("NextResultCh should returns next cmd after NextWriteCmd")
 		} else {
-			done()
+			c.reset()
+			f <- c
 		}
 	})
 
@@ -160,9 +164,10 @@ func TestFlowBuffer(t *testing.T) {
 			buffer.NextWriteCmd()
 		}
 		for i := 0; i < (1 << 1); i++ {
-			_, done := buffer.NextResultCh()
+			c, _, f := buffer.NextResultCh()
 
-			done()
+			c.reset()
+			f <- c
 		}
 	})
 
@@ -184,9 +189,10 @@ func TestFlowBuffer(t *testing.T) {
 			buffer.NextWriteCmd()
 		}
 		for i := 0; i < (1 << 1); i++ {
-			_, done := buffer.NextResultCh()
+			c, _, f := buffer.NextResultCh()
 
-			done()
+			c.reset()
+			f <- c
 		}
 	})
 }

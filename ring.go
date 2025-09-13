@@ -13,7 +13,7 @@ type queue interface {
 	PutMulti(ctx context.Context, m []Completed, resps []RedisResult) (chan RedisResult, error)
 	NextWriteCmd() (Completed, []Completed, chan RedisResult)
 	WaitForWrite() (Completed, []Completed, chan RedisResult)
-	NextResultCh() (queuedCmd, func())
+	NextResultCh() (queuedCmd, *sync.Cond, chan<- queuedCmd)
 }
 
 type queuedCmd struct {
@@ -134,14 +134,11 @@ func (r *ring) WaitForWrite() (one Completed, multi []Completed, ch chan RedisRe
 }
 
 // NextResultCh should be only called by one dedicated thread
-func (r *ring) NextResultCh() (cmd queuedCmd, done func()) {
+func (r *ring) NextResultCh() (cmd queuedCmd, cond *sync.Cond, f chan<- queuedCmd) {
 	r.read2++
 	p := r.read2 & r.mask
 	n := &r.store[p]
-	done = func() {
-		n.c1.L.Unlock()
-		n.c1.Signal()
-	}
+	cond = n.c1
 	n.c1.L.Lock()
 	if n.mark == 2 {
 		cmd = queuedCmd{

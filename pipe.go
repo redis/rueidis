@@ -409,7 +409,8 @@ func (p *pipe) _background() {
 		resps []RedisResult
 		ch    chan RedisResult
 		cmd   queuedCmd
-		done  func()
+		cond  *sync.Cond
+		f     chan<- queuedCmd
 	)
 
 	// clean up cache and free pending calls
@@ -427,7 +428,7 @@ func (p *pipe) _background() {
 			_, _, _ = p.queue.NextWriteCmd()
 		default:
 		}
-		cmd, done = p.queue.NextResultCh()
+		cmd, cond, f = p.queue.NextResultCh()
 		ch, resps = cmd.ch, cmd.resps
 		if ch != nil {
 			for i := range resps {
@@ -435,9 +436,19 @@ func (p *pipe) _background() {
 			}
 			ch <- resp
 
-			done()
+			if cond != nil {
+				cond.L.Unlock()
+				cond.Signal()
+			} else {
+				cmd.reset()
+				f <- cmd
+			}
 		} else {
-			done()
+			if cond != nil {
+				cond.L.Unlock()
+				cond.Signal()
+			}
+
 			runtime.Gosched()
 		}
 	}
@@ -496,7 +507,8 @@ func (p *pipe) _backgroundRead() (err error) {
 	var (
 		msg   RedisMessage
 		cmd   queuedCmd
-		done  func()
+		cond  *sync.Cond
+		f     chan<- queuedCmd
 		ones  = make([]Completed, 1)
 		multi []Completed
 		resps []RedisResult
@@ -523,7 +535,13 @@ func (p *pipe) _backgroundRead() (err error) {
 			}
 			ch <- resp
 
-			done()
+			if cond != nil {
+				cond.L.Unlock()
+				cond.Signal()
+			} else {
+				cmd.reset()
+				f <- cmd
+			}
 		}
 	}()
 
@@ -565,10 +583,13 @@ func (p *pipe) _backgroundRead() (err error) {
 		}
 		if ff == len(multi) {
 			ff = 0
-			cmd, done = p.queue.NextResultCh()
+			cmd, cond, f = p.queue.NextResultCh()
 			ones[0], multi, ch, resps = cmd.one, cmd.multi, cmd.ch, cmd.resps // ch should not be nil; otherwise, it must be a protocol bug
 			if ch == nil {
-				done()
+				if cond != nil {
+					cond.L.Unlock()
+					cond.Signal()
+				}
 
 				// Redis will send sunsubscribe notification proactively in the event of slot migration.
 				// We should ignore them and go fetch the next message.
@@ -651,7 +672,13 @@ func (p *pipe) _backgroundRead() (err error) {
 		if ff++; ff == len(multi) {
 			ch <- resp
 
-			done()
+			if cond != nil {
+				cond.L.Unlock()
+				cond.Signal()
+			} else {
+				cmd.reset()
+				f <- cmd
+			}
 		}
 	}
 }

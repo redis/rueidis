@@ -2,6 +2,7 @@ package rueidis
 
 import (
 	"context"
+	"sync"
 )
 
 type flowBuffer struct {
@@ -82,15 +83,11 @@ func (b *flowBuffer) WaitForWrite() (one Completed, multi []Completed, ch chan R
 }
 
 // NextResultCh should be only called by one dedicated thread
-func (b *flowBuffer) NextResultCh() (queuedCmd, func()) {
+func (b *flowBuffer) NextResultCh() (queuedCmd, *sync.Cond, chan<- queuedCmd) {
 	select {
 	case cmd := <-b.r:
-		done := func() {
-			cmd.reset()
-			b.f <- cmd
-		}
-		return cmd, done
+		return cmd, nil, b.f
 	default:
-		return queuedCmd{}, func() {}
+		return queuedCmd{}, nil, nil
 	}
 }
