@@ -1534,6 +1534,27 @@ func TestScannerIter(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("early exit", func(t *testing.T) {
+		callCount := 0
+		entries := []ScanEntry{
+			{Elements: []string{"key1"}, Cursor: 10},
+		}
+		scanner := NewScanner(func(cursor uint64) (ScanEntry, error) {
+			if callCount >= len(entries) {
+				return ScanEntry{}, errors.New("unexpected call")
+			}
+			entry := entries[callCount]
+			callCount++
+			return entry, nil
+		})
+		for range scanner.Iter() {
+			break
+		}
+		if scanner.Err() != nil {
+			t.Errorf("unexpected error: %v", scanner.Err())
+		}
+	})
 }
 
 func TestScannerIter2(t *testing.T) {
@@ -1623,4 +1644,25 @@ func TestScannerIter2(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("early exit", func(t *testing.T) {
+		callCount := 0
+		entries := []ScanEntry{
+			{Elements: []string{"field1", "value1"}, Cursor: 10},
+		}
+		scanner := NewScanner(func(cursor uint64) (ScanEntry, error) {
+			if callCount >= len(entries) {
+				return ScanEntry{}, errors.New("unexpected call")
+			}
+			entry := entries[callCount]
+			callCount++
+			return entry, nil
+		})
+		for range scanner.Iter2() {
+			break
+		}
+		if scanner.Err() != nil {
+			t.Errorf("unexpected error: %v", scanner.Err())
+		}
+	})
 }
