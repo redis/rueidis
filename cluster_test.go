@@ -728,7 +728,9 @@ func TestClusterClientInit(t *testing.T) {
 				SendToReplicas: func(cmd Completed) bool {
 					return true
 				},
-				ReadNodeSelector: DefaultReadNodeSelector},
+				ReadNodeSelector: func(slot uint16, nodes []NodeInfo) int {
+					return 0
+				}},
 			func(dst string, opt *ClientOption) conn {
 				return &mockConn{DialFn: func() error { return nil }}
 			},
@@ -1584,7 +1586,9 @@ func TestClusterClientInit(t *testing.T) {
 				SendToReplicas: func(cmd Completed) bool {
 					return true
 				},
-				ReadNodeSelector: DefaultReadNodeSelector,
+				ReadNodeSelector: func(slot uint16, nodes []NodeInfo) int {
+					return 0
+				},
 			},
 			func(dst string, opt *ClientOption) conn {
 				switch {
@@ -9953,9 +9957,9 @@ func TestClusterClient_ReadNodeSelector_SendToAlternatePrimaryAndReplicaNodes(t 
 	client, err := newClusterClient(
 		&ClientOption{
 			InitAddress: []string{"127.0.0.1:0"},
-			ReadNodeSelector: func(_ uint16, _ []NodeInfo) int  {
+			ReadNodeSelector: func(_ uint16, _ []NodeInfo) int {
 				nextNode++
-				return (nextNode/2)%2
+				return (nextNode / 2) % 2
 			},
 		},
 		func(dst string, opt *ClientOption) conn {
