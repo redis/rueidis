@@ -98,6 +98,7 @@ type ClientOption struct {
 	// Only used when DisableRetry is false.
 	RetryDelay RetryDelayFn
 
+	// Deprecated: use ReadNodeSelector instead.
 	// ReplicaSelector selects a replica node when `SendToReplicas` returns true.
 	// If the function is set, the client will send the selected command to the replica node.
 	// The Returned value is the index of the replica node in the replica slice.
@@ -108,7 +109,7 @@ type ClientOption struct {
 	// Each ReplicaInfo must not be modified.
 	// NOTE: This function can't be used with ReplicaOnly option.
 	// NOTE: This function must be used with the SendToReplicas function.
-	ReplicaSelector func(slot uint16, replicas []ReplicaInfo) int
+	ReplicaSelector func(slot uint16, replicas []NodeInfo) int
 
 	// Sentinel options, including MasterSet and Auth options
 	Sentinel SentinelOption
@@ -242,6 +243,14 @@ type ClientOption struct {
 	// EnableReplicaAZInfo enables the client to load the replica node's availability zone.
 	// If true, the client will set the `AZ` field in `ReplicaInfo`.
 	EnableReplicaAZInfo bool
+
+	// ReadNodeSelector returns index of node selected for a read only command.
+	// If set, ReadNodeSelector is prioritized over ReplicaSelector.
+	// If the returned index is out of range, the primary node will be selected.
+	// The function is called only when SendToReplicas returns true.
+	// Each NodeInfo must not be modified.
+	// NOTE: This function can't be used with ReplicaSelector option.
+	ReadNodeSelector func(slot uint16, nodes []NodeInfo) int
 }
 
 // SentinelOption contains MasterSet,
@@ -276,11 +285,15 @@ type StandaloneOption struct {
 	ReplicaAddress []string
 }
 
-// ReplicaInfo is the information of a replica node in a redis cluster.
-type ReplicaInfo struct {
+// NodeInfo is the information of a replica node in a redis cluster.
+type NodeInfo struct {
 	Addr string
 	AZ   string
+	conn conn
 }
+
+// ReplicaInfo is the information of a replica node in a redis cluster.
+type ReplicaInfo = NodeInfo
 
 type ClientMode string
 

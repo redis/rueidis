@@ -168,7 +168,7 @@ func TestNewClusterClientError(t *testing.T) {
 		client, err := NewClient(ClientOption{
 			InitAddress: []string{"127.0.0.1:" + port},
 			ReplicaOnly: true,
-			ReplicaSelector: func(slot uint16, replicas []ReplicaInfo) int {
+			ReplicaSelector: func(slot uint16, replicas []NodeInfo) int {
 				return 0
 			},
 		})
@@ -191,7 +191,7 @@ func TestNewClusterClientError(t *testing.T) {
 		_, port, _ := net.SplitHostPort(ln.Addr().String())
 		client, err := NewClient(ClientOption{
 			InitAddress: []string{"127.0.0.1:" + port},
-			ReplicaSelector: func(slot uint16, replicas []ReplicaInfo) int {
+			ReplicaSelector: func(slot uint16, replicas []NodeInfo) int {
 				return 0
 			},
 		})
@@ -200,6 +200,56 @@ func TestNewClusterClientError(t *testing.T) {
 		}
 
 		if !strings.Contains(err.Error(), ErrSendToReplicasNotSet.Error()) {
+			t.Errorf("unexpected error %v", err)
+		}
+	})
+
+	t.Run("replica only and read node selector option conflict", func(t *testing.T) {
+		ln, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer ln.Close()
+
+		_, port, _ := net.SplitHostPort(ln.Addr().String())
+		client, err := NewClient(ClientOption{
+			InitAddress: []string{"127.0.0.1:" + port},
+			ReplicaOnly: true,
+			ReadNodeSelector: func(slot uint16, nodes []NodeInfo) int {
+				return 0
+			},
+		})
+		if client != nil || err == nil {
+			t.Errorf("unexpected return %v %v", client, err)
+		}
+
+		if !strings.Contains(err.Error(), ErrReplicaOnlyConflictWithReadNodeSelector.Error()) {
+			t.Errorf("unexpected error %v", err)
+		}
+	})
+
+	t.Run("replica selector and read node selector option conflict", func(t *testing.T) {
+		ln, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer ln.Close()
+
+		_, port, _ := net.SplitHostPort(ln.Addr().String())
+		client, err := NewClient(ClientOption{
+			InitAddress: []string{"127.0.0.1:" + port},
+			ReplicaSelector: func(slot uint16, replicas []NodeInfo) int {
+				return 0
+			},
+			ReadNodeSelector: func(slot uint16, nodes []NodeInfo) int {
+				return 0
+			},
+		})
+		if client != nil || err == nil {
+			t.Errorf("unexpected return %v %v", client, err)
+		}
+
+		if !strings.Contains(err.Error(), ErrReplicaSelectorConflictWithReadNodeSelector.Error()) {
 			t.Errorf("unexpected error %v", err)
 		}
 	})
