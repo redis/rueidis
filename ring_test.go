@@ -1,6 +1,7 @@
 package rueidis
 
 import (
+	"context"
 	"runtime"
 	"strconv"
 	"testing"
@@ -21,7 +22,7 @@ func TestRing(t *testing.T) {
 		}
 
 		for cmd := range fixture {
-			go ring.PutOne(cmds.NewCompleted([]string{cmd}))
+			go ring.PutOne(context.Background(), cmds.NewCompleted([]string{cmd}))
 		}
 
 		for len(fixture) != 0 {
@@ -30,9 +31,8 @@ func TestRing(t *testing.T) {
 				runtime.Gosched()
 				continue
 			}
-			cmd2, _, ch, _, cond := ring.NextResultCh()
-			cond.L.Unlock()
-			cond.Signal()
+			cmd2, _, ch, _ := ring.NextResultCh()
+			ring.FinishResult()
 			if cmd1.Commands()[0] != cmd2.Commands()[0] {
 				t.Fatalf("cmds read by NextWriteCmd and NextResultCh is not the same one")
 			}
@@ -53,7 +53,7 @@ func TestRing(t *testing.T) {
 
 		base := [][]string{{"a"}, {"b"}, {"c"}, {"d"}}
 		for cmd := range fixture {
-			go ring.PutMulti(cmds.NewMultiCompleted(append([][]string{{cmd}}, base...)), nil)
+			go ring.PutMulti(context.Background(), cmds.NewMultiCompleted(append([][]string{{cmd}}, base...)), nil)
 		}
 
 		for len(fixture) != 0 {
@@ -62,9 +62,8 @@ func TestRing(t *testing.T) {
 				runtime.Gosched()
 				continue
 			}
-			_, cmd2, ch, _, cond := ring.NextResultCh()
-			cond.L.Unlock()
-			cond.Signal()
+			_, cmd2, ch, _ := ring.NextResultCh()
+			ring.FinishResult()
 			for j := 0; j < len(cmd1); j++ {
 				if cmd1[j].Commands()[0] != cmd2[j].Commands()[0] {
 					t.Fatalf("cmds read by NextWriteCmd and NextResultCh is not the same one")
@@ -82,33 +81,30 @@ func TestRing(t *testing.T) {
 		if one, multi, _ := ring.NextWriteCmd(); !one.IsEmpty() || multi != nil {
 			t.Fatalf("NextWriteCmd should returns nil if empty")
 		}
-		if one, multi, ch, _, cond := ring.NextResultCh(); !one.IsEmpty() || multi != nil || ch != nil {
+		if one, multi, ch, _ := ring.NextResultCh(); !one.IsEmpty() || multi != nil || ch != nil {
 			t.Fatalf("NextResultCh should returns nil if not NextWriteCmd yet")
 		} else {
-			cond.L.Unlock()
-			cond.Signal()
+			ring.FinishResult()
 		}
 
-		ring.PutOne(cmds.NewCompleted([]string{"0"}))
+		ring.PutOne(context.Background(), cmds.NewCompleted([]string{"0"}))
 		if one, _, _ := ring.NextWriteCmd(); len(one.Commands()) == 0 || one.Commands()[0] != "0" {
 			t.Fatalf("NextWriteCmd should returns next cmd")
 		}
-		if one, _, ch, _, cond := ring.NextResultCh(); len(one.Commands()) == 0 || one.Commands()[0] != "0" || ch == nil {
+		if one, _, ch, _ := ring.NextResultCh(); len(one.Commands()) == 0 || one.Commands()[0] != "0" || ch == nil {
 			t.Fatalf("NextResultCh should returns next cmd after NextWriteCmd")
 		} else {
-			cond.L.Unlock()
-			cond.Signal()
+			ring.FinishResult()
 		}
 
-		ring.PutMulti(cmds.NewMultiCompleted([][]string{{"0"}}), nil)
+		ring.PutMulti(context.Background(), cmds.NewMultiCompleted([][]string{{"0"}}), nil)
 		if _, multi, _ := ring.NextWriteCmd(); len(multi) == 0 || multi[0].Commands()[0] != "0" {
 			t.Fatalf("NextWriteCmd should returns next cmd")
 		}
-		if _, multi, ch, _, cond := ring.NextResultCh(); len(multi) == 0 || multi[0].Commands()[0] != "0" || ch == nil {
+		if _, multi, ch, _ := ring.NextResultCh(); len(multi) == 0 || multi[0].Commands()[0] != "0" || ch == nil {
 			t.Fatalf("NextResultCh should returns next cmd after NextWriteCmd")
 		} else {
-			cond.L.Unlock()
-			cond.Signal()
+			ring.FinishResult()
 		}
 	})
 
@@ -117,7 +113,7 @@ func TestRing(t *testing.T) {
 		if one, _, ch := ring.NextWriteCmd(); ch == nil {
 			go func() {
 				time.Sleep(time.Millisecond * 100)
-				ring.PutOne(cmds.PingCmd)
+				ring.PutOne(context.Background(), cmds.PingCmd)
 			}()
 			if one, _, ch = ring.WaitForWrite(); ch != nil && one.Commands()[0] == cmds.PingCmd.Commands()[0] {
 				return
@@ -131,7 +127,7 @@ func TestRing(t *testing.T) {
 		if _, _, ch := ring.NextWriteCmd(); ch == nil {
 			go func() {
 				time.Sleep(time.Millisecond * 100)
-				ring.PutMulti([]Completed{cmds.PingCmd}, nil)
+				ring.PutMulti(context.Background(), []Completed{cmds.PingCmd}, nil)
 			}()
 			if _, multi, ch := ring.WaitForWrite(); ch != nil && multi[0].Commands()[0] == cmds.PingCmd.Commands()[0] {
 				return

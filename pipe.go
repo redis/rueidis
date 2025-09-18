@@ -122,7 +122,12 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 		optIn: isOptIn(option.ClientTrackingOptions),
 	}
 	if !nobg {
-		p.queue = newRing(option.RingScaleEachConn)
+		switch queueTypeFromEnv {
+		case queueTypeFlowBuffer:
+			p.queue = newFlowBuffer(option.RingScaleEachConn)
+		default:
+			p.queue = newRing(option.RingScaleEachConn)
+		}
 		p.nsubs = newSubs()
 		p.psubs = newSubs()
 		p.ssubs = newSubs()
@@ -381,7 +386,8 @@ func (p *pipe) _background() {
 		default:
 			p.incrWaits()
 			go func() {
-				<-p.queue.PutOne(cmds.PingCmd) // avoid _backgroundWrite hanging at p.queue.WaitForWrite()
+				ch, _ := p.queue.PutOne(context.Background(), cmds.PingCmd) // avoid _backgroundWrite hanging at p.queue.WaitForWrite()
+				<-ch
 				p.decrWaits()
 			}()
 		}
@@ -401,7 +407,6 @@ func (p *pipe) _background() {
 	var (
 		resps []RedisResult
 		ch    chan RedisResult
-		cond  *sync.Cond
 	)
 
 	// clean up cache and free pending calls
@@ -419,16 +424,14 @@ func (p *pipe) _background() {
 			_, _, _ = p.queue.NextWriteCmd()
 		default:
 		}
-		if _, _, ch, resps, cond = p.queue.NextResultCh(); ch != nil {
+		if _, _, ch, resps = p.queue.NextResultCh(); ch != nil {
 			for i := range resps {
 				resps[i] = resp
 			}
 			ch <- resp
-			cond.L.Unlock()
-			cond.Signal()
+			p.queue.FinishResult()
 		} else {
-			cond.L.Unlock()
-			cond.Signal()
+			p.queue.FinishResult()
 			runtime.Gosched()
 		}
 	}
@@ -486,7 +489,6 @@ func (p *pipe) _backgroundWrite() (err error) {
 func (p *pipe) _backgroundRead() (err error) {
 	var (
 		msg   RedisMessage
-		cond  *sync.Cond
 		ones  = make([]Completed, 1)
 		multi []Completed
 		resps []RedisResult
@@ -512,8 +514,7 @@ func (p *pipe) _backgroundRead() (err error) {
 				resps[ff] = resp
 			}
 			ch <- resp
-			cond.L.Unlock()
-			cond.Signal()
+			p.queue.FinishResult()
 		}
 	}()
 
@@ -555,9 +556,9 @@ func (p *pipe) _backgroundRead() (err error) {
 		}
 		if ff == len(multi) {
 			ff = 0
-			ones[0], multi, ch, resps, cond = p.queue.NextResultCh() // ch should not be nil; otherwise, it must be a protocol bug
+			ones[0], multi, ch, resps = p.queue.NextResultCh() // ch should not be nil; otherwise, it must be a protocol bug
 			if ch == nil {
-				cond.L.Unlock()
+				p.queue.FinishResult()
 				// Redis will send sunsubscribe notification proactively in the event of slot migration.
 				// We should ignore them and go fetch the next message.
 				// We also treat all the other unsubscribe notifications just like sunsubscribe,
@@ -638,8 +639,7 @@ func (p *pipe) _backgroundRead() (err error) {
 		}
 		if ff++; ff == len(multi) {
 			ch <- resp
-			cond.L.Unlock()
-			cond.Signal()
+			p.queue.FinishResult()
 		}
 	}
 }
@@ -951,7 +951,12 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	return resp
 
 queue:
-	ch := p.queue.PutOne(cmd)
+	ch, err := p.queue.PutOne(ctx, cmd)
+	if err != nil {
+		p.decrWaits()
+		return newErrResult(err)
+	}
+
 	if ctxCh := ctx.Done(); ctxCh == nil {
 		resp = <-ch
 	} else {
@@ -1057,7 +1062,16 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 	return resp
 
 queue:
-	ch := p.queue.PutMulti(multi, resp.s)
+	ch, err := p.queue.PutMulti(ctx, multi, resp.s)
+	if err != nil {
+		p.decrWaits()
+		errResult := newErrResult(err)
+		for i := 0; i < len(resp.s); i++ {
+			resp.s[i] = errResult
+		}
+		return resp
+	}
+
 	if ctxCh := ctx.Done(); ctxCh == nil {
 		<-ch
 	} else {
@@ -1076,9 +1090,9 @@ abort:
 		p.decrWaitsAndIncrRecvs()
 	}(resp, ch)
 	resp = resultsp.Get(len(multi), len(multi))
-	err := newErrResult(ctx.Err())
+	errResult := newErrResult(ctx.Err())
 	for i := 0; i < len(resp.s); i++ {
-		resp.s[i] = err
+		resp.s[i] = errResult
 	}
 	return resp
 }
@@ -1644,7 +1658,7 @@ func (p *pipe) Close() {
 		}
 		if block == 1 && (stopping1 || stopping2) { // make sure there is no block cmd
 			p.incrWaits()
-			ch := p.queue.PutOne(cmds.PingCmd)
+			ch, _ := p.queue.PutOne(context.Background(), cmds.PingCmd)
 			select {
 			case <-ch:
 				p.decrWaits()

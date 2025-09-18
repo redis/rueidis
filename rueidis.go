@@ -9,12 +9,38 @@ import (
 	"errors"
 	"math"
 	"net"
+	"os"
 	"runtime"
 	"strings"
 	"time"
 
 	"github.com/redis/rueidis/internal/util"
 )
+
+const (
+	queueTypeEnvVar = "RUEIDIS_QUEUE_TYPE"
+)
+
+// queue types.
+// queue type defines the type of queue implementation to use for command pipelining
+// If you want to use the ring buffer, you can set the "RUEIDIS_QUEUE_TYPE" environment variable to "ring" or empty string.
+// If you want to use the flow buffer, you can set the "RUEIDIS_QUEUE_TYPE" environment variable to "flowbuffer".
+const (
+	// QueueTypeRing uses the default ring buffer with mutex/condition variables
+	// This provides the best raw performance with atomic operations and condition variables
+	// but does not support context cancellation when the buffer is full
+	queueTypeRing = "ring"
+	// QueueTypeFlowBuffer uses a channel-based lock-free implementation
+	// This provides context cancellation support even when the buffer is full
+	// but is slower than QueueTypeRing and requires more memory
+	queueTypeFlowBuffer = "flowbuffer"
+)
+
+var queueTypeFromEnv string
+
+func init() {
+	queueTypeFromEnv = os.Getenv(queueTypeEnvVar)
+}
 
 const (
 	// DefaultCacheBytes is the default value of ClientOption.CacheSizeEachConn, which is 128 MiB

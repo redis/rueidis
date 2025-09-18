@@ -3501,7 +3501,7 @@ func TestPubSub(t *testing.T) {
 
 			p, mock, _, _ := setup(t, ClientOption{})
 			atomic.StoreInt32(&p.state, 1)
-			p.queue.PutOne(push)
+			p.queue.PutOne(context.Background(), push)
 			_, _, ch := p.queue.NextWriteCmd()
 			go func() {
 				mock.Expect().Reply(strmsg(
@@ -3531,8 +3531,8 @@ func TestPubSub(t *testing.T) {
 
 			p, mock, _, _ := setup(t, ClientOption{})
 			atomic.StoreInt32(&p.state, 1)
-			p.queue.PutOne(push)
-			p.queue.PutOne(cmds.PingCmd)
+			p.queue.PutOne(context.Background(), push)
+			p.queue.PutOne(context.Background(), cmds.PingCmd)
 			_, _, ch := p.queue.NextWriteCmd()
 			_, _, _ = p.queue.NextWriteCmd()
 			go func() {
@@ -3824,7 +3824,7 @@ func TestPubSub(t *testing.T) {
 
 			p, mock, _, _ := setup(t, ClientOption{})
 			atomic.StoreInt32(&p.state, 1)
-			p.queue.PutOne(builder.Get().Key("a").Build())
+			p.queue.PutOne(context.Background(), builder.Get().Key("a").Build())
 			p.queue.NextWriteCmd()
 			go func() {
 				mock.Expect().Reply(slicemsg(
@@ -3854,7 +3854,7 @@ func TestPubSub(t *testing.T) {
 
 			p, mock, _, _ := setup(t, ClientOption{})
 			atomic.StoreInt32(&p.state, 1)
-			p.queue.PutOne(cmd)
+			p.queue.PutOne(context.Background(), cmd)
 			p.queue.NextWriteCmd()
 			go func() {
 				mock.Expect().Reply(strmsg('+', "QUEUED"))
@@ -4258,6 +4258,67 @@ func TestExitOnRingFullAndPingTimeout(t *testing.T) {
 	}
 	// let writer loop over the ring
 	for i := 0; i < len(p.queue.(*ring).store); i++ {
+		mock.Expect("GET", "a")
+	}
+
+	if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); !errors.Is(err, os.ErrDeadlineExceeded) {
+		t.Errorf("unexpected result, expected context.DeadlineExceeded, got %v", err)
+	}
+}
+
+func TestExitOnFlowBufferFullAndConnError(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	queueTypeFromEnv = "flowbuffer"
+	defer func() { queueTypeFromEnv = "" }()
+
+	p, mock, _, closeConn := setup(t, ClientOption{
+		RingScaleEachConn: 1,
+	})
+	p.background()
+
+	// fill the buffer
+	for i := 0; i < 2; i++ {
+		go func() {
+			if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+				t.Errorf("unexpected result, expected io err, got %v", err)
+			}
+		}()
+	}
+	// let writer loop over the buffer
+	for i := 0; i < 2; i++ {
+		mock.Expect("GET", "a")
+	}
+
+	time.Sleep(time.Second) // make sure the writer is waiting for the next write
+	closeConn()
+
+	if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
+		t.Errorf("unexpected result, expected io err, got %v", err)
+	}
+}
+
+func TestExitOnFlowBufferFullAndPingTimeout(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	queueTypeFromEnv = "flowbuffer"
+	defer func() { queueTypeFromEnv = "" }()
+
+	p, mock, _, _ := setup(t, ClientOption{
+		RingScaleEachConn: 1,
+		ConnWriteTimeout:  500 * time.Millisecond,
+		Dialer:            net.Dialer{KeepAlive: 500 * time.Millisecond},
+	})
+	p.background()
+
+	// fill the buffer
+	for i := 0; i < 2; i++ {
+		go func() {
+			if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); !errors.Is(err, os.ErrDeadlineExceeded) {
+				t.Errorf("unexpected result, expected context.DeadlineExceeded, got %v", err)
+			}
+		}()
+	}
+	// let writer loop over the buffer
+	for i := 0; i < 2; i++ {
 		mock.Expect("GET", "a")
 	}
 
