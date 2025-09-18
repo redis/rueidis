@@ -956,7 +956,7 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 queue:
 	ch, err := p.queue.PutOne(ctx, cmd)
 	if err != nil {
-		p.decrWaitsAndIncrRecvs()
+		p.decrWaits()
 		return newErrResult(err)
 	}
 
@@ -1072,7 +1072,7 @@ queue:
 			resp.s[i] = errResult
 		}
 
-		p.decrWaitsAndIncrRecvs()
+		p.decrWaits()
 		return resp
 	}
 
