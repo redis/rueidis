@@ -2,13 +2,13 @@ package rueidis
 
 import (
 	"context"
-	"sync"
 )
 
 type flowBuffer struct {
 	f chan queuedCmd
 	r chan queuedCmd
 	w chan queuedCmd
+	c *chan RedisResult
 }
 
 var _ queue = (*flowBuffer)(nil)
@@ -36,9 +36,7 @@ func (b *flowBuffer) PutOne(ctx context.Context, m Completed) (chan RedisResult,
 	select {
 	case cmd := <-b.f:
 		cmd.one = m
-
 		b.w <- cmd
-
 		return cmd.ch, nil
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -49,9 +47,7 @@ func (b *flowBuffer) PutMulti(ctx context.Context, m []Completed, resps []RedisR
 	select {
 	case cmd := <-b.f:
 		cmd.multi, cmd.resps = m, resps
-
 		b.w <- cmd
-
 		return cmd.ch, nil
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -63,9 +59,7 @@ func (b *flowBuffer) NextWriteCmd() (one Completed, multi []Completed, ch chan R
 	select {
 	case cmd := <-b.w:
 		one, multi, ch = cmd.one, cmd.multi, cmd.ch
-
 		b.r <- cmd
-
 		return
 	default:
 		return
@@ -76,18 +70,25 @@ func (b *flowBuffer) NextWriteCmd() (one Completed, multi []Completed, ch chan R
 func (b *flowBuffer) WaitForWrite() (one Completed, multi []Completed, ch chan RedisResult) {
 	cmd := <-b.w
 	one, multi, ch = cmd.one, cmd.multi, cmd.ch
-
 	b.r <- cmd
-
 	return
 }
 
 // NextResultCh should be only called by one dedicated thread
-func (b *flowBuffer) NextResultCh() (queuedCmd, *sync.Cond, chan<- queuedCmd) {
+func (b *flowBuffer) NextResultCh() queuedCmd {
 	select {
 	case cmd := <-b.r:
-		return cmd, nil, b.f
+		b.c = &cmd.ch
+		return cmd
 	default:
-		return queuedCmd{}, nil, nil
+		return queuedCmd{}
+	}
+}
+
+// FinishResult should be only called by one dedicated thread
+func (b *flowBuffer) FinishResult() {
+	if b.c != nil {
+		b.f <- queuedCmd{ch: *b.c}
+		b.c = nil
 	}
 }

@@ -13,7 +13,8 @@ type queue interface {
 	PutMulti(ctx context.Context, m []Completed, resps []RedisResult) (chan RedisResult, error)
 	NextWriteCmd() (Completed, []Completed, chan RedisResult)
 	WaitForWrite() (Completed, []Completed, chan RedisResult)
-	NextResultCh() (queuedCmd, *sync.Cond, chan<- queuedCmd)
+	NextResultCh() queuedCmd
+	FinishResult()
 }
 
 type queuedCmd struct {
@@ -21,12 +22,6 @@ type queuedCmd struct {
 	one   Completed
 	multi []Completed
 	resps []RedisResult
-}
-
-func (c *queuedCmd) reset() {
-	c.one = Completed{}
-	c.multi = nil
-	c.resps = nil
 }
 
 var _ queue = (*ring)(nil)
@@ -47,6 +42,7 @@ func newRing(factor int) *ring {
 }
 
 type ring struct {
+	resc  *sync.Cond
 	store []node // store's size must be 2^N to work with the mask
 	_     cpu.CacheLinePad
 	write uint32
@@ -134,11 +130,11 @@ func (r *ring) WaitForWrite() (one Completed, multi []Completed, ch chan RedisRe
 }
 
 // NextResultCh should be only called by one dedicated thread
-func (r *ring) NextResultCh() (cmd queuedCmd, cond *sync.Cond, f chan<- queuedCmd) {
+func (r *ring) NextResultCh() (cmd queuedCmd) {
 	r.read2++
 	p := r.read2 & r.mask
 	n := &r.store[p]
-	cond = n.c1
+	r.resc = n.c1
 	n.c1.L.Lock()
 	if n.mark == 2 {
 		cmd = queuedCmd{
@@ -155,4 +151,13 @@ func (r *ring) NextResultCh() (cmd queuedCmd, cond *sync.Cond, f chan<- queuedCm
 		r.read2--
 	}
 	return
+}
+
+// FinishResult should be only called by one dedicated thread
+func (r *ring) FinishResult() {
+	if r.resc != nil {
+		r.resc.L.Unlock()
+		r.resc.Signal()
+		r.resc = nil
+	}
 }

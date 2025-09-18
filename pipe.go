@@ -407,9 +407,6 @@ func (p *pipe) _background() {
 	var (
 		resps []RedisResult
 		ch    chan RedisResult
-		cmd   queuedCmd
-		cond  *sync.Cond
-		f     chan<- queuedCmd
 	)
 
 	// clean up cache and free pending calls
@@ -427,27 +424,16 @@ func (p *pipe) _background() {
 			_, _, _ = p.queue.NextWriteCmd()
 		default:
 		}
-		cmd, cond, f = p.queue.NextResultCh()
+		cmd := p.queue.NextResultCh()
 		ch, resps = cmd.ch, cmd.resps
 		if ch != nil {
 			for i := range resps {
 				resps[i] = resp
 			}
 			ch <- resp
-
-			if cond != nil {
-				cond.L.Unlock()
-				cond.Signal()
-			} else {
-				cmd.reset()
-				f <- cmd
-			}
+			p.queue.FinishResult()
 		} else {
-			if cond != nil {
-				cond.L.Unlock()
-				cond.Signal()
-			}
-
+			p.queue.FinishResult()
 			runtime.Gosched()
 		}
 	}
@@ -505,9 +491,6 @@ func (p *pipe) _backgroundWrite() (err error) {
 func (p *pipe) _backgroundRead() (err error) {
 	var (
 		msg   RedisMessage
-		cmd   queuedCmd
-		cond  *sync.Cond
-		f     chan<- queuedCmd
 		ones  = make([]Completed, 1)
 		multi []Completed
 		resps []RedisResult
@@ -533,14 +516,7 @@ func (p *pipe) _backgroundRead() (err error) {
 				resps[ff] = resp
 			}
 			ch <- resp
-
-			if cond != nil {
-				cond.L.Unlock()
-				cond.Signal()
-			} else {
-				cmd.reset()
-				f <- cmd
-			}
+			p.queue.FinishResult()
 		}
 	}()
 
@@ -582,14 +558,10 @@ func (p *pipe) _backgroundRead() (err error) {
 		}
 		if ff == len(multi) {
 			ff = 0
-			cmd, cond, f = p.queue.NextResultCh()
+			cmd := p.queue.NextResultCh()
 			ones[0], multi, ch, resps = cmd.one, cmd.multi, cmd.ch, cmd.resps // ch should not be nil; otherwise, it must be a protocol bug
 			if ch == nil {
-				if cond != nil {
-					cond.L.Unlock()
-					cond.Signal()
-				}
-
+				p.queue.FinishResult()
 				// Redis will send sunsubscribe notification proactively in the event of slot migration.
 				// We should ignore them and go fetch the next message.
 				// We also treat all the other unsubscribe notifications just like sunsubscribe,
@@ -670,14 +642,7 @@ func (p *pipe) _backgroundRead() (err error) {
 		}
 		if ff++; ff == len(multi) {
 			ch <- resp
-
-			if cond != nil {
-				cond.L.Unlock()
-				cond.Signal()
-			} else {
-				cmd.reset()
-				f <- cmd
-			}
+			p.queue.FinishResult()
 		}
 	}
 }
