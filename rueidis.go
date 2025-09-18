@@ -9,6 +9,7 @@ import (
 	"errors"
 	"math"
 	"net"
+	"os"
 	"runtime"
 	"strings"
 	"time"
@@ -34,6 +35,12 @@ const (
 	// but is slower than QueueTypeRing and requires more memory
 	queueTypeFlowBuffer = "flowbuffer"
 )
+
+var queueTypeFromEnv string
+
+func init() {
+	queueTypeFromEnv = os.Getenv(queueTypeEnvVar)
+}
 
 const (
 	// DefaultCacheBytes is the default value of ClientOption.CacheSizeEachConn, which is 128 MiB

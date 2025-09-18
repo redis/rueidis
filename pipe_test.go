@@ -4268,8 +4268,8 @@ func TestExitOnRingFullAndPingTimeout(t *testing.T) {
 
 func TestExitOnFlowBufferFullAndConnError(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
-	os.Setenv("RUEIDIS_QUEUE_TYPE", "flowbuffer")
-	defer os.Unsetenv("RUEIDIS_QUEUE_TYPE")
+	queueTypeFromEnv = "flowbuffer"
+	defer func() { queueTypeFromEnv = "" }()
 
 	p, mock, _, closeConn := setup(t, ClientOption{
 		RingScaleEachConn: 1,
@@ -4299,8 +4299,8 @@ func TestExitOnFlowBufferFullAndConnError(t *testing.T) {
 
 func TestExitOnFlowBufferFullAndPingTimeout(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
-	os.Setenv("RUEIDIS_QUEUE_TYPE", "flowbuffer")
-	defer os.Unsetenv("RUEIDIS_QUEUE_TYPE")
+	queueTypeFromEnv = "flowbuffer"
+	defer func() { queueTypeFromEnv = "" }()
 
 	p, mock, _, _ := setup(t, ClientOption{
 		RingScaleEachConn: 1,
