@@ -4,6 +4,13 @@ import (
 	"context"
 )
 
+type queuedCmd struct {
+	ch    chan RedisResult
+	one   Completed
+	multi []Completed
+	resps []RedisResult
+}
+
 type flowBuffer struct {
 	f chan queuedCmd
 	r chan queuedCmd
@@ -60,10 +67,9 @@ func (b *flowBuffer) NextWriteCmd() (one Completed, multi []Completed, ch chan R
 	case cmd := <-b.w:
 		one, multi, ch = cmd.one, cmd.multi, cmd.ch
 		b.r <- cmd
-		return
 	default:
-		return
 	}
+	return
 }
 
 // WaitForWrite should be only called by one dedicated thread
@@ -75,14 +81,14 @@ func (b *flowBuffer) WaitForWrite() (one Completed, multi []Completed, ch chan R
 }
 
 // NextResultCh should be only called by one dedicated thread
-func (b *flowBuffer) NextResultCh() queuedCmd {
+func (b *flowBuffer) NextResultCh() (one Completed, multi []Completed, ch chan RedisResult, resps []RedisResult) {
 	select {
 	case cmd := <-b.r:
 		b.c = &cmd.ch
-		return cmd
+		one, multi, ch, resps = cmd.one, cmd.multi, cmd.ch, cmd.resps
 	default:
-		return queuedCmd{}
 	}
+	return
 }
 
 // FinishResult should be only called by one dedicated thread

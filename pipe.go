@@ -424,9 +424,7 @@ func (p *pipe) _background() {
 			_, _, _ = p.queue.NextWriteCmd()
 		default:
 		}
-		cmd := p.queue.NextResultCh()
-		ch, resps = cmd.ch, cmd.resps
-		if ch != nil {
+		if _, _, ch, resps = p.queue.NextResultCh(); ch != nil {
 			for i := range resps {
 				resps[i] = resp
 			}
@@ -558,8 +556,7 @@ func (p *pipe) _backgroundRead() (err error) {
 		}
 		if ff == len(multi) {
 			ff = 0
-			cmd := p.queue.NextResultCh()
-			ones[0], multi, ch, resps = cmd.one, cmd.multi, cmd.ch, cmd.resps // ch should not be nil; otherwise, it must be a protocol bug
+			ones[0], multi, ch, resps = p.queue.NextResultCh() // ch should not be nil; otherwise, it must be a protocol bug
 			if ch == nil {
 				p.queue.FinishResult()
 				// Redis will send sunsubscribe notification proactively in the event of slot migration.
@@ -1067,12 +1064,11 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 queue:
 	ch, err := p.queue.PutMulti(ctx, multi, resp.s)
 	if err != nil {
+		p.decrWaits()
 		errResult := newErrResult(err)
 		for i := 0; i < len(resp.s); i++ {
 			resp.s[i] = errResult
 		}
-
-		p.decrWaits()
 		return resp
 	}
 

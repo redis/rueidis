@@ -31,8 +31,7 @@ func TestFlowBuffer(t *testing.T) {
 				runtime.Gosched()
 				continue
 			}
-			c := buffer.NextResultCh()
-			cmd2, ch := c.one, c.ch
+			cmd2, _, ch, _ := buffer.NextResultCh()
 			buffer.FinishResult()
 			if cmd1.Commands()[0] != cmd2.Commands()[0] {
 				t.Fatalf("cmds read by NextWriteCmd and NextResultCh is not the same one")
@@ -63,8 +62,7 @@ func TestFlowBuffer(t *testing.T) {
 				runtime.Gosched()
 				continue
 			}
-			c := buffer.NextResultCh()
-			cmd2, ch := c.multi, c.ch
+			_, cmd2, ch, _ := buffer.NextResultCh()
 			buffer.FinishResult()
 			for j := 0; j < len(cmd1); j++ {
 				if cmd1[j].Commands()[0] != cmd2[j].Commands()[0] {
@@ -83,8 +81,7 @@ func TestFlowBuffer(t *testing.T) {
 		if one, multi, _ := buffer.NextWriteCmd(); !one.IsEmpty() || multi != nil {
 			t.Fatalf("NextWriteCmd should returns nil if empty")
 		}
-		c := buffer.NextResultCh()
-		one, multi, ch := c.one, c.multi, c.ch
+		one, multi, ch, _ := buffer.NextResultCh()
 		if !one.IsEmpty() || multi != nil || ch != nil {
 			t.Fatalf("NextResultCh should returns nil if not NextWriteCmd yet")
 		}
@@ -93,8 +90,7 @@ func TestFlowBuffer(t *testing.T) {
 		if one, _, _ := buffer.NextWriteCmd(); len(one.Commands()) == 0 || one.Commands()[0] != "0" {
 			t.Fatalf("NextWriteCmd should returns next cmd")
 		}
-		c = buffer.NextResultCh()
-		one, multi, ch = c.one, c.multi, c.ch
+		one, multi, ch, _ = buffer.NextResultCh()
 		if len(one.Commands()) == 0 || one.Commands()[0] != "0" || ch == nil {
 			t.Fatalf("NextResultCh should returns next cmd after NextWriteCmd")
 		} else {
@@ -105,8 +101,7 @@ func TestFlowBuffer(t *testing.T) {
 		if _, multi, _ := buffer.NextWriteCmd(); len(multi) == 0 || multi[0].Commands()[0] != "0" {
 			t.Fatalf("NextWriteCmd should returns next cmd")
 		}
-		c = buffer.NextResultCh()
-		multi, ch = c.multi, c.ch
+		_, multi, ch, _ = buffer.NextResultCh()
 		if len(multi) == 0 || multi[0].Commands()[0] != "0" || ch == nil {
 			t.Fatalf("NextResultCh should returns next cmd after NextWriteCmd")
 		} else {
@@ -160,7 +155,7 @@ func TestFlowBuffer(t *testing.T) {
 			buffer.NextWriteCmd()
 		}
 		for i := 0; i < (1 << 1); i++ {
-			_ = buffer.NextResultCh()
+			buffer.NextResultCh()
 			buffer.FinishResult()
 		}
 	})
@@ -183,7 +178,7 @@ func TestFlowBuffer(t *testing.T) {
 			buffer.NextWriteCmd()
 		}
 		for i := 0; i < (1 << 1); i++ {
-			_ = buffer.NextResultCh()
+			buffer.NextResultCh()
 			buffer.FinishResult()
 		}
 	})

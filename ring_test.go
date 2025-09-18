@@ -31,9 +31,7 @@ func TestRing(t *testing.T) {
 				runtime.Gosched()
 				continue
 			}
-			c := ring.NextResultCh()
-			cmd2 := c.one
-			ch := c.ch
+			cmd2, _, ch, _ := ring.NextResultCh()
 			ring.FinishResult()
 			if cmd1.Commands()[0] != cmd2.Commands()[0] {
 				t.Fatalf("cmds read by NextWriteCmd and NextResultCh is not the same one")
@@ -64,9 +62,7 @@ func TestRing(t *testing.T) {
 				runtime.Gosched()
 				continue
 			}
-			c := ring.NextResultCh()
-			cmd2 := c.multi
-			ch := c.ch
+			_, cmd2, ch, _ := ring.NextResultCh()
 			ring.FinishResult()
 			for j := 0; j < len(cmd1); j++ {
 				if cmd1[j].Commands()[0] != cmd2[j].Commands()[0] {
@@ -85,9 +81,7 @@ func TestRing(t *testing.T) {
 		if one, multi, _ := ring.NextWriteCmd(); !one.IsEmpty() || multi != nil {
 			t.Fatalf("NextWriteCmd should returns nil if empty")
 		}
-		c := ring.NextResultCh()
-		one, multi, ch := c.one, c.multi, c.ch
-		if !one.IsEmpty() || multi != nil || ch != nil {
+		if one, multi, ch, _ := ring.NextResultCh(); !one.IsEmpty() || multi != nil || ch != nil {
 			t.Fatalf("NextResultCh should returns nil if not NextWriteCmd yet")
 		} else {
 			ring.FinishResult()
@@ -97,9 +91,7 @@ func TestRing(t *testing.T) {
 		if one, _, _ := ring.NextWriteCmd(); len(one.Commands()) == 0 || one.Commands()[0] != "0" {
 			t.Fatalf("NextWriteCmd should returns next cmd")
 		}
-		c = ring.NextResultCh()
-		one, multi, ch = c.one, c.multi, c.ch
-		if len(one.Commands()) == 0 || one.Commands()[0] != "0" || ch == nil {
+		if one, _, ch, _ := ring.NextResultCh(); len(one.Commands()) == 0 || one.Commands()[0] != "0" || ch == nil {
 			t.Fatalf("NextResultCh should returns next cmd after NextWriteCmd")
 		} else {
 			ring.FinishResult()
@@ -109,9 +101,7 @@ func TestRing(t *testing.T) {
 		if _, multi, _ := ring.NextWriteCmd(); len(multi) == 0 || multi[0].Commands()[0] != "0" {
 			t.Fatalf("NextWriteCmd should returns next cmd")
 		}
-		c = ring.NextResultCh()
-		multi, ch = c.multi, c.ch
-		if len(multi) == 0 || multi[0].Commands()[0] != "0" || ch == nil {
+		if _, multi, ch, _ := ring.NextResultCh(); len(multi) == 0 || multi[0].Commands()[0] != "0" || ch == nil {
 			t.Fatalf("NextResultCh should returns next cmd after NextWriteCmd")
 		} else {
 			ring.FinishResult()
