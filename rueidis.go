@@ -9,7 +9,6 @@ import (
 	"errors"
 	"math"
 	"net"
-	"os"
 	"runtime"
 	"strings"
 	"time"
@@ -39,7 +38,8 @@ const (
 var queueTypeFromEnv string
 
 func init() {
-	queueTypeFromEnv = os.Getenv(queueTypeEnvVar)
+	queueTypeFromEnv = queueTypeFlowBuffer
+	//queueTypeFromEnv = os.Getenv(queueTypeEnvVar)
 }
 
 const (
