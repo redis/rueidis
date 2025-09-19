@@ -271,20 +271,21 @@ func (c *clusterClient) _refresh() (err error) {
 			if len(rslots) == 0 { // lazy init
 				rslots = make([][]NodeInfo, 16384)
 			}
-			if len(g.nodes) > 1 {
-				if c.opt.EnableReplicaAZInfo {
-					var wg sync.WaitGroup
-					for i := 0; i < len(g.nodes); i += 4 { // batch AZ() for every 4 connections
-						for j := i; j < i+4 && j < len(g.nodes); j++ {
-							wg.Add(1)
-							go func(wg *sync.WaitGroup, info *NodeInfo) {
-								info.AZ = info.conn.AZ()
-								wg.Done()
-							}(&wg, &g.nodes[j])
-						}
-						wg.Wait()
+			if c.opt.EnableReplicaAZInfo && (c.opt.ReadNodeSelector != nil || len(g.nodes) > 1) {
+				var wg sync.WaitGroup
+				for i := 0; i < len(g.nodes); i += 4 { // batch AZ() for every 4 connections
+					for j := i + 1; j < i+4 && j < len(g.nodes); j++ {
+						wg.Add(1)
+						go func(wg *sync.WaitGroup, info *NodeInfo) {
+							info.AZ = info.conn.AZ()
+							wg.Done()
+						}(&wg, &g.nodes[j])
 					}
+					g.nodes[i].AZ = g.nodes[i].conn.AZ()
+					wg.Wait()
 				}
+			}
+			if len(g.nodes) > 1 {
 				for _, slot := range g.slots {
 					for i := slot[0]; i <= slot[1] && i >= 0 && i < 16384; i++ {
 						wslots[i] = g.nodes[0].conn
