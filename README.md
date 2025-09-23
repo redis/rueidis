@@ -427,7 +427,6 @@ If you have many rueidis connections, you may find that they occupy quite an amo
 In that case, you may consider reducing `ClientOption.RingScaleEachConn` to 8 or 9 at the cost of potential throughput degradation.
 
 You may also consider setting the value of `ClientOption.PipelineMultiplex` to `-1`, which will let rueidis use only 1 connection for pipelining to each redis node.
-
 In addition, each connection also allocates read and write buffers to reduce system calls during high concurrency
 or large pipelines. These buffers are controlled by:
 
@@ -493,7 +492,7 @@ client, err := rueidis.NewClient(rueidis.ClientOption{
         MasterSet: "my_master",
     },
 })
-````
+```
 
 ### Redis URL
 
