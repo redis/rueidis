@@ -435,19 +435,6 @@ or large pipelines. These buffers are controlled by:
 
 You can adjust these values in memory-sensitive environments to lower memory usage, at the cost of potential throughput.
 
-Example:
-
-```go
-client, err := rueidis.NewClient(rueidis.ClientOption{
-    InitAddress:         []string{"127.0.0.1:6379"},
-    ReadBufferEachConn:  128 * 1024,  // 128 KiB
-    WriteBufferEachConn: 128 * 1024,  // 128 KiB
-})
-if err != nil {
-    panic(err)
-}
-```
-
 ## Instantiating a new Redis Client
 
 You can create a new redis client using `NewClient` and provide several options.
