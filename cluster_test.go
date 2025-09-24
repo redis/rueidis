@@ -6503,6 +6503,54 @@ func TestClusterClientMovedRetry(t *testing.T) {
 		}
 	})
 
+	t.Run("DoMulti Retry on MOVED for EXEC", func(t *testing.T) {
+		client, m := setup()
+
+		attempts := 0
+		m.DoMultiFn = func(multi ...Completed) *redisresults {
+			attempts++
+
+			results := make([]RedisResult, len(multi))
+			for i, cmd := range multi {
+				cmdName := cmd.Commands()[0]
+				if cmdName == "MULTI" {
+					results[i] = newResult(strmsg('+', "OK"), nil)
+				} else if cmdName == "EXEC" {
+					if attempts == 1 {
+						// return MOVED error only for EXEC on first attempt
+						// making sure we do not panic on wslots connection reassignment because EXEC's "slot" is 16384 (InitSlot)
+						results[i] = newResult(strmsg('-', "MOVED 1 127.0.0.1"), nil)
+					} else {
+						// return a successful transaction result for the retry
+						results[i] = newResult(slicemsg('*', []RedisMessage{strmsg('+', "some_value")}), nil)
+					}
+				} else {
+					results[i] = newResult(strmsg('+', "QUEUED"), nil)
+				}
+			}
+			return &redisresults{s: results}
+		}
+
+		cmds := []Completed{
+			client.B().Multi().Build(),
+			client.B().Get().Key("some_key").Build(),
+			client.B().Exec().Build(),
+		}
+		resps := client.DoMulti(context.Background(), cmds...)
+
+		if attempts != 2 {
+			t.Fatalf("expected 2 attempts, got %d", attempts)
+		}
+
+		if len(resps) != 3 {
+			t.Fatalf("unexpected response length %v", len(resps))
+		}
+
+		if vs, err := resps[2].AsStrSlice(); err != nil || vs[0] != "some_value" {
+			t.Fatalf("unexpected response %v %v", vs, err)
+		}
+	})
+
 	t.Run("DoMulti Retry on ASK", func(t *testing.T) {
 		client, m := setup()
 

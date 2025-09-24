@@ -502,7 +502,7 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn, slot uint16, mode 
 		p := c.connFn(addr, c.opt)
 		cc = connrole{conn: p}
 		c.conns[addr] = cc
-		if mode == RedirectMove {
+		if mode == RedirectMove && slot != cmds.InitSlot {
 			c.wslots[slot] = p
 		}
 	} else if prev == cc.conn {
@@ -516,7 +516,7 @@ func (c *clusterClient) redirectOrNew(addr string, prev conn, slot uint16, mode 
 		p := c.connFn(addr, c.opt)
 		cc = connrole{conn: p}
 		c.conns[addr] = cc
-		if mode == RedirectMove { // MOVED should always point to the primary.
+		if mode == RedirectMove && slot != cmds.InitSlot { // MOVED should always point to the primary.
 			c.wslots[slot] = p
 		}
 	}
