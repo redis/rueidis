@@ -9,19 +9,19 @@ A fast Golang Redis client that does auto pipelining and supports server-assiste
 
 ## Features
 
-- [Auto pipelining for non-blocking redis commands](#auto-pipelining)
-- [Server-assisted client-side caching](#server-assisted-client-side-caching)
-- [Generic Object Mapping with client-side caching](./om)
-- [Cache-Aside pattern with client-side caching](./rueidisaside)
-- [Distributed Locks with client-side caching](./rueidislock)
-- [Helpers for writing tests with rueidis mock](./mock)
-- [OpenTelemetry integration](./rueidisotel)
-- [Hooks and other integrations](./rueidishook)
-- [Go-redis like API adapter](./rueidiscompat) by [@418Coffee](https://github.com/418Coffee)
-- Pub/Sub, Sharded Pub/Sub, Streams
-- Redis Cluster, Sentinel, RedisJSON, RedisBloom, RediSearch, RedisTimeseries, etc.
-- [Probabilistic Data Structures without Redis Stack](./rueidisprob)
-- [Availability zone affinity routing](#availability-zone-affinity-routing)
+* [Auto pipelining for non-blocking redis commands](#auto-pipelining)
+* [Server-assisted client-side caching](#server-assisted-client-side-caching)
+* [Generic Object Mapping with client-side caching](./om)
+* [Cache-Aside pattern with client-side caching](./rueidisaside)
+* [Distributed Locks with client-side caching](./rueidislock)
+* [Helpers for writing tests with rueidis mock](./mock)
+* [OpenTelemetry integration](./rueidisotel)
+* [Hooks and other integrations](./rueidishook)
+* [Go-redis like API adapter](./rueidiscompat) by [@418Coffee](https://github.com/418Coffee)
+* Pub/Sub, Sharded Pub/Sub, Streams
+* Redis Cluster, Sentinel, RedisJSON, RedisBloom, RediSearch, RedisTimeseries, etc.
+* [Probabilistic Data Structures without Redis Stack](./rueidisprob)
+* [Availability zone affinity routing](#availability-zone-affinity-routing)
 
 ---
 
@@ -107,7 +107,7 @@ You can avoid this by setting `DisableAutoPipelining` to true, then it will swit
 
 When `DisableAutoPipelining` is set to true, you can still send commands for auto pipelining with `ToPipe()`:
 
-```golang
+``` golang
 cmd := client.B().Get().Key("key").Build().ToPipe()
 client.Do(ctx, cmd)
 ```
@@ -118,7 +118,7 @@ This allows you to use connection pooling approach by default but opt-in auto pi
 
 Besides auto pipelining, you can also pipeline commands manually with `DoMulti()`:
 
-```golang
+``` golang
 cmds := make(rueidis.Commands, 0, 10)
 for i := 0; i < 10; i++ {
     cmds = append(cmds, client.B().Set().Key("key").Value("value").Build())
@@ -191,8 +191,8 @@ client.DoCache(ctx, client.B().Get().Key("k1").Cache(), time.Minute).IsCacheHit(
 
 If the OpenTelemetry is enabled by the `rueidisotel.NewClient(option)`, then there are also two metrics instrumented:
 
-- rueidis_do_cache_miss
-- rueidis_do_cache_hits
+* rueidis_do_cache_miss
+* rueidis_do_cache_hits
 
 ### MGET/JSON.MGET Client-Side Caching Helpers
 
@@ -373,7 +373,7 @@ client.Dedicated(func(c rueidis.DedicatedClient) error {
 
 Or use `Dedicate()` and invoke `cancel()` when finished to put the connection back to the pool.
 
-```golang
+``` golang
 c, cancel := client.Dedicate()
 defer cancel()
 
@@ -427,6 +427,7 @@ If you have many rueidis connections, you may find that they occupy quite an amo
 In that case, you may consider reducing `ClientOption.RingScaleEachConn` to 8 or 9 at the cost of potential throughput degradation.
 
 You may also consider setting the value of `ClientOption.PipelineMultiplex` to `-1`, which will let rueidis use only 1 connection for pipelining to each redis node.
+
 In addition, each connection also allocates read and write buffers to reduce system calls during high concurrency
 or large pipelines. These buffers are controlled by:
 
