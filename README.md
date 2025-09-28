@@ -428,6 +428,14 @@ In that case, you may consider reducing `ClientOption.RingScaleEachConn` to 8 or
 
 You may also consider setting the value of `ClientOption.PipelineMultiplex` to `-1`, which will let rueidis use only 1 connection for pipelining to each redis node.
 
+In addition, each connection also allocates read and write buffers to reduce system calls during high concurrency
+or large pipelines. These buffers are controlled by:
+
+- `ClientOption.ReadBufferEachConn` (default: 0.5 MiB)
+- `ClientOption.WriteBufferEachConn` (default: 0.5 MiB)
+
+You can adjust these values in memory-sensitive environments to lower memory usage, at the cost of potential throughput.
+
 ## Instantiating a new Redis Client
 
 You can create a new redis client using `NewClient` and provide several options.
