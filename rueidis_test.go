@@ -15,6 +15,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -301,17 +302,23 @@ func TestForceSingleClientInitialDialError(t *testing.T) {
 	defer ln.Close()
 
 	_, port, _ := net.SplitHostPort(ln.Addr().String())
+	initialDialErr := errors.New("initial Dial error")
+	var dials atomic.Uint32
 	client, err := NewClient(ClientOption{
 		InitAddress:       []string{"127.0.0.1:" + port},
 		ForceSingleClient: true,
-		Dialer:            net.Dialer{Timeout: time.Second / 10},
+		DialCtxFn: func(ctx context.Context, addr string, dialer *net.Dialer, _ *tls.Config) (net.Conn, error) {
+			if dials.Add(1) == 1 {
+				return nil, initialDialErr
+			}
+			return dialer.DialContext(ctx, "tcp", addr)
+		},
 	})
-	if client == nil || err == nil {
-		t.Fatal(err)
+	if client == nil {
+		t.Fatal("NewClient returned a nil client with ForceSingleClient")
 	}
-	// discard NewClient dial attempt
-	if _, err := ln.Accept(); err != nil {
-		t.Errorf("unexpected error result: %v", err)
+	if !errors.Is(err, initialDialErr) {
+		t.Fatalf("unexpected NewClient error: %v", err)
 	}
 
 	done := make(chan struct{})
@@ -338,6 +345,10 @@ func TestForceSingleClientInitialDialError(t *testing.T) {
 	}
 	client.Close()
 	<-done
+
+	if n := dials.Load(); n != 2 {
+		t.Errorf("expected 2 Dial calls, got %d", n)
+	}
 }
 
 func TestForceSingleClient(t *testing.T) {
