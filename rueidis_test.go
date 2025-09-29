@@ -15,6 +15,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -411,10 +412,11 @@ func TestStandaloneClient(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer rln.Close()
-	pdone := make(chan struct{})
-	rdone := make(chan struct{})
-	go func() {
-		mock, err := accept(t, pln)
+
+	var wg sync.WaitGroup
+	mockServer := func(ln net.Listener) {
+		defer wg.Done()
+		mock, err := accept(t, ln)
 		if err != nil {
 			return
 		}
@@ -424,23 +426,11 @@ func TestStandaloneClient(t *testing.T) {
 			ReplyError("UNKNOWN COMMAND")
 		mock.Expect("PING").ReplyString("OK")
 		mock.Close()
-		close(pdone)
-	}()
-	go func() {
-		mock, err := accept(t, rln)
-		if err != nil {
-			return
-		}
-		mock.Expect("READONLY").
-			ReplyError("OK")
-		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
-			ReplyError("UNKNOWN COMMAND")
-		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
-			ReplyError("UNKNOWN COMMAND")
-		mock.Expect("PING").ReplyString("OK")
-		mock.Close()
-		close(rdone)
-	}()
+	}
+	wg.Add(2)
+	go mockServer(pln)
+	go mockServer(rln)
+
 	_, pport, _ := net.SplitHostPort(pln.Addr().String())
 	_, rport, _ := net.SplitHostPort(rln.Addr().String())
 	client, err := NewClient(ClientOption{
@@ -459,8 +449,7 @@ func TestStandaloneClient(t *testing.T) {
 		t.Fatal("client should be a standalone")
 	}
 	client.Close()
-	<-pdone
-	<-rdone
+	wg.Wait()
 }
 
 func TestTLSClient(t *testing.T) {
