@@ -546,6 +546,41 @@ func TestNewPipe(t *testing.T) {
 		n1.Close()
 		n2.Close()
 	})
+	t.Run("With EnableRedirect", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+		go func() {
+			mock.Expect("HELLO", "3").
+				Reply(slicemsg(
+					'%',
+					[]RedisMessage{
+						strmsg('+', "proto"),
+						{typ: ':', intlen: 3},
+					},
+				))
+			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "CAPA", "redirect").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+				ReplyString("OK")
+		}()
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
+			Standalone: StandaloneOption{
+				EnableRedirect: true,
+			},
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		go func() { mock.Expect("PING").ReplyString("OK") }()
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
 }
 
 func TestNewRESP2Pipe(t *testing.T) {
@@ -849,6 +884,52 @@ func TestNewRESP2Pipe(t *testing.T) {
 		if err != io.ErrClosedPipe {
 			t.Fatalf("pipe setup should failed with io.ErrClosedPipe, but got %v", err)
 		}
+	})
+	t.Run("With EnableRedirect RESP2", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+		go func() {
+			// First batch: RESP3 attempt
+			mock.Expect("HELLO", "3").
+				ReplyError("ERR unknown command `HELLO`")
+			mock.Expect("CLIENT", "NO-EVICT", "ON").
+				ReplyString("OK") // ignored because r2=true
+			mock.Expect("CLIENT", "CAPA", "redirect").
+				ReplyString("OK") // ignored because r2=true
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+				ReplyString("OK") // last 2 are skipped from error checking
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+				ReplyString("OK")
+			// Second batch: RESP2 fallback
+			mock.Expect("HELLO", "2").
+				Reply(slicemsg('*', []RedisMessage{
+					strmsg('+', "proto"),
+					{typ: ':', intlen: 2},
+				}))
+			mock.Expect("CLIENT", "NO-EVICT", "ON").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "CAPA", "redirect").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+				ReplyString("OK")
+		}()
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
+			DisableCache:  true,
+			ClientNoEvict: true,
+			Standalone: StandaloneOption{
+				EnableRedirect: true,
+			},
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		go func() { mock.Expect("PING").ReplyString("OK") }()
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
 	})
 	t.Run("With DisableClientSetInfo", func(t *testing.T) {
 		n1, n2 := net.Pipe()
