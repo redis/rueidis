@@ -50,12 +50,7 @@ func MGet(client Client, ctx context.Context, keys []string) (ret map[string]Red
 		return clientMGet(client, ctx, client.B().Mget().Key(keys...).Build(), keys)
 	}
 
-	cmds := mgetcmdsp.Get(len(keys), len(keys))
-	defer mgetcmdsp.Put(cmds)
-	for i := range cmds.s {
-		cmds.s[i] = client.B().Get().Key(keys[i]).Build()
-	}
-	return doMultiGet(client, ctx, cmds.s, keys)
+	return clusterMGet(client, ctx, keys)
 }
 
 // MSet is a helper that consults the redis directly with multiple keys by grouping keys within the same slot into MSETs or multiple SETs
@@ -139,12 +134,7 @@ func JsonMGet(client Client, ctx context.Context, keys []string, path string) (r
 		return clientMGet(client, ctx, client.B().JsonMget().Key(keys...).Path(path).Build(), keys)
 	}
 
-	cmds := mgetcmdsp.Get(len(keys), len(keys))
-	defer mgetcmdsp.Put(cmds)
-	for i := range cmds.s {
-		cmds.s[i] = client.B().JsonGet().Key(keys[i]).Path(path).Build()
-	}
-	return doMultiGet(client, ctx, cmds.s, keys)
+	return clusterJsonMGet(client, ctx, keys, path)
 }
 
 // JsonMSet is a helper that consults redis directly with multiple keys by grouping keys within the same slot into JSON.MSETs or multiple JSON.SETs
@@ -275,6 +265,66 @@ func arrayToKV(m map[string]RedisMessage, arr []RedisMessage, keys []string) map
 		m[keys[i]] = resp
 	}
 	return m
+}
+
+func clusterMGet(client Client, ctx context.Context, keys []string) (ret map[string]RedisMessage, err error) {
+	ret = make(map[string]RedisMessage, len(keys))
+	slotCmds := intl.MGets(keys)
+	if len(slotCmds) == 0 {
+		return ret, nil
+	}
+	cmds := make([]Completed, 0, len(slotCmds))
+	for _, cmd := range slotCmds {
+		cmds = append(cmds, cmd.Pin())
+	}
+	resps := client.DoMulti(ctx, cmds...)
+	defer resultsp.Put(&redisresults{s: resps})
+	for i, resp := range resps {
+		if err := resp.NonRedisError(); err != nil {
+			return nil, err
+		}
+		arr, err := resp.ToArray()
+		if err != nil {
+			return nil, err
+		}
+		commands := cmds[i].Commands()
+		cmdKeys := commands[1:]
+		ret = arrayToKV(ret, arr, cmdKeys)
+	}
+	for _, cmd := range cmds {
+		intl.PutCompletedForce(cmd)
+	}
+	return ret, nil
+}
+
+func clusterJsonMGet(client Client, ctx context.Context, keys []string, path string) (ret map[string]RedisMessage, err error) {
+	ret = make(map[string]RedisMessage, len(keys))
+	slotCmds := intl.JsonMGets(keys, path)
+	if len(slotCmds) == 0 {
+		return ret, nil
+	}
+	cmds := make([]Completed, 0, len(slotCmds))
+	for _, cmd := range slotCmds {
+		cmds = append(cmds, cmd.Pin())
+	}
+	resps := client.DoMulti(ctx, cmds...)
+	defer resultsp.Put(&redisresults{s: resps})
+	for i, resp := range resps {
+		if err := resp.NonRedisError(); err != nil {
+			return nil, err
+		}
+		arr, err := resp.ToArray()
+		if err != nil {
+			return nil, err
+		}
+		commands := cmds[i].Commands()
+		cmdKeys := commands[1 : len(commands)-1]
+		ret = arrayToKV(ret, arr, cmdKeys)
+	}
+	for _, cmd := range cmds {
+		intl.PutCompletedForce(cmd)
+	}
+	return ret, nil
 }
 
 // ErrMSetNXNotSet is used in the MSetNX helper when the underlying MSETNX response is 0.
