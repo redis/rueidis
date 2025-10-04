@@ -696,6 +696,8 @@
         "enum": [
           "NORMAL",
           "MASTER",
+          "PRIMARY",
+          "SLAVE",
           "REPLICA",
           "PUBSUB"
         ],
@@ -733,6 +735,143 @@
         "type": "integer",
         "token": "MAXAGE",
         "optional": true
+      },
+      {
+        "command": "NAME",
+        "name": "name",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "idle",
+        "type": "integer",
+        "token": "IDLE",
+        "optional": true
+      },
+      {
+        "command": "FLAGS",
+        "name": "flags",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "LIB-NAME",
+        "name": "lib-name",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "LIB-VER",
+        "name": "lib-ver",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "db",
+        "type": "integer",
+        "token": "DB",
+        "optional": true
+      },
+      {
+        "command": "CAPA",
+        "name": "capa",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "IP",
+        "name": "ip",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "NOT-TYPE",
+        "type": "enum",
+        "enum": [
+          "NORMAL",
+          "MASTER",
+          "PRIMARY",
+          "SLAVE",
+          "REPLICA",
+          "PUBSUB"
+        ],
+        "optional": true
+      },
+      {
+        "name": "not-id",
+        "type": "block",
+        "block": [
+          {
+            "command": "NOT-ID",
+            "type": "command"
+          },
+          {
+            "name": "not-client-id",
+            "type": "integer",
+            "multiple": true
+          }
+        ],
+        "optional": true
+      },
+      {
+        "command": "NOT-USER",
+        "name": "not-username",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "NOT-ADDR",
+        "name": "not-addr",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "NOT-LADDR",
+        "name": "not-laddr",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "NOT-NAME",
+        "name": "not-name",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "NOT-FLAGS",
+        "name": "not-flags",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "NOT-LIB-NAME",
+        "name": "not-lib-name",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "NOT-LIB-VER",
+        "name": "not-lib-ver",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "not-db",
+        "type": "integer",
+        "token": "NOT-DB",
+        "optional": true
+      },
+      {
+        "command": "NOT-CAPA",
+        "name": "not-capa",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "NOT-IP",
+        "name": "not-ip",
+        "type": "string",
+        "optional": true
       }
     ],
     "since": "2.4.0",
@@ -767,6 +906,174 @@
             "multiple": true
           }
         ],
+        "optional": true
+      },
+      {
+        "command": "USER",
+        "name": "username",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "ADDR",
+        "name": "ip:port",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "LADDR",
+        "name": "ip:port",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "SKIPME",
+        "type": "enum",
+        "enum": [
+          "YES",
+          "NO"
+        ],
+        "optional": true
+      },
+      {
+        "name": "maxage",
+        "type": "integer",
+        "token": "MAXAGE",
+        "optional": true
+      },
+      {
+        "command": "NAME",
+        "name": "name",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "idle",
+        "type": "integer",
+        "token": "IDLE",
+        "optional": true
+      },
+      {
+        "command": "FLAGS",
+        "name": "flags",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "LIB-NAME",
+        "name": "lib-name",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "LIB-VER",
+        "name": "lib-ver",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "db",
+        "type": "integer",
+        "token": "DB",
+        "optional": true
+      },
+      {
+        "command": "CAPA",
+        "name": "capa",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "IP",
+        "name": "ip",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "NOT-TYPE",
+        "type": "enum",
+        "enum": [
+          "NORMAL",
+          "MASTER",
+          "REPLICA",
+          "PUBSUB"
+        ],
+        "optional": true
+      },
+      {
+        "name": "not-id",
+        "type": "block",
+        "block": [
+          {
+            "command": "NOT-ID",
+            "type": "command"
+          },
+          {
+            "name": "not-client-id",
+            "type": "integer",
+            "multiple": true
+          }
+        ],
+        "optional": true
+      },
+      {
+        "command": "NOT-USER",
+        "name": "not-username",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "NOT-ADDR",
+        "name": "not-addr",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "NOT-LADDR",
+        "name": "not-laddr",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "NOT-NAME",
+        "name": "not-name",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "NOT-FLAGS",
+        "name": "not-flags",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "NOT-LIB-NAME",
+        "name": "not-lib-name",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "NOT-LIB-VER",
+        "name": "not-lib-ver",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "name": "not-db",
+        "type": "integer",
+        "token": "NOT-DB",
+        "optional": true
+      },
+      {
+        "command": "NOT-CAPA",
+        "name": "not-capa",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "NOT-IP",
+        "name": "not-ip",
+        "type": "string",
         "optional": true
       }
     ],
