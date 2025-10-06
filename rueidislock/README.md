@@ -36,6 +36,20 @@ func main() {
 }
 ```
 
+## Default Configuration
+
+When creating a new `Locker` without explicitly setting options, the following defaults are applied:
+
+- **KeyPrefix**: `"rueidislock"`  
+- **KeyValidity**: `5s` — lock validity period before it expires.  
+- **ExtendInterval**: `KeyValidity / 2` (default: 2.5s) — how often the lock is automatically extended.  
+- **TryNextAfter**: `20ms` — wait time before trying the next Redis key when acquiring locks.  
+- **KeyMajority**: `2` — number of keys required out of `KeyMajority*2-1` total keys for a valid lock.  
+- **NoLoopTracking**: `false` — disables NOLOOP in client tracking unless explicitly set.  
+- **FallbackSETPX**: `false` — uses `SET PXAT` by default; set to `true` for Redis versions < 6.2.
+
+These values can be overridden by providing a `LockerOption` when calling `NewLocker`.
+
 ## Features backed by the Redis Client Side Caching
 * The returned `ctx` will be canceled automatically and immediately once the `KeyMajority` is not held anymore, for example:
   * Redis are down.
