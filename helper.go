@@ -273,11 +273,14 @@ func clusterMGet(client Client, ctx context.Context, keys []string) (ret map[str
 	if len(slotCmds) == 0 {
 		return ret, nil
 	}
-	cmds := make([]Completed, 0, len(slotCmds))
+	cmds := mgetcmdsp.Get(len(slotCmds), len(slotCmds))
+	defer mgetcmdsp.Put(cmds)
+	i := 0
 	for _, cmd := range slotCmds {
-		cmds = append(cmds, cmd.Pin())
+		cmds.s[i] = cmd.Pin()
+		i++
 	}
-	resps := client.DoMulti(ctx, cmds...)
+	resps := client.DoMulti(ctx, cmds.s...)
 	defer resultsp.Put(&redisresults{s: resps})
 	for i, resp := range resps {
 		if err := resp.NonRedisError(); err != nil {
@@ -287,12 +290,12 @@ func clusterMGet(client Client, ctx context.Context, keys []string) (ret map[str
 		if err != nil {
 			return nil, err
 		}
-		commands := cmds[i].Commands()
+		commands := cmds.s[i].Commands()
 		cmdKeys := commands[1:]
 		ret = arrayToKV(ret, arr, cmdKeys)
 	}
-	for _, cmd := range cmds {
-		intl.PutCompletedForce(cmd)
+	for i := range cmds.s {
+		intl.PutCompletedForce(cmds.s[i])
 	}
 	return ret, nil
 }
@@ -303,11 +306,14 @@ func clusterJsonMGet(client Client, ctx context.Context, keys []string, path str
 	if len(slotCmds) == 0 {
 		return ret, nil
 	}
-	cmds := make([]Completed, 0, len(slotCmds))
+	cmds := mgetcmdsp.Get(len(slotCmds), len(slotCmds))
+	defer mgetcmdsp.Put(cmds)
+	i := 0
 	for _, cmd := range slotCmds {
-		cmds = append(cmds, cmd.Pin())
+		cmds.s[i] = cmd.Pin()
+		i++
 	}
-	resps := client.DoMulti(ctx, cmds...)
+	resps := client.DoMulti(ctx, cmds.s...)
 	defer resultsp.Put(&redisresults{s: resps})
 	for i, resp := range resps {
 		if err := resp.NonRedisError(); err != nil {
@@ -317,12 +323,12 @@ func clusterJsonMGet(client Client, ctx context.Context, keys []string, path str
 		if err != nil {
 			return nil, err
 		}
-		commands := cmds[i].Commands()
+		commands := cmds.s[i].Commands()
 		cmdKeys := commands[1 : len(commands)-1]
 		ret = arrayToKV(ret, arr, cmdKeys)
 	}
-	for _, cmd := range cmds {
-		intl.PutCompletedForce(cmd)
+	for i := range cmds.s {
+		intl.PutCompletedForce(cmds.s[i])
 	}
 	return ret, nil
 }
