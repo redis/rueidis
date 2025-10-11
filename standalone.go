@@ -78,13 +78,17 @@ func (s *standalone) redirectToPrimary(addr string) error {
 
 	// Atomically swap the primary and close the old one
 	oldPrimary := s.primary.Swap(newPrimary)
-	oldPrimary.Close()
+	go func(oldPrimary *singleClient) {
+		time.Sleep(time.Second * 5)
+		oldPrimary.Close()
+	}(oldPrimary)
 
 	return nil
 }
 
 func (s *standalone) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	attempts := 1
+
 	if s.enableRedirect {
 		cmd = cmd.Pin()
 	}
@@ -100,16 +104,17 @@ retry:
 	if s.enableRedirect {
 		if ret, yes := IsRedisErr(resp.Error()); yes {
 			if addr, ok := ret.IsRedirect(); ok {
-				// Command is already pinned at this point
 				err := s.redirectCall.Do(ctx, func() error {
 					return s.redirectToPrimary(addr)
 				})
-				// Use retryHandler to handle multiple redirects with context deadline
 				if err == nil || s.retryer.WaitOrSkipRetry(ctx, attempts, cmd, resp.Error()) {
 					attempts++
 					goto retry
 				}
 			}
+		}
+		if resp.NonRedisError() == nil {
+			cmds.PutCompletedForce(cmd)
 		}
 	}
 
@@ -119,7 +124,6 @@ retry:
 func (s *standalone) DoMulti(ctx context.Context, multi ...Completed) (resp []RedisResult) {
 	attempts := 1
 
-	// Pin all commands at the beginning if redirect is enabled
 	if s.enableRedirect {
 		for i := range multi {
 			multi[i] = multi[i].Pin()
@@ -143,20 +147,22 @@ retry:
 	// Handle redirects with retry until context deadline
 	if s.enableRedirect {
 		for i, result := range resp {
-			if i < len(multi) {
-				if ret, yes := IsRedisErr(result.Error()); yes {
-					if addr, ok := ret.IsRedirect(); ok {
-						err := s.redirectCall.Do(ctx, func() error {
-							return s.redirectToPrimary(addr)
-						})
-						// Use retryHandler to handle multiple redirects with context deadline
-						if err == nil || s.retryer.WaitOrSkipRetry(ctx, attempts, multi[0], result.Error()) {
-							attempts++
-							goto retry
-						}
-						break // Exit the loop if redirect handling fails
+			if ret, yes := IsRedisErr(result.Error()); yes {
+				if addr, ok := ret.IsRedirect(); ok {
+					err := s.redirectCall.Do(ctx, func() error {
+						return s.redirectToPrimary(addr)
+					})
+					if err == nil || s.retryer.WaitOrSkipRetry(ctx, attempts, multi[i], result.Error()) {
+						attempts++
+						goto retry
 					}
+					break // Exit the loop if redirect handling fails
 				}
+			}
+		}
+		for i, result := range resp {
+			if result.NonRedisError() == nil {
+				cmds.PutCompletedForce(multi[i])
 			}
 		}
 	}
@@ -179,44 +185,77 @@ func (s *standalone) Close() {
 }
 
 func (s *standalone) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult) {
-	return s.primary.Load().DoCache(ctx, cmd, ttl)
+	attempts := 1
+
+	if s.enableRedirect {
+		cmd = cmd.Pin()
+	}
+
+retry:
+	resp = s.primary.Load().DoCache(ctx, cmd, ttl)
+
+	if s.enableRedirect {
+		if ret, yes := IsRedisErr(resp.Error()); yes {
+			if addr, ok := ret.IsRedirect(); ok {
+				err := s.redirectCall.Do(ctx, func() error {
+					return s.redirectToPrimary(addr)
+				})
+				if err == nil || s.retryer.WaitOrSkipRetry(ctx, attempts, Completed(cmd), resp.Error()) {
+					attempts++
+					goto retry
+				}
+			}
+		}
+		if resp.NonRedisError() == nil {
+			cmds.PutCompletedForce(Completed(cmd))
+		}
+	}
+	return
 }
 
 func (s *standalone) DoMultiCache(ctx context.Context, multi ...CacheableTTL) (resp []RedisResult) {
+	attempts := 1
+
 	if s.enableRedirect {
 		for i := range multi {
 			multi[i].Cmd = multi[i].Cmd.Pin()
 		}
 	}
-	return s.primary.Load().DoMultiCache(ctx, multi...)
+
+retry:
+	resp = s.primary.Load().DoMultiCache(ctx, multi...)
+
+	if s.enableRedirect {
+		for i, result := range resp {
+			if ret, yes := IsRedisErr(result.Error()); yes {
+				if addr, ok := ret.IsRedirect(); ok {
+					err := s.redirectCall.Do(ctx, func() error {
+						return s.redirectToPrimary(addr)
+					})
+					if err == nil || s.retryer.WaitOrSkipRetry(ctx, attempts, Completed(multi[i].Cmd), result.Error()) {
+						attempts++
+						goto retry
+					}
+					break // Exit the loop if redirect handling fails
+				}
+			}
+		}
+		for i, result := range resp {
+			if result.NonRedisError() == nil {
+				cmds.PutCompletedForce(Completed(multi[i].Cmd))
+			}
+		}
+	}
+	return
 }
 
 func (s *standalone) DoStream(ctx context.Context, cmd Completed) RedisResultStream {
-	if s.enableRedirect {
-		cmd = cmd.Pin()
-	}
 	var stream RedisResultStream
 	if s.toReplicas != nil && s.toReplicas(cmd) {
 		stream = s.replicas[s.pick()].DoStream(ctx, cmd)
 	} else {
 		stream = s.primary.Load().DoStream(ctx, cmd)
 	}
-
-	// Handle redirect for stream
-	if s.enableRedirect && stream.Error() != nil {
-		if ret, yes := IsRedisErr(stream.Error()); yes {
-			if addr, ok := ret.IsRedirect(); ok {
-				err := s.redirectCall.Do(ctx, func() error {
-					return s.redirectToPrimary(addr)
-				})
-				if err == nil {
-					// Execute the command on the updated primary
-					return s.primary.Load().DoStream(ctx, cmd)
-				}
-			}
-		}
-	}
-
 	return stream
 }
 
@@ -234,22 +273,6 @@ func (s *standalone) DoMultiStream(ctx context.Context, multi ...Completed) Mult
 	} else {
 		stream = s.primary.Load().DoMultiStream(ctx, multi...)
 	}
-
-	// Handle redirect for stream
-	if s.enableRedirect && stream.Error() != nil {
-		if ret, yes := IsRedisErr(stream.Error()); yes {
-			if addr, ok := ret.IsRedirect(); ok {
-				err := s.redirectCall.Do(ctx, func() error {
-					return s.redirectToPrimary(addr)
-				})
-				if err == nil {
-					// Execute the command on the updated primary
-					return s.primary.Load().DoMultiStream(ctx, multi...)
-				}
-			}
-		}
-	}
-
 	return stream
 }
 

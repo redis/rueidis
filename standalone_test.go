@@ -304,6 +304,65 @@ func TestStandaloneRedirectHandling(t *testing.T) {
 	}
 }
 
+func TestStandaloneDoCacheRedirectHandling(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	// Create a mock redirect response
+	redirectErr := RedisError(strmsg('-', "REDIRECT 127.0.0.1:6380"))
+
+	// Mock primary connection that returns redirect
+	primaryConn := &mockConn{
+		DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
+			return newErrResult(&redirectErr)
+		},
+	}
+
+	// Mock redirect target connection that returns success
+	redirectConn := &mockConn{
+		DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
+			return RedisResult{val: strmsg('+', "OK")}
+		},
+	}
+
+	// Track which connection is being used
+	var connUsed string
+
+	s, err := newStandaloneClient(&ClientOption{
+		InitAddress: []string{"primary"},
+		Standalone: StandaloneOption{
+			EnableRedirect: true,
+		},
+		DisableRetry: true,
+	}, func(dst string, opt *ClientOption) conn {
+		connUsed = dst
+		if dst == "primary" {
+			return primaryConn
+		}
+		return redirectConn
+	}, newRetryer(defaultRetryDelayFn))
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer s.Close()
+
+	ctx := context.Background()
+	result := s.DoCache(ctx, s.B().Get().Key("test").Cache(), time.Second)
+
+	if result.Error() != nil {
+		t.Errorf("expected no error after redirect, got: %v", result.Error())
+	}
+
+	if str, _ := result.ToString(); str != "OK" {
+		t.Errorf("expected OK response after redirect, got: %s", str)
+	}
+
+	// Verify that the redirect target was used
+	if connUsed != "127.0.0.1:6380" {
+		t.Errorf("expected redirect to use 127.0.0.1:6380, got: %s", connUsed)
+	}
+}
+
 func TestStandaloneRedirectDisabled(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 
@@ -345,6 +404,47 @@ func TestStandaloneRedirectDisabled(t *testing.T) {
 	}
 }
 
+func TestStandaloneDoCacheRedirectDisabled(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	// Create a mock redirect response
+	redirectErr := RedisError(strmsg('-', "REDIRECT 127.0.0.1:6380"))
+
+	// Mock primary connection that returns redirect
+	primaryConn := &mockConn{
+		DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
+			return newErrResult(&redirectErr)
+		},
+	}
+
+	s, err := newStandaloneClient(&ClientOption{
+		InitAddress: []string{"primary"},
+		Standalone: StandaloneOption{
+			EnableRedirect: false, // Redirect disabled
+		},
+		DisableRetry: true,
+	}, func(dst string, opt *ClientOption) conn {
+		return primaryConn
+	}, newRetryer(defaultRetryDelayFn))
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer s.Close()
+
+	ctx := context.Background()
+	result := s.DoCache(ctx, s.B().Get().Key("test").Cache(), time.Second)
+
+	// Should return the original redirect error since redirect is disabled
+	if result.Error() == nil {
+		t.Error("expected redirect error to be returned when redirect is disabled")
+	}
+
+	if result.Error().Error() != "REDIRECT 127.0.0.1:6380" {
+		t.Errorf("expected redirect error, got: %v", result.Error())
+	}
+}
+
 func TestNewClientEnableRedirectPriority(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 
@@ -373,268 +473,6 @@ func TestNewClientEnableRedirectPriority(t *testing.T) {
 	// Verify that EnableRedirect is properly configured
 	if !s.enableRedirect {
 		t.Error("expected EnableRedirect to be true")
-	}
-}
-
-func TestStandaloneDoStreamWithRedirect(t *testing.T) {
-	defer ShouldNotLeak(SetupLeakDetection())
-
-	redirectConnUsed := false
-	redirectErr := RedisError(strmsg('-', "REDIRECT 127.0.0.1:6380"))
-	primaryConn := &mockConn{
-		DialFn: func() error { return nil },
-		DoStreamFn: func(cmd Completed) RedisResultStream {
-			return RedisResultStream{e: &redirectErr}
-		},
-	}
-
-	redirectConn := &mockConn{
-		DialFn: func() error { return nil },
-		DoStreamFn: func(cmd Completed) RedisResultStream {
-			redirectConnUsed = true
-			return RedisResultStream{e: nil}
-		},
-		CloseFn: func() {},
-	}
-
-	s, err := newStandaloneClient(&ClientOption{
-		InitAddress: []string{"primary"},
-		Standalone: StandaloneOption{
-			EnableRedirect: true,
-		},
-		DisableRetry: true,
-	}, func(dst string, opt *ClientOption) conn {
-		if dst == "primary" {
-			return primaryConn
-		}
-		return redirectConn
-	}, newRetryer(defaultRetryDelayFn))
-
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	defer s.Close()
-
-	// Test DoStream with redirect
-	stream := s.DoStream(context.Background(), s.B().Set().Key("k").Value("v").Build())
-	if stream.Error() != nil {
-		t.Fatalf("unexpected error: %v", stream.Error())
-	}
-
-	if !redirectConnUsed {
-		t.Error("expected redirect connection to be used")
-	}
-}
-
-func TestStandaloneDoStreamWithRedirectFailure(t *testing.T) {
-	defer ShouldNotLeak(SetupLeakDetection())
-
-	redirectErr := RedisError(strmsg('-', "REDIRECT 127.0.0.1:6380"))
-	primaryConn := &mockConn{
-		DialFn: func() error { return nil },
-		DoStreamFn: func(cmd Completed) RedisResultStream {
-			return RedisResultStream{e: &redirectErr}
-		},
-	}
-
-	redirectConn := &mockConn{
-		DialFn: func() error { return errors.New("connection failed") },
-	}
-
-	s, err := newStandaloneClient(&ClientOption{
-		InitAddress: []string{"primary"},
-		Standalone: StandaloneOption{
-			EnableRedirect: true,
-		},
-		DisableRetry: true,
-	}, func(dst string, opt *ClientOption) conn {
-		if dst == "primary" {
-			return primaryConn
-		}
-		return redirectConn
-	}, newRetryer(defaultRetryDelayFn))
-
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	defer s.Close()
-
-	// Test DoStream with redirect failure - should return original result
-	stream := s.DoStream(context.Background(), s.B().Set().Key("k").Value("v").Build())
-	if stream.Error() == nil {
-		t.Error("expected original error to be returned")
-	}
-
-	if verr, ok := stream.Error().(*RedisError); !ok || !strings.Contains(verr.Error(), "REDIRECT") {
-		t.Errorf("expected REDIRECT error, got %v", stream.Error())
-	}
-}
-
-func TestStandaloneDoStreamWithoutRedirect(t *testing.T) {
-	defer ShouldNotLeak(SetupLeakDetection())
-
-	redirectErr := RedisError(strmsg('-', "REDIRECT 127.0.0.1:6380"))
-	primaryConn := &mockConn{
-		DialFn: func() error { return nil },
-		DoStreamFn: func(cmd Completed) RedisResultStream {
-			return RedisResultStream{e: &redirectErr}
-		},
-	}
-
-	s, err := newStandaloneClient(&ClientOption{
-		InitAddress: []string{"primary"},
-		Standalone: StandaloneOption{
-			EnableRedirect: false,
-		},
-		DisableRetry: true,
-	}, func(dst string, opt *ClientOption) conn {
-		return primaryConn
-	}, newRetryer(defaultRetryDelayFn))
-
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	defer s.Close()
-
-	// Test DoStream without redirect - should return original result
-	stream := s.DoStream(context.Background(), s.B().Set().Key("k").Value("v").Build())
-	if stream.Error() == nil {
-		t.Error("expected original error to be returned")
-	}
-
-	if verr, ok := stream.Error().(*RedisError); !ok || !strings.Contains(verr.Error(), "REDIRECT") {
-		t.Errorf("expected REDIRECT error, got %v", stream.Error())
-	}
-}
-
-func TestStandaloneDoMultiStreamWithRedirect(t *testing.T) {
-	defer ShouldNotLeak(SetupLeakDetection())
-
-	redirectConnUsed := false
-	redirectErr := RedisError(strmsg('-', "REDIRECT 127.0.0.1:6380"))
-	primaryConn := &mockConn{
-		DialFn: func() error { return nil },
-		DoMultiStreamFn: func(multi ...Completed) MultiRedisResultStream {
-			return MultiRedisResultStream{e: &redirectErr}
-		},
-	}
-
-	redirectConn := &mockConn{
-		DialFn: func() error { return nil },
-		DoMultiStreamFn: func(multi ...Completed) MultiRedisResultStream {
-			redirectConnUsed = true
-			return MultiRedisResultStream{e: nil}
-		},
-		CloseFn: func() {},
-	}
-
-	s, err := newStandaloneClient(&ClientOption{
-		InitAddress: []string{"primary"},
-		Standalone: StandaloneOption{
-			EnableRedirect: true,
-		},
-		DisableRetry: true,
-	}, func(dst string, opt *ClientOption) conn {
-		if dst == "primary" {
-			return primaryConn
-		}
-		return redirectConn
-	}, newRetryer(defaultRetryDelayFn))
-
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	defer s.Close()
-
-	// Test DoMultiStream with redirect
-	stream := s.DoMultiStream(context.Background(), s.B().Set().Key("k").Value("v").Build())
-	if stream.Error() != nil {
-		t.Fatalf("unexpected error: %v", stream.Error())
-	}
-
-	if !redirectConnUsed {
-		t.Error("expected redirect connection to be used")
-	}
-}
-
-func TestStandaloneDoMultiStreamWithRedirectFailure(t *testing.T) {
-	defer ShouldNotLeak(SetupLeakDetection())
-
-	redirectErr := RedisError(strmsg('-', "REDIRECT 127.0.0.1:6380"))
-	primaryConn := &mockConn{
-		DialFn: func() error { return nil },
-		DoMultiStreamFn: func(multi ...Completed) MultiRedisResultStream {
-			return MultiRedisResultStream{e: &redirectErr}
-		},
-	}
-
-	redirectConn := &mockConn{
-		DialFn: func() error { return errors.New("connection failed") },
-	}
-
-	s, err := newStandaloneClient(&ClientOption{
-		InitAddress: []string{"primary"},
-		Standalone: StandaloneOption{
-			EnableRedirect: true,
-		},
-		DisableRetry: true,
-	}, func(dst string, opt *ClientOption) conn {
-		if dst == "primary" {
-			return primaryConn
-		}
-		return redirectConn
-	}, newRetryer(defaultRetryDelayFn))
-
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	defer s.Close()
-
-	// Test DoMultiStream with redirect failure - should return original result
-	stream := s.DoMultiStream(context.Background(), s.B().Set().Key("k").Value("v").Build())
-	if stream.Error() == nil {
-		t.Error("expected original error to be returned")
-	}
-
-	if verr, ok := stream.Error().(*RedisError); !ok || !strings.Contains(verr.Error(), "REDIRECT") {
-		t.Errorf("expected REDIRECT error, got %v", stream.Error())
-	}
-}
-
-func TestStandaloneDoMultiStreamWithoutRedirect(t *testing.T) {
-	defer ShouldNotLeak(SetupLeakDetection())
-
-	redirectErr := RedisError(strmsg('-', "REDIRECT 127.0.0.1:6380"))
-	primaryConn := &mockConn{
-		DialFn: func() error { return nil },
-		DoMultiStreamFn: func(multi ...Completed) MultiRedisResultStream {
-			return MultiRedisResultStream{e: &redirectErr}
-		},
-	}
-
-	s, err := newStandaloneClient(&ClientOption{
-		InitAddress: []string{"primary"},
-		Standalone: StandaloneOption{
-			EnableRedirect: false,
-		},
-		DisableRetry: true,
-	}, func(dst string, opt *ClientOption) conn {
-		return primaryConn
-	}, newRetryer(defaultRetryDelayFn))
-
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	defer s.Close()
-
-	// Test DoMultiStream without redirect - should return original result
-	stream := s.DoMultiStream(context.Background(), s.B().Set().Key("k").Value("v").Build())
-	if stream.Error() == nil {
-		t.Error("expected original error to be returned")
-	}
-
-	if verr, ok := stream.Error().(*RedisError); !ok || !strings.Contains(verr.Error(), "REDIRECT") {
-		t.Errorf("expected REDIRECT error, got %v", stream.Error())
 	}
 }
 
@@ -852,114 +690,6 @@ func TestStandalonePickMultipleReplicas(t *testing.T) {
 	}
 }
 
-func TestStandaloneDoWithNonRedirectError(t *testing.T) {
-	defer ShouldNotLeak(SetupLeakDetection())
-
-	primaryConn := &mockConn{
-		DialFn: func() error { return nil },
-		DoFn: func(cmd Completed) RedisResult {
-			return newErrResult(errors.New("other error"))
-		},
-	}
-
-	s, err := newStandaloneClient(&ClientOption{
-		InitAddress: []string{"primary"},
-		Standalone: StandaloneOption{
-			EnableRedirect: true,
-		},
-		DisableRetry: true,
-	}, func(dst string, opt *ClientOption) conn {
-		return primaryConn
-	}, newRetryer(defaultRetryDelayFn))
-
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	defer s.Close()
-
-	// Test Do with non-redirect error
-	result := s.Do(context.Background(), s.B().Set().Key("k").Value("v").Build())
-	if result.Error() == nil || result.Error().Error() != "other error" {
-		t.Errorf("expected other error, got %v", result.Error())
-	}
-}
-
-func TestStandaloneDoToReplicaWithRedirect(t *testing.T) {
-	defer ShouldNotLeak(SetupLeakDetection())
-
-	// This test is simplified to avoid the command building issue
-	// The coverage for this scenario is already covered by other tests
-	primaryConn := &mockConn{
-		DialFn: func() error { return nil },
-	}
-
-	replicaConn := &mockConn{
-		DialFn: func() error { return nil },
-	}
-
-	s, err := newStandaloneClient(&ClientOption{
-		InitAddress: []string{"primary"},
-		Standalone: StandaloneOption{
-			ReplicaAddress: []string{"replica"},
-		},
-		SendToReplicas: func(cmd Completed) bool { return true }, // Always send to replica
-		DisableRetry:   true,
-	}, func(dst string, opt *ClientOption) conn {
-		if dst == "primary" {
-			return primaryConn
-		}
-		return replicaConn
-	}, newRetryer(defaultRetryDelayFn))
-
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	defer s.Close()
-
-	// Just test that we can create the client successfully
-	if s.Mode() != ClientModeStandalone {
-		t.Errorf("expected standalone mode, got %v", s.Mode())
-	}
-}
-
-func TestStandaloneDoMultiCacheWithRedirect(t *testing.T) {
-	defer ShouldNotLeak(SetupLeakDetection())
-
-	primaryConn := &mockConn{
-		DialFn: func() error { return nil },
-		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
-			return &redisresults{s: []RedisResult{RedisResult{val: strmsg('+', "OK")}}}
-		},
-	}
-
-	s, err := newStandaloneClient(&ClientOption{
-		InitAddress: []string{"primary"},
-		Standalone: StandaloneOption{
-			EnableRedirect: true,
-		},
-		DisableRetry: true,
-	}, func(dst string, opt *ClientOption) conn {
-		return primaryConn
-	}, newRetryer(defaultRetryDelayFn))
-
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	defer s.Close()
-
-	// Test DoMultiCache with redirect enabled - this exercises the Pin() code path
-	// Create a CacheableTTL manually to avoid the build-twice issue
-	cacheable := Cacheable(cmds.NewCompleted([]string{"GET", "k"}))
-	results := s.DoMultiCache(context.Background(), CacheableTTL{Cmd: cacheable, TTL: time.Second})
-	if len(results) != 1 {
-		t.Fatalf("expected 1 result, got %d", len(results))
-	}
-
-	if results[0].Error() != nil {
-		t.Errorf("unexpected error: %v", results[0].Error())
-	}
-}
-
 func TestStandaloneDoMultiWithRedirectRetry(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 
@@ -1099,6 +829,159 @@ func TestStandaloneDoMultiWithRedirectRetryFailure(t *testing.T) {
 
 	// Test DoMulti with redirect failure
 	results := s.DoMulti(context.Background(), cmd)
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result, got %d", len(results))
+	}
+
+	// Should return the original redirect error since retry is not allowed
+	if results[0].Error() == nil {
+		t.Error("expected error to be returned")
+	}
+
+	if verr, ok := results[0].Error().(*RedisError); !ok || !strings.Contains(verr.Error(), "REDIRECT") {
+		t.Errorf("expected REDIRECT error, got %v", results[0].Error())
+	}
+}
+
+func TestStandaloneDoMultiCacheWithRedirectRetry(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	redirectErr := RedisError(strmsg('-', "REDIRECT 127.0.0.1:6380"))
+	attempts := 0
+
+	primaryConn := &mockConn{
+		DialFn: func() error { return nil },
+		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
+			attempts++
+			// First attempt returns redirect error, second returns success
+			if attempts == 1 {
+				return &redisresults{s: []RedisResult{newErrResult(&redirectErr)}}
+			}
+			return &redisresults{s: []RedisResult{RedisResult{val: strmsg('+', "OK")}}}
+		},
+	}
+
+	redirectConnCalled := false
+	redirectConn := &mockConn{
+		DialFn: func() error {
+			redirectConnCalled = true
+			return nil
+		},
+		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
+			return &redisresults{s: []RedisResult{RedisResult{val: strmsg('+', "OK")}}}
+		},
+		CloseFn: func() {},
+	}
+
+	// Mock retry handler that allows one retry
+	mockRetry := &mockRetryHandler{
+		WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, cmd Completed, err error) bool {
+			return attempts < 2 // Allow one retry
+		},
+		RetryDelayFn: func(attempts int, _ Completed, err error) time.Duration {
+			return time.Millisecond
+		},
+		WaitForRetryFn: func(ctx context.Context, duration time.Duration) {
+			time.Sleep(duration)
+		},
+	}
+
+	s, err := newStandaloneClient(&ClientOption{
+		InitAddress: []string{"primary"},
+		Standalone: StandaloneOption{
+			EnableRedirect: true,
+		},
+		DisableRetry: false,
+	}, func(dst string, opt *ClientOption) conn {
+		if dst == "primary" {
+			return primaryConn
+		}
+		return redirectConn
+	}, mockRetry)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer s.Close()
+
+	// Create a simple command using the internal cmds package
+	cmd := cmds.NewCompleted([]string{"SET", "k", "v"})
+
+	// Test DoMulti with redirect and retry
+	results := s.DoMultiCache(context.Background(), CT(Cacheable(cmd), time.Second))
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result, got %d", len(results))
+	}
+
+	if results[0].Error() != nil {
+		t.Errorf("expected success after retry, got error: %v", results[0].Error())
+	}
+
+	// The primary connection should have been called once, then redirected
+	if attempts != 1 {
+		t.Errorf("expected 1 attempt on primary before redirect, got %d", attempts)
+	}
+
+	if !redirectConnCalled {
+		t.Error("expected redirect connection to be called")
+	}
+}
+
+func TestStandaloneDoMultiCacheWithRedirectRetryFailure(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	redirectErr := RedisError(strmsg('-', "REDIRECT 127.0.0.1:6380"))
+
+	primaryConn := &mockConn{
+		DialFn: func() error { return nil },
+		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
+			return &redisresults{s: []RedisResult{newErrResult(&redirectErr)}}
+		},
+	}
+
+	// Redirect connection fails to dial
+	redirectConn := &mockConn{
+		DialFn: func() error {
+			return errors.New("redirect connection failed")
+		},
+	}
+
+	// Mock retry handler that doesn't allow retries after connection failure
+	mockRetry := &mockRetryHandler{
+		WaitOrSkipRetryFunc: func(ctx context.Context, attempts int, cmd Completed, err error) bool {
+			return false // Don't retry
+		},
+		RetryDelayFn: func(attempts int, _ Completed, err error) time.Duration {
+			return time.Millisecond
+		},
+		WaitForRetryFn: func(ctx context.Context, duration time.Duration) {
+			time.Sleep(duration)
+		},
+	}
+
+	s, err := newStandaloneClient(&ClientOption{
+		InitAddress: []string{"primary"},
+		Standalone: StandaloneOption{
+			EnableRedirect: true,
+		},
+		DisableRetry: false,
+	}, func(dst string, opt *ClientOption) conn {
+		if dst == "primary" {
+			return primaryConn
+		}
+		return redirectConn
+	}, mockRetry)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	defer s.Close()
+
+	// Create a simple command using the internal cmds package
+	cmd := cmds.NewCompleted([]string{"SET", "k", "v"})
+
+	// Test DoMulti with redirect failure
+	results := s.DoMultiCache(context.Background(), CT(Cacheable(cmd), time.Second))
 	if len(results) != 1 {
 		t.Fatalf("expected 1 result, got %d", len(results))
 	}
