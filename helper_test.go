@@ -179,18 +179,22 @@ func TestMGetCache(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		t.Run("Delegate DisabledCache DoCache", func(t *testing.T) {
-			keys := make([]string, 100)
-			for i := range keys {
-				keys[i] = strconv.Itoa(i)
-			}
+			keys := []string{"{slot1}a", "{slot1}b", "{slot2}a", "{slot2}b"}
 			m.DoMultiFn = func(cmd ...Completed) *redisresults {
 				result := make([]RedisResult, len(cmd))
-				for i, key := range keys {
-					if !reflect.DeepEqual(cmd[i].Commands(), []string{"GET", key}) {
-						t.Fatalf("unexpected command %v", cmd)
+				for i, c := range cmd {
+					// Each command should be MGET with keys from the same slot
+					commands := c.Commands()
+					if commands[0] != "MGET" {
+						t.Fatalf("expected MGET command, got %v", commands)
 						return nil
 					}
-					result[i] = newResult(strmsg('+', key), nil)
+					// Build response array with values matching the keys
+					values := make([]RedisMessage, len(commands)-1)
+					for j := 1; j < len(commands); j++ {
+						values[j-1] = strmsg('+', commands[j])
+					}
+					result[i] = newResult(slicemsg('*', values), nil)
 				}
 				return &redisresults{s: result}
 			}
@@ -200,7 +204,7 @@ func TestMGetCache(t *testing.T) {
 			}
 			for _, key := range keys {
 				if vKey, ok := v[key]; !ok || vKey.string() != key {
-					t.Fatalf("unexpected response %v", v)
+					t.Fatalf("unexpected response for key %s: %v", key, v)
 				}
 			}
 		})
@@ -358,18 +362,22 @@ func TestMGet(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		t.Run("Delegate Do", func(t *testing.T) {
-			keys := make([]string, 100)
-			for i := range keys {
-				keys[i] = strconv.Itoa(i)
-			}
+			keys := []string{"{slot1}a", "{slot1}b", "{slot2}a", "{slot2}b"}
 			m.DoMultiFn = func(cmd ...Completed) *redisresults {
 				result := make([]RedisResult, len(cmd))
-				for i, key := range keys {
-					if !reflect.DeepEqual(cmd[i].Commands(), []string{"GET", key}) {
-						t.Fatalf("unexpected command %v", cmd)
+				for i, c := range cmd {
+					// Each command should be MGET with keys from the same slot
+					commands := c.Commands()
+					if commands[0] != "MGET" {
+						t.Fatalf("expected MGET command, got %v", commands)
 						return nil
 					}
-					result[i] = newResult(strmsg('+', key), nil)
+					// Build response array with values matching the keys
+					values := make([]RedisMessage, len(commands)-1)
+					for j := 1; j < len(commands); j++ {
+						values[j-1] = strmsg('+', commands[j])
+					}
+					result[i] = newResult(slicemsg('*', values), nil)
 				}
 				return &redisresults{s: result}
 			}
@@ -379,7 +387,7 @@ func TestMGet(t *testing.T) {
 			}
 			for _, key := range keys {
 				if vKey, ok := v[key]; !ok || vKey.string() != key {
-					t.Fatalf("unexpected response %v", v)
+					t.Fatalf("unexpected response for key %s: %v", key, v)
 				}
 			}
 		})
@@ -1162,18 +1170,26 @@ func TestJsonMGet(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 		t.Run("Delegate Do", func(t *testing.T) {
-			keys := make([]string, 100)
-			for i := range keys {
-				keys[i] = strconv.Itoa(i)
-			}
+			keys := []string{"{slot1}a", "{slot1}b", "{slot2}a", "{slot2}b"}
 			m.DoMultiFn = func(cmd ...Completed) *redisresults {
 				result := make([]RedisResult, len(cmd))
-				for i, key := range keys {
-					if !reflect.DeepEqual(cmd[i].Commands(), []string{"JSON.GET", key, "$"}) {
-						t.Fatalf("unexpected command %v", cmd)
+				for i, c := range cmd {
+					// Each command should be JSON.MGET with keys from the same slot and path at the end
+					commands := c.Commands()
+					if commands[0] != "JSON.MGET" {
+						t.Fatalf("expected JSON.MGET command, got %v", commands)
 						return nil
 					}
-					result[i] = newResult(strmsg('+', key), nil)
+					if commands[len(commands)-1] != "$" {
+						t.Fatalf("expected $ as last parameter, got %v", commands)
+						return nil
+					}
+					// Build response array with values matching the keys (exclude the path)
+					values := make([]RedisMessage, len(commands)-2)
+					for j := 1; j < len(commands)-1; j++ {
+						values[j-1] = strmsg('+', commands[j])
+					}
+					result[i] = newResult(slicemsg('*', values), nil)
 				}
 				return &redisresults{s: result}
 			}
@@ -1183,7 +1199,7 @@ func TestJsonMGet(t *testing.T) {
 			}
 			for _, key := range keys {
 				if vKey, ok := v[key]; !ok || vKey.string() != key {
-					t.Fatalf("unexpected response %v", v)
+					t.Fatalf("unexpected response for key %s: %v", key, v)
 				}
 			}
 		})
