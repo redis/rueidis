@@ -43,14 +43,14 @@ func newStandaloneClient(opt *ClientOption, connFn connFn, retryer retryHandler)
 }
 
 type standalone struct {
+	retryer        retryHandler
 	toReplicas     func(Completed) bool
 	primary        atomic.Pointer[singleClient]
-	replicas       []*singleClient
-	enableRedirect bool
 	connFn         connFn
 	opt            *ClientOption
-	retryer        retryHandler
 	redirectCall   call
+	replicas       []*singleClient
+	enableRedirect bool
 }
 
 func (s *standalone) B() Builder {
@@ -86,6 +86,17 @@ func (s *standalone) redirectToPrimary(addr string) error {
 	return nil
 }
 
+func (s *standalone) handleRedirect(ctx context.Context, err error) (error, bool) {
+	if ret, yes := IsRedisErr(err); yes {
+		if addr, ok := ret.IsRedirect(); ok {
+			return s.redirectCall.Do(ctx, func() error {
+				return s.redirectToPrimary(addr)
+			}), ok
+		}
+	}
+	return nil, false
+}
+
 func (s *standalone) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	attempts := 1
 
@@ -100,17 +111,11 @@ retry:
 		resp = s.primary.Load().Do(ctx, cmd)
 	}
 
-	// Handle redirects with retry until context deadline
 	if s.enableRedirect {
-		if ret, yes := IsRedisErr(resp.Error()); yes {
-			if addr, ok := ret.IsRedirect(); ok {
-				err := s.redirectCall.Do(ctx, func() error {
-					return s.redirectToPrimary(addr)
-				})
-				if err == nil || s.retryer.WaitOrSkipRetry(ctx, attempts, cmd, resp.Error()) {
-					attempts++
-					goto retry
-				}
+		if err, ok := s.handleRedirect(ctx, resp.Error()); ok {
+			if err == nil || s.retryer.WaitOrSkipRetry(ctx, attempts, cmd, resp.Error()) {
+				attempts++
+				goto retry
 			}
 		}
 		if resp.NonRedisError() == nil {
@@ -144,20 +149,14 @@ retry:
 		resp = s.primary.Load().DoMulti(ctx, multi...)
 	}
 
-	// Handle redirects with retry until context deadline
 	if s.enableRedirect {
 		for i, result := range resp {
-			if ret, yes := IsRedisErr(result.Error()); yes {
-				if addr, ok := ret.IsRedirect(); ok {
-					err := s.redirectCall.Do(ctx, func() error {
-						return s.redirectToPrimary(addr)
-					})
-					if err == nil || s.retryer.WaitOrSkipRetry(ctx, attempts, multi[i], result.Error()) {
-						attempts++
-						goto retry
-					}
-					break // Exit the loop if redirect handling fails
+			if err, ok := s.handleRedirect(ctx, result.Error()); ok {
+				if err == nil || s.retryer.WaitOrSkipRetry(ctx, attempts, multi[i], result.Error()) {
+					attempts++
+					goto retry
 				}
+				break
 			}
 		}
 		for i, result := range resp {
@@ -195,19 +194,14 @@ retry:
 	resp = s.primary.Load().DoCache(ctx, cmd, ttl)
 
 	if s.enableRedirect {
-		if ret, yes := IsRedisErr(resp.Error()); yes {
-			if addr, ok := ret.IsRedirect(); ok {
-				err := s.redirectCall.Do(ctx, func() error {
-					return s.redirectToPrimary(addr)
-				})
-				if err == nil || s.retryer.WaitOrSkipRetry(ctx, attempts, Completed(cmd), resp.Error()) {
-					attempts++
-					goto retry
-				}
+		if err, ok := s.handleRedirect(ctx, resp.Error()); ok {
+			if err == nil || s.retryer.WaitOrSkipRetry(ctx, attempts, Completed(cmd), resp.Error()) {
+				attempts++
+				goto retry
 			}
 		}
 		if resp.NonRedisError() == nil {
-			cmds.PutCompletedForce(Completed(cmd))
+			cmds.PutCacheableForce(cmd)
 		}
 	}
 	return
@@ -227,22 +221,17 @@ retry:
 
 	if s.enableRedirect {
 		for i, result := range resp {
-			if ret, yes := IsRedisErr(result.Error()); yes {
-				if addr, ok := ret.IsRedirect(); ok {
-					err := s.redirectCall.Do(ctx, func() error {
-						return s.redirectToPrimary(addr)
-					})
-					if err == nil || s.retryer.WaitOrSkipRetry(ctx, attempts, Completed(multi[i].Cmd), result.Error()) {
-						attempts++
-						goto retry
-					}
-					break // Exit the loop if redirect handling fails
+			if err, ok := s.handleRedirect(ctx, result.Error()); ok {
+				if err == nil || s.retryer.WaitOrSkipRetry(ctx, attempts, Completed(multi[i].Cmd), result.Error()) {
+					attempts++
+					goto retry
 				}
+				break
 			}
 		}
 		for i, result := range resp {
 			if result.NonRedisError() == nil {
-				cmds.PutCompletedForce(Completed(multi[i].Cmd))
+				cmds.PutCacheableForce(multi[i].Cmd)
 			}
 		}
 	}
