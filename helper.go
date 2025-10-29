@@ -313,9 +313,6 @@ func clusterJsonMGet(client Client, ctx context.Context, keys []string, path str
 	resps := client.DoMulti(ctx, cmds.s...)
 	defer resultsp.Put(&redisresults{s: resps})
 	for i, resp := range resps {
-		if err := resp.NonRedisError(); err != nil {
-			return nil, err
-		}
 		arr, err := resp.ToArray()
 		if err != nil {
 			return nil, err
