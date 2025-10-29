@@ -9,19 +9,19 @@ A fast Golang Redis client that does auto pipelining and supports server-assiste
 
 ## Features
 
-* [Auto pipelining for non-blocking redis commands](#auto-pipelining)
-* [Server-assisted client-side caching](#server-assisted-client-side-caching)
-* [Generic Object Mapping with client-side caching](./om)
-* [Cache-Aside pattern with client-side caching](./rueidisaside)
-* [Distributed Locks with client-side caching](./rueidislock)
-* [Helpers for writing tests with rueidis mock](./mock)
-* [OpenTelemetry integration](./rueidisotel)
-* [Hooks and other integrations](./rueidishook)
-* [Go-redis like API adapter](./rueidiscompat) by [@418Coffee](https://github.com/418Coffee)
-* Pub/Sub, Sharded Pub/Sub, Streams
-* Redis Cluster, Sentinel, RedisJSON, RedisBloom, RediSearch, RedisTimeseries, etc.
-* [Probabilistic Data Structures without Redis Stack](./rueidisprob)
-* [Availability zone affinity routing](#availability-zone-affinity-routing)
+- [Auto pipelining for non-blocking redis commands](#auto-pipelining)
+- [Server-assisted client-side caching](#server-assisted-client-side-caching)
+- [Generic Object Mapping with client-side caching](./om)
+- [Cache-Aside pattern with client-side caching](./rueidisaside)
+- [Distributed Locks with client-side caching](./rueidislock)
+- [Helpers for writing tests with rueidis mock](./mock)
+- [OpenTelemetry integration](./rueidisotel)
+- [Hooks and other integrations](./rueidishook)
+- [Go-redis like API adapter](./rueidiscompat) by [@418Coffee](https://github.com/418Coffee)
+- Pub/Sub, Sharded Pub/Sub, Streams
+- Redis Cluster, Sentinel, RedisJSON, RedisBloom, RediSearch, RedisTimeseries, etc.
+- [Probabilistic Data Structures without Redis Stack](./rueidisprob)
+- [Availability zone affinity routing](#availability-zone-affinity-routing)
 
 ---
 
@@ -31,22 +31,22 @@ A fast Golang Redis client that does auto pipelining and supports server-assiste
 package main
 
 import (
-	"context"
-	"github.com/redis/rueidis"
+  "context"
+  "github.com/redis/rueidis"
 )
 
 func main() {
-	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
-	if err != nil {
-		panic(err)
-	}
-	defer client.Close()
+  client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
+  if err != nil {
+    panic(err)
+  }
+  defer client.Close()
 
-	ctx := context.Background()
-	// SET key val NX
-	err = client.Do(ctx, client.B().Set().Key("key").Value("val").Nx().Build()).Error()
-	// HGETALL hm
-	hm, err := client.Do(ctx, client.B().Hgetall().Key("hm").Build()).AsStrMap()
+  ctx := context.Background()
+  // SET key val NX
+  err = client.Do(ctx, client.B().Set().Key("key").Value("val").Nx().Build()).Error()
+  // HGETALL hm
+  hm, err := client.Do(ctx, client.B().Hgetall().Key("hm").Build()).AsStrMap()
 }
 ```
 
@@ -77,13 +77,13 @@ For example:
 
 ```go
 func BenchmarkPipelining(b *testing.B, client rueidis.Client) {
-	// the below client.Do() operations will be issued from
-	// multiple goroutines and thus will be pipelined automatically.
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			client.Do(context.Background(), client.B().Get().Key("k").Build()).ToString()
-		}
-	})
+  // the below client.Do() operations will be issued from
+  // multiple goroutines and thus will be pipelined automatically.
+  b.RunParallel(func(pb *testing.PB) {
+    for pb.Next() {
+      client.Do(context.Background(), client.B().Get().Key("k").Build()).ToString()
+    }
+  })
 }
 ```
 
@@ -107,7 +107,7 @@ You can avoid this by setting `DisableAutoPipelining` to true, then it will swit
 
 When `DisableAutoPipelining` is set to true, you can still send commands for auto pipelining with `ToPipe()`:
 
-``` golang
+```golang
 cmd := client.B().Get().Key("key").Build().ToPipe()
 client.Do(ctx, cmd)
 ```
@@ -118,7 +118,7 @@ This allows you to use connection pooling approach by default but opt-in auto pi
 
 Besides auto pipelining, you can also pipeline commands manually with `DoMulti()`:
 
-``` golang
+```golang
 cmds := make(rueidis.Commands, 0, 10)
 for i := 0; i < 10; i++ {
     cmds = append(cmds, client.B().Set().Key("key").Value("value").Build())
@@ -137,13 +137,13 @@ If you need to reference them afterward (e.g. to retrieve the key), use the `Pin
 // Create pinned commands to preserve them from being recycled
 cmds := make(rueidis.Commands, 0, 10)
 for i := 0; i < 10; i++ {
-	cmds = append(cmds, client.B().Get().Key(strconv.Itoa(i)).Build().Pin())
+  cmds = append(cmds, client.B().Get().Key(strconv.Itoa(i)).Build().Pin())
 }
 
 // Execute commands and process responses
 for i, resp := range client.DoMulti(context.Background(), cmds...) {
-	fmt.Println(resp.ToString()) // this is the result
-	fmt.Println(cmds[i].Commands()[1]) // this is the corresponding key
+  fmt.Println(resp.ToString()) // this is the result
+  fmt.Println(cmds[i].Commands()[1]) // this is the corresponding key
 }
 ```
 
@@ -154,9 +154,9 @@ val, err := MGet(client, ctx, []string{"k1", "k2"})
 fmt.Println(val["k1"].ToString()) // this is the k1 value
 ```
 
-## [Server-Assisted Client-Side Caching](https://redis.io/docs/manual/client-side-caching/)
+## [Server-Assisted Client-Side Caching](https://redis.io/docs/latest/develop/clients/client-side-caching/)
 
-The opt-in mode of [server-assisted client-side caching](https://redis.io/docs/manual/client-side-caching/) is enabled by default and can be used by calling `DoCache()` or `DoMultiCache()` with client-side TTLs specified.
+The opt-in mode of [server-assisted client-side caching](https://redis.io/docs/latest/develop/clients/client-side-caching/) is enabled by default and can be used by calling `DoCache()` or `DoMultiCache()` with client-side TTLs specified.
 
 ```golang
 client.DoCache(ctx, client.B().Hmget().Key("mk").Field("1", "2").Cache(), time.Minute).ToArray()
@@ -191,8 +191,8 @@ client.DoCache(ctx, client.B().Get().Key("k1").Cache(), time.Minute).IsCacheHit(
 
 If the OpenTelemetry is enabled by the `rueidisotel.NewClient(option)`, then there are also two metrics instrumented:
 
-* rueidis_do_cache_miss
-* rueidis_do_cache_hits
+- rueidis_do_cache_miss
+- rueidis_do_cache_hits
 
 ### MGET/JSON.MGET Client-Side Caching Helpers
 
@@ -205,11 +205,11 @@ Although the default is opt-in mode, you can use broadcast mode by specifying yo
 
 ```go
 client, err := rueidis.NewClient(rueidis.ClientOption{
-	InitAddress:           []string{"127.0.0.1:6379"},
-	ClientTrackingOptions: []string{"PREFIX", "prefix1:", "PREFIX", "prefix2:", "BCAST"},
+  InitAddress:           []string{"127.0.0.1:6379"},
+  ClientTrackingOptions: []string{"PREFIX", "prefix1:", "PREFIX", "prefix2:", "BCAST"},
 })
 if err != nil {
-	panic(err)
+  panic(err)
 }
 client.DoCache(ctx, client.B().Get().Key("prefix1:1").Cache(), time.Minute).IsCacheHit() == false
 client.DoCache(ctx, client.B().Get().Key("prefix1:1").Cache(), time.Minute).IsCacheHit() == true
@@ -331,14 +331,14 @@ c, cancel := client.Dedicate()
 defer cancel()
 
 wait := c.SetPubSubHooks(rueidis.PubSubHooks{
-	OnMessage: func(m rueidis.PubSubMessage) {
-		// Handle the message. If you need to perform heavy processing or issue
-		// additional commands, do that in a separate goroutine to avoid
-		// blocking the pipeline, e.g.:
-		//   go func() {
-		//       // long work or client.Do(...)
-		//   }()
-	}
+  OnMessage: func(m rueidis.PubSubMessage) {
+    // Handle the message. If you need to perform heavy processing or issue
+    // additional commands, do that in a separate goroutine to avoid
+    // blocking the pipeline, e.g.:
+    //   go func() {
+    //       // long work or client.Do(...)
+    //   }()
+  }
 })
 c.Do(ctx, c.B().Subscribe().Channel("ch").Build())
 err := <-wait // disconnected with err
@@ -373,7 +373,7 @@ client.Dedicated(func(c rueidis.DedicatedClient) error {
 
 Or use `Dedicate()` and invoke `cancel()` when finished to put the connection back to the pool.
 
-``` golang
+```golang
 c, cancel := client.Dedicate()
 defer cancel()
 
@@ -427,6 +427,14 @@ If you have many rueidis connections, you may find that they occupy quite an amo
 In that case, you may consider reducing `ClientOption.RingScaleEachConn` to 8 or 9 at the cost of potential throughput degradation.
 
 You may also consider setting the value of `ClientOption.PipelineMultiplex` to `-1`, which will let rueidis use only 1 connection for pipelining to each redis node.
+
+In addition, each connection also allocates read and write buffers to reduce system calls during high concurrency
+or large pipelines. These buffers are controlled by:
+
+- `ClientOption.ReadBufferEachConn` (default: 0.5 MiB)
+- `ClientOption.WriteBufferEachConn` (default: 0.5 MiB)
+
+You can adjust these values in memory-sensitive environments to lower memory usage, at the cost of potential throughput.
 
 ## Instantiating a new Redis Client
 
@@ -499,19 +507,19 @@ set the `EnableReplicaAZInfo` option and your `ReadNodeSelector` function. For e
 
 ```go
 client, err := rueidis.NewClient(rueidis.ClientOption{
-	InitAddress:         []string{"address.example.com:6379"},
-	EnableReplicaAZInfo: true,
-	SendToReplicas: func(cmd rueidis.Completed) bool {
-		return cmd.IsReadOnly()
-	},
-	ReadNodeSelector: func(slot uint16, replicas []rueidis.NodeInfo) int {
-		for i, replica := range replicas {
-			if replica.AZ == "us-east-1a" {
-				return i // return the index of the replica.
-			}
-		}
-		return -1 // send to the primary.
-	},
+  InitAddress:         []string{"address.example.com:6379"},
+  EnableReplicaAZInfo: true,
+  SendToReplicas: func(cmd rueidis.Completed) bool {
+    return cmd.IsReadOnly()
+  },
+  ReadNodeSelector: func(slot uint16, replicas []rueidis.NodeInfo) int {
+    for i, replica := range replicas {
+      if replica.AZ == "us-east-1a" {
+        return i // return the index of the replica.
+      }
+    }
+    return -1 // send to the primary.
+  },
 })
 ```
 
@@ -625,25 +633,25 @@ DecodeSliceOfJSON is useful when you would like to scan the results of an array 
 
 ```golang
 type User struct {
-	Name string `json:"name"`
+  Name string `json:"name"`
 }
 
 // Set some values
 if err = client.Do(ctx, client.B().Set().Key("user1").Value(`{"name": "name1"}`).Build()).Error(); err != nil {
-	return err
+  return err
 }
 if err = client.Do(ctx, client.B().Set().Key("user2").Value(`{"name": "name2"}`).Build()).Error(); err != nil {
-	return err
+  return err
 }
 
 // Scan MGET results into []*User
 var users []*User // or []User is also scannable
 if err := rueidis.DecodeSliceOfJSON(client.Do(ctx, client.B().Mget().Key("user1", "user2").Build()), &users); err != nil {
-	return err
+  return err
 }
 
 for _, user := range users {
-	fmt.Printf("%+v\n", user)
+  fmt.Printf("%+v\n", user)
 }
 /*
 &{name:name1}
@@ -658,13 +666,13 @@ Please make sure that all values in the result have the same JSON structures.
 ```golang
 // Set a pure string value
 if err = client.Do(ctx, client.B().Set().Key("user1").Value("userName1").Build()).Error(); err != nil {
-	return err
+  return err
 }
 
 // Bad
 users := make([]*User, 0)
 if err := rueidis.DecodeSliceOfJSON(client.Do(ctx, client.B().Mget().Key("user1").Build()), &users); err != nil {
-	return err
+  return err
 }
 // -> Error: invalid character 'u' looking for the beginning of the value
 // in this case, use client.Do(ctx, client.B().Mget().Key("user1").Build()).AsStrSlice()

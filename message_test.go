@@ -109,6 +109,41 @@ func TestRedisErrorIsAsk(t *testing.T) {
 	}
 }
 
+func TestRedisErrorIsRedirect(t *testing.T) {
+	for _, c := range []struct {
+		err  string
+		addr string
+	}{
+		{err: "REDIRECT 127.0.0.1:6380", addr: "127.0.0.1:6380"},
+		{err: "REDIRECT [::1]:6380", addr: "[::1]:6380"},
+		{err: "REDIRECT ::1:6380", addr: "[::1]:6380"},
+	} {
+		e := RedisError(strmsg('-', c.err))
+		if addr, ok := e.IsRedirect(); !ok || addr != c.addr {
+			t.Fail()
+		}
+	}
+}
+
+func TestIsRedisRedirect(t *testing.T) {
+	err := errors.New("other")
+	if ret, yes := IsRedisErr(err); yes {
+		if addr, ok := ret.IsRedirect(); ok {
+			t.Fatalf("TestIsRedisRedirect fail: expected false, got addr=%s", addr)
+		}
+	}
+
+	redisErr := RedisError(strmsg('-', "REDIRECT 127.0.0.1:6380"))
+	err = &redisErr
+	if ret, yes := IsRedisErr(err); yes {
+		if addr, ok := ret.IsRedirect(); !ok || addr != "127.0.0.1:6380" {
+			t.Fatalf("TestIsRedisRedirect fail: expected addr=127.0.0.1:6380, got addr=%s, ok=%t", addr, ok)
+		}
+	} else {
+		t.Fatal("TestIsRedisRedirect fail: expected RedisError")
+	}
+}
+
 func TestIsRedisBusyGroup(t *testing.T) {
 	err := errors.New("other")
 	if IsRedisBusyGroup(err) {

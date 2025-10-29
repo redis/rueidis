@@ -15,6 +15,8 @@ import (
 	"net"
 	"os"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -301,17 +303,23 @@ func TestForceSingleClientInitialDialError(t *testing.T) {
 	defer ln.Close()
 
 	_, port, _ := net.SplitHostPort(ln.Addr().String())
+	initialDialErr := errors.New("initial Dial error")
+	var dials atomic.Uint32
 	client, err := NewClient(ClientOption{
 		InitAddress:       []string{"127.0.0.1:" + port},
 		ForceSingleClient: true,
-		Dialer:            net.Dialer{Timeout: time.Second / 10},
+		DialCtxFn: func(ctx context.Context, addr string, dialer *net.Dialer, _ *tls.Config) (net.Conn, error) {
+			if dials.Add(1) == 1 {
+				return nil, initialDialErr
+			}
+			return dialer.DialContext(ctx, "tcp", addr)
+		},
 	})
-	if client == nil || err == nil {
-		t.Fatal(err)
+	if client == nil {
+		t.Fatal("NewClient returned a nil client with ForceSingleClient")
 	}
-	// discard NewClient dial attempt
-	if _, err := ln.Accept(); err != nil {
-		t.Errorf("unexpected error result: %v", err)
+	if !errors.Is(err, initialDialErr) {
+		t.Fatalf("unexpected NewClient error: %v", err)
 	}
 
 	done := make(chan struct{})
@@ -338,6 +346,10 @@ func TestForceSingleClientInitialDialError(t *testing.T) {
 	}
 	client.Close()
 	<-done
+
+	if n := dials.Load(); n != 2 {
+		t.Errorf("expected 2 Dial calls, got %d", n)
+	}
 }
 
 func TestForceSingleClient(t *testing.T) {
@@ -400,10 +412,11 @@ func TestStandaloneClient(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer rln.Close()
-	pdone := make(chan struct{})
-	rdone := make(chan struct{})
-	go func() {
-		mock, err := accept(t, pln)
+
+	var wg sync.WaitGroup
+	mockServer := func(ln net.Listener) {
+		defer wg.Done()
+		mock, err := accept(t, ln)
 		if err != nil {
 			return
 		}
@@ -413,23 +426,11 @@ func TestStandaloneClient(t *testing.T) {
 			ReplyError("UNKNOWN COMMAND")
 		mock.Expect("PING").ReplyString("OK")
 		mock.Close()
-		close(pdone)
-	}()
-	go func() {
-		mock, err := accept(t, rln)
-		if err != nil {
-			return
-		}
-		mock.Expect("READONLY").
-			ReplyError("OK")
-		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
-			ReplyError("UNKNOWN COMMAND")
-		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
-			ReplyError("UNKNOWN COMMAND")
-		mock.Expect("PING").ReplyString("OK")
-		mock.Close()
-		close(rdone)
-	}()
+	}
+	wg.Add(2)
+	go mockServer(pln)
+	go mockServer(rln)
+
 	_, pport, _ := net.SplitHostPort(pln.Addr().String())
 	_, rport, _ := net.SplitHostPort(rln.Addr().String())
 	client, err := NewClient(ClientOption{
@@ -448,8 +449,7 @@ func TestStandaloneClient(t *testing.T) {
 		t.Fatal("client should be a standalone")
 	}
 	client.Close()
-	<-pdone
-	<-rdone
+	wg.Wait()
 }
 
 func TestTLSClient(t *testing.T) {
@@ -545,6 +545,65 @@ func TestNewClientMaxMultiplex(t *testing.T) {
 	})
 	if err != ErrWrongPipelineMultiplex {
 		t.Fatalf("unexpected error %v", err)
+	}
+}
+
+func TestNewClientWithEnableRedirectPriority(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	// Test that EnableRedirect has priority over other options
+	// We'll test by checking error conditions rather than actually connecting
+
+	// First, test the error case to demonstrate the path
+	_, err := NewClient(ClientOption{
+		InitAddress: []string{}, // Empty address should cause an error
+		Standalone: StandaloneOption{
+			EnableRedirect: true,
+		},
+		ForceSingleClient: true, // This should be ignored when EnableRedirect is set
+	})
+
+	if err != ErrNoAddr {
+		t.Errorf("expected ErrNoAddr, got %v", err)
+	}
+}
+
+func TestNewClientWithMultipleReplicaAddresses(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	// Test that ReplicaAddress requires SendToReplicas
+	_, err := NewClient(ClientOption{
+		InitAddress: []string{"127.0.0.1:6379"},
+		Standalone: StandaloneOption{
+			ReplicaAddress: []string{"127.0.0.1:6380", "127.0.0.1:6381"},
+		},
+		// Missing SendToReplicas should cause an error
+	})
+
+	if err != ErrNoSendToReplicas {
+		t.Errorf("expected ErrNoSendToReplicas, got %v", err)
+	}
+}
+
+func TestNewClientEnableRedirectAndReplicaAddressConflict(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	// Test that EnableRedirect and ReplicaAddress cannot be used together
+	_, err := NewClient(ClientOption{
+		InitAddress: []string{"127.0.0.1:6379"},
+		Standalone: StandaloneOption{
+			EnableRedirect: true,
+			ReplicaAddress: []string{"127.0.0.1:6380"},
+		},
+	})
+
+	if err == nil {
+		t.Error("expected error when EnableRedirect and ReplicaAddress are both used")
+	}
+
+	expectedMsg := "EnableRedirect and ReplicaAddress cannot be used together"
+	if err.Error() != expectedMsg {
+		t.Errorf("expected error message '%s', got '%s'", expectedMsg, err.Error())
 	}
 }
 

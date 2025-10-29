@@ -137,6 +137,14 @@ type ClientOption struct {
 	// NOTE: This function must be used with the SendToReplicas function.
 	ReplicaSelector func(slot uint16, replicas []NodeInfo) int
 
+	// ReadNodeSelector returns index of node selected for a read only command.
+	// If set, ReadNodeSelector is prioritized over ReplicaSelector.
+	// If the returned index is out of range, the primary node will be selected.
+	// The function is called only when SendToReplicas returns true.
+	// Each NodeInfo must not be modified.
+	// NOTE: This function can't be used with ReplicaSelector option.
+	ReadNodeSelector func(slot uint16, nodes []NodeInfo) int
+
 	// Sentinel options, including MasterSet and Auth options
 	Sentinel SentinelOption
 
@@ -269,14 +277,6 @@ type ClientOption struct {
 	// EnableReplicaAZInfo enables the client to load the replica node's availability zone.
 	// If true, the client will set the `AZ` field in `ReplicaInfo`.
 	EnableReplicaAZInfo bool
-
-	// ReadNodeSelector returns index of node selected for a read only command.
-	// If set, ReadNodeSelector is prioritized over ReplicaSelector.
-	// If the returned index is out of range, the primary node will be selected.
-	// The function is called only when SendToReplicas returns true.
-	// Each NodeInfo must not be modified.
-	// NOTE: This function can't be used with ReplicaSelector option.
-	ReadNodeSelector func(slot uint16, nodes []NodeInfo) int
 }
 
 // SentinelOption contains MasterSet,
@@ -309,13 +309,17 @@ type StandaloneOption struct {
 	// Note that these addresses must be online and cannot be promoted.
 	// An example use case is the reader endpoint provided by cloud vendors.
 	ReplicaAddress []string
+	// EnableRedirect enables the CLIENT CAPA redirect feature for Valkey 8+
+	// When enabled, the client will send CLIENT CAPA redirect during connection
+	// initialization and handle REDIRECT responses from the server.
+	EnableRedirect bool
 }
 
 // NodeInfo is the information of a replica node in a redis cluster.
 type NodeInfo struct {
+	conn conn
 	Addr string
 	AZ   string
-	conn conn
 }
 
 // ReplicaInfo is the information of a replica node in a redis cluster.
@@ -449,6 +453,11 @@ type AuthCredentials struct {
 // It will first try to connect as a cluster client. If the len(ClientOption.InitAddress) == 1 and
 // the address does not enable cluster mode, the NewClient() will use single client instead.
 func NewClient(option ClientOption) (client Client, err error) {
+	// Validate configuration conflicts early
+	if option.Standalone.EnableRedirect && len(option.Standalone.ReplicaAddress) > 0 {
+		return nil, errors.New("EnableRedirect and ReplicaAddress cannot be used together")
+	}
+
 	if option.ReadBufferEachConn < 32 { // the buffer should be able to hold an int64 string at least
 		option.ReadBufferEachConn = DefaultReadBuffer
 	}
@@ -487,6 +496,11 @@ func NewClient(option ClientOption) (client Client, err error) {
 	if option.Sentinel.MasterSet != "" {
 		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
 		return newSentinelClient(&option, makeConn, newRetryer(option.RetryDelay))
+	}
+
+	if option.Standalone.EnableRedirect {
+		option.PipelineMultiplex = singleClientMultiplex(option.PipelineMultiplex)
+		return newStandaloneClient(&option, makeConn, newRetryer(option.RetryDelay))
 	}
 	if len(option.Standalone.ReplicaAddress) > 0 {
 		if option.SendToReplicas == nil {

@@ -34,6 +34,21 @@ retry:
 	}
 }
 
+func TestPutCacheableForce(t *testing.T) {
+retry:
+	cs1 := get()
+	cs1.s = append(cs1.s, "1", "1", "1", "1", "1")
+	cs1.r = 1 // pin
+	PutCacheableForce(Cacheable{cs: cs1})
+	cs2 := get()
+	if cs1 != cs2 {
+		goto retry
+	}
+	if len(cs2.s) != 0 {
+		t.Fatalf("PutCacheableForce doesn't clean the CommandSlice")
+	}
+}
+
 func TestPutCacheable(t *testing.T) {
 retry:
 	cs1 := get()

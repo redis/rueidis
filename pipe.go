@@ -21,7 +21,7 @@ import (
 )
 
 const LibName = "rueidis"
-const LibVer = "1.0.65"
+const LibVer = "1.0.67"
 
 var noHello = regexp.MustCompile("unknown command .?(HELLO|hello).?")
 
@@ -189,6 +189,9 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 	if option.ClientNoEvict {
 		init = append(init, []string{"CLIENT", "NO-EVICT", "ON"})
 	}
+	if option.Standalone.EnableRedirect {
+		init = append(init, []string{"CLIENT", "CAPA", "redirect"})
+	}
 
 	addClientSetInfoCmds := true
 	if len(option.ClientSetInfo) == 2 {
@@ -282,6 +285,9 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 		}
 		if option.ClientNoEvict {
 			init = append(init, []string{"CLIENT", "NO-EVICT", "ON"})
+		}
+		if option.Standalone.EnableRedirect {
+			init = append(init, []string{"CLIENT", "CAPA", "redirect"})
 		}
 
 		addClientSetInfoCmds := true
