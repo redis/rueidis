@@ -1682,3 +1682,46 @@ func TestScannerIter2(t *testing.T) {
 		}
 	})
 }
+
+func TestSlot(t *testing.T) {
+	tests := []struct {
+		name string
+		key  string
+		want uint16
+	}{
+		{
+			name: "simple key",
+			key:  "key",
+			want: 12539,
+		},
+		{
+			name: "key with hash tag",
+			key:  "{user1000}.following",
+			want: 3443,
+		},
+		{
+			name: "key with empty hash tag",
+			key:  "foo{}{bar}",
+			want: 8363,
+		},
+		{
+			name: "key with no closing brace",
+			key:  "foo{bar",
+			want: 15278,
+		},
+		{
+			name: "same slot keys",
+			key:  "{user1000}.followers",
+			want: 3443, // Same as {user1000}.following
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := Slot(tt.key)
+			if got != tt.want {
+				t.Errorf("Slot(%q) = %d, want %d", tt.key, got, tt.want)
+			}
+		})
+	}
+}
