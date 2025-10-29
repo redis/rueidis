@@ -9,12 +9,6 @@ import (
 	intl "github.com/redis/rueidis/internal/cmds"
 )
 
-// Slot computes the Redis Cluster slot for a given key.
-// It follows the Redis Cluster specification: https://redis.io/topics/cluster-spec
-func Slot(key string) uint16 {
-	return intl.Slot(key)
-}
-
 func slot(key string) uint16 {
 	return intl.Slot(key)
 }
