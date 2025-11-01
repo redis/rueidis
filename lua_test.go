@@ -405,7 +405,7 @@ func (c *client) Close() {
 	}
 }
 
-func TestNewLuaScriptNoShaWithLazyLoad(t *testing.T) {
+func TestNewLuaScriptWithLoadSha1(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 	body := strconv.Itoa(rand.Int())
 	sum := sha1.Sum([]byte(body))
@@ -438,7 +438,7 @@ func TestNewLuaScriptNoShaWithLazyLoad(t *testing.T) {
 		},
 	}
 
-	script := NewLuaScriptNoSha(body, WithLoadSha1())
+	script := NewLuaScript(body, WithLoadSha1())
 
 	if v, err := script.Exec(context.Background(), c, k, a).ToString(); err != nil || v != "OK" {
 		t.Fatalf("ret mismatch")
@@ -452,7 +452,7 @@ func TestNewLuaScriptNoShaWithLazyLoad(t *testing.T) {
 	}
 }
 
-func TestNewLuaScriptReadOnlyNoShaWithLazyLoad(t *testing.T) {
+func TestNewLuaScriptReadOnlyWithLoadSha1(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 	body := strconv.Itoa(rand.Int())
 	sum := sha1.Sum([]byte(body))
@@ -485,7 +485,7 @@ func TestNewLuaScriptReadOnlyNoShaWithLazyLoad(t *testing.T) {
 		},
 	}
 
-	script := NewLuaScriptReadOnlyNoSha(body, WithLoadSha1())
+	script := NewLuaScriptReadOnly(body, WithLoadSha1())
 
 	if v, err := script.Exec(context.Background(), c, k, a).ToString(); err != nil || v != "OK" {
 		t.Fatalf("ret mismatch")
@@ -499,7 +499,7 @@ func TestNewLuaScriptReadOnlyNoShaWithLazyLoad(t *testing.T) {
 	}
 }
 
-func TestNewLuaScriptNoShaWithLazyLoadConcurrent(t *testing.T) {
+func TestNewLuaScriptWithLoadSha1Concurrent(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 	body := strconv.Itoa(rand.Int())
 	sum := sha1.Sum([]byte(body))
@@ -527,9 +527,9 @@ func TestNewLuaScriptNoShaWithLazyLoadConcurrent(t *testing.T) {
 		},
 	}
 
-	script := NewLuaScriptNoSha(body, WithLoadSha1())
+	script := NewLuaScript(body, WithLoadSha1())
 
-	// Execute concurrently to verify sync.Once works correctly
+	// Execute concurrently to verify singleflight works correctly
 	done := make(chan bool)
 	for i := 0; i < 10; i++ {
 		go func() {
@@ -542,13 +542,13 @@ func TestNewLuaScriptNoShaWithLazyLoadConcurrent(t *testing.T) {
 		<-done
 	}
 
-	// SCRIPT LOAD should only be called once due to sync.Once
+	// SCRIPT LOAD should only be called once due to singleflight
 	if count := scriptLoadCount.Load(); count != 1 {
 		t.Fatalf("SCRIPT LOAD should be called exactly once, but was called %d times", count)
 	}
 }
 
-func TestNewLuaScriptNoShaWithLazyLoadExecMulti(t *testing.T) {
+func TestNewLuaScriptWithLoadSha1ExecMulti(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 	body := strconv.Itoa(rand.Int())
 	sum := sha1.Sum([]byte(body))
@@ -583,7 +583,7 @@ func TestNewLuaScriptNoShaWithLazyLoadExecMulti(t *testing.T) {
 		},
 	}
 
-	script := NewLuaScriptNoSha(body, WithLoadSha1())
+	script := NewLuaScript(body, WithLoadSha1())
 	if v, err := script.ExecMulti(context.Background(), c, LuaExec{Keys: k, Args: a})[0].ToString(); err != nil || v != "OK" {
 		t.Fatalf("ret mismatch")
 	}
@@ -658,8 +658,8 @@ func BenchmarkLuaScript_Exec(b *testing.B) {
 		script *Lua
 	}{
 		{"Default", NewLuaScript(script)},
+		{"LoadSha1", NewLuaScript(script, WithLoadSha1())},
 		{"NoSha", NewLuaScriptNoSha(script)},
-		{"NoSha_Load", NewLuaScriptNoSha(script, WithLoadSha1())},
 	}
 
 	for _, tc := range cases {
@@ -758,8 +758,8 @@ func BenchmarkLuaScript_ExecMulti(b *testing.B) {
 		script *Lua
 	}{
 		{"Default", NewLuaScript(script)},
+		{"LoadSha1", NewLuaScript(script, WithLoadSha1())},
 		{"NoSha", NewLuaScriptNoSha(script)},
-		{"NoSha_Load", NewLuaScriptNoSha(script, WithLoadSha1())},
 	}
 
 	for _, tc := range cases {
