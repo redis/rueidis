@@ -78,8 +78,8 @@ func newLuaScript(script string, readonly bool, noSha1 bool, opts ...LuaOption) 
 type Lua struct {
 	script       string
 	sha1         string
-	sha1Loaded   atomic.Value // stores string when sha1 loading is enabled.
-	sha1Once     sync.Once
+	sha1Mu       sync.Mutex
+	sha1Call     call
 	maxp         int
 	readonly     bool
 	nosha1       bool
@@ -97,17 +97,30 @@ func (s *Lua) Exec(ctx context.Context, c Client, keys, args []string) (resp Red
 
 	// Determine which SHA-1 to use.
 	if s.nosha1 && s.lazyLoadSha1 {
-		// Lazy load SHA-1 from Redis if not already loaded
-		s.sha1Once.Do(func() {
-			// Load script to Redis and get SHA-1
-			result := c.Do(ctx, c.B().ScriptLoad().Script(s.script).Build())
-			if shaStr, err := result.ToString(); err == nil {
-				s.sha1Loaded.Store(shaStr)
+		// Check if SHA-1 is already loaded.
+		s.sha1Mu.Lock()
+		scriptSha1 = s.sha1
+		s.sha1Mu.Unlock()
+
+		// If not loaded yet, use singleflight to load it.
+		if scriptSha1 == "" {
+			err := s.sha1Call.Do(ctx, func() error {
+				result := c.Do(ctx, c.B().ScriptLoad().Script(s.script).Build())
+				if shaStr, err := result.ToString(); err == nil {
+					s.sha1Mu.Lock()
+					s.sha1 = shaStr
+					s.sha1Mu.Unlock()
+					return nil
+				}
+				return result.Error()
+			})
+			if err != nil {
+				return newErrResult(err)
 			}
-		})
-		// Read the loaded SHA-1 using atomic operation
-		if loaded := s.sha1Loaded.Load(); loaded != nil {
-			scriptSha1 = loaded.(string)
+			// Reload scriptSha1 after singleflight completes.
+			s.sha1Mu.Lock()
+			scriptSha1 = s.sha1
+			s.sha1Mu.Unlock()
 		}
 	} else {
 		scriptSha1 = s.sha1
@@ -144,8 +157,6 @@ type LuaExec struct {
 // If Lua is initialized with lazy SHA-1 loading, it will obtain the SHA-1 from SCRIPT LOAD response.
 // Cross-slot keys within the single LuaExec are prohibited if the Client is a cluster client.
 func (s *Lua) ExecMulti(ctx context.Context, c Client, multi ...LuaExec) (resp []RedisResult) {
-	var scriptSha1 string
-
 	// Handle script loading for both regular and lazy load modes.
 	if !s.nosha1 || (s.nosha1 && s.lazyLoadSha1) {
 		var e atomic.Value
@@ -171,21 +182,18 @@ func (s *Lua) ExecMulti(ctx context.Context, c Client, multi ...LuaExec) (resp [
 		// Set SHA-1 from Redis if lazy loading is enabled.
 		if s.nosha1 && s.lazyLoadSha1 {
 			if sha := sha1Result.Load(); sha != nil {
-				s.sha1Once.Do(func() {
-					s.sha1Loaded.Store(sha.(string))
-				})
+				s.sha1Mu.Lock()
+				if s.sha1 == "" {
+					s.sha1 = sha.(string)
+				}
+				s.sha1Mu.Unlock()
 			}
 		}
 	}
 
-	// Determine which SHA-1 to use.
-	if s.nosha1 && s.lazyLoadSha1 {
-		if loaded := s.sha1Loaded.Load(); loaded != nil {
-			scriptSha1 = loaded.(string)
-		}
-	} else {
-		scriptSha1 = s.sha1
-	}
+	s.sha1Mu.Lock()
+	scriptSha1 := s.sha1
+	s.sha1Mu.Unlock()
 
 	cmds := make(Commands, 0, len(multi))
 	for _, m := range multi {
