@@ -432,7 +432,7 @@ func TestNewLuaScriptWithLoadSha1(t *testing.T) {
 				return newResult(strmsg('+', "OK"), nil)
 			}
 			if reflect.DeepEqual(commands, []string{"EVAL", body, "2", "1", "2", "3", "4"}) {
-				t.Fatal("EVAL must not be called when lazy load succeeds")
+				t.Fatal("EVAL must not be called when load succeeds")
 			}
 			return newResult(strmsg('+', "unexpected"), nil)
 		},
@@ -479,7 +479,7 @@ func TestNewLuaScriptReadOnlyWithLoadSha1(t *testing.T) {
 				return newResult(strmsg('+', "OK"), nil)
 			}
 			if reflect.DeepEqual(commands, []string{"EVAL_RO", body, "2", "1", "2", "3", "4"}) {
-				t.Fatal("EVAL_RO must not be called when lazy load succeeds")
+				t.Fatal("EVAL_RO must not be called when load succeeds")
 			}
 			return newResult(strmsg('+', "unexpected"), nil)
 		},
@@ -576,7 +576,7 @@ func TestNewLuaScriptWithLoadSha1ExecMulti(t *testing.T) {
 				if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA", sha, "2", "1", "2", "3", "4"}) {
 					resp = append(resp, newResult(strmsg('+', "OK"), nil))
 				} else if reflect.DeepEqual(cmd.Commands(), []string{"EVAL", body, "2", "1", "2", "3", "4"}) {
-					t.Fatal("EVAL should not be called when lazy load succeeds")
+					t.Fatal("EVAL should not be called when load succeeds")
 				}
 			}
 			return resp
