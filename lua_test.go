@@ -330,7 +330,7 @@ type client struct {
 	ModeFn         func() ClientMode
 }
 
-func (c *client) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) error {
+func (c *client) Receive(_ context.Context, _ Completed, _ func(msg PubSubMessage)) error {
 	return nil
 }
 
@@ -355,11 +355,11 @@ func (c *client) DoMulti(ctx context.Context, cmd ...Completed) (resp []RedisRes
 	return nil
 }
 
-func (c *client) DoStream(ctx context.Context, cmd Completed) (resp RedisResultStream) {
+func (c *client) DoStream(_ context.Context, _ Completed) (resp RedisResultStream) {
 	return RedisResultStream{}
 }
 
-func (c *client) DoMultiStream(ctx context.Context, cmd ...Completed) (resp MultiRedisResultStream) {
+func (c *client) DoMultiStream(_ context.Context, _ ...Completed) (resp MultiRedisResultStream) {
 	return MultiRedisResultStream{}
 }
 
@@ -438,7 +438,7 @@ func TestNewLuaScriptWithLoadSha1(t *testing.T) {
 		},
 	}
 
-	script := NewLuaScript(body, WithLoadSha1())
+	script := NewLuaScript(body, WithLoadSHA1(true))
 
 	if v, err := script.Exec(context.Background(), c, k, a).ToString(); err != nil || v != "OK" {
 		t.Fatalf("ret mismatch")
@@ -485,7 +485,7 @@ func TestNewLuaScriptReadOnlyWithLoadSha1(t *testing.T) {
 		},
 	}
 
-	script := NewLuaScriptReadOnly(body, WithLoadSha1())
+	script := NewLuaScriptReadOnly(body, WithLoadSHA1(true))
 
 	if v, err := script.Exec(context.Background(), c, k, a).ToString(); err != nil || v != "OK" {
 		t.Fatalf("ret mismatch")
@@ -527,7 +527,7 @@ func TestNewLuaScriptWithLoadSha1Concurrent(t *testing.T) {
 		},
 	}
 
-	script := NewLuaScript(body, WithLoadSha1())
+	script := NewLuaScript(body, WithLoadSHA1(true))
 
 	// Execute concurrently to verify singleflight works correctly
 	done := make(chan bool)
@@ -583,7 +583,7 @@ func TestNewLuaScriptWithLoadSha1ExecMulti(t *testing.T) {
 		},
 	}
 
-	script := NewLuaScript(body, WithLoadSha1())
+	script := NewLuaScript(body, WithLoadSHA1(true))
 	if v, err := script.ExecMulti(context.Background(), c, LuaExec{Keys: k, Args: a})[0].ToString(); err != nil || v != "OK" {
 		t.Fatalf("ret mismatch")
 	}
@@ -658,7 +658,7 @@ func BenchmarkLuaScript_Exec(b *testing.B) {
 		script *Lua
 	}{
 		{"Default", NewLuaScript(script)},
-		{"LoadSha1", NewLuaScript(script, WithLoadSha1())},
+		{"LoadSHA1", NewLuaScript(script, WithLoadSHA1(true))},
 		{"NoSha", NewLuaScriptNoSha(script)},
 	}
 
@@ -758,7 +758,7 @@ func BenchmarkLuaScript_ExecMulti(b *testing.B) {
 		script *Lua
 	}{
 		{"Default", NewLuaScript(script)},
-		{"LoadSha1", NewLuaScript(script, WithLoadSha1())},
+		{"LoadSHA1", NewLuaScript(script, WithLoadSHA1(true))},
 		{"NoSha", NewLuaScriptNoSha(script)},
 	}
 

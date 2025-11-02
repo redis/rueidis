@@ -14,24 +14,24 @@ import (
 // LuaOption is a functional option for configuring Lua script behavior.
 type LuaOption func(*Lua)
 
-// WithLoadSha1 enables loading of SHA-1 from Redis via SCRIPT LOAD instead of calculating
+// WithLoadSHA1 allows enabling loading of SHA-1 from Redis via SCRIPT LOAD instead of calculating
 // it on the client side. When enabled, the SHA-1 hash is not calculated client-side (important
 // for FIPS compliance). Instead, on first execution, SCRIPT LOAD is called to obtain the SHA-1
 // from Redis, which is then used for EVALSHA commands in subsequent executions.
-func WithLoadSha1() LuaOption {
+func WithLoadSHA1(enabled bool) LuaOption {
 	return func(l *Lua) {
-		l.loadSha1 = true
+		l.loadSha1 = enabled
 	}
 }
 
 // NewLuaScript creates a Lua instance whose Lua.Exec uses EVALSHA and EVAL.
-// By default, SHA-1 is calculated client-side. Use WithLoadSha1() option to load SHA-1 from Redis instead.
+// By default, SHA-1 is calculated client-side. Use WithLoadSHA1(true) option to load SHA-1 from Redis instead.
 func NewLuaScript(script string, opts ...LuaOption) *Lua {
 	return newLuaScript(script, false, false, opts...)
 }
 
 // NewLuaScriptReadOnly creates a Lua instance whose Lua.Exec uses EVALSHA_RO and EVAL_RO.
-// By default, SHA-1 is calculated client-side. Use WithLoadSha1() option to load SHA-1 from Redis instead.
+// By default, SHA-1 is calculated client-side. Use WithLoadSHA1(true) option to load SHA-1 from Redis instead.
 func NewLuaScriptReadOnly(script string, opts ...LuaOption) *Lua {
 	return newLuaScript(script, true, false, opts...)
 }
