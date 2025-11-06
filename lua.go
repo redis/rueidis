@@ -72,9 +72,9 @@ func newLuaScript(script string, readonly bool, noSha1 bool, opts ...LuaOption) 
 type Lua struct {
 	script   string
 	sha1     string
-	sha1Mu   sync.RWMutex
 	sha1Call call
 	maxp     int
+	sha1Mu   sync.RWMutex
 	readonly bool
 	noSha1   bool
 	loadSha1 bool
