@@ -85,12 +85,16 @@ func stream0(s Builder) {
 	s.Xread().Count(1).Streams().Key("1").Key("1").Id("1").Id("1").Build()
 	s.Xread().Block(1).Streams().Key("1").Key("1").Id("1").Id("1").Build()
 	s.Xread().Streams().Key("1").Key("1").Id("1").Id("1").Build()
+	s.Xreadgroup().Group("1", "1").Count(1).Block(1).Noack().Claim("1").Streams().Key("1").Key("1").Id("1").Id("1").Build()
 	s.Xreadgroup().Group("1", "1").Count(1).Block(1).Noack().Streams().Key("1").Key("1").Id("1").Id("1").Build()
+	s.Xreadgroup().Group("1", "1").Count(1).Block(1).Claim("1").Streams().Key("1").Key("1").Id("1").Id("1").Build()
 	s.Xreadgroup().Group("1", "1").Count(1).Block(1).Streams().Key("1").Key("1").Id("1").Id("1").Build()
-	s.Xreadgroup().Group("1", "1").Count(1).Noack().Streams().Key("1").Key("1").Id("1").Id("1").Build()
+	s.Xreadgroup().Group("1", "1").Count(1).Noack().Claim("1").Streams().Key("1").Key("1").Id("1").Id("1").Build()
+	s.Xreadgroup().Group("1", "1").Count(1).Claim("1").Streams().Key("1").Key("1").Id("1").Id("1").Build()
 	s.Xreadgroup().Group("1", "1").Count(1).Streams().Key("1").Key("1").Id("1").Id("1").Build()
-	s.Xreadgroup().Group("1", "1").Block(1).Noack().Streams().Key("1").Key("1").Id("1").Id("1").Build()
-	s.Xreadgroup().Group("1", "1").Noack().Streams().Key("1").Key("1").Id("1").Id("1").Build()
+	s.Xreadgroup().Group("1", "1").Block(1).Noack().Claim("1").Streams().Key("1").Key("1").Id("1").Id("1").Build()
+	s.Xreadgroup().Group("1", "1").Noack().Claim("1").Streams().Key("1").Key("1").Id("1").Id("1").Build()
+	s.Xreadgroup().Group("1", "1").Claim("1").Streams().Key("1").Key("1").Id("1").Id("1").Build()
 	s.Xreadgroup().Group("1", "1").Streams().Key("1").Key("1").Id("1").Id("1").Build()
 	s.Xrevrange().Key("1").End("1").Start("1").Count(1).Build()
 	s.Xrevrange().Key("1").End("1").Start("1").Build()
@@ -101,13 +105,13 @@ func stream0(s Builder) {
 	s.Xtrim().Key("1").Maxlen().Exact().Threshold("1").Limit(1).Keepref().Build()
 	s.Xtrim().Key("1").Maxlen().Exact().Threshold("1").Limit(1).Delref().Build()
 	s.Xtrim().Key("1").Maxlen().Exact().Threshold("1").Limit(1).Acked().Build()
+}
+
+func stream1(s Builder) {
 	s.Xtrim().Key("1").Maxlen().Exact().Threshold("1").Limit(1).Build()
 	s.Xtrim().Key("1").Maxlen().Exact().Threshold("1").Keepref().Build()
 	s.Xtrim().Key("1").Maxlen().Exact().Threshold("1").Delref().Build()
 	s.Xtrim().Key("1").Maxlen().Exact().Threshold("1").Acked().Build()
-}
-
-func stream1(s Builder) {
 	s.Xtrim().Key("1").Maxlen().Exact().Threshold("1").Build()
 	s.Xtrim().Key("1").Maxlen().Almost().Threshold("1").Build()
 	s.Xtrim().Key("1").Maxlen().Threshold("1").Build()

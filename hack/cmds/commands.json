@@ -1885,6 +1885,42 @@
     "since": "1.0.0",
     "group": "generic"
   },
+  "DELEX": {
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "condition",
+        "type": "oneof",
+        "arguments": [
+          {
+            "name": "ifeq",
+            "type": "string",
+            "token": "IFEQ"
+          },
+          {
+            "name": "ifne",
+            "type": "string",
+            "token": "IFNE"
+          },
+          {
+            "name": "ifdeq",
+            "type": "string",
+            "token": "IFDEQ"
+          },
+          {
+            "name": "ifdne",
+            "type": "string",
+            "token": "IFDNE"
+          }
+        ],
+        "optional": true
+      }
+    ],
+    "group": "string"
+  },
   "DELIFEQ": {
     "summary": "Delete key if value matches string.",
     "complexity": "O(1)",
@@ -4837,6 +4873,51 @@
     "since": "1.0.1",
     "group": "string"
   },
+  "MSETEX": {
+    "arguments": [
+      {
+        "name": "numkeys",
+        "type": "integer"
+      },
+      {
+        "name": [
+          "key",
+          "value"
+        ],
+        "type": [
+          "key",
+          "string"
+        ],
+        "multiple": true
+      },
+      {
+        "name": "condition",
+        "type": "enum",
+        "enum": [
+          "NX",
+          "XX"
+        ],
+        "optional": true
+      },
+      {
+        "name": "expiration",
+        "type": "enum",
+        "enum": [
+          "EX seconds",
+          "PX milliseconds",
+          "EXAT timestamp",
+          "PXAT milliseconds-timestamp",
+          "KEEPTTL",
+          "EX sec-typed",
+          "PX ms-typed",
+          "EXAT timestamp-typed",
+          "PXAT ms-timestamp-typed"
+        ],
+        "optional": true
+      }
+    ],
+    "group": "string"
+  },
   "MULTI": {
     "summary": "Mark the start of a transaction block",
     "since": "1.2.0",
@@ -5588,6 +5669,15 @@
     "since": "1.0.0",
     "group": "connection"
   },
+  "DIGEST": {
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      }
+    ],
+    "group": "string"
+  },
   "SET": {
     "summary": "Set the string value of a key",
     "complexity": "O(1)",
@@ -5618,6 +5708,21 @@
             "name": "ifeq",
             "type": "string",
             "token": "IFEQ"
+          },
+          {
+            "name": "ifne",
+            "type": "string",
+            "token": "IFNE"
+          },
+          {
+            "name": "ifdeq",
+            "type": "string",
+            "token": "IFDEQ"
+          },
+          {
+            "name": "ifdne",
+            "type": "string",
+            "token": "IFDNE"
           }
         ],
         "optional": true
@@ -7057,6 +7162,12 @@
         "enum": [
           "NOACK"
         ],
+        "optional": true
+      },
+      {
+        "name": "CLAIM",
+        "type": "string",
+        "token": "CLAIM",
         "optional": true
       },
       {
