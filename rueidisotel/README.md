@@ -11,7 +11,9 @@ Client side caching metrics:
 - `rueidis_do_cache_miss`: number of cache miss on client side
 - `rueidis_do_cache_hits`: number of cache hits on client side
 
-Client side commmand metrics:
+These metrics can include additional labels using `Labeler` (see below).
+
+Client side command metrics:
 - `rueidis_command_duration_seconds`: histogram of command duration
 - `rueidis_command_errors`: number of command errors
 
@@ -19,8 +21,12 @@ Client side commmand metrics:
 package main
 
 import (
+    "context"
+    "time"
+
     "github.com/redis/rueidis"
     "github.com/redis/rueidis/rueidisotel"
+    "go.opentelemetry.io/otel/attribute"
 )
 
 func main() {
@@ -29,6 +35,30 @@ func main() {
         panic(err)
     }
     defer client.Close()
+
+    // Basic usage
+    ctx := context.Background()
+    client.DoCache(ctx, client.B().Get().Key("mykey").Cache(), time.Minute)
+
+    // Add custom labels to cache metrics using Labeler
+    // Check if labeler exists in context, create new context only if needed
+    bookLabeler, ok := valkeyotel.LabelerFromContext(ctx)
+    if !ok {
+        ctx = valkeyotel.ContextWithLabeler(ctx, bookLabeler)
+    }
+    bookLabeler.Add(attribute.String("key_pattern", "book"))
+    client.DoCache(ctx, client.B().Get().Key("book:123").Cache(), time.Minute)
+
+    // Track with multiple attributes
+    authorLabeler, ok := valkeyotel.LabelerFromContext(ctx)
+    if !ok {
+        ctx = valkeyotel.ContextWithLabeler(ctx, authorLabeler)
+    }
+    authorLabeler.Add(
+        attribute.String("key_pattern", "author"),
+        attribute.String("tenant", "acme"),
+    )
+    client.DoCache(ctx, client.B().Get().Key("author:456").Cache(), time.Minute)
 }
 ```
 

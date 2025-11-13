@@ -20,6 +20,52 @@ var (
 	dbstmt = attribute.Key("db.statement")
 )
 
+type contextKey struct{}
+
+var labelerContextKey = contextKey{}
+
+// Labeler is used to allow instrumentation to add additional attributes
+// to metrics.
+type Labeler struct {
+	attrs []attribute.KeyValue
+}
+
+// Add appends new attributes to the labeler.
+func (l *Labeler) Add(attrs ...attribute.KeyValue) {
+	l.attrs = append(l.attrs, attrs...)
+}
+
+// Get returns the attributes added to the labeler.
+func (l *Labeler) Get() []attribute.KeyValue {
+	return l.attrs
+}
+
+// LabelerFromContext retrieves a Labeler instance from the provided context.
+// It returns the labeler and a boolean indicating whether it was found.
+// If no labeler is found, returns a new empty labeler and false.
+func LabelerFromContext(ctx context.Context) (*Labeler, bool) {
+	if l, ok := ctx.Value(labelerContextKey).(*Labeler); ok {
+		return l, true
+	}
+	return &Labeler{}, false
+}
+
+// ContextWithLabeler returns a new context with the provided Labeler.
+// Attributes added to the labeler will be included in cache metrics.
+//
+// Example:
+//
+//	// Check if labeler exists in context, create new context only if needed
+//	labeler, ok := valkeyotel.LabelerFromContext(ctx)
+//	if !ok {
+//		ctx = valkeyotel.ContextWithLabeler(ctx, labeler)
+//	}
+//	labeler.Add(attribute.String("key_pattern", "book"))
+//	client.DoCache(ctx, client.B().Get().Key("book:123").Cache(), time.Minute)
+func ContextWithLabeler(ctx context.Context, labeler *Labeler) context.Context {
+	return context.WithValue(ctx, labelerContextKey, labeler)
+}
+
 var _ rueidis.Client = (*otelclient)(nil)
 
 // WithClient creates a new rueidis.Client with OpenTelemetry tracing enabled.
@@ -71,18 +117,40 @@ type commandMetrics struct {
 
 func (c *commandMetrics) recordDuration(ctx context.Context, op string, now time.Time) {
 	opts := c.recordOpts
-	if c.opAttr {
+
+	labeler, hasLabeler := ctx.Value(labelerContextKey).(*Labeler)
+	hasLabelerAttrs := hasLabeler && len(labeler.attrs) > 0
+
+	if c.opAttr && hasLabelerAttrs {
+		opts = append(c.recordOpts,
+			metric.WithAttributeSet(attribute.NewSet(attribute.String("operation", op))),
+			metric.WithAttributeSet(attribute.NewSet(labeler.attrs...)))
+	} else if c.opAttr {
 		opts = append(c.recordOpts, metric.WithAttributeSet(attribute.NewSet(attribute.String("operation", op))))
+	} else if hasLabelerAttrs {
+		opts = append(c.recordOpts, metric.WithAttributeSet(attribute.NewSet(labeler.attrs...)))
 	}
+
 	c.duration.Record(ctx, time.Since(now).Seconds(), opts...)
 }
 
 func (c *commandMetrics) recordError(ctx context.Context, op string, err error) {
 	if err != nil && !rueidis.IsRedisNil(err) {
 		opts := c.addOpts
-		if c.opAttr {
+
+		labeler, hasLabeler := ctx.Value(labelerContextKey).(*Labeler)
+		hasLabelerAttrs := hasLabeler && len(labeler.attrs) > 0
+
+		if c.opAttr && hasLabelerAttrs {
+			opts = append(c.addOpts,
+				metric.WithAttributeSet(attribute.NewSet(attribute.String("operation", op))),
+				metric.WithAttributeSet(attribute.NewSet(labeler.attrs...)))
+		} else if c.opAttr {
 			opts = append(c.addOpts, metric.WithAttributeSet(attribute.NewSet(attribute.String("operation", op))))
+		} else if hasLabelerAttrs {
+			opts = append(c.addOpts, metric.WithAttributeSet(attribute.NewSet(labeler.attrs...)))
 		}
+
 		c.errors.Add(ctx, 1, opts...)
 	}
 }
@@ -167,9 +235,9 @@ func (o *otelclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl tim
 	resp = o.client.DoCache(ctx, cmd, ttl)
 	if resp.NonRedisError() == nil {
 		if resp.IsCacheHit() {
-			o.cscHits.Add(ctx, 1, o.addOpts...)
+			o.recordCacheHit(ctx)
 		} else {
-			o.cscMiss.Add(ctx, 1, o.addOpts...)
+			o.recordCacheMiss(ctx)
 		}
 	}
 	o.end(span, resp.Error())
@@ -185,9 +253,9 @@ func (o *otelclient) DoMultiCache(ctx context.Context, multi ...rueidis.Cacheabl
 	for _, resp := range resps {
 		if resp.NonRedisError() == nil {
 			if resp.IsCacheHit() {
-				o.cscHits.Add(ctx, 1, o.addOpts...)
+				o.recordCacheHit(ctx)
 			} else {
-				o.cscMiss.Add(ctx, 1, o.addOpts...)
+				o.recordCacheMiss(ctx)
 			}
 		}
 	}
@@ -259,6 +327,22 @@ func (o *otelclient) Mode() rueidis.ClientMode {
 
 func (o *otelclient) Close() {
 	o.client.Close()
+}
+
+func (o *otelclient) recordCacheHit(ctx context.Context) {
+	opts := o.addOpts
+	if labeler, ok := ctx.Value(labelerContextKey).(*Labeler); ok && len(labeler.attrs) > 0 {
+		opts = append(o.addOpts, metric.WithAttributeSet(attribute.NewSet(labeler.attrs...)))
+	}
+	o.cscHits.Add(ctx, 1, opts...)
+}
+
+func (o *otelclient) recordCacheMiss(ctx context.Context) {
+	opts := o.addOpts
+	if labeler, ok := ctx.Value(labelerContextKey).(*Labeler); ok && len(labeler.attrs) > 0 {
+		opts = append(o.addOpts, metric.WithAttributeSet(attribute.NewSet(labeler.attrs...)))
+	}
+	o.cscMiss.Add(ctx, 1, opts...)
 }
 
 var _ rueidis.DedicatedClient = (*dedicated)(nil)
