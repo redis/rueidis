@@ -273,18 +273,19 @@ func arrayToKV(m map[string]RedisMessage, arr []RedisMessage, keys []string) map
 
 func clusterMGet(client Client, ctx context.Context, keys []string) (ret map[string]RedisMessage, err error) {
 	ret = make(map[string]RedisMessage, len(keys))
-	slots := make(map[uint16][]int, len(keys)/2)
-	for i, key := range keys {
-		s := slot(key)
-		slots[s] = append(slots[s], i)
+	slotCount := make(map[uint16]int, len(keys)/2)
+	for _, key := range keys {
+		slotCount[slot(key)]++
 	}
-	cmds := mgetcmdsp.Get(0, len(slots))
+	cmds := mgetcmdsp.Get(0, len(slotCount))
 	defer mgetcmdsp.Put(cmds)
-	groups := make([][]string, 0, len(slots))
-	for _, group := range slots {
-		gkeys := make([]string, 0, len(group))
-		for _, i := range group {
-			gkeys = append(gkeys, keys[i])
+	groups := make([][]string, 0, len(slotCount))
+	for s, count := range slotCount {
+		gkeys := make([]string, 0, count)
+		for _, key := range keys {
+			if slot(key) == s {
+				gkeys = append(gkeys, key)
+			}
 		}
 		cmds.s = append(cmds.s, client.B().Mget().Key(gkeys...).Build().Pin())
 		groups = append(groups, gkeys)
@@ -306,21 +307,22 @@ func clusterMGet(client Client, ctx context.Context, keys []string) (ret map[str
 
 func clusterJsonMGet(client Client, ctx context.Context, keys []string, path string) (ret map[string]RedisMessage, err error) {
 	ret = make(map[string]RedisMessage, len(keys))
-	slots := make(map[uint16][]int, len(keys)/2)
-	for i, key := range keys {
-		s := slot(key)
-		slots[s] = append(slots[s], i)
+	slotCount := make(map[uint16]int, len(keys)/2)
+	for _, key := range keys {
+		slotCount[slot(key)]++
 	}
-	if len(slots) == 0 {
+	if len(slotCount) == 0 {
 		return ret, nil
 	}
-	cmds := mgetcmdsp.Get(0, len(slots))
+	cmds := mgetcmdsp.Get(0, len(slotCount))
 	defer mgetcmdsp.Put(cmds)
-	groups := make([][]string, 0, len(slots))
-	for _, group := range slots {
-		gkeys := make([]string, 0, len(group))
-		for _, i := range group {
-			gkeys = append(gkeys, keys[i])
+	groups := make([][]string, 0, len(slotCount))
+	for s, count := range slotCount {
+		gkeys := make([]string, 0, count)
+		for _, key := range keys {
+			if slot(key) == s {
+				gkeys = append(gkeys, key)
+			}
 		}
 		cmds.s = append(cmds.s, client.B().JsonMget().Key(gkeys...).Path(path).Build().Pin())
 		groups = append(groups, gkeys)
