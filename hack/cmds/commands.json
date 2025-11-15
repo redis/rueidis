@@ -1313,6 +1313,12 @@
     "since": "3.0.0",
     "group": "cluster"
   },
+  "CLUSTER CANCELSLOTMIGRATIONS": {
+    "summary": "Cancel slot migration operations",
+    "complexity": "O(N) where N is the number of active slot migrations",
+    "since": "9.0.0",
+    "group": "cluster"
+  },
   "CLUSTER COUNT-FAILURE-REPORTS": {
     "summary": "Return the number of failure reports active for a given node",
     "complexity": "O(N) where N is the number of failure reports",
@@ -1421,6 +1427,12 @@
     "since": "3.0.0",
     "group": "cluster"
   },
+  "CLUSTER GETSLOTMIGRATIONS": {
+    "summary": "Return a list of recent slot migrations",
+    "complexity": "O(N) where N is the number of slot migration jobs",
+    "since": "9.0.0",
+    "group": "cluster"
+  },
   "CLUSTER INFO": {
     "summary": "Provides info about Redis Cluster node state",
     "complexity": "O(1)",
@@ -1443,6 +1455,32 @@
     "summary": "Returns a list of all TCP links to and from peer nodes in cluster",
     "complexity": "O(N) where N is the total number of Cluster nodes",
     "since": "7.0.0",
+    "group": "cluster"
+  },
+  "CLUSTER MIGRATESLOTS": {
+    "summary": "Migrate hash slots to target nodes using atomic slot migration",
+    "complexity": "O(N) where N is the number of keys in the migrating slots",
+    "arguments": [
+      {
+        "name": "slot-migration-spec",
+        "type": "block",
+        "multiple": true,
+        "arguments": [
+          {
+            "name": ["start-slot", "end-slot"],
+            "type": ["integer", "integer"],
+            "multiple": true,
+            "command": "SLOTSRANGE"
+          },
+          {
+            "command": "NODE",
+            "name": "node-id",
+            "type": "string"
+          }
+        ]
+      }
+    ],
+    "since": "9.0.0",
     "group": "cluster"
   },
   "CLUSTER MEET": {
@@ -1884,6 +1922,42 @@
     ],
     "since": "1.0.0",
     "group": "generic"
+  },
+  "DELEX": {
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "condition",
+        "type": "oneof",
+        "arguments": [
+          {
+            "name": "ifeq",
+            "type": "string",
+            "token": "IFEQ"
+          },
+          {
+            "name": "ifne",
+            "type": "string",
+            "token": "IFNE"
+          },
+          {
+            "name": "ifdeq",
+            "type": "string",
+            "token": "IFDEQ"
+          },
+          {
+            "name": "ifdne",
+            "type": "string",
+            "token": "IFDNE"
+          }
+        ],
+        "optional": true
+      }
+    ],
+    "group": "string"
   },
   "DELIFEQ": {
     "summary": "Delete key if value matches string.",
@@ -4837,6 +4911,51 @@
     "since": "1.0.1",
     "group": "string"
   },
+  "MSETEX": {
+    "arguments": [
+      {
+        "name": "numkeys",
+        "type": "integer"
+      },
+      {
+        "name": [
+          "key",
+          "value"
+        ],
+        "type": [
+          "key",
+          "string"
+        ],
+        "multiple": true
+      },
+      {
+        "name": "condition",
+        "type": "enum",
+        "enum": [
+          "NX",
+          "XX"
+        ],
+        "optional": true
+      },
+      {
+        "name": "expiration",
+        "type": "enum",
+        "enum": [
+          "EX seconds",
+          "PX milliseconds",
+          "EXAT timestamp",
+          "PXAT milliseconds-timestamp",
+          "KEEPTTL",
+          "EX sec-typed",
+          "PX ms-typed",
+          "EXAT timestamp-typed",
+          "PXAT ms-timestamp-typed"
+        ],
+        "optional": true
+      }
+    ],
+    "group": "string"
+  },
   "MULTI": {
     "summary": "Mark the start of a transaction block",
     "since": "1.2.0",
@@ -5588,6 +5707,15 @@
     "since": "1.0.0",
     "group": "connection"
   },
+  "DIGEST": {
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      }
+    ],
+    "group": "string"
+  },
   "SET": {
     "summary": "Set the string value of a key",
     "complexity": "O(1)",
@@ -5618,6 +5746,21 @@
             "name": "ifeq",
             "type": "string",
             "token": "IFEQ"
+          },
+          {
+            "name": "ifne",
+            "type": "string",
+            "token": "IFNE"
+          },
+          {
+            "name": "ifdeq",
+            "type": "string",
+            "token": "IFDEQ"
+          },
+          {
+            "name": "ifdne",
+            "type": "string",
+            "token": "IFDNE"
           }
         ],
         "optional": true
@@ -7057,6 +7200,12 @@
         "enum": [
           "NOACK"
         ],
+        "optional": true
+      },
+      {
+        "name": "CLAIM",
+        "type": "string",
+        "token": "CLAIM",
         "optional": true
       },
       {

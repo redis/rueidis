@@ -1380,7 +1380,19 @@ func (c XreadgroupBlock) Noack() XreadgroupNoack {
 	return (XreadgroupNoack)(c)
 }
 
+func (c XreadgroupBlock) Claim(claim string) XreadgroupClaim {
+	c.cs.s = append(c.cs.s, "CLAIM", claim)
+	return (XreadgroupClaim)(c)
+}
+
 func (c XreadgroupBlock) Streams() XreadgroupStreams {
+	c.cs.s = append(c.cs.s, "STREAMS")
+	return (XreadgroupStreams)(c)
+}
+
+type XreadgroupClaim Incomplete
+
+func (c XreadgroupClaim) Streams() XreadgroupStreams {
 	c.cs.s = append(c.cs.s, "STREAMS")
 	return (XreadgroupStreams)(c)
 }
@@ -1396,6 +1408,11 @@ func (c XreadgroupCount) Block(milliseconds int64) XreadgroupBlock {
 func (c XreadgroupCount) Noack() XreadgroupNoack {
 	c.cs.s = append(c.cs.s, "NOACK")
 	return (XreadgroupNoack)(c)
+}
+
+func (c XreadgroupCount) Claim(claim string) XreadgroupClaim {
+	c.cs.s = append(c.cs.s, "CLAIM", claim)
+	return (XreadgroupClaim)(c)
 }
 
 func (c XreadgroupCount) Streams() XreadgroupStreams {
@@ -1419,6 +1436,11 @@ func (c XreadgroupGroup) Block(milliseconds int64) XreadgroupBlock {
 func (c XreadgroupGroup) Noack() XreadgroupNoack {
 	c.cs.s = append(c.cs.s, "NOACK")
 	return (XreadgroupNoack)(c)
+}
+
+func (c XreadgroupGroup) Claim(claim string) XreadgroupClaim {
+	c.cs.s = append(c.cs.s, "CLAIM", claim)
+	return (XreadgroupClaim)(c)
 }
 
 func (c XreadgroupGroup) Streams() XreadgroupStreams {
@@ -1461,6 +1483,11 @@ func (c XreadgroupKey) Id(id ...string) XreadgroupId {
 }
 
 type XreadgroupNoack Incomplete
+
+func (c XreadgroupNoack) Claim(claim string) XreadgroupClaim {
+	c.cs.s = append(c.cs.s, "CLAIM", claim)
+	return (XreadgroupClaim)(c)
+}
 
 func (c XreadgroupNoack) Streams() XreadgroupStreams {
 	c.cs.s = append(c.cs.s, "STREAMS")
