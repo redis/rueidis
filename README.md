@@ -480,6 +480,13 @@ client, err := rueidis.NewClient(rueidis.ClientOption{
         MasterSet: "my_master",
     },
 })
+// connect to redis node through unix socket
+client, err := rueidis.NewClient(rueidis.ClientOption{
+    InitAddress: []string{"/run/valkey.sock"},
+    DialCtxFn: func(ctx context.Context, s string, d *net.Dialer, c *tls.Config) (conn net.Conn, err error) {
+        return d.DialContext(ctx, "unix", s)
+    },
+})
 ```
 
 ### Redis URL
@@ -497,6 +504,8 @@ client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:7001?add
 client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:6379/0"))
 // connect to a redis sentinel
 client, err = rueidis.NewClient(rueidis.MustParseURL("redis://127.0.0.1:26379/0?master_set=my_master"))
+// connecting to redis node using unix socket
+client, err = rueidis.NewClient(rueidis.MustParseURL("unix:///run/redis.conf?db=0"))
 ```
 
 ### Availability Zone Affinity Routing
