@@ -279,16 +279,20 @@ func clusterMGet(client Client, ctx context.Context, keys []string) (ret map[str
 	}
 	cmds := mgetcmdsp.Get(0, len(slotCount))
 	defer mgetcmdsp.Put(cmds)
-	groups := make([][]string, 0, len(slotCount))
-	for s, count := range slotCount {
-		gkeys := make([]string, 0, count)
+	for s := range slotCount {
+		var builder any = client.B().Mget()
+		var first = true
 		for _, key := range keys {
 			if slot(key) == s {
-				gkeys = append(gkeys, key)
+				if first {
+					builder = builder.(intl.Mget).Key(key)
+					first = false
+				} else {
+					builder = builder.(intl.MgetKey).Key(key)
+				}
 			}
 		}
-		cmds.s = append(cmds.s, client.B().Mget().Key(gkeys...).Build().Pin())
-		groups = append(groups, gkeys)
+		cmds.s = append(cmds.s, builder.(intl.MgetKey).Build().Pin())
 	}
 	resps := client.DoMulti(ctx, cmds.s...)
 	defer resultsp.Put(&redisresults{s: resps})
@@ -297,7 +301,14 @@ func clusterMGet(client Client, ctx context.Context, keys []string) (ret map[str
 		if err != nil {
 			return nil, err
 		}
-		ret = arrayToKV(ret, arr, groups[i])
+		s := cmds.s[i].Slot()
+		var j int
+		for _, key := range keys {
+			if slot(key) == s {
+				ret[key] = arr[j]
+				j++
+			}
+		}
 	}
 	for i := range cmds.s {
 		intl.PutCompletedForce(cmds.s[i])
@@ -316,16 +327,20 @@ func clusterJsonMGet(client Client, ctx context.Context, keys []string, path str
 	}
 	cmds := mgetcmdsp.Get(0, len(slotCount))
 	defer mgetcmdsp.Put(cmds)
-	groups := make([][]string, 0, len(slotCount))
-	for s, count := range slotCount {
-		gkeys := make([]string, 0, count)
+	for s := range slotCount {
+		var builder any = client.B().JsonMget()
+		var first = true
 		for _, key := range keys {
 			if slot(key) == s {
-				gkeys = append(gkeys, key)
+				if first {
+					builder = builder.(intl.JsonMget).Key(key)
+					first = false
+				} else {
+					builder = builder.(intl.JsonMgetKey).Key(key)
+				}
 			}
 		}
-		cmds.s = append(cmds.s, client.B().JsonMget().Key(gkeys...).Path(path).Build().Pin())
-		groups = append(groups, gkeys)
+		cmds.s = append(cmds.s, builder.(intl.JsonMgetKey).Path(path).Build().Pin())
 	}
 	resps := client.DoMulti(ctx, cmds.s...)
 	defer resultsp.Put(&redisresults{s: resps})
@@ -334,7 +349,14 @@ func clusterJsonMGet(client Client, ctx context.Context, keys []string, path str
 		if err != nil {
 			return nil, err
 		}
-		ret = arrayToKV(ret, arr, groups[i])
+		s := cmds.s[i].Slot()
+		var j int
+		for _, key := range keys {
+			if slot(key) == s {
+				ret[key] = arr[j]
+				j++
+			}
+		}
 	}
 	for i := range cmds.s {
 		intl.PutCompletedForce(cmds.s[i])
