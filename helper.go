@@ -273,43 +273,52 @@ func arrayToKV(m map[string]RedisMessage, arr []RedisMessage, keys []string) map
 
 func clusterMGet(client Client, ctx context.Context, keys []string) (ret map[string]RedisMessage, err error) {
 	ret = make(map[string]RedisMessage, len(keys))
-	slotCount := make(map[uint16]int, len(keys)/2)
+	if len(keys) == 0 {
+		return ret, nil
+	}
+
+	slotIdx := make(map[uint16]int, len(keys)/2)
+	var builders []any
 	for _, key := range keys {
-		slotCount[slot(key)]++
-	}
-	cmds := mgetcmdsp.Get(0, len(slotCount))
-	defer mgetcmdsp.Put(cmds)
-	for s := range slotCount {
-		var builder any = client.B().Mget()
-		var first = true
-		for _, key := range keys {
-			if slot(key) == s {
-				if first {
-					builder = builder.(intl.Mget).Key(key)
-					first = false
-				} else {
-					builder = builder.(intl.MgetKey).Key(key)
-				}
-			}
+		s := slot(key)
+		idx, ok := slotIdx[s]
+		if !ok {
+			idx = len(builders)
+			slotIdx[s] = idx
+			builders = append(builders, client.B().Mget())
 		}
-		cmds.s = append(cmds.s, builder.(intl.MgetKey).Build().Pin())
+		switch b := builders[idx].(type) {
+		case intl.Mget:
+			builders[idx] = b.Key(key)
+		case intl.MgetKey:
+			builders[idx] = b.Key(key)
+		}
 	}
+
+	cmds := mgetcmdsp.Get(0, len(builders))
+	defer mgetcmdsp.Put(cmds)
+	cmds.s = cmds.s[:len(builders)]
+	for i, b := range builders {
+		cmds.s[i] = b.(intl.MgetKey).Build().Pin()
+	}
+
 	resps := client.DoMulti(ctx, cmds.s...)
 	defer resultsp.Put(&redisresults{s: resps})
+
 	for i, resp := range resps {
-		arr, err := resp.ToArray()
+		builders[i], err = resp.ToArray()
 		if err != nil {
 			return nil, err
 		}
-		s := cmds.s[i].Slot()
-		var j int
-		for _, key := range keys {
-			if slot(key) == s {
-				ret[key] = arr[j]
-				j++
-			}
-		}
 	}
+
+	pos := make([]int, len(builders))
+	for _, key := range keys {
+		idx := slotIdx[slot(key)]
+		ret[key] = builders[idx].([]RedisMessage)[pos[idx]]
+		pos[idx]++
+	}
+
 	for i := range cmds.s {
 		intl.PutCompletedForce(cmds.s[i])
 	}
@@ -318,46 +327,52 @@ func clusterMGet(client Client, ctx context.Context, keys []string) (ret map[str
 
 func clusterJsonMGet(client Client, ctx context.Context, keys []string, path string) (ret map[string]RedisMessage, err error) {
 	ret = make(map[string]RedisMessage, len(keys))
-	slotCount := make(map[uint16]int, len(keys)/2)
-	for _, key := range keys {
-		slotCount[slot(key)]++
-	}
-	if len(slotCount) == 0 {
+	if len(keys) == 0 {
 		return ret, nil
 	}
-	cmds := mgetcmdsp.Get(0, len(slotCount))
-	defer mgetcmdsp.Put(cmds)
-	for s := range slotCount {
-		var builder any = client.B().JsonMget()
-		var first = true
-		for _, key := range keys {
-			if slot(key) == s {
-				if first {
-					builder = builder.(intl.JsonMget).Key(key)
-					first = false
-				} else {
-					builder = builder.(intl.JsonMgetKey).Key(key)
-				}
-			}
+
+	slotIdx := make(map[uint16]int, len(keys)/2)
+	var builders []any
+	for _, key := range keys {
+		s := slot(key)
+		idx, ok := slotIdx[s]
+		if !ok {
+			idx = len(builders)
+			slotIdx[s] = idx
+			builders = append(builders, client.B().JsonMget())
 		}
-		cmds.s = append(cmds.s, builder.(intl.JsonMgetKey).Path(path).Build().Pin())
+		switch b := builders[idx].(type) {
+		case intl.JsonMget:
+			builders[idx] = b.Key(key)
+		case intl.JsonMgetKey:
+			builders[idx] = b.Key(key)
+		}
 	}
+
+	cmds := mgetcmdsp.Get(0, len(builders))
+	defer mgetcmdsp.Put(cmds)
+	cmds.s = cmds.s[:len(builders)]
+	for i, b := range builders {
+		cmds.s[i] = b.(intl.JsonMgetKey).Path(path).Build().Pin()
+	}
+
 	resps := client.DoMulti(ctx, cmds.s...)
 	defer resultsp.Put(&redisresults{s: resps})
+
 	for i, resp := range resps {
-		arr, err := resp.ToArray()
+		builders[i], err = resp.ToArray()
 		if err != nil {
 			return nil, err
 		}
-		s := cmds.s[i].Slot()
-		var j int
-		for _, key := range keys {
-			if slot(key) == s {
-				ret[key] = arr[j]
-				j++
-			}
-		}
 	}
+
+	pos := make([]int, len(builders))
+	for _, key := range keys {
+		idx := slotIdx[slot(key)]
+		ret[key] = builders[idx].([]RedisMessage)[pos[idx]]
+		pos[idx]++
+	}
+
 	for i := range cmds.s {
 		intl.PutCompletedForce(cmds.s[i])
 	}
