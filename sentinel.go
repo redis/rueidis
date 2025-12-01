@@ -86,7 +86,7 @@ retry:
 		if err == errConnExpired {
 			goto retry
 		}
-		if c.retry && cmd.IsReadOnly() && c.isRetryable(err, ctx) {
+		if c.retry && cmd.IsRetryable() && c.isRetryable(err, ctx) {
 			if c.retryHandler.WaitOrSkipRetry(ctx, attempts, cmd, err) {
 				attempts++
 				goto retry
@@ -136,7 +136,7 @@ retry:
 			goto recover
 		}
 	}
-	if c.retry && allReadOnly(multi) {
+	if c.retry && allRetryable(multi) {
 		for i, resp := range resps.s {
 			if c.isRetryable(resp.Error(), ctx) {
 				shouldRetry := c.retryHandler.WaitOrSkipRetry(

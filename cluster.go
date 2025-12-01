@@ -567,7 +567,7 @@ process:
 		resultsp.Put(results)
 		goto process
 	case RedirectRetry:
-		if c.retry && cmd.IsReadOnly() {
+		if c.retry && cmd.IsRetryable() {
 			shouldRetry := c.retryHandler.WaitOrSkipRetry(ctx, attempts, cmd, resp.Error())
 			if shouldRetry {
 				attempts++
@@ -741,7 +741,7 @@ func (c *clusterClient) doresultfn(
 			nc := cc
 			retryDelay := time.Duration(-1)
 			if mode == RedirectRetry {
-				if !c.retry || !cm.IsReadOnly() {
+				if !c.retry || !cm.IsRetryable() {
 					continue
 				}
 				retryDelay = c.retryHandler.RetryDelay(attempts, cm, resp.Error())
@@ -1477,7 +1477,7 @@ retry:
 		resp = w.Do(ctx, cmd)
 		switch _, mode := c.client.shouldRefreshRetry(resp.Error(), ctx); mode {
 		case RedirectRetry:
-			if c.retry && cmd.IsReadOnly() && w.Error() == nil {
+			if c.retry && cmd.IsRetryable() && w.Error() == nil {
 				shouldRetry := c.retryHandler.WaitOrSkipRetry(
 					ctx, attempts, cmd, resp.Error(),
 				)
@@ -1504,7 +1504,7 @@ func (c *dedicatedClusterClient) DoMulti(ctx context.Context, multi ...Completed
 	}
 	retryable := c.retry
 	if retryable {
-		retryable = allReadOnly(multi)
+		retryable = allRetryable(multi)
 	}
 	attempts := 1
 retry:
