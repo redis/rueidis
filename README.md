@@ -271,6 +271,15 @@ to make sure manually cancellation is respected, especially for blocking request
 All read-only commands are automatically retried on failures by default before their context deadlines exceeded.
 You can disable this by setting `DisableRetry` or adjust the number of retries and durations between retries using `RetryDelay` function.
 
+### Retryable Commands
+
+Write commands can set Retryable to automatically retried on failures like read-only commands. Make sure you only use this feature with idempotent operations.
+
+```golang
+client.Do(ctx, client.B().Set().Key("key").Value("val").Build().ToRetryable())
+client.DoMulti(ctx, client.B().Set().Key("key").Value("val").Build().ToRetryable())
+```
+
 ## Pub/Sub
 
 To receive messages from channels, `client.Receive()` should be used. It supports `SUBSCRIBE`, `PSUBSCRIBE`, and Redis 7.0's `SSUBSCRIBE`:
