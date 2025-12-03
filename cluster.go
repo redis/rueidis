@@ -537,6 +537,7 @@ func (c *clusterClient) Do(ctx context.Context, cmd Completed) (resp RedisResult
 
 func (c *clusterClient) do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	attempts := 1
+	redirects := 0
 retry:
 	cc, err := c.pick(ctx, cmd.Slot(), c.toReplica(cmd))
 	if err != nil {
@@ -549,6 +550,10 @@ retry:
 process:
 	switch addr, mode := c.shouldRefreshRetry(resp.Error(), ctx); mode {
 	case RedirectMove:
+		redirects++
+		if c.opt.ClusterOption.MaxMovedRedirections > 0 && redirects > c.opt.ClusterOption.MaxMovedRedirections {
+			return resp
+		}
 		ncc := c.redirectOrNew(addr, cc, cmd.Slot(), mode)
 	recover1:
 		resp = ncc.Do(ctx, cmd)
@@ -557,6 +562,10 @@ process:
 		}
 		goto process
 	case RedirectAsk:
+		redirects++
+		if c.opt.ClusterOption.MaxMovedRedirections > 0 && redirects > c.opt.ClusterOption.MaxMovedRedirections {
+			return resp
+		}
 		ncc := c.redirectOrNew(addr, cc, cmd.Slot(), mode)
 	recover2:
 		results := ncc.DoMulti(ctx, cmds.AskingCmd, cmd)
@@ -868,6 +877,7 @@ func (c *clusterClient) DoMulti(ctx context.Context, multi ...Completed) []Redis
 	results := resultsp.Get(len(multi), len(multi))
 
 	attempts := 1
+	redirects := 0
 
 retry:
 	retries.RetryDelay = -1 // Assume no retry. Because a client retry flag can be set to false.
@@ -892,6 +902,10 @@ retry:
 
 	if len(retries.m) != 0 {
 		if retries.Redirects > 0 {
+			redirects++
+			if c.opt.ClusterOption.MaxMovedRedirections > 0 && redirects > c.opt.ClusterOption.MaxMovedRedirections {
+				return results.s
+			}
 			retries.Redirects = 0
 			goto retry
 		}
@@ -920,6 +934,7 @@ func fillErrs(n int, err error) (results []RedisResult) {
 
 func (c *clusterClient) doCache(ctx context.Context, cmd Cacheable, ttl time.Duration) (resp RedisResult) {
 	attempts := 1
+	redirects := 0
 
 retry:
 	cc, err := c.pick(ctx, cmd.Slot(), c.toReplica(Completed(cmd)))
@@ -933,6 +948,10 @@ retry:
 process:
 	switch addr, mode := c.shouldRefreshRetry(resp.Error(), ctx); mode {
 	case RedirectMove:
+		redirects++
+		if c.opt.ClusterOption.MaxMovedRedirections > 0 && redirects > c.opt.ClusterOption.MaxMovedRedirections {
+			return resp
+		}
 		ncc := c.redirectOrNew(addr, cc, cmd.Slot(), mode)
 	recover:
 		resp = ncc.DoCache(ctx, cmd, ttl)
@@ -941,6 +960,10 @@ process:
 		}
 		goto process
 	case RedirectAsk:
+		redirects++
+		if c.opt.ClusterOption.MaxMovedRedirections > 0 && redirects > c.opt.ClusterOption.MaxMovedRedirections {
+			return resp
+		}
 		results := c.askingMultiCache(c.redirectOrNew(addr, cc, cmd.Slot(), mode), ctx, []CacheableTTL{CT(cmd, ttl)})
 		resp = results.s[0]
 		resultsp.Put(results)
@@ -1235,6 +1258,7 @@ func (c *clusterClient) DoMultiCache(ctx context.Context, multi ...CacheableTTL)
 	results := resultsp.Get(len(multi), len(multi))
 
 	attempts := 1
+	redirects := 0
 
 retry:
 	retries.RetryDelay = -1 // Assume no retry. Because a client retry flag can be set to false.
@@ -1259,6 +1283,10 @@ retry:
 
 	if len(retries.m) != 0 {
 		if retries.Redirects > 0 {
+			redirects++
+			if c.opt.ClusterOption.MaxMovedRedirections > 0 && redirects > c.opt.ClusterOption.MaxMovedRedirections {
+				return results.s
+			}
 			retries.Redirects = 0
 			goto retry
 		}
