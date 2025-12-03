@@ -163,3 +163,57 @@ func TestTypedCacheAsideClient_Del(t *testing.T) {
 		t.Fatal("expected function to be called because the value should be deleted")
 	}
 }
+
+func TestTypedCacheAsideClient_OverrideTTL(t *testing.T) {
+	baseClient := makeClient(t, addr)
+	t.Cleanup(baseClient.Close)
+
+	serializer := func(v *testStruct) (string, error) {
+		if v == nil {
+			return "nilTestStruct", nil
+		}
+		b, err := json.Marshal(v)
+		return string(b), err
+	}
+
+	deserializer := func(s string) (*testStruct, error) {
+		if s == "nilTestStruct" {
+			return nil, nil
+		}
+		var v testStruct
+		err := json.Unmarshal([]byte(s), &v)
+		return &v, err
+	}
+
+	client := NewTypedCacheAsideClient[testStruct](baseClient, serializer, deserializer)
+
+	t.Run("override ttl for negative caching", func(t *testing.T) {
+		key := randStr()
+
+		val, err := client.Get(context.Background(), time.Second*5, key, func(ctx context.Context, key string) (*testStruct, error) {
+			OverrideCacheTTL(ctx, time.Millisecond*300)
+			return nil, nil
+		})
+		if err != nil || val != nil {
+			t.Fatalf("expected nil value, got %v, err: %v", val, err)
+		}
+
+		val, err = client.Get(context.Background(), time.Second*5, key, nil)
+		if err != nil || val != nil {
+			t.Fatalf("expected cached nil value, got %v, err: %v", val, err)
+		}
+
+		time.Sleep(time.Millisecond * 400)
+
+		found := &testStruct{ID: 42, Name: "found"}
+		val, err = client.Get(context.Background(), time.Second*5, key, func(ctx context.Context, key string) (*testStruct, error) {
+			return found, nil
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if val.ID != found.ID || val.Name != found.Name {
+			t.Fatalf("expected %v, got %v", found, val)
+		}
+	})
+}
