@@ -278,7 +278,8 @@ func clusterMGet(client Client, ctx context.Context, keys []string) (ret map[str
 	}
 
 	slotIdx := make(map[uint16]int, len(keys)/2)
-	var builders []any
+	cmds := mgetcmdsp.Get(0, len(keys))
+	defer mgetcmdsp.Put(cmds)
 	for _, key := range keys {
 		s := slot(key)
 		idx, ok := slotIdx[s]
