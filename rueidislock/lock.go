@@ -270,7 +270,7 @@ func (m *locker) try(ctx context.Context, cancel context.CancelFunc, name string
 				case <-ctx.Done():
 					err = ctx.Err()
 				case <-timer.C:
-					deadline = deadline.Add(m.interval)
+					deadline = time.Now().Add(m.validity)
 					if err = m.script(ctx, extend, key, val, deadline); err == nil {
 						timer.Reset(m.interval)
 					}
