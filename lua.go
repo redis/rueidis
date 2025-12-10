@@ -24,6 +24,14 @@ func WithLoadSHA1(enabled bool) LuaOption {
 	}
 }
 
+// WithRetryable allows making lua script (which not readOnly) execution retryable. It would retry
+// automatically under network issues or redis retryable issues. It works with Completed.ToRetryable.
+func WithRetryable(enabled bool) LuaOption {
+	return func(l *Lua) {
+		l.retryable = enabled
+	}
+}
+
 // NewLuaScript creates a Lua instance whose Lua.Exec uses EVALSHA and EVAL.
 // By default, SHA-1 is calculated client-side. Use WithLoadSHA1(true) option to load SHA-1 from Redis instead.
 func NewLuaScript(script string, opts ...LuaOption) *Lua {
@@ -39,15 +47,15 @@ func NewLuaScriptReadOnly(script string, opts ...LuaOption) *Lua {
 // NewLuaScriptNoSha creates a Lua instance whose Lua.Exec uses EVAL only (never EVALSHA).
 // No SHA-1 is calculated or loaded. The script is sent to the server every time. Use this when you want
 // to avoid SHA-1 entirely (e.g., to fully avoid hash collision concerns).
-func NewLuaScriptNoSha(script string) *Lua {
-	return newLuaScript(script, false, true)
+func NewLuaScriptNoSha(script string, opts ...LuaOption) *Lua {
+	return newLuaScript(script, false, true, opts...)
 }
 
 // NewLuaScriptReadOnlyNoSha creates a Lua instance whose Lua.Exec uses EVAL_RO only (never EVALSHA_RO).
 // No SHA-1 is calculated or loaded. The script is sent to the server every time. Use this when you want
 // to avoid SHA-1 entirely (e.g., to fully avoid hash collision concerns).
-func NewLuaScriptReadOnlyNoSha(script string) *Lua {
-	return newLuaScript(script, true, true)
+func NewLuaScriptReadOnlyNoSha(script string, opts ...LuaOption) *Lua {
+	return newLuaScript(script, true, true, opts...)
 }
 
 func newLuaScript(script string, readonly bool, noSha1 bool, opts ...LuaOption) *Lua {
@@ -70,14 +78,15 @@ func newLuaScript(script string, readonly bool, noSha1 bool, opts ...LuaOption) 
 
 // Lua represents a redis lua script. It should be created from the NewLuaScript() or NewLuaScriptReadOnly().
 type Lua struct {
-	script   string
-	sha1     string
-	sha1Call call
-	maxp     int
-	sha1Mu   sync.RWMutex
-	readonly bool
-	noSha1   bool
-	loadSha1 bool
+	script    string
+	sha1      string
+	sha1Call  call
+	maxp      int
+	sha1Mu    sync.RWMutex
+	readonly  bool
+	noSha1    bool
+	loadSha1  bool
+	retryable bool
 }
 
 // Exec the script to the given Client.
@@ -90,7 +99,7 @@ func (s *Lua) Exec(ctx context.Context, c Client, keys, args []string) (resp Red
 	var scriptSha1 string
 
 	// Determine which SHA-1 to use.
-	if s.loadSha1 {
+	if !s.noSha1 && s.loadSha1 {
 		// Check if SHA-1 is already loaded.
 		s.sha1Mu.RLock()
 		scriptSha1 = s.sha1
@@ -99,7 +108,7 @@ func (s *Lua) Exec(ctx context.Context, c Client, keys, args []string) (resp Red
 		// If not loaded yet, use singleflight to load it.
 		if scriptSha1 == "" {
 			err := s.sha1Call.Do(ctx, func() error {
-				result := c.Do(ctx, c.B().ScriptLoad().Script(s.script).Build())
+				result := c.Do(ctx, s.mayRetryable(c.B().ScriptLoad().Script(s.script).Build()))
 				if shaStr, err := result.ToString(); err == nil {
 					s.sha1Mu.Lock()
 					s.sha1 = shaStr
@@ -126,7 +135,7 @@ func (s *Lua) Exec(ctx context.Context, c Client, keys, args []string) (resp Red
 		if s.readonly {
 			resp = c.Do(ctx, c.B().EvalshaRo().Sha1(scriptSha1).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
 		} else {
-			resp = c.Do(ctx, c.B().Evalsha().Sha1(scriptSha1).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
+			resp = c.Do(ctx, s.mayRetryable(c.B().Evalsha().Sha1(scriptSha1).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build()))
 		}
 		err, isErr := IsRedisErr(resp.Error())
 		isNoScript = isErr && err.IsNoScript()
@@ -135,7 +144,7 @@ func (s *Lua) Exec(ctx context.Context, c Client, keys, args []string) (resp Red
 		if s.readonly {
 			resp = c.Do(ctx, c.B().EvalRo().Script(s.script).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
 		} else {
-			resp = c.Do(ctx, c.B().Eval().Script(s.script).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build())
+			resp = c.Do(ctx, s.mayRetryable(c.B().Eval().Script(s.script).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build()))
 		}
 	}
 	return resp
@@ -159,7 +168,7 @@ func (s *Lua) ExecMulti(ctx context.Context, c Client, multi ...LuaExec) (resp [
 		var e atomic.Value
 		var sha1Result atomic.Value
 		util.ParallelVals(s.maxp, c.Nodes(), func(n Client) {
-			result := n.Do(ctx, n.B().ScriptLoad().Script(s.script).Build())
+			result := n.Do(ctx, s.mayRetryable(n.B().ScriptLoad().Script(s.script).Build()))
 			if err := result.Error(); err != nil {
 				e.CompareAndSwap(nil, &errs{error: err})
 			} else if s.loadSha1 {
@@ -200,15 +209,22 @@ func (s *Lua) ExecMulti(ctx context.Context, c Client, multi ...LuaExec) (resp [
 			if s.readonly {
 				cmds = append(cmds, c.B().EvalshaRo().Sha1(scriptSha1).Numkeys(int64(len(m.Keys))).Key(m.Keys...).Arg(m.Args...).Build())
 			} else {
-				cmds = append(cmds, c.B().Evalsha().Sha1(scriptSha1).Numkeys(int64(len(m.Keys))).Key(m.Keys...).Arg(m.Args...).Build())
+				cmds = append(cmds, s.mayRetryable(c.B().Evalsha().Sha1(scriptSha1).Numkeys(int64(len(m.Keys))).Key(m.Keys...).Arg(m.Args...).Build()))
 			}
 		} else {
 			if s.readonly {
 				cmds = append(cmds, c.B().EvalRo().Script(s.script).Numkeys(int64(len(m.Keys))).Key(m.Keys...).Arg(m.Args...).Build())
 			} else {
-				cmds = append(cmds, c.B().Eval().Script(s.script).Numkeys(int64(len(m.Keys))).Key(m.Keys...).Arg(m.Args...).Build())
+				cmds = append(cmds, s.mayRetryable(c.B().Eval().Script(s.script).Numkeys(int64(len(m.Keys))).Key(m.Keys...).Arg(m.Args...).Build()))
 			}
 		}
 	}
 	return c.DoMulti(ctx, cmds...)
+}
+
+func (s *Lua) mayRetryable(cmd Completed) Completed {
+	if s.retryable {
+		cmd = cmd.ToRetryable()
+	}
+	return cmd
 }
