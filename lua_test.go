@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"encoding/hex"
+	"fmt"
 	"math/rand"
 	"reflect"
 	"strconv"
@@ -591,6 +592,167 @@ func TestNewLuaScriptWithLoadSha1ExecMulti(t *testing.T) {
 	if !scriptLoadCalled {
 		t.Fatal("SCRIPT LOAD should have been called")
 	}
+}
+
+func TestNewLuaScriptWithRetryable(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	body := strconv.Itoa(rand.Int())
+	sum := sha1.Sum([]byte(body))
+	sha := hex.EncodeToString(sum[:])
+
+	k := []string{"1", "2"}
+	a := []string{"3", "4"}
+
+	type cmdAttr struct {
+		ReadOnly  bool
+		Retryable bool
+	}
+	type expect struct {
+		commands []string
+		reply    RedisResult
+		attr     cmdAttr
+	}
+	var expects []expect
+	should := func(e ...expect) { expects = e }
+	scriptLoad := func(_, retryable bool) expect {
+		return expect{
+			commands: []string{"SCRIPT", "LOAD", body},
+			reply:    newResult(strmsg('+', sha), nil),
+			attr:     cmdAttr{ReadOnly: false, Retryable: retryable},
+		}
+	}
+	evalSha := func(readOnly, retryable bool) expect {
+		cmd := "EVALSHA"
+		if readOnly {
+			cmd = "EVALSHA_RO"
+		}
+		return expect{
+			commands: []string{cmd, sha, "2", "1", "2", "3", "4"},
+			reply:    newResult(strmsg('+', "OK"), nil),
+			attr:     cmdAttr{ReadOnly: readOnly, Retryable: readOnly || retryable},
+		}
+	}
+	eval := func(readOnly, retryable bool) expect {
+		cmd := "EVAL"
+		if readOnly {
+			cmd = "EVAL_RO"
+		}
+		return expect{
+			commands: []string{cmd, body, "2", "1", "2", "3", "4"},
+			reply:    newResult(strmsg('+', "OK"), nil),
+			attr:     cmdAttr{ReadOnly: readOnly, Retryable: readOnly || retryable},
+		}
+	}
+	genExpects := func(fn ...func(readOnly, retryable bool) expect) []func(readOnly, retryable bool) expect { return fn }
+
+	c := &client{
+		BFn: func() Builder {
+			return cmds.NewBuilder(cmds.NoSlot)
+		},
+		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
+			commands := cmd.Commands()
+			for _, e := range expects {
+				if reflect.DeepEqual(commands, e.commands) {
+					if cmd.IsReadOnly() != e.attr.ReadOnly || cmd.IsRetryable() != e.attr.Retryable {
+						return newErrResult(fmt.Errorf("cmd attr not match, %v %v %v %v", cmd.IsReadOnly(), e.attr.ReadOnly, cmd.IsRetryable(), e.attr.Retryable))
+					}
+					return e.reply
+				}
+			}
+			return newResult(strmsg('-', "not expected"), nil)
+		},
+		DoMultiFn: func(ctx context.Context, multi ...Completed) (resp []RedisResult) {
+			for _, cmd := range multi {
+				commands := cmd.Commands()
+				found := false
+				for _, e := range expects {
+					if reflect.DeepEqual(commands, e.commands) {
+						if cmd.IsReadOnly() != e.attr.ReadOnly || cmd.IsRetryable() != e.attr.Retryable {
+							resp = append(resp, newErrResult(fmt.Errorf("cmd attr not match, %v %v %v %v", cmd.IsReadOnly(), e.attr.ReadOnly, cmd.IsRetryable(), e.attr.Retryable)))
+						} else {
+							resp = append(resp, e.reply)
+						}
+						found = true
+						break
+					}
+				}
+				if !found {
+					resp = append(resp, newResult(strmsg('-', "not expected"), nil))
+				}
+			}
+			return resp
+		},
+	}
+
+	testScript := func(t *testing.T, fn func(opts ...LuaOption) *Lua, readOnly bool,
+		execShould, execMultiShould []func(readOnly, retryable bool) expect) {
+		retryable := false
+		do := func(t *testing.T, opts ...LuaOption) {
+			var ecs []expect
+			for _, e := range execShould {
+				ecs = append(ecs, e(readOnly, retryable))
+			}
+			should(ecs...)
+			script := fn(opts...)
+
+			if v, err := script.Exec(context.Background(), c, k, a).ToString(); err != nil || v != "OK" {
+				t.Errorf("ret mismatch, %v %v", err, v)
+			}
+			ecs = nil
+			for _, e := range execMultiShould {
+				ecs = append(ecs, e(readOnly, retryable))
+			}
+			should(ecs...)
+			if v, err := script.ExecMulti(context.Background(), c, LuaExec{Keys: k, Args: a})[0].ToString(); err != nil || v != "OK" {
+				t.Errorf("ret mismatch, %v %v", err, v)
+			}
+		}
+		t.Run("", func(t *testing.T) {
+			do(t)
+		})
+		retryable = true
+		t.Run("WithRetryable", func(t *testing.T) {
+			do(t, WithRetryable(true))
+		})
+	}
+
+	t.Run("NewLuaScript", func(t *testing.T) {
+		testScript(t, func(opts ...LuaOption) *Lua {
+			return NewLuaScript(body, opts...)
+		}, false, genExpects(evalSha), genExpects(scriptLoad, evalSha))
+	})
+
+	t.Run("NewLuaScriptNoSha", func(t *testing.T) {
+		testScript(t, func(opts ...LuaOption) *Lua {
+			return NewLuaScriptNoSha(body, opts...)
+		}, false, genExpects(eval), genExpects(eval))
+	})
+
+	t.Run("NewLuaScriptReadOnly", func(t *testing.T) {
+		testScript(t, func(opts ...LuaOption) *Lua {
+			return NewLuaScriptReadOnly(body, opts...)
+		}, true, genExpects(evalSha), genExpects(scriptLoad, evalSha))
+	})
+
+	t.Run("NewLuaScriptReadOnlyNoSha", func(t *testing.T) {
+		testScript(t, func(opts ...LuaOption) *Lua {
+			return NewLuaScriptReadOnlyNoSha(body, opts...)
+		}, true, genExpects(eval), genExpects(eval))
+	})
+
+	t.Run("NewLuaScriptWithLoadSha1", func(t *testing.T) {
+		testScript(t, func(opts ...LuaOption) *Lua {
+			opts = append(opts, WithLoadSHA1(true))
+			return NewLuaScript(body, opts...)
+		}, false, genExpects(scriptLoad, evalSha), genExpects(scriptLoad, evalSha))
+	})
+
+	t.Run("NewLuaScriptReadOnlyWithLoadSha1", func(t *testing.T) {
+		testScript(t, func(opts ...LuaOption) *Lua {
+			opts = append(opts, WithLoadSHA1(true))
+			return NewLuaScriptReadOnly(body, opts...)
+		}, true, genExpects(scriptLoad, evalSha), genExpects(scriptLoad, evalSha))
+	})
 }
 
 func BenchmarkLuaScript_Exec(b *testing.B) {
