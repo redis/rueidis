@@ -1,6 +1,6 @@
 # rueidisaside
 
-A Cache-Aside pattern implementation enhanced by [Client Side Caching](https://redis.io/docs/manual/client-side-caching/).
+A Cache-Aside pattern implementation enhanced by [Client Side Caching](https://redis.io/docs/latest/develop/reference/client-side-caching/).
 
 ## Features backed by the Redis Client Side Caching
 
