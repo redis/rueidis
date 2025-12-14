@@ -9,6 +9,10 @@ import (
 	intl "github.com/redis/rueidis/internal/cmds"
 )
 
+func slot(key string) uint16 {
+	return intl.Slot(key)
+}
+
 // MGetCache is a helper that consults the client-side caches with multiple keys by grouping keys within the same slot into multiple GETs
 func MGetCache(client Client, ctx context.Context, ttl time.Duration, keys []string) (ret map[string]RedisMessage, err error) {
 	if len(keys) == 0 {
@@ -50,12 +54,7 @@ func MGet(client Client, ctx context.Context, keys []string) (ret map[string]Red
 		return clientMGet(client, ctx, client.B().Mget().Key(keys...).Build(), keys)
 	}
 
-	cmds := mgetcmdsp.Get(len(keys), len(keys))
-	defer mgetcmdsp.Put(cmds)
-	for i := range cmds.s {
-		cmds.s[i] = client.B().Get().Key(keys[i]).Build()
-	}
-	return doMultiGet(client, ctx, cmds.s, keys)
+	return clusterMGet(client, ctx, keys)
 }
 
 // MSet is a helper that consults the redis directly with multiple keys by grouping keys within the same slot into MSETs or multiple SETs
@@ -139,12 +138,7 @@ func JsonMGet(client Client, ctx context.Context, keys []string, path string) (r
 		return clientMGet(client, ctx, client.B().JsonMget().Key(keys...).Path(path).Build(), keys)
 	}
 
-	cmds := mgetcmdsp.Get(len(keys), len(keys))
-	defer mgetcmdsp.Put(cmds)
-	for i := range cmds.s {
-		cmds.s[i] = client.B().JsonGet().Key(keys[i]).Path(path).Build()
-	}
-	return doMultiGet(client, ctx, cmds.s, keys)
+	return clusterJsonMGet(client, ctx, keys, path)
 }
 
 // JsonMSet is a helper that consults redis directly with multiple keys by grouping keys within the same slot into JSON.MSETs or multiple JSON.SETs
@@ -275,6 +269,134 @@ func arrayToKV(m map[string]RedisMessage, arr []RedisMessage, keys []string) map
 		m[keys[i]] = resp
 	}
 	return m
+}
+
+func clusterMGet(client Client, ctx context.Context, keys []string) (ret map[string]RedisMessage, err error) {
+	ret = make(map[string]RedisMessage, len(keys))
+	if len(keys) == 0 {
+		return ret, nil
+	}
+
+	// Map slot -> index in cmds.s
+	slotIdx := make(map[uint16]int, len(keys)/2)
+	cmds := mgetcmdsp.Get(0, len(keys))
+	defer mgetcmdsp.Put(cmds)
+
+	for _, key := range keys {
+		s := slot(key)
+		idx, ok := slotIdx[s]
+		if !ok {
+			// first key in this slot: create a new MGET
+			idx = len(cmds.s)
+			slotIdx[s] = idx
+			cmds.s = append(cmds.s, client.B().Mget().Key(key).Build().Pin())
+			continue
+		}
+
+		c := cmds.s[idx]
+		args := c.Commands()                 // ["MGET", k1, k2, ...]
+		mk := client.B().Mget().Key(args[1]) // first existing key
+		for i := 2; i < len(args); i++ {     // remaining existing keys
+			mk = mk.Key(args[i])
+		}
+		mk = mk.Key(key) // add the new key
+
+		intl.PutCompletedForce(c)
+		cmds.s[idx] = mk.Build().Pin()
+	}
+
+	resps := client.DoMulti(ctx, cmds.s...)
+	defer resultsp.Put(&redisresults{s: resps})
+
+	// Convert each response to an array once
+	values := make([][]RedisMessage, len(cmds.s))
+	for i, resp := range resps {
+		values[i], err = resp.ToArray()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Track per-command index as we walk keys in order
+	pos := make([]int, len(cmds.s))
+	for _, key := range keys {
+		idx := slotIdx[slot(key)]
+		ret[key] = values[idx][pos[idx]]
+		pos[idx]++
+	}
+
+	for i := range cmds.s {
+		intl.PutCompletedForce(cmds.s[i])
+	}
+	return ret, nil
+}
+
+func clusterJsonMGet(client Client, ctx context.Context, keys []string, path string) (ret map[string]RedisMessage, err error) {
+	ret = make(map[string]RedisMessage, len(keys))
+	if len(keys) == 0 {
+		return ret, nil
+	}
+
+	// Map slot -> index in cmds.s
+	slotIdx := make(map[uint16]int, len(keys)/2)
+	cmds := mgetcmdsp.Get(0, len(keys))
+	defer mgetcmdsp.Put(cmds)
+
+	for _, key := range keys {
+		s := slot(key)
+		idx, ok := slotIdx[s]
+		if !ok {
+			// first key in this slot: create a new JSON.MGET
+			idx = len(cmds.s)
+			slotIdx[s] = idx
+			cmds.s = append(cmds.s, client.B().JsonMget().Key(key).Path(path).Build().Pin())
+			continue
+		}
+
+		// extend existing JSON.MGET for this slot by rebuilding the command with the new key
+		c := cmds.s[idx]
+		args := c.Commands() // ["JSON.MGET", k1, k2, ..., path]
+		if len(args) < 3 {
+			// Shouldn't happen, but guard anyway
+			intl.PutCompletedForce(c)
+			cmds.s[idx] = client.B().JsonMget().Key(key).Path(path).Build().Pin()
+			continue
+		}
+
+		// existing keys are args[1 : len(args)-1], final arg is path
+		jm := client.B().JsonMget().Key(args[1])
+		for i := 2; i < len(args)-1; i++ {
+			jm = jm.Key(args[i])
+		}
+		jm = jm.Key(key)
+		jp := jm.Path(path)
+
+		intl.PutCompletedForce(c)
+		cmds.s[idx] = jp.Build().Pin()
+	}
+
+	resps := client.DoMulti(ctx, cmds.s...)
+	defer resultsp.Put(&redisresults{s: resps})
+
+	values := make([][]RedisMessage, len(cmds.s))
+	for i, resp := range resps {
+		values[i], err = resp.ToArray()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	pos := make([]int, len(cmds.s))
+	for _, key := range keys {
+		idx := slotIdx[slot(key)]
+		ret[key] = values[idx][pos[idx]]
+		pos[idx]++
+	}
+
+	for i := range cmds.s {
+		intl.PutCompletedForce(cmds.s[i])
+	}
+	return ret, nil
 }
 
 // ErrMSetNXNotSet is used in the MSetNX helper when the underlying MSETNX response is 0.
