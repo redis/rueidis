@@ -105,7 +105,7 @@ func (s *Lua) Exec(ctx context.Context, c Client, keys, args []string) (resp Red
 	var scriptSha1 string
 
 	// Determine which SHA-1 to use.
-	if !s.noSha1 && s.loadSha1 {
+	if s.loadSha1 {
 		// Check if SHA-1 is already loaded.
 		s.sha1Mu.RLock()
 		scriptSha1 = s.sha1
