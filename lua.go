@@ -24,46 +24,52 @@ func WithLoadSHA1(enabled bool) LuaOption {
 	}
 }
 
-// WithRetryable allows making lua script (which not readOnly) execution retryable. It would retry
-// automatically under network issues or redis retryable issues. It works with Completed.ToRetryable.
-func WithRetryable(enabled bool) LuaOption {
-	return func(l *Lua) {
-		l.retryable = enabled
-	}
-}
-
 // NewLuaScript creates a Lua instance whose Lua.Exec uses EVALSHA and EVAL.
 // By default, SHA-1 is calculated client-side. Use WithLoadSHA1(true) option to load SHA-1 from Redis instead.
 func NewLuaScript(script string, opts ...LuaOption) *Lua {
-	return newLuaScript(script, false, false, opts...)
+	return newLuaScript(script, false, false, false, opts...)
 }
 
 // NewLuaScriptReadOnly creates a Lua instance whose Lua.Exec uses EVALSHA_RO and EVAL_RO.
 // By default, SHA-1 is calculated client-side. Use WithLoadSHA1(true) option to load SHA-1 from Redis instead.
 func NewLuaScriptReadOnly(script string, opts ...LuaOption) *Lua {
-	return newLuaScript(script, true, false, opts...)
+	return newLuaScript(script, true, false, false, opts...)
 }
 
 // NewLuaScriptNoSha creates a Lua instance whose Lua.Exec uses EVAL only (never EVALSHA).
 // No SHA-1 is calculated or loaded. The script is sent to the server every time. Use this when you want
 // to avoid SHA-1 entirely (e.g., to fully avoid hash collision concerns).
-func NewLuaScriptNoSha(script string, opts ...LuaOption) *Lua {
-	return newLuaScript(script, false, true, opts...)
+func NewLuaScriptNoSha(script string) *Lua {
+	return newLuaScript(script, false, true, false)
 }
 
 // NewLuaScriptReadOnlyNoSha creates a Lua instance whose Lua.Exec uses EVAL_RO only (never EVALSHA_RO).
 // No SHA-1 is calculated or loaded. The script is sent to the server every time. Use this when you want
 // to avoid SHA-1 entirely (e.g., to fully avoid hash collision concerns).
-func NewLuaScriptReadOnlyNoSha(script string, opts ...LuaOption) *Lua {
-	return newLuaScript(script, true, true, opts...)
+func NewLuaScriptReadOnlyNoSha(script string) *Lua {
+	return newLuaScript(script, true, true, false)
 }
 
-func newLuaScript(script string, readonly bool, noSha1 bool, opts ...LuaOption) *Lua {
+// NewLuaScriptRetryable creates a retryable Lua instance whose Lua.Exec uses EVALSHA and EVAL.
+// By default, SHA-1 is calculated client-side. Use WithLoadSHA1(true) option to load SHA-1 from Redis instead.
+func NewLuaScriptRetryable(script string, opts ...LuaOption) *Lua {
+	return newLuaScript(script, false, false, true, opts...)
+}
+
+// NewLuaScriptNoShaRetryable creates a retryable Lua instance whose Lua.Exec uses EVAL only (never EVALSHA).
+// No SHA-1 is calculated or loaded. The script is sent to the server every time. Use this when you want
+// to avoid SHA-1 entirely (e.g., to fully avoid hash collision concerns).
+func NewLuaScriptNoShaRetryable(script string) *Lua {
+	return newLuaScript(script, false, true, true)
+}
+
+func newLuaScript(script string, readonly bool, noSha1, retryable bool, opts ...LuaOption) *Lua {
 	l := &Lua{
-		script:   script,
-		maxp:     runtime.GOMAXPROCS(0),
-		readonly: readonly,
-		noSha1:   noSha1,
+		script:    script,
+		maxp:      runtime.GOMAXPROCS(0),
+		readonly:  readonly,
+		noSha1:    noSha1,
+		retryable: retryable,
 	}
 	for _, opt := range opts {
 		opt(l)
@@ -108,7 +114,7 @@ func (s *Lua) Exec(ctx context.Context, c Client, keys, args []string) (resp Red
 		// If not loaded yet, use singleflight to load it.
 		if scriptSha1 == "" {
 			err := s.sha1Call.Do(ctx, func() error {
-				result := c.Do(ctx, s.mayRetryable(c.B().ScriptLoad().Script(s.script).Build()))
+				result := c.Do(ctx, c.B().ScriptLoad().Script(s.script).Build().ToRetryable())
 				if shaStr, err := result.ToString(); err == nil {
 					s.sha1Mu.Lock()
 					s.sha1 = shaStr
@@ -168,7 +174,7 @@ func (s *Lua) ExecMulti(ctx context.Context, c Client, multi ...LuaExec) (resp [
 		var e atomic.Value
 		var sha1Result atomic.Value
 		util.ParallelVals(s.maxp, c.Nodes(), func(n Client) {
-			result := n.Do(ctx, s.mayRetryable(n.B().ScriptLoad().Script(s.script).Build()))
+			result := n.Do(ctx, n.B().ScriptLoad().Script(s.script).Build().ToRetryable())
 			if err := result.Error(); err != nil {
 				e.CompareAndSwap(nil, &errs{error: err})
 			} else if s.loadSha1 {
