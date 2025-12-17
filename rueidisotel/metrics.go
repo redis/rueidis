@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"net"
+	"strconv"
 	"sync/atomic"
 	"time"
 
@@ -182,7 +183,7 @@ func newClient(opts ...Option) (*otelclient, error) {
 
 func trackDialing(m dialMetrics, t dialTracer, dialFn func(context.Context, string, *net.Dialer, *tls.Config) (conn net.Conn, err error)) func(context.Context, string, *net.Dialer, *tls.Config) (conn net.Conn, err error) {
 	return func(ctx context.Context, dst string, dialer *net.Dialer, tlsConfig *tls.Config) (conn net.Conn, err error) {
-		ctx, span := t.Start(ctx, "redis.dial", kind, trace.WithAttributes(dbattr, attribute.String("server.address", dst)), t.tAttrs)
+		ctx, span := t.Start(ctx, "redis.dial", kind, trace.WithAttributes(dbattr), serverAttrs(dst), t.tAttrs)
 		defer span.End()
 
 		m.attempt.Add(ctx, 1, m.addOpts...)
@@ -232,4 +233,13 @@ func defaultDialFn(ctx context.Context, dst string, dialer *net.Dialer, cfg *tls
 		return td.DialContext(ctx, "tcp", dst)
 	}
 	return dialer.DialContext(ctx, "tcp", dst)
+}
+
+func serverAttrs(dst string) trace.SpanStartOption {
+	if addr, port, err := net.SplitHostPort(dst); err == nil {
+		if port, err := strconv.Atoi(port); err == nil {
+			return trace.WithAttributes(attribute.String("server.address", addr), attribute.Int("server.port", port))
+		}
+	}
+	return trace.WithAttributes(attribute.String("server.address", dst))
 }
