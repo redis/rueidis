@@ -297,13 +297,8 @@ func validateTrace(t *testing.T, exp *tracetest.InMemoryExporter, op string, cod
 	if name := exp.GetSpans().Snapshots()[0].Name(); name != op {
 		t.Fatalf("unexpected span name %v", name)
 	}
-	if operation := exp.GetSpans().Snapshots()[0].Attributes()[1].Value.AsString(); operation != op {
-		t.Fatalf("unexpected span name %v", operation)
-	}
-	customAttr := exp.GetSpans().Snapshots()[0].Attributes()[3]
-	if string(customAttr.Key) != "any" || customAttr.Value.AsString() != "label" {
-		t.Fatalf("unexpected custom attr %v", customAttr)
-	}
+	validateSpanHasAttribute(t, exp.GetSpans().Snapshots()[0], attribute.String("db.operation", op))
+	validateSpanHasAttribute(t, exp.GetSpans().Snapshots()[0], attribute.String("any", "label"))
 	if c := exp.GetSpans().Snapshots()[0].Status().Code; c != code {
 		t.Fatalf("unexpected span status code %v", c)
 	}

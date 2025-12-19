@@ -163,6 +163,7 @@ type otelclient struct {
 	meter           metric.Meter
 	cscMiss         metric.Int64Counter
 	cscHits         metric.Int64Counter
+	sAttrs          trace.SpanStartEventOption
 	tAttrs          trace.SpanStartEventOption
 	dbStmtFunc      StatementFunc
 	addOpts         []metric.AddOption
@@ -269,6 +270,7 @@ func (o *otelclient) Dedicated(fn func(rueidis.DedicatedClient) error) (err erro
 	return o.client.Dedicated(func(client rueidis.DedicatedClient) error {
 		return fn(&dedicated{
 			client:         client,
+			sAttrs:         o.sAttrs,
 			tAttrs:         o.tAttrs,
 			tracer:         o.tracer,
 			dbStmtFunc:     o.dbStmtFunc,
@@ -281,6 +283,7 @@ func (o *otelclient) Dedicate() (rueidis.DedicatedClient, func()) {
 	client, cancel := o.client.Dedicate()
 	return &dedicated{
 		client:         client,
+		sAttrs:         o.sAttrs,
 		tAttrs:         o.tAttrs,
 		tracer:         o.tracer,
 		dbStmtFunc:     o.dbStmtFunc,
@@ -312,6 +315,7 @@ func (o *otelclient) Nodes() map[string]rueidis.Client {
 			cscHits:         o.cscHits,
 			addOpts:         o.addOpts,
 			recordOpts:      o.recordOpts,
+			sAttrs:          serverAttrs(addr),
 			tAttrs:          o.tAttrs,
 			histogramOption: o.histogramOption,
 			dbStmtFunc:      o.dbStmtFunc,
@@ -350,6 +354,7 @@ var _ rueidis.DedicatedClient = (*dedicated)(nil)
 type dedicated struct {
 	client     rueidis.DedicatedClient
 	tracer     trace.Tracer
+	sAttrs     trace.SpanStartEventOption
 	tAttrs     trace.SpanStartEventOption
 	dbStmtFunc StatementFunc
 	commandMetrics
@@ -489,7 +494,7 @@ func multiCacheableFirst(multi []rueidis.CacheableTTL) string {
 }
 
 func (o *otelclient) start(ctx context.Context, op string, size int) (context.Context, trace.Span) {
-	return startSpan(o.tracer, ctx, op, size, o.tAttrs)
+	return startSpan(o.tracer, ctx, op, size, o.sAttrs, o.tAttrs)
 }
 
 func (o *otelclient) end(span trace.Span, err error) {
@@ -497,15 +502,15 @@ func (o *otelclient) end(span trace.Span, err error) {
 }
 
 func (d *dedicated) start(ctx context.Context, op string, size int) (context.Context, trace.Span) {
-	return startSpan(d.tracer, ctx, op, size, d.tAttrs)
+	return startSpan(d.tracer, ctx, op, size, d.sAttrs, d.tAttrs)
 }
 
 func (d *dedicated) end(span trace.Span, err error) {
 	endSpan(span, err)
 }
 
-func startSpan(tracer trace.Tracer, ctx context.Context, op string, size int, attrs trace.SpanStartEventOption) (context.Context, trace.Span) {
-	return tracer.Start(ctx, op, kind, attr(op, size), attrs)
+func startSpan(tracer trace.Tracer, ctx context.Context, op string, size int, sAttrs trace.SpanStartEventOption, tAttrs trace.SpanStartEventOption) (context.Context, trace.Span) {
+	return tracer.Start(ctx, op, kind, attr(op, size), sAttrs, tAttrs)
 }
 
 func endSpan(span trace.Span, err error) {

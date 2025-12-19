@@ -85,6 +85,10 @@ func NewClient(clientOption rueidis.ClientOption, opts ...Option) (rueidis.Clien
 		return nil, err
 	}
 
+	if len(clientOption.InitAddress) == 1 {
+		oclient.sAttrs = serverAttrs(clientOption.InitAddress[0])
+	}
+
 	if clientOption.DialCtxFn == nil {
 		clientOption.DialCtxFn = defaultDialFn
 		if clientOption.DialFn != nil {
@@ -136,6 +140,7 @@ func NewClient(clientOption rueidis.ClientOption, opts ...Option) (rueidis.Clien
 
 func newClient(opts ...Option) (*otelclient, error) {
 	cli := &otelclient{
+		sAttrs: trace.WithAttributes(),
 		tAttrs: trace.WithAttributes(),
 	}
 	for _, opt := range opts {
@@ -235,7 +240,7 @@ func defaultDialFn(ctx context.Context, dst string, dialer *net.Dialer, cfg *tls
 	return dialer.DialContext(ctx, "tcp", dst)
 }
 
-func serverAttrs(dst string) trace.SpanStartOption {
+func serverAttrs(dst string) trace.SpanStartEventOption {
 	if addr, port, err := net.SplitHostPort(dst); err == nil {
 		if port, err := strconv.Atoi(port); err == nil {
 			return trace.WithAttributes(attribute.String("server.address", addr), attribute.Int("server.port", port))
