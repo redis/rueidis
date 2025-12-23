@@ -460,16 +460,15 @@ func (c *clusterClient) _pick(slot uint16, toReplica bool) (p conn) {
 			break
 		}
 	} else if toReplica && c.rslots != nil {
-		if c.opt.ReadNodeSelector != nil {
-			nodes := c.rslots[slot]
-			rIndex := c.opt.ReadNodeSelector(slot, nodes)
-			if rIndex >= 0 && rIndex < len(nodes) {
-				p = c.rslots[slot][rIndex].conn
-			} else {
-				p = c.wslots[slot]
+		if nodes := c.rslots[slot]; len(nodes) > 0 {
+			rIndex := 0
+			if c.opt.ReadNodeSelector != nil {
+				rIndex = c.opt.ReadNodeSelector(slot, nodes)
+				if rIndex < 0 || rIndex >= len(nodes) {
+					rIndex = 0
+				}
 			}
-		} else {
-			p = c.rslots[slot][0].conn
+			p = nodes[rIndex].conn
 		}
 	} else {
 		p = c.wslots[slot]
@@ -617,18 +616,18 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 			var cc conn
 			slot := cmd.Slot()
 			if c.opt.SendToReplicas(cmd) {
-				bm.Set(i)
-				if c.opt.ReadNodeSelector != nil {
-					nodes := c.rslots[slot]
-					rIndex := c.opt.ReadNodeSelector(slot, nodes)
-					if rIndex > 0 && rIndex < len(nodes) {
-						itor[i] = rIndex
-					} else {
-						rIndex = 0 // default itor[i] = 0
+				if nodes := c.rslots[slot]; len(nodes) > 0 {
+					bm.Set(i)
+					rIndex := 0
+					if c.opt.ReadNodeSelector != nil {
+						rIndex = c.opt.ReadNodeSelector(slot, nodes)
+						if rIndex < 0 || rIndex >= len(nodes) {
+							rIndex = 0
+						} else if rIndex != 0 { // the default itor[i] is 0
+							itor[i] = rIndex
+						}
 					}
 					cc = nodes[rIndex].conn
-				} else {
-					cc = c.rslots[slot][0].conn
 				}
 			} else {
 				cc = c.wslots[slot]
@@ -1109,15 +1108,15 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 			var p conn
 			slot := cmd.Cmd.Slot()
 			if c.opt.SendToReplicas(Completed(cmd.Cmd)) {
-				if c.opt.ReadNodeSelector != nil {
-					rIndex := c.opt.ReadNodeSelector(slot, c.rslots[slot])
-					if rIndex >= 0 && rIndex < len(c.rslots[slot]) {
-						p = c.rslots[slot][rIndex].conn
-					} else {
-						p = c.wslots[slot]
+				if nodes := c.rslots[slot]; len(nodes) > 0 {
+					rIndex := 0
+					if c.opt.ReadNodeSelector != nil {
+						rIndex = c.opt.ReadNodeSelector(slot, nodes)
+						if rIndex < 0 || rIndex >= len(nodes) {
+							rIndex = 0
+						}
 					}
-				} else {
-					p = c.rslots[slot][0].conn
+					p = nodes[rIndex].conn
 				}
 			} else {
 				p = c.wslots[slot]

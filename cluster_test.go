@@ -10796,3 +10796,164 @@ func TestClusterClient_ReadNodeSelector_SendToAlternatePrimaryAndReplicaNodes(t 
 		}
 	})
 }
+
+func TestClusterClient_Refresh_MissingSlotsForReplicas_Do(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	var refresh int64
+	primaryNodeConn := &mockConn{
+		DoOverride: map[string]func(cmd Completed) RedisResult{
+			"CLUSTER SLOTS": func(cmd Completed) RedisResult {
+				if atomic.AddInt64(&refresh, 1) == 1 {
+					return newResult(slicemsg('*', slotsMultiResp.val.values()[:1]), nil)
+				}
+				return slotsMultiResp
+			},
+		},
+	}
+	replicaNodeConn := &mockConn{
+		DoOverride: map[string]func(cmd Completed) RedisResult{
+			"GET K1{d}": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "GET K1{d}"), nil)
+			},
+		},
+	}
+
+	client, err := newClusterClient(
+		&ClientOption{
+			InitAddress: []string{"127.0.0.1:0"},
+			SendToReplicas: func(cmd Completed) bool {
+				return true
+			},
+			ReadNodeSelector: func(_ uint16, _ []NodeInfo) int {
+				return 1
+			},
+		},
+		func(dst string, opt *ClientOption) conn {
+			if dst == "127.0.0.1:0" { // primary nodes
+				return primaryNodeConn
+			} else if dst == "127.0.3.1:1" { // replica nodes
+				return replicaNodeConn
+			}
+			return &mockConn{}
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	if v, err := client.Do(context.Background(), client.B().Get().Key("K1{d}").Build()).ToString(); err != nil || v != "GET K1{d}" {
+		t.Fatalf("unexpected response %v %v", v, err)
+	}
+}
+
+func TestClusterClient_Refresh_MissingSlotsForReplicas_DoMulti(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	var refresh int64
+	primaryNodeConn := &mockConn{
+		DoOverride: map[string]func(cmd Completed) RedisResult{
+			"CLUSTER SLOTS": func(cmd Completed) RedisResult {
+				if atomic.AddInt64(&refresh, 1) == 1 {
+					return newResult(slicemsg('*', slotsMultiResp.val.values()[:1]), nil)
+				}
+				return slotsMultiResp
+			},
+		},
+	}
+	replicaNodeConn := &mockConn{
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			resps := make([]RedisResult, len(multi))
+			for i, cmd := range multi {
+				resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+			}
+			return &redisresults{s: resps}
+		},
+	}
+
+	client, err := newClusterClient(
+		&ClientOption{
+			InitAddress: []string{"127.0.0.1:0"},
+			SendToReplicas: func(cmd Completed) bool {
+				return true
+			},
+			ReadNodeSelector: func(_ uint16, _ []NodeInfo) int {
+				return 1
+			},
+		},
+		func(dst string, opt *ClientOption) conn {
+			if dst == "127.0.0.1:0" { // primary nodes
+				return primaryNodeConn
+			} else if dst == "127.0.3.1:1" { // replica nodes
+				return replicaNodeConn
+			}
+			return &mockConn{}
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	for _, resp := range client.DoMulti(context.Background(), client.B().Get().Key("K1{d}").Build()) {
+		if v, err := resp.ToString(); err != nil || v != "GET K1{d}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	}
+}
+
+func TestClusterClient_Refresh_MissingSlotsForReplicas_DoMultiCache(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	var refresh int64
+	primaryNodeConn := &mockConn{
+		DoOverride: map[string]func(cmd Completed) RedisResult{
+			"CLUSTER SLOTS": func(cmd Completed) RedisResult {
+				if atomic.AddInt64(&refresh, 1) == 1 {
+					return newResult(slicemsg('*', slotsMultiResp.val.values()[:1]), nil)
+				}
+				return slotsMultiResp
+			},
+		},
+	}
+	replicaNodeConn := &mockConn{
+		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
+			resps := make([]RedisResult, len(multi))
+			for i, cmd := range multi {
+				resps[i] = newResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
+			}
+			return &redisresults{s: resps}
+		},
+	}
+
+	client, err := newClusterClient(
+		&ClientOption{
+			InitAddress: []string{"127.0.0.1:0"},
+			SendToReplicas: func(cmd Completed) bool {
+				return true
+			},
+			ReadNodeSelector: func(_ uint16, _ []NodeInfo) int {
+				return 1
+			},
+		},
+		func(dst string, opt *ClientOption) conn {
+			if dst == "127.0.0.1:0" { // primary nodes
+				return primaryNodeConn
+			} else if dst == "127.0.3.1:1" { // replica nodes
+				return replicaNodeConn
+			}
+			return &mockConn{}
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	for _, resp := range client.DoMultiCache(context.Background(), CT(client.B().Get().Key("K1{d}").Cache(), time.Second)) {
+		if v, err := resp.ToString(); err != nil || v != "GET K1{d}" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+	}
+}
