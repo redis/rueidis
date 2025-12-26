@@ -603,10 +603,10 @@ func TestStandalonePickReplica(t *testing.T) {
 	}
 	defer s.Close()
 
-	// Test that pick() returns 0 for single replica
-	index := s.pick()
-	if index != 0 {
-		t.Errorf("expected index 0, got %d", index)
+	// Test that pick() returns the single replica
+	client := s.pick()
+	if client != s.replicas[0] {
+		t.Errorf("expected replica client, got different client")
 	}
 }
 
@@ -681,11 +681,11 @@ func TestStandalonePickMultipleReplicas(t *testing.T) {
 	}
 	defer s.Close()
 
-	// Test that pick() returns a valid index for multiple replicas
+	// Test that pick() returns a valid replica for multiple replicas
 	for i := 0; i < 10; i++ {
-		index := s.pick()
-		if index < 0 || index >= 2 {
-			t.Errorf("expected index 0 or 1, got %d", index)
+		client := s.pick()
+		if client != s.replicas[0] && client != s.replicas[1] {
+			t.Errorf("expected one of the replica clients, got different client")
 		}
 	}
 }
@@ -994,4 +994,76 @@ func TestStandaloneDoMultiCacheWithRedirectRetryFailure(t *testing.T) {
 	if verr, ok := results[0].Error().(*RedisError); !ok || !strings.Contains(verr.Error(), "REDIRECT") {
 		t.Errorf("expected REDIRECT error, got %v", results[0].Error())
 	}
+}
+
+func TestStandaloneReadNodeSelector(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	t.Run("ReadNodeSelector", func(t *testing.T) {
+		primaryNodeConn := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "primary"), nil)
+			},
+			AZFn: func() string {
+				return "us-east-1a"
+			},
+		}
+		replica1NodeConn := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "replica1"), nil)
+			},
+			AZFn: func() string {
+				return "us-east-1a" // Same AZ as client
+			},
+		}
+		replica2NodeConn := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "replica2"), nil)
+			},
+			AZFn: func() string {
+				return "us-east-1b" // Different AZ
+			},
+		}
+
+		client, err := newStandaloneClient(&ClientOption{
+			InitAddress: []string{"primary"},
+			Standalone: StandaloneOption{
+				ReplicaAddress: []string{"replica1", "replica2"},
+			},
+			EnableReplicaAZInfo: true,
+			SendToReplicas: func(cmd Completed) bool {
+				return cmd.IsReadOnly()
+			},
+			ReadNodeSelector: func(slot uint16, nodes []NodeInfo) int {
+				for i := 1; i < len(nodes); i++ {
+					if nodes[i].AZ == "us-east-1a" {
+						return i
+					}
+				}
+				return -1
+			},
+			DisableRetry: true,
+		}, func(dst string, opt *ClientOption) conn {
+			if dst == "primary" {
+				return primaryNodeConn
+			}
+			if dst == "replica1" {
+				return replica1NodeConn
+			}
+			return replica2NodeConn
+		}, newRetryer(defaultRetryDelayFn))
+
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		defer client.Close()
+
+		// Verify same-AZ replica (replica1) is selected when executing GET command
+		for i := 0; i < 10; i++ {
+			result := client.Do(context.Background(), client.B().Get().Key("key").Build())
+			if val, _ := result.ToString(); val != "replica1" {
+				t.Fatalf("expected same-AZ replica1 to be selected, got %s", val)
+			}
+		}
+	})
 }
