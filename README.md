@@ -521,7 +521,49 @@ client, err = rueidis.NewClient(rueidis.MustParseURL("unix:///run/redis.conf?db=
 
 Starting from Valkey 8.1, Valkey server provides the `availability-zone` information for clients to know where the server is located.
 For using this information to route requests to the replica located in the same availability zone,
-set the `EnableReplicaAZInfo` option and your `ReadNodeSelector` function. For example:
+set the `EnableReplicaAZInfo` option and your `ReadNodeSelector` function.
+
+#### Using Built-in Helper Functions
+
+Rueidis provides helper functions for common AZ-aware routing patterns:
+
+```go
+client, err := rueidis.NewClient(rueidis.ClientOption{
+  InitAddress:         []string{"address.example.com:6379"},
+  EnableReplicaAZInfo: true,
+  SendToReplicas: func(cmd rueidis.Completed) bool {
+    return cmd.IsReadOnly()
+  },
+  // Prefer replicas in same AZ, fallback to other replicas
+  ReadNodeSelector: rueidis.AZAffinityNodeSelector("us-east-1a"),
+
+  // Prefer same-AZ replicas, then same-AZ primary, then other replicas
+  // ReadNodeSelector: rueidis.AZAffinityReplicasAndPrimaryNodeSelector("us-east-1a"),
+})
+```
+
+For standalone mode with replicas:
+
+```go
+client, err := rueidis.NewClient(rueidis.ClientOption{
+  InitAddress:         []string{"primary.example.com:6379"},
+  Standalone: rueidis.StandaloneOption{
+    ReplicaAddress: []string{"replica1.example.com:6379", "replica2.example.com:6379"},
+  },
+  EnableReplicaAZInfo: true,
+  SendToReplicas: func(cmd rueidis.Completed) bool {
+    return cmd.IsReadOnly()
+  },
+  ReadNodeSelector: rueidis.AZAffinityNodeSelector("us-east-1a"),
+
+  // Prefer same-AZ replicas, then same-AZ primary, then other replicas
+  // ReadNodeSelector: rueidis.AZAffinityReplicasAndPrimaryNodeSelector("us-east-1a"),
+})
+```
+
+#### Custom ReadNodeSelector
+
+You can also implement your own custom routing logic:
 
 ```go
 client, err := rueidis.NewClient(rueidis.ClientOption{
@@ -531,6 +573,7 @@ client, err := rueidis.NewClient(rueidis.ClientOption{
     return cmd.IsReadOnly()
   },
   ReadNodeSelector: func(slot uint16, replicas []rueidis.NodeInfo) int {
+    // nodes[0] is the primary, nodes[1+] are replicas
     for i, replica := range replicas {
       if replica.AZ == "us-east-1a" {
         return i // return the index of the replica.

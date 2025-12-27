@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"iter"
+	"math/rand/v2"
 	"time"
 
 	intl "github.com/redis/rueidis/internal/cmds"
@@ -325,4 +326,85 @@ func (s *Scanner) Iter2() iter.Seq2[string, string] {
 
 func (s *Scanner) Err() error {
 	return s.err
+}
+
+// AZAffinityNodeSelector prioritizes replicas in the same AZ as the client.
+// Falls back to other replicas or primary if no same-AZ replica is available.
+// Works with standalone and cluster clients to minimize cross-AZ traffic.
+func AZAffinityNodeSelector(clientAZ string) func(uint16, []NodeInfo) int {
+	// nodes[0] is primary, nodes[1:] are replicas
+	return func(_ uint16, nodes []NodeInfo) int {
+		if len(nodes) <= 1 {
+			return -1
+		}
+
+		sameAZCount := 0
+		for i := 1; i < len(nodes); i++ {
+			if nodes[i].AZ == clientAZ {
+				sameAZCount++
+			}
+		}
+
+		if sameAZCount > 0 {
+			targetIdx := rand.IntN(sameAZCount)
+			currentIdx := 0
+			for i := 1; i < len(nodes); i++ {
+				if nodes[i].AZ == clientAZ {
+					if currentIdx == targetIdx {
+						return i
+					}
+					currentIdx++
+				}
+			}
+		}
+
+		replicaIdx := rand.IntN(len(nodes) - 1)
+		return 1 + replicaIdx
+	}
+}
+
+// AZAffinityReplicasAndPrimaryNodeSelector implements AZ-aware routing:
+// Priority 1: Replicas in same AZ as client
+// Priority 2: Primary in same AZ as client
+// Priority 3: Replicas in other AZs
+// Priority 4: Primary
+// Works with standalone and cluster clients to minimize cross-AZ traffic.
+func AZAffinityReplicasAndPrimaryNodeSelector(clientAZ string) func(uint16, []NodeInfo) int {
+	// nodes[0] is primary, nodes[1:] are replicas
+	return func(_ uint16, nodes []NodeInfo) int {
+		if len(nodes) == 0 {
+			return 0
+		}
+
+		sameAZReplicaCount := 0
+		for i := 1; i < len(nodes); i++ {
+			if nodes[i].AZ == clientAZ {
+				sameAZReplicaCount++
+			}
+		}
+
+		if sameAZReplicaCount > 0 {
+			targetIdx := rand.IntN(sameAZReplicaCount)
+			currentIdx := 0
+			for i := 1; i < len(nodes); i++ {
+				if nodes[i].AZ == clientAZ {
+					if currentIdx == targetIdx {
+						return i
+					}
+					currentIdx++
+				}
+			}
+		}
+
+		if len(nodes) > 0 && nodes[0].AZ == clientAZ {
+			return 0
+		}
+
+		if len(nodes) > 1 {
+			replicaIdx := rand.IntN(len(nodes) - 1)
+			return 1 + replicaIdx
+		}
+
+		return -1
+	}
 }

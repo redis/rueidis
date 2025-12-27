@@ -1493,14 +1493,7 @@ func TestClusterClientInit(t *testing.T) {
 				SendToReplicas: func(cmd Completed) bool {
 					return true
 				},
-				ReplicaSelector: func(slot uint16, replicas []NodeInfo) int {
-					for i, replica := range replicas {
-						if replica.AZ == "us-west-1b" {
-							return i
-						}
-					}
-					return -1
-				},
+				ReplicaSelector:     AZAffinityNodeSelector("us-west-1b"),
 				EnableReplicaAZInfo: true,
 			},
 			func(dst string, opt *ClientOption) conn {
@@ -1632,6 +1625,74 @@ func TestClusterClientInit(t *testing.T) {
 					t.Fatalf("unexpected node assigned to rslot %d at index %d", i, j)
 				}
 			}
+		}
+	})
+
+	t.Run("Refresh cluster with AZAffinityReplicasAndPrimaryNodeSelector helper", func(t *testing.T) {
+		var selectedConn atomic.Value
+
+		primaryNodeConn := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+					return slotsMultiRespWithMultiReplicas
+				}
+				selectedConn.Store("primary")
+				return newResult(strmsg('+', "primary"), nil)
+			},
+			AZFn: func() string { return "us-west-1a" },
+		}
+		replicaNodeConn1 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				selectedConn.Store("replica1")
+				return newResult(strmsg('+', "replica1"), nil)
+			},
+			AZFn: func() string { return "us-west-1c" },
+		}
+		replicaNodeConn2 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				selectedConn.Store("replica2")
+				return newResult(strmsg('+', "replica2"), nil)
+			},
+			AZFn: func() string { return "us-west-1b" },
+		}
+		replicaNodeConn3 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				selectedConn.Store("replica3")
+				return newResult(strmsg('+', "replica3"), nil)
+			},
+			AZFn: func() string { return "us-west-1b" },
+		}
+
+		client, err := newClusterClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				SendToReplicas: func(cmd Completed) bool {
+					return cmd.IsReadOnly()
+				},
+				ReadNodeSelector:    AZAffinityReplicasAndPrimaryNodeSelector("us-west-1a"),
+				EnableReplicaAZInfo: true,
+			},
+			func(dst string, opt *ClientOption) conn {
+				switch {
+				case dst == "127.0.0.2:1" || dst == "127.0.1.2:1":
+					return replicaNodeConn1
+				case dst == "127.0.0.3:2" || dst == "127.0.1.3:2":
+					return replicaNodeConn2
+				case dst == "127.0.0.4:3" || dst == "127.0.1.4:3":
+					return replicaNodeConn3
+				default:
+					return primaryNodeConn
+				}
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		client.Do(context.Background(), client.B().Get().Key("key").Build())
+		if selected := selectedConn.Load().(string); selected != "primary" {
+			t.Fatalf("expected same-AZ primary to be selected, got %s", selected)
 		}
 	})
 }
