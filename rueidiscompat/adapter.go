@@ -639,8 +639,27 @@ type CacheCompat struct {
 	ttl    time.Duration
 }
 
-func NewAdapter(client rueidis.Client) Cmdable {
-	return &Compat{client: client, maxp: runtime.GOMAXPROCS(0)}
+// AdapterOption is a functional option type for NewAdapter
+type AdapterOption func(c *Compat)
+
+// WithNodeScaleoutLimit sets the maximum parallelism for node scaleout operations.
+// If not set, defaults to runtime.GOMAXPROCS(0).
+// Values less than 1 will be set to 1.
+func WithNodeScaleoutLimit(limit int) AdapterOption {
+	return func(c *Compat) {
+		if limit < 1 {
+			limit = 1
+		}
+		c.maxp = limit
+	}
+}
+
+func NewAdapter(client rueidis.Client, options ...AdapterOption) Cmdable {
+	c := &Compat{client: client, maxp: runtime.GOMAXPROCS(0)}
+	for _, opt := range options {
+		opt(c)
+	}
+	return c
 }
 
 func (c *Compat) Cache(ttl time.Duration) CacheCompat {
