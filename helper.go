@@ -50,12 +50,7 @@ func MGet(client Client, ctx context.Context, keys []string) (ret map[string]Red
 		return clientMGet(client, ctx, client.B().Mget().Key(keys...).Build(), keys)
 	}
 
-	cmds := mgetcmdsp.Get(len(keys), len(keys))
-	defer mgetcmdsp.Put(cmds)
-	for i := range cmds.s {
-		cmds.s[i] = client.B().Get().Key(keys[i]).Build()
-	}
-	return doMultiGet(client, ctx, cmds.s, keys)
+	return clusterMGet(client, ctx, keys)
 }
 
 // MSet is a helper that consults the redis directly with multiple keys by grouping keys within the same slot into MSETs or multiple SETs
@@ -139,12 +134,7 @@ func JsonMGet(client Client, ctx context.Context, keys []string, path string) (r
 		return clientMGet(client, ctx, client.B().JsonMget().Key(keys...).Path(path).Build(), keys)
 	}
 
-	cmds := mgetcmdsp.Get(len(keys), len(keys))
-	defer mgetcmdsp.Put(cmds)
-	for i := range cmds.s {
-		cmds.s[i] = client.B().JsonGet().Key(keys[i]).Path(path).Build()
-	}
-	return doMultiGet(client, ctx, cmds.s, keys)
+	return clusterJsonMGet(client, ctx, keys, path)
 }
 
 // JsonMSet is a helper that consults redis directly with multiple keys by grouping keys within the same slot into JSON.MSETs or multiple JSON.SETs
@@ -245,19 +235,6 @@ func doMultiCache(cc Client, ctx context.Context, cmds []CacheableTTL, keys []st
 	return ret, nil
 }
 
-func doMultiGet(cc Client, ctx context.Context, cmds []Completed, keys []string) (ret map[string]RedisMessage, err error) {
-	ret = make(map[string]RedisMessage, len(keys))
-	resps := cc.DoMulti(ctx, cmds...)
-	defer resultsp.Put(&redisresults{s: resps})
-	for i, resp := range resps {
-		if err := resp.NonRedisError(); err != nil {
-			return nil, err
-		}
-		ret[keys[i]] = resp.val
-	}
-	return ret, nil
-}
-
 func doMultiSet(cc Client, ctx context.Context, cmds []Completed) (ret map[string]error) {
 	ret = make(map[string]error, len(cmds))
 	resps := cc.DoMulti(ctx, cmds...)
@@ -275,6 +252,94 @@ func arrayToKV(m map[string]RedisMessage, arr []RedisMessage, keys []string) map
 		m[keys[i]] = resp
 	}
 	return m
+}
+
+func clusterMGet(client Client, ctx context.Context, keys []string) (ret map[string]RedisMessage, err error) {
+	ret = make(map[string]RedisMessage, len(keys))
+	if len(keys) == 0 {
+		return ret, nil
+	}
+
+	// Map slot -> index in cmds.s
+	hint := len(keys) / 2
+	slotIdx := make(map[uint16]int, hint)
+	cmds := mgetcmdsp.Get(0, hint)
+	defer mgetcmdsp.Put(cmds)
+
+	for _, key := range keys {
+		slot := intl.Slot(key)
+		idx, ok := slotIdx[slot]
+		if !ok {
+			slotIdx[slot] = len(cmds.s)
+			cmds.s = append(cmds.s, client.B().Mget().Key(key).Build().Pin())
+			continue
+		}
+		intl.AppendCompleted(cmds.s[idx], key)
+	}
+
+	resps := client.DoMulti(ctx, cmds.s...)
+	defer resultsp.Put(&redisresults{s: resps})
+
+	for i, resp := range resps {
+		arr, err := resp.ToArray()
+		if err != nil {
+			return nil, err
+		}
+		for j, val := range arr {
+			ret[cmds.s[i].Commands()[j+1]] = val
+		}
+	}
+
+	for i := range cmds.s {
+		intl.PutCompletedForce(cmds.s[i])
+	}
+	return ret, nil
+}
+
+func clusterJsonMGet(client Client, ctx context.Context, keys []string, path string) (ret map[string]RedisMessage, err error) {
+	ret = make(map[string]RedisMessage, len(keys))
+	if len(keys) == 0 {
+		return ret, nil
+	}
+
+	// Map slot -> index in cmds.s
+	hint := len(keys) / 2
+	slotIdx := make(map[uint16]int, hint)
+	cmds := mgetcmdsp.Get(0, hint)
+	defer mgetcmdsp.Put(cmds)
+
+	for _, key := range keys {
+		slot := intl.Slot(key)
+		idx, ok := slotIdx[slot]
+		if !ok {
+			slotIdx[slot] = len(cmds.s)
+			cmds.s = append(cmds.s, client.B().Arbitrary("JSON.MGET").Keys(key).MultiGet().Pin())
+			continue
+		}
+		intl.AppendCompleted(cmds.s[idx], key)
+	}
+
+	for _, c := range cmds.s {
+		intl.AppendCompleted(c, path)
+	}
+
+	resps := client.DoMulti(ctx, cmds.s...)
+	defer resultsp.Put(&redisresults{s: resps})
+
+	for i, resp := range resps {
+		arr, err := resp.ToArray()
+		if err != nil {
+			return nil, err
+		}
+		for j, val := range arr {
+			ret[cmds.s[i].Commands()[j+1]] = val
+		}
+	}
+
+	for i := range cmds.s {
+		intl.PutCompletedForce(cmds.s[i])
+	}
+	return ret, nil
 }
 
 // ErrMSetNXNotSet is used in the MSetNX helper when the underlying MSETNX response is 0.
