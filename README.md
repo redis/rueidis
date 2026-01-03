@@ -66,13 +66,13 @@ Once a command is built, use either `client.Do()` or `client.DoMulti()` to send 
 
 To reuse a command, use `Pin()` after `Build()` and it will prevent the command from being recycled.
 
-## [Pipelining](https://redis.io/docs/manual/pipelining/)
+## [Pipelining](https://redis.io/docs/latest/develop/using-commands/pipelining/)
 
 ### Auto Pipelining
 
 All concurrent non-blocking redis commands (such as `GET`, `SET`) are automatically pipelined by default,
 which reduces the overall round trips and system calls and gets higher throughput. You can easily get the benefit
-of [pipelining technique](https://redis.io/docs/manual/pipelining/) by just calling `client.Do()` from multiple goroutines concurrently.
+of [pipelining technique](https://redis.io/docs/latest/develop/using-commands/pipelining/) by just calling `client.Do()` from multiple goroutines concurrently.
 For example:
 
 ```go
@@ -270,6 +270,15 @@ to make sure manually cancellation is respected, especially for blocking request
 
 All read-only commands are automatically retried on failures by default before their context deadlines exceeded.
 You can disable this by setting `DisableRetry` or adjust the number of retries and durations between retries using `RetryDelay` function.
+
+### Retryable Commands
+
+Write commands can set Retryable to automatically retried on failures like read-only commands. Make sure you only use this feature with idempotent operations.
+
+```golang
+client.Do(ctx, client.B().Set().Key("key").Value("val").Build().ToRetryable())
+client.DoMulti(ctx, client.B().Set().Key("key").Value("val").Build().ToRetryable())
+```
 
 ## Pub/Sub
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"net"
+	"strconv"
 	"sync/atomic"
 	"time"
 
@@ -84,6 +85,10 @@ func NewClient(clientOption rueidis.ClientOption, opts ...Option) (rueidis.Clien
 		return nil, err
 	}
 
+	if len(clientOption.InitAddress) == 1 {
+		oclient.sAttrs = serverAttrs(clientOption.InitAddress[0])
+	}
+
 	if clientOption.DialCtxFn == nil {
 		clientOption.DialCtxFn = defaultDialFn
 		if clientOption.DialFn != nil {
@@ -135,6 +140,7 @@ func NewClient(clientOption rueidis.ClientOption, opts ...Option) (rueidis.Clien
 
 func newClient(opts ...Option) (*otelclient, error) {
 	cli := &otelclient{
+		sAttrs: trace.WithAttributes(),
 		tAttrs: trace.WithAttributes(),
 	}
 	for _, opt := range opts {
@@ -182,7 +188,7 @@ func newClient(opts ...Option) (*otelclient, error) {
 
 func trackDialing(m dialMetrics, t dialTracer, dialFn func(context.Context, string, *net.Dialer, *tls.Config) (conn net.Conn, err error)) func(context.Context, string, *net.Dialer, *tls.Config) (conn net.Conn, err error) {
 	return func(ctx context.Context, dst string, dialer *net.Dialer, tlsConfig *tls.Config) (conn net.Conn, err error) {
-		ctx, span := t.Start(ctx, "redis.dial", kind, trace.WithAttributes(dbattr, attribute.String("server.address", dst)), t.tAttrs)
+		ctx, span := t.Start(ctx, "redis.dial", kind, trace.WithAttributes(dbattr), serverAttrs(dst), t.tAttrs)
 		defer span.End()
 
 		m.attempt.Add(ctx, 1, m.addOpts...)
@@ -232,4 +238,13 @@ func defaultDialFn(ctx context.Context, dst string, dialer *net.Dialer, cfg *tls
 		return td.DialContext(ctx, "tcp", dst)
 	}
 	return dialer.DialContext(ctx, "tcp", dst)
+}
+
+func serverAttrs(dst string) trace.SpanStartEventOption {
+	if addr, port, err := net.SplitHostPort(dst); err == nil {
+		if port, err := strconv.Atoi(port); err == nil {
+			return trace.WithAttributes(attribute.String("server.address", addr), attribute.Int("server.port", port))
+		}
+	}
+	return trace.WithAttributes(attribute.String("server.address", dst))
 }

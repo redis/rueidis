@@ -512,3 +512,107 @@ func TestMultipleClientLL(t *testing.T) {
 		}
 	}
 }
+
+func TestOverrideCacheTTL(t *testing.T) {
+	client := makeClient(t, addr)
+	defer client.Close()
+	key := strconv.Itoa(rand.Int())
+
+	val, err := client.Get(context.Background(), time.Second*5, key, func(ctx context.Context, key string) (val string, err error) {
+		OverrideCacheTTL(ctx, time.Millisecond*300)
+		return "1", nil
+	})
+	if err != nil || val != "1" {
+		t.Fatal(err)
+	}
+
+	val, err = client.Get(context.Background(), time.Second*5, key, nil)
+	if err != nil || val != "1" {
+		t.Fatal(err)
+	}
+
+	time.Sleep(time.Millisecond * 400)
+	val, err = client.Get(context.Background(), time.Second*5, key, nil) // should miss
+	if !rueidis.IsRedisNil(err) {
+		t.Fatal("expected cache miss after overridden TTL expired")
+	}
+}
+
+func TestOverrideCacheTTLLL(t *testing.T) {
+	client := makeClientWithLuaLock(t, addr)
+	defer client.Close()
+	key := strconv.Itoa(rand.Int())
+
+	val, err := client.Get(context.Background(), time.Second*5, key, func(ctx context.Context, key string) (val string, err error) {
+		OverrideCacheTTL(ctx, time.Millisecond*300)
+		return "1", nil
+	})
+	if err != nil || val != "1" {
+		t.Fatal(err)
+	}
+
+	val, err = client.Get(context.Background(), time.Second*5, key, nil)
+	if err != nil || val != "1" {
+		t.Fatal(err)
+	}
+
+	time.Sleep(time.Millisecond * 400)
+	val, err = client.Get(context.Background(), time.Second*5, key, nil) // should miss
+	if !rueidis.IsRedisNil(err) {
+		t.Fatal("expected cache miss after overridden TTL expired")
+	}
+}
+
+func TestOverrideCacheTTLNegativeCaching(t *testing.T) {
+	client := makeClient(t, addr)
+	defer client.Close()
+	key := strconv.Itoa(rand.Int())
+
+	val, err := client.Get(context.Background(), time.Second*5, key, func(ctx context.Context, key string) (val string, err error) {
+		OverrideCacheTTL(ctx, time.Millisecond*300)
+		return "NOT_FOUND", nil
+	})
+	if err != nil || val != "NOT_FOUND" {
+		t.Fatal(err)
+	}
+
+	val, err = client.Get(context.Background(), time.Second*5, key, nil)
+	if err != nil || val != "NOT_FOUND" {
+		t.Fatal(err)
+	}
+
+	time.Sleep(time.Millisecond * 400)
+	val, err = client.Get(context.Background(), time.Second*5, key, func(ctx context.Context, key string) (val string, err error) {
+		return "FOUND", nil
+	})
+	if err != nil || val != "FOUND" {
+		t.Fatal(err)
+	}
+}
+
+func TestOverrideCacheTTLNegativeCachingLL(t *testing.T) {
+	client := makeClientWithLuaLock(t, addr)
+	defer client.Close()
+	key := strconv.Itoa(rand.Int())
+
+	val, err := client.Get(context.Background(), time.Second*5, key, func(ctx context.Context, key string) (val string, err error) {
+		OverrideCacheTTL(ctx, time.Millisecond*300)
+		return "NOT_FOUND", nil
+	})
+	if err != nil || val != "NOT_FOUND" {
+		t.Fatal(err)
+	}
+
+	val, err = client.Get(context.Background(), time.Second*5, key, nil)
+	if err != nil || val != "NOT_FOUND" {
+		t.Fatal(err)
+	}
+
+	time.Sleep(time.Millisecond * 400)
+	val, err = client.Get(context.Background(), time.Second*5, key, func(ctx context.Context, key string) (val string, err error) {
+		return "FOUND", nil
+	})
+	if err != nil || val != "FOUND" {
+		t.Fatal(err)
+	}
+}

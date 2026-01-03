@@ -297,13 +297,8 @@ func validateTrace(t *testing.T, exp *tracetest.InMemoryExporter, op string, cod
 	if name := exp.GetSpans().Snapshots()[0].Name(); name != op {
 		t.Fatalf("unexpected span name %v", name)
 	}
-	if operation := exp.GetSpans().Snapshots()[0].Attributes()[1].Value.AsString(); operation != op {
-		t.Fatalf("unexpected span name %v", operation)
-	}
-	customAttr := exp.GetSpans().Snapshots()[0].Attributes()[3]
-	if string(customAttr.Key) != "any" || customAttr.Value.AsString() != "label" {
-		t.Fatalf("unexpected custom attr %v", customAttr)
-	}
+	validateSpanHasAttribute(t, exp.GetSpans().Snapshots()[0], attribute.String("db.operation", op))
+	validateSpanHasAttribute(t, exp.GetSpans().Snapshots()[0], attribute.String("any", "label"))
 	if c := exp.GetSpans().Snapshots()[0].Status().Code; c != code {
 		t.Fatalf("unexpected span status code %v", c)
 	}
@@ -376,15 +371,16 @@ func TestNewClientSimple(t *testing.T) {
 		t.Fatal("could not find SET span")
 	}
 	commandSpan := spans[commandSpanIdx]
-	validateSpanHasAttribute(t, commandSpan, "any", "label")
+	validateSpanHasAttribute(t, commandSpan, attribute.String("any", "label"))
 
 	dialSpanIdx := slices.IndexFunc(spans, func(span trace.ReadOnlySpan) bool { return span.Name() == "redis.dial" })
 	if dialSpanIdx == -1 {
 		t.Fatal("could not find dial span")
 	}
 	dialSpan := spans[dialSpanIdx]
-	validateSpanHasAttribute(t, dialSpan, "server.address", "127.0.0.1:6379")
-	validateSpanHasAttribute(t, dialSpan, "any", "label")
+	validateSpanHasAttribute(t, dialSpan, attribute.String("server.address", "127.0.0.1"))
+	validateSpanHasAttribute(t, dialSpan, attribute.Int("server.port", 6379))
+	validateSpanHasAttribute(t, dialSpan, attribute.String("any", "label"))
 
 	metrics := metricdata.ResourceMetrics{}
 	if err := mxp.Collect(context.Background(), &metrics); err != nil {
@@ -422,7 +418,7 @@ func TestNewClientErrorSpan(t *testing.T) {
 	if span.Name() != "redis.dial" {
 		t.Fatalf("expected span name 'redis.dial', got %s", span.Name())
 	}
-	validateSpanHasAttribute(t, span, "any", "label")
+	validateSpanHasAttribute(t, span, attribute.String("any", "label"))
 	events := span.Events()
 	if len(events) != 1 {
 		t.Fatalf("expected 1 event, got %d", len(events))
@@ -433,12 +429,12 @@ func TestNewClientErrorSpan(t *testing.T) {
 	}
 }
 
-func validateSpanHasAttribute(t *testing.T, span trace.ReadOnlySpan, key, value string) {
+func validateSpanHasAttribute(t *testing.T, span trace.ReadOnlySpan, expected attribute.KeyValue) {
 	t.Helper()
 	if !slices.ContainsFunc(span.Attributes(), func(attr attribute.KeyValue) bool {
-		return string(attr.Key) == key && attr.Value.AsString() == value
+		return attr == expected
 	}) {
-		t.Fatalf("expected attribute '%s: %s' not found in span attributes", key, value)
+		t.Fatalf("expected attribute '%s: %v' not found in span attributes", expected.Key, expected.Value)
 	}
 }
 
