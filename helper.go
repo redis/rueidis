@@ -313,14 +313,13 @@ func clusterJsonMGet(client Client, ctx context.Context, keys []string, path str
 		idx, ok := slotIdx[slot]
 		if !ok {
 			slotIdx[slot] = len(cmds.s)
-			cmds.s = append(cmds.s, client.B().Mget().Key(key).Build().Pin())
+			cmds.s = append(cmds.s, client.B().Arbitrary("JSON.MGET").Keys(key).MultiGet().Pin())
 			continue
 		}
 		intl.AppendCompleted(cmds.s[idx], key)
 	}
 
 	for _, c := range cmds.s {
-		c.Commands()[0] = "JSON.MGET"
 		intl.AppendCompleted(c, path)
 	}
 
