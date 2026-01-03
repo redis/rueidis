@@ -273,6 +273,12 @@ func CacheKey(c Cacheable) (key, command string) {
 	return key, sb.String()
 }
 
+// AppendCompleted appends an arg to a Completed
+func AppendCompleted(c Completed, s string) {
+	c.cs.s = append(c.cs.s, s)
+	c.cs.l += 1
+}
+
 // CompletedCS get the underlying *CommandSlice
 func CompletedCS(c Completed) *CommandSlice {
 	return c.cs

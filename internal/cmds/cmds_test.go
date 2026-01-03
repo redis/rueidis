@@ -214,6 +214,16 @@ func TestCompleted_Slots(t *testing.T) {
 	}
 }
 
+func TestCompleted_Append(t *testing.T) {
+	builder := NewBuilder(InitSlot)
+	c := builder.Get().Key("a").Build()
+	AppendCompleted(c, "b")
+	if c.Commands()[len(c.Commands())-1] != "b" {
+		t.Fatalf("unexpected command %v", c.Commands())
+	}
+	CompletedCS(c).Verify()
+}
+
 func TestMGets(t *testing.T) {
 	keys := []string{"{1}", "{2}", "{3}", "{1}", "{2}", "{3}"}
 	ret := MGets(keys)
