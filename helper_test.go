@@ -5,6 +5,7 @@ import (
 	"errors"
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -1680,5 +1681,281 @@ func TestScannerIter2(t *testing.T) {
 		if scanner.Err() != nil {
 			t.Errorf("unexpected error: %v", scanner.Err())
 		}
+	})
+}
+
+func TestAZAffinityNodesSelection(t *testing.T) {
+	// Setup AZs can be changed per test
+	var primAZ, rep1AZ, rep2AZ, rep3AZ string
+
+	t.Run("standalone client node selectors", func(t *testing.T) {
+		primary := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "primary"), nil)
+			},
+			AZFn: func() string { return primAZ },
+		}
+		replica1 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "replica1"), nil)
+			},
+			AZFn: func() string { return rep1AZ },
+		}
+		replica2 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "replica2"), nil)
+			},
+			AZFn: func() string { return rep2AZ },
+		}
+
+		buildClient := func(selector ReadNodeSelectorFunc, replicas []string) *standalone {
+			c, err := newStandaloneClient(
+				&ClientOption{
+					InitAddress: []string{"127.0.0.1:6379"},
+					Standalone: StandaloneOption{
+						ReplicaAddress: replicas,
+					},
+					EnableReplicaAZInfo: true,
+					SendToReplicas:      func(cmd Completed) bool { return true },
+					ReadNodeSelector:    selector,
+				},
+				func(dst string, opt *ClientOption) conn {
+					switch dst {
+					case "127.0.0.1:6379":
+						return primary
+					case "127.0.0.1:6380":
+						return replica1
+					case "127.0.0.1:6381":
+						return replica2
+					}
+					return nil
+				},
+				newRetryer(defaultRetryDelayFn),
+			)
+			if err != nil {
+				t.Fatalf("unexpected err %v", err)
+			}
+			return c
+		}
+
+		t.Run("PreferReplicaNodeSelector", func(t *testing.T) {
+			primAZ, rep1AZ, rep2AZ = "us-west-1", "us-west-1", "us-west-2"
+			client := buildClient(PreferReplicaNodeSelector(), []string{"127.0.0.1:6380", "127.0.0.1:6381"})
+
+			// Round-Robin check: must hit replicas, never primary
+			for range 10 {
+				resp := client.Do(context.Background(), client.B().Get().Key("k").Build())
+				val, _ := resp.ToString()
+				if val == "primary" {
+					t.Fatalf("expected replica, got primary")
+				}
+				if val != "replica1" && val != "replica2" {
+					t.Fatalf("unexpected node: %v", val)
+				}
+			}
+		})
+
+		t.Run("AZAffinityNodeSelector", func(t *testing.T) {
+			primAZ, rep1AZ, rep2AZ = "us-west-1", "us-west-1", "us-west-2"
+			client := buildClient(AZAffinityNodeSelector("us-west-2"), []string{"127.0.0.1:6380", "127.0.0.1:6381"})
+
+			resp := client.Do(context.Background(), client.B().Get().Key("k").Build())
+			if val, _ := resp.ToString(); val != "replica2" {
+				t.Fatalf("expected replica2, got %v", val)
+			}
+		})
+
+		t.Run("AZAffinityNodeSelector Any Replica", func(t *testing.T) {
+			primAZ, rep1AZ, rep2AZ = "us-west-1", "us-west-1", "us-west-2"
+			client := buildClient(AZAffinityNodeSelector("us-west-3"), []string{"127.0.0.1:6380", "127.0.0.1:6381"})
+
+			// Run multiple times to verify we hit replicas and NOT primary
+			for range 10 {
+				resp := client.Do(context.Background(), client.B().Get().Key("k").Build())
+				val, _ := resp.ToString()
+
+				if val == "primary" {
+					t.Fatalf("expected any replica fallback, got primary")
+				}
+				if val != "replica1" && val != "replica2" {
+					t.Fatalf("unexpected node: %v", val)
+				}
+			}
+		})
+
+		t.Run("AZAffinityReplicasAndPrimary Same-AZ Replica", func(t *testing.T) {
+			// Client: A, Rep1: A, Primary: B
+			primAZ, rep1AZ, rep2AZ = "zone-B", "zone-A", "zone-B"
+			client := buildClient(AZAffinityReplicasAndPrimaryNodeSelector("zone-A"), []string{"127.0.0.1:6380", "127.0.0.1:6381"})
+
+			resp := client.Do(context.Background(), client.B().Get().Key("k").Build())
+			if val, _ := resp.ToString(); val != "replica1" {
+				t.Fatalf("expected replica1, got %v", val)
+			}
+		})
+
+		t.Run("AZAffinityReplicasAndPrimary Same-AZ Primary", func(t *testing.T) {
+			// Client: A, Primary: A, Replicas: B
+			primAZ, rep1AZ, rep2AZ = "zone-A", "zone-B", "zone-B"
+			client := buildClient(AZAffinityReplicasAndPrimaryNodeSelector("zone-A"), []string{"127.0.0.1:6380", "127.0.0.1:6381"})
+
+			resp := client.Do(context.Background(), client.B().Get().Key("k").Build())
+			if val, _ := resp.ToString(); val != "primary" {
+				t.Fatalf("expected primary, got %v", val)
+			}
+		})
+
+		t.Run("AZAffinityReplicasAndPrimary Remote Replica", func(t *testing.T) {
+			// Client: A, All Nodes: B
+			primAZ, rep1AZ, rep2AZ = "zone-B", "zone-B", "zone-B"
+			client := buildClient(AZAffinityReplicasAndPrimaryNodeSelector("zone-A"), []string{"127.0.0.1:6380", "127.0.0.1:6381"})
+
+			for range 10 {
+				resp := client.Do(context.Background(), client.B().Get().Key("k").Build())
+				val, _ := resp.ToString()
+				if val == "primary" {
+					t.Fatalf("expected remote replica, got primary")
+				}
+			}
+		})
+
+		t.Run("AZAffinityReplicasAndPrimary Primary Fallback", func(t *testing.T) {
+			primAZ = "zone-B"
+			client := buildClient(AZAffinityReplicasAndPrimaryNodeSelector("zone-A"), []string{}) // Empty replicas
+
+			resp := client.Do(context.Background(), client.B().Get().Key("k").Build())
+			if val, _ := resp.ToString(); val != "primary" {
+				t.Fatalf("expected primary, got %v", val)
+			}
+		})
+	})
+
+	t.Run("cluster client node selectors", func(t *testing.T) {
+		primary := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				if strings.Contains(strings.ToUpper(strings.Join(cmd.Commands(), " ")), "CLUSTER SLOTS") {
+					return slotsMultiRespWithMultiReplicas
+				}
+				return newResult(strmsg('+', "primary"), nil)
+			},
+			AZFn: func() string { return primAZ },
+		}
+		rep1 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return newResult(strmsg('+', "replica1"), nil) },
+			AZFn: func() string { return rep1AZ },
+		}
+		rep2 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return newResult(strmsg('+', "replica2"), nil) },
+			AZFn: func() string { return rep2AZ },
+		}
+		rep3 := &mockConn{
+			DoFn: func(cmd Completed) RedisResult { return newResult(strmsg('+', "replica3"), nil) },
+			AZFn: func() string { return rep3AZ },
+		}
+
+		buildCluster := func(selector ReadNodeSelectorFunc) *clusterClient {
+			c, err := newClusterClient(
+				&ClientOption{
+					InitAddress:         []string{"127.0.0.1:0"},
+					SendToReplicas:      func(cmd Completed) bool { return true },
+					EnableReplicaAZInfo: true,
+					ReadNodeSelector:    selector,
+				},
+				func(dst string, opt *ClientOption) conn {
+					switch dst {
+					case "127.0.0.2:1", "127.0.1.2:1":
+						return rep1
+					case "127.0.0.3:2", "127.0.1.3:2":
+						return rep2
+					case "127.0.0.4:3", "127.0.1.4:3":
+						return rep3
+					default:
+						return primary
+					}
+				},
+				newRetryer(defaultRetryDelayFn),
+			)
+			if err != nil {
+				t.Fatalf("unexpected err %v", err)
+			}
+			// Force topology refresh
+			c.refresh(context.Background())
+			return c
+		}
+
+		t.Run("AZAffinityNodeSelector", func(t *testing.T) {
+			primAZ = "az-1"
+			rep1AZ = "az-1" // Same as Primary
+			rep2AZ = "az-2" // Target
+			rep3AZ = "az-3"
+
+			// Client in az-2, should hit replica2
+			client := buildCluster(AZAffinityNodeSelector("az-2"))
+
+			resp := client.Do(context.Background(), client.B().Get().Key("k").Build())
+			if val, _ := resp.ToString(); val != "replica2" {
+				t.Fatalf("expected replica2 (same AZ), got %v", val)
+			}
+		})
+
+		t.Run("AZAffinityNodeSelector Fallback", func(t *testing.T) {
+			primAZ, rep1AZ, rep2AZ, rep3AZ = "az-1", "az-1", "az-2", "az-3"
+
+			// Client in az-4 (No match), should hit any replica (RR)
+			client := buildCluster(AZAffinityNodeSelector("az-4"))
+
+			for range 10 {
+				resp := client.Do(context.Background(), client.B().Get().Key("k").Build())
+				val, _ := resp.ToString()
+				if val == "primary" {
+					t.Fatalf("expected any replica, got primary")
+				}
+			}
+		})
+
+		t.Run("AZAffinityReplicasAndPrimary Same-AZ Primary", func(t *testing.T) {
+			// Client in az-1. Replica 1 is az-1.
+			// Wait, we want to test Priority 2 (Primary).
+			// So let's make all Replicas "remote".
+			primAZ = "az-1"
+			rep1AZ, rep2AZ, rep3AZ = "az-2", "az-3", "az-4"
+
+			client := buildCluster(AZAffinityReplicasAndPrimaryNodeSelector("az-1"))
+
+			// Should prioritize Primary (Same AZ) over Replicas (Different AZ)
+			resp := client.Do(context.Background(), client.B().Get().Key("k").Build())
+			if val, _ := resp.ToString(); val != "primary" {
+				t.Fatalf("expected primary (same AZ), got %v", val)
+			}
+		})
+	})
+
+	t.Run("zero allocation guarantee", func(t *testing.T) {
+		count := 200000
+		nodes := make([]NodeInfo, count)
+		targetAZ := "us-east-1a"
+
+		for i := range count {
+			// Every 10th node is in the target AZ
+			if i%10 == 0 {
+				nodes[i] = NodeInfo{AZ: targetAZ}
+			} else {
+				nodes[i] = NodeInfo{AZ: "other-az"}
+			}
+		}
+		clientAZ := "us-east-1a"
+
+		t.Run("PreferReplicaNodeSelector", ShouldNotAllocate(func() {
+			PreferReplicaNodeSelector()(0, nodes)
+		}))
+		t.Run("AZAffinityNodeSelector", ShouldNotAllocate(func() {
+			AZAffinityNodeSelector(clientAZ)(0, nodes)
+		}))
+		t.Run("AZAffinityReplicasAndPrimaryNodeSelector", ShouldNotAllocate(func() {
+			AZAffinityReplicasAndPrimaryNodeSelector(clientAZ)(0, nodes)
+		}))
+		t.Run("AZAffinityNodeSelector (Fallback)", ShouldNotAllocate(func() {
+			AZAffinityNodeSelector("us-unknown")(0, nodes)
+		}))
 	})
 }

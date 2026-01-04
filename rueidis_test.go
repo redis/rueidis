@@ -34,6 +34,16 @@ func ShouldNotLeak(g gomega.Gomega, snapshot []gleak.Goroutine) {
 	g.Eventually(gleak.Goroutines).WithTimeout(time.Minute).ShouldNot(gleak.HaveLeaked(snapshot))
 }
 
+// ShouldNotAllocate asserts zero heap allocations for f.
+func ShouldNotAllocate(f func()) func(*testing.T) {
+	return func(t *testing.T) {
+		t.Helper()
+		if avg := testing.AllocsPerRun(10, f); avg > 0 {
+			t.Errorf("Expected 0 allocs, got %f", avg)
+		}
+	}
+}
+
 func TestMain(m *testing.M) {
 	g, snap := SetupLeakDetection()
 	code := m.Run()

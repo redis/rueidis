@@ -93,6 +93,10 @@ var (
 	DisableClientSetInfo = make([]string, 0)
 )
 
+// Define distinct types for safety.
+type ReadNodeSelectorFunc func(slot uint16, nodes []NodeInfo) int
+type ReplicaSelectorFunc func(slot uint16, replicas []NodeInfo) int
+
 // ClientOption should be passed to NewClient to construct a Client
 type ClientOption struct {
 	TLSConfig *tls.Config
@@ -135,7 +139,7 @@ type ClientOption struct {
 	// Each ReplicaInfo must not be modified.
 	// NOTE: This function can't be used with ReplicaOnly option.
 	// NOTE: This function must be used with the SendToReplicas function.
-	ReplicaSelector func(slot uint16, replicas []NodeInfo) int
+	ReplicaSelector ReplicaSelectorFunc
 
 	// ReadNodeSelector returns index of node selected for a read only command.
 	// If set, ReadNodeSelector is prioritized over ReplicaSelector.
@@ -143,7 +147,7 @@ type ClientOption struct {
 	// The function is called only when SendToReplicas returns true.
 	// Each NodeInfo must not be modified.
 	// NOTE: This function can't be used with ReplicaSelector option.
-	ReadNodeSelector func(slot uint16, nodes []NodeInfo) int
+	ReadNodeSelector ReadNodeSelectorFunc
 
 	// Sentinel options, including MasterSet and Auth options
 	Sentinel SentinelOption
