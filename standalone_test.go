@@ -604,7 +604,7 @@ func TestStandalonePickReplica(t *testing.T) {
 	defer s.Close()
 
 	// Test that pick() returns the single replica
-	client := s.pick()
+	client := s.pick(0)
 	if client != s.replicas[0] {
 		t.Errorf("expected replica client, got different client")
 	}
@@ -683,7 +683,7 @@ func TestStandalonePickMultipleReplicas(t *testing.T) {
 
 	// Test that pick() returns a valid replica for multiple replicas
 	for i := 0; i < 10; i++ {
-		client := s.pick()
+		client := s.pick(0)
 		if client != s.replicas[0] && client != s.replicas[1] {
 			t.Errorf("expected one of the replica clients, got different client")
 		}

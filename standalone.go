@@ -74,9 +74,9 @@ func (s *standalone) B() Builder {
 	return s.primary.Load().B()
 }
 
-func (s *standalone) pick() *singleClient {
+func (s *standalone) pick(slot uint16) *singleClient {
 	if s.nodeSelector != nil {
-		rIndex := s.nodeSelector(0, s.nodes)
+		rIndex := s.nodeSelector(slot, s.nodes)
 		if rIndex < 0 || rIndex >= len(s.nodes) {
 			rIndex = 0
 		}
@@ -134,7 +134,7 @@ func (s *standalone) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 
 retry:
 	if s.toReplicas != nil && s.toReplicas(cmd) {
-		resp = s.pick().Do(ctx, cmd)
+		resp = s.pick(cmd.Slot()).Do(ctx, cmd)
 	} else {
 		resp = s.primary.Load().Do(ctx, cmd)
 	}
@@ -164,15 +164,12 @@ func (s *standalone) DoMulti(ctx context.Context, multi ...Completed) (resp []Re
 	}
 
 retry:
-	toReplica := true
-	for _, cmd := range multi {
-		if s.toReplicas == nil || !s.toReplicas(cmd) {
-			toReplica = false
-			break
-		}
+	toReplica := s.toReplicas != nil
+	for i := 0; i < len(multi) && toReplica; i++ {
+		toReplica = s.toReplicas(multi[i])
 	}
-	if toReplica {
-		resp = s.pick().DoMulti(ctx, multi...)
+	if toReplica && len(multi) > 0 {
+		resp = s.pick(multi[0].Slot()).DoMulti(ctx, multi...)
 	} else {
 		resp = s.primary.Load().DoMulti(ctx, multi...)
 	}
@@ -199,7 +196,7 @@ retry:
 
 func (s *standalone) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) error {
 	if s.toReplicas != nil && s.toReplicas(subscribe) {
-		return s.pick().Receive(ctx, subscribe, fn)
+		return s.pick(subscribe.Slot()).Receive(ctx, subscribe, fn)
 	}
 	return s.primary.Load().Receive(ctx, subscribe, fn)
 }
@@ -269,7 +266,7 @@ retry:
 func (s *standalone) DoStream(ctx context.Context, cmd Completed) RedisResultStream {
 	var stream RedisResultStream
 	if s.toReplicas != nil && s.toReplicas(cmd) {
-		stream = s.pick().DoStream(ctx, cmd)
+		stream = s.pick(cmd.Slot()).DoStream(ctx, cmd)
 	} else {
 		stream = s.primary.Load().DoStream(ctx, cmd)
 	}
@@ -278,15 +275,12 @@ func (s *standalone) DoStream(ctx context.Context, cmd Completed) RedisResultStr
 
 func (s *standalone) DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisResultStream {
 	var stream MultiRedisResultStream
-	toReplica := true
-	for _, cmd := range multi {
-		if s.toReplicas == nil || !s.toReplicas(cmd) {
-			toReplica = false
-			break
-		}
+	toReplica := s.toReplicas != nil
+	for i := 0; i < len(multi) && toReplica; i++ {
+		toReplica = s.toReplicas(multi[i])
 	}
-	if toReplica {
-		stream = s.pick().DoMultiStream(ctx, multi...)
+	if toReplica && len(multi) > 0 {
+		stream = s.pick(multi[0].Slot()).DoMultiStream(ctx, multi...)
 	} else {
 		stream = s.primary.Load().DoMultiStream(ctx, multi...)
 	}
