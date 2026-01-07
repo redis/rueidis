@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"iter"
+	"sync/atomic"
 	"time"
 
 	intl "github.com/redis/rueidis/internal/cmds"
@@ -390,4 +391,109 @@ func (s *Scanner) Iter2() iter.Seq2[string, string] {
 
 func (s *Scanner) Err() error {
 	return s.err
+}
+
+// PreferReplicaNodeSelector prioritizes reading from any replica using Round-Robin.
+// If no replicas are available, it falls back to the primary.
+func PreferReplicaNodeSelector() ReadNodeSelectorFunc {
+	var counter atomic.Uint32
+	return func(_ uint16, nodes []NodeInfo) int {
+		length := uint32(len(nodes))
+		if length > 1 {
+			c := counter.Add(1)
+			return int(c%(length-1)) + 1
+		}
+		return -1
+	}
+}
+
+// AZAffinityNodeSelector prioritizes replicas in the same AZ using Round-Robin.
+func AZAffinityNodeSelector(clientAZ string) ReadNodeSelectorFunc {
+	return newAZSelector(clientAZ, 1)
+}
+
+// AZAffinityReplicaSelector prioritizes replicas in the same AZ using Round-Robin.
+func AZAffinityReplicaSelector(clientAZ string) ReplicaSelectorFunc {
+	return newAZSelector(clientAZ, 0)
+}
+
+// AZAffinityReplicasAndPrimaryNodeSelector prioritizes:
+// 1. Same-AZ Replicas
+// 2. Same-AZ Primary
+// 3. Any Replica
+// 4. Primary
+func AZAffinityReplicasAndPrimaryNodeSelector(clientAZ string) ReadNodeSelectorFunc {
+	var counter atomic.Uint32
+	return func(_ uint16, nodes []NodeInfo) int {
+		// Same-AZ Replicas
+		if idx := pickAZ(nodes, clientAZ, 1, &counter); idx != -1 {
+			return idx
+		}
+
+		length := uint32(len(nodes))
+
+		// Same-AZ Primary
+		if length > 0 && nodes[0].AZ == clientAZ {
+			return 0
+		}
+
+		// Any Replica
+		if length > 1 {
+			c := counter.Add(1)
+			return int(c%(length-1)) + 1
+		}
+		return -1
+	}
+}
+
+// newAZSelector creates the internal selector closure with a specific start index.
+func newAZSelector(clientAZ string, startIdx int) func(uint16, []NodeInfo) int {
+	var counter atomic.Uint32
+	return func(_ uint16, nodes []NodeInfo) int {
+		// Round-Robin on Same-AZ Replicas
+		if idx := pickAZ(nodes, clientAZ, startIdx, &counter); idx != -1 {
+			return idx
+		}
+
+		// Round-Robin on ALL available nodes
+		if count := uint32(len(nodes) - startIdx); count > 0 {
+			c := counter.Add(1)
+			return int(c%count) + startIdx
+		}
+
+		return -1
+	}
+}
+
+// pickAZ selects a node index from nodes[startIdx:] that matches the clientAZ.
+func pickAZ(nodes []NodeInfo, clientAZ string, startIdx int, counter *atomic.Uint32) int {
+	n := len(nodes)
+	if n <= startIdx {
+		return -1
+	}
+
+	// We cap the search at 255 nodes
+	limit := min(n, 255)
+	var matches [8]int
+	var count uint32 = 0
+
+	for i := startIdx; i < limit; i++ {
+		if nodes[i].AZ == clientAZ {
+			matches[count] = i
+			count++
+			if count == 8 {
+				break
+			}
+		}
+	}
+
+	if count == 0 {
+		return -1
+	}
+
+	// Round-Robin Selection
+	c := counter.Add(1)
+	k := c % count
+
+	return matches[k]
 }
