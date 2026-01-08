@@ -412,11 +412,6 @@ func AZAffinityNodeSelector(clientAZ string) ReadNodeSelectorFunc {
 	return newAZSelector(clientAZ, 1)
 }
 
-// AZAffinityReplicaSelector prioritizes replicas in the same AZ using Round-Robin.
-func AZAffinityReplicaSelector(clientAZ string) ReplicaSelectorFunc {
-	return newAZSelector(clientAZ, 0)
-}
-
 // AZAffinityReplicasAndPrimaryNodeSelector prioritizes:
 // 1. Same-AZ Replicas
 // 2. Same-AZ Primary
@@ -474,12 +469,12 @@ func pickAZ(nodes []NodeInfo, clientAZ string, startIdx int, counter *atomic.Uin
 
 	// We cap the search at 255 nodes
 	limit := min(n, 255)
-	var matches [8]int
+	var matches [8]uint8
 	var count uint32 = 0
 
 	for i := startIdx; i < limit; i++ {
 		if nodes[i].AZ == clientAZ {
-			matches[count] = i
+			matches[count] = uint8(i)
 			count++
 			if count == 8 {
 				break
@@ -495,5 +490,5 @@ func pickAZ(nodes []NodeInfo, clientAZ string, startIdx int, counter *atomic.Uin
 	c := counter.Add(1)
 	k := c % count
 
-	return matches[k]
+	return int(matches[k])
 }
