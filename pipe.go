@@ -336,11 +336,11 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 		}
 	}
 	if !nobg {
-		if p.onInvalidations != nil || option.AlwaysPipelining {
-			p.background()
-		}
 		if p.timeout > 0 && p.pinggap > 0 {
 			p.backgroundPing()
+		}
+		if p.onInvalidations != nil || option.AlwaysPipelining {
+			p.background()
 		}
 	}
 	if option.ConnLifetime > 0 {
@@ -652,9 +652,16 @@ func (p *pipe) _backgroundRead() (err error) {
 
 func (p *pipe) backgroundPing() {
 	var prev, recv int32
+    var mu sync.Mutex
+
+	mu.Lock()
+	defer mu.Unlock()
 
 	prev = p.loadRecvs()
 	p.pingTimer = time.AfterFunc(p.pinggap, func() {
+		mu.Lock()
+		defer mu.Unlock()
+
 		var err error
 		recv = p.loadRecvs()
 		defer func() {
