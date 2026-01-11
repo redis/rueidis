@@ -390,3 +390,41 @@ const (
 	unexpectedNumByte  = "received unexpected number byte: "
 	unknownMessageType = "received unknown message type: "
 )
+
+// ReadInt reads a RESP integer value from the reader (e.g., ":123\r\n" returns 123).
+// Use this after receiving type byte ':' or for reading lengths after '$', '*', '%', etc.
+// This function is intended for use with DoWithReader callbacks.
+func ReadInt(r *bufio.Reader) (int64, error) {
+	return readI(r)
+}
+
+// ReadSimpleString reads a RESP simple string from the reader (e.g., "+OK\r\n" returns "OK").
+// Call this after receiving type byte '+', '-', ',', '(', etc.
+// Returns a string that references the reader's internal buffer (zero-copy).
+// The string is only valid until the next read operation on the reader.
+// This function is intended for use with DoWithReader callbacks.
+func ReadSimpleString(r *bufio.Reader) (string, error) {
+	ptr, length, err := readS(r)
+	if err != nil {
+		return "", err
+	}
+	return unsafe.String(ptr, length), nil
+}
+
+// ReadBlobString reads a RESP blob string from the reader (e.g., "$5\r\nhello\r\n").
+// Call this after receiving type byte '$', '!', or '='.
+// First call ReadInt to get the length, then use this to read the blob data.
+// Returns a newly allocated byte slice containing the blob data.
+// This function is intended for use with DoWithReader callbacks.
+func ReadBlobString(r *bufio.Reader) ([]byte, error) {
+	ptr, length, err := readB(r)
+	if err != nil {
+		if err == errOldNull {
+			return nil, Nil
+		}
+		return nil, err
+	}
+	bs := make([]byte, length)
+	copy(bs, unsafe.Slice(ptr, length))
+	return bs, nil
+}

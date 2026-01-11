@@ -46,6 +46,7 @@ type wire interface {
 	Receive(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
 	DoStream(ctx context.Context, pool *pool, cmd Completed) RedisResultStream
 	DoMultiStream(ctx context.Context, pool *pool, multi ...Completed) MultiRedisResultStream
+	DoWithReader(ctx context.Context, pool *pool, cmd Completed, fn ReaderFunc) error
 	Info() map[string]RedisMessage
 	Version() int
 	AZ() string
@@ -1265,6 +1266,131 @@ func (p *pipe) DoMultiStream(ctx context.Context, pool *pool, multi ...Completed
 	p.decrWaits()
 	pool.Store(p)
 	return RedisResultStream{e: p.Error()}
+}
+
+func (p *pipe) DoWithReader(ctx context.Context, pool *pool, cmd Completed, fn ReaderFunc) error {
+	cmds.CompletedCS(cmd).Verify()
+
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
+	state := atomic.LoadInt32(&p.state)
+
+	if state == 1 {
+		panic("DoWithReader with auto pipelining is a bug")
+	}
+
+	if state == 0 {
+		atomic.AddInt32(&p.blcksig, 1)
+		waits := p.incrWaits()
+		if waits != 1 {
+			panic("DoWithReader with racing is a bug")
+		}
+		dl, ok := ctx.Deadline()
+		if ok {
+			if p.timeout > 0 && !cmd.IsBlock() {
+				defaultDeadline := time.Now().Add(p.timeout)
+				if dl.After(defaultDeadline) {
+					dl = defaultDeadline
+				}
+			}
+			p.conn.SetDeadline(dl)
+		} else if p.timeout > 0 && !cmd.IsBlock() {
+			p.conn.SetDeadline(time.Now().Add(p.timeout))
+		} else {
+			p.conn.SetDeadline(time.Time{})
+		}
+
+		// Write command and flush
+		_ = writeCmd(p.w, cmd.Commands())
+		if err := p.w.Flush(); err != nil {
+			p.error.CompareAndSwap(nil, &errs{error: err})
+			p.conn.Close()
+			p.background()
+			atomic.AddInt32(&p.blcksig, -1)
+			p.decrWaits()
+			pool.Store(p)
+			return err
+		}
+
+		// Read response type, skipping push messages
+		var typ byte
+		var err error
+	next:
+		if typ, err = p.r.ReadByte(); err != nil {
+			p.error.CompareAndSwap(nil, &errs{error: err})
+			p.conn.Close()
+			p.background()
+			atomic.AddInt32(&p.blcksig, -1)
+			p.decrWaits()
+			pool.Store(p)
+			return err
+		}
+		if typ == '>' { // Push message - skip it
+			if _, err = readNextMessage(p.r); err != nil {
+				p.error.CompareAndSwap(nil, &errs{error: err})
+				p.conn.Close()
+				p.background()
+				atomic.AddInt32(&p.blcksig, -1)
+				p.decrWaits()
+				pool.Store(p)
+				return err
+			}
+			goto next
+		}
+
+		// Handle error responses - parse fully and return RedisError
+		// This allows cluster client to detect MOVED/ASK redirects
+		if typ == '-' || typ == '!' { // Simple error or Blob error
+			_ = p.r.UnreadByte() // Put type byte back
+			msg, err := readNextMessage(p.r)
+			atomic.AddInt32(&p.blcksig, -1)
+			p.decrWaits()
+			pool.Store(p)
+			if err != nil {
+				return err
+			}
+			// Return as RedisError so cluster can check for MOVED/ASK
+			return (*RedisError)(&msg)
+		}
+
+		// Handle NULL response
+		if typ == '_' {
+			_, err := p.r.Discard(2) // Discard \r\n
+			atomic.AddInt32(&p.blcksig, -1)
+			p.decrWaits()
+			pool.Store(p)
+			if err != nil {
+				return err
+			}
+			return Nil
+		}
+
+		// SUCCESS: Non-error response - call user callback
+		err = fn(p.r, typ)
+
+		// If callback returned an error, the connection state may be corrupted
+		// (e.g., callback failed to fully consume the response).
+		// Close the connection to prevent subsequent commands from reading corrupted data.
+		if err != nil {
+			p.error.CompareAndSwap(nil, &errs{error: err})
+			p.conn.Close()
+			p.background()
+		}
+
+		atomic.AddInt32(&p.blcksig, -1)
+		p.decrWaits()
+		if pool != nil {
+			pool.Store(p)
+		}
+		return err
+	}
+
+	if pool != nil {
+		pool.Store(p)
+	}
+	return p.Error()
 }
 
 func (p *pipe) syncDo(dl time.Time, dlOk bool, cmd Completed) (resp RedisResult) {

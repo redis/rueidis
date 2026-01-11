@@ -31,6 +31,7 @@ type conn interface {
 	Receive(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error
 	DoStream(ctx context.Context, cmd Completed) RedisResultStream
 	DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisResultStream
+	DoWithReader(ctx context.Context, cmd Completed, fn ReaderFunc) error
 	Info() map[string]RedisMessage
 	Version() int
 	AZ() string
@@ -229,6 +230,11 @@ func (m *mux) DoStream(ctx context.Context, cmd Completed) RedisResultStream {
 func (m *mux) DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisResultStream {
 	wire := m.spool.Acquire(ctx)
 	return wire.DoMultiStream(ctx, m.spool, multi...)
+}
+
+func (m *mux) DoWithReader(ctx context.Context, cmd Completed, fn ReaderFunc) error {
+	wire := m.spool.Acquire(ctx)
+	return wire.DoWithReader(ctx, m.spool, cmd, fn)
 }
 
 func (m *mux) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
