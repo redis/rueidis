@@ -95,6 +95,82 @@ type Lua struct {
 	retryable bool
 }
 
+// ExecWithReader executes the script and provides direct access to the raw RESP response
+// through a callback function for zero-allocation parsing.
+// It will first try with EVALSHA/EVALSHA_RO and then EVAL/EVAL_RO if NOSCRIPT error occurs.
+// If Lua is initialized with disabled SHA1, it will use EVAL/EVAL_RO without the EVALSHA/EVALSHA_RO attempt.
+// If Lua is initialized with SHA-1 loading, it will call SCRIPT LOAD once to obtain the SHA-1 from Redis.
+// Cross-slot keys are prohibited if the Client is a cluster client.
+//
+// The callback is ONLY invoked for successful script execution.
+// All Redis errors (including NOSCRIPT) are handled automatically by rueidis.
+// The callback must fully consume the response or return an error (see ReaderFunc documentation).
+func (s *Lua) ExecWithReader(ctx context.Context, c Client, keys, args []string, fn ReaderFunc) error {
+	var isNoScript bool
+	var scriptSha1 string
+
+	// Determine which SHA-1 to use (same logic as Exec)
+	if s.loadSha1 {
+		s.sha1Mu.RLock()
+		scriptSha1 = s.sha1
+		s.sha1Mu.RUnlock()
+
+		if scriptSha1 == "" {
+			err := s.sha1Call.Do(ctx, func() error {
+				result := c.Do(ctx, c.B().ScriptLoad().Script(s.script).Build().ToRetryable())
+				if shaStr, err := result.ToString(); err == nil {
+					s.sha1Mu.Lock()
+					s.sha1 = shaStr
+					s.sha1Mu.Unlock()
+					return nil
+				}
+				return result.Error()
+			})
+			if err != nil {
+				return err
+			}
+			s.sha1Mu.RLock()
+			scriptSha1 = s.sha1
+			s.sha1Mu.RUnlock()
+		}
+	} else {
+		scriptSha1 = s.sha1
+	}
+
+	// Try EVALSHA if SHA-1 is available
+	if !s.noSha1 && scriptSha1 != "" {
+		var err error
+		if s.readonly {
+			err = c.DoWithReader(ctx, c.B().EvalshaRo().Sha1(scriptSha1).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build(), fn)
+		} else {
+			err = c.DoWithReader(ctx, s.mayRetryable(c.B().Evalsha().Sha1(scriptSha1).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build()), fn)
+		}
+
+		// Check if it's a NOSCRIPT error - if so, retry with EVAL
+		if redisErr, isErr := IsRedisErr(err); isErr {
+			isNoScript = redisErr.IsNoScript()
+			if !isNoScript {
+				// It's a Redis error but not NOSCRIPT, return it
+				return err
+			}
+			// Fall through to EVAL below
+		} else {
+			// Either success (nil) or other error (network, callback error)
+			return err
+		}
+	}
+
+	// Use EVAL if noSha1 or NOSCRIPT error occurred
+	if s.noSha1 || isNoScript {
+		if s.readonly {
+			return c.DoWithReader(ctx, c.B().EvalRo().Script(s.script).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build(), fn)
+		} else {
+			return c.DoWithReader(ctx, s.mayRetryable(c.B().Eval().Script(s.script).Numkeys(int64(len(keys))).Key(keys...).Arg(args...).Build()), fn)
+		}
+	}
+	return nil
+}
+
 // Exec the script to the given Client.
 // It will first try with the EVALSHA/EVALSHA_RO and then EVAL/EVAL_RO if the first try failed.
 // If Lua is initialized with disabled SHA1, it will use EVAL/EVAL_RO without the EVALSHA/EVALSHA_RO attempt.
