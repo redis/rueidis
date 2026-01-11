@@ -54,6 +54,13 @@ type muxwire struct {
 	mu   sync.Mutex
 }
 
+const (
+	// usePoolForDoWithReader controls whether DoWithReader uses pool (true) or pipeline (false)
+	// Default: true (use pool for exclusive synchronous access)
+	// Set to false to enable experimental pipeline mode for DoWithReader
+	usePoolForDoWithReader = true
+)
+
 type mux struct {
 	init     wire
 	dead     wire
@@ -233,6 +240,25 @@ func (m *mux) DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisR
 }
 
 func (m *mux) DoWithReader(ctx context.Context, cmd Completed, fn ReaderFunc) error {
+	if usePoolForDoWithReader {
+		// Original pool-based implementation
+		wire := m.spool.Acquire(ctx)
+		return wire.DoWithReader(ctx, m.spool, cmd, fn)
+	} else {
+		// Pipeline-based implementation (experimental)
+		return m.pipelineWithReader(ctx, cmd, fn)
+	}
+}
+
+func (m *mux) pipelineWithReader(ctx context.Context, cmd Completed, fn ReaderFunc) error {
+	// TODO: Implement pipeline mode for DoWithReader
+	// This requires:
+	// 1. Adding ReaderFunc field to the queue entry
+	// 2. Modifying _backgroundRead to detect DoWithReader commands
+	// 3. Calling fn(reader, typ) inline in background reader instead of parsing
+	// 4. Signaling completion/error back to caller via future
+	//
+	// For now, fall back to pool mode
 	wire := m.spool.Acquire(ctx)
 	return wire.DoWithReader(ctx, m.spool, cmd, fn)
 }

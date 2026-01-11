@@ -428,3 +428,59 @@ func ReadBlobString(r *bufio.Reader) ([]byte, error) {
 	copy(bs, unsafe.Slice(ptr, length))
 	return bs, nil
 }
+
+// DiscardResponse consumes and drops a Redis RESP value without allocating.
+func DiscardResponse(r *bufio.Reader, typ byte) error {
+	switch typ {
+	case '+', '-', ':', ',', '(', '#':
+		// Simple string, error, integer, double, big number, boolean
+		for {
+			b, err := r.ReadByte()
+			if err != nil {
+				return err
+			}
+			if b == '\n' {
+				break // finished line
+			}
+		}
+		return nil
+
+	case '$', '!', '=':
+		// Blob strings
+		length, err := ReadInt(r)
+		if err != nil {
+			return err
+		}
+		if length < 0 {
+			return nil // null blob
+		}
+		// skip data + \r\n
+		if _, err := r.Discard(int(length) + 2); err != nil {
+			return err
+		}
+		return nil
+
+	case '*', '%', '~':
+		// Arrays, maps, sets
+		count, err := ReadInt(r)
+		if err != nil {
+			return err
+		}
+		if count < 0 {
+			return nil // null
+		}
+		for i := int64(0); i < count; i++ {
+			b, err := r.ReadByte()
+			if err != nil {
+				return err
+			}
+			if err := DiscardResponse(r, b); err != nil {
+				return err
+			}
+		}
+		return nil
+
+	default:
+		return fmt.Errorf("unexpected RESP type: %q", typ)
+	}
+}

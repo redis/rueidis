@@ -1345,6 +1345,11 @@ func (p *pipe) DoWithReader(ctx context.Context, pool *pool, cmd Completed, fn R
 		if typ == '-' || typ == '!' { // Simple error or Blob error
 			_ = p.r.UnreadByte() // Put type byte back
 			msg, err := readNextMessage(p.r)
+			if err != nil {
+				p.error.CompareAndSwap(nil, &errs{error: err})
+				p.conn.Close()
+				p.background()
+			}
 			atomic.AddInt32(&p.blcksig, -1)
 			p.decrWaits()
 			pool.Store(p)
@@ -1358,6 +1363,11 @@ func (p *pipe) DoWithReader(ctx context.Context, pool *pool, cmd Completed, fn R
 		// Handle NULL response
 		if typ == '_' {
 			_, err := p.r.Discard(2) // Discard \r\n
+			if err != nil {
+				p.error.CompareAndSwap(nil, &errs{error: err})
+				p.conn.Close()
+				p.background()
+			}
 			atomic.AddInt32(&p.blcksig, -1)
 			p.decrWaits()
 			pool.Store(p)
