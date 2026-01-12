@@ -339,8 +339,7 @@ type ReplicaInfo = NodeInfo
 type ClientMode string
 
 // ReaderFunc is a callback function that receives direct access to the bufio.Reader
-// containing the Redis response. The respType parameter is the RESP type byte
-// (e.g., '$' for blob string, '*' for array, ':' for integer).
+// containing the Redis response.
 //
 // The reader is only valid during the callback execution and must not be stored.
 //
@@ -350,7 +349,7 @@ type ClientMode string
 //
 // All errors from io operations (io.ReadFull, r.Discard, etc.) MUST be checked
 // and returned. Ignoring errors will leave the connection in a corrupted state.
-type ReaderFunc func(reader *bufio.Reader, respType byte) error
+type ReaderFunc func(reader *bufio.Reader) error
 
 // Client is the redis client interface for both single redis instance and redis cluster. It should be created from the NewClient()
 type Client interface {
@@ -410,24 +409,6 @@ type Client interface {
 	// If the callback returns an error, the underlying connection is closed to prevent
 	// data corruption. Therefore, all errors from io operations (io.ReadFull, r.Discard, etc.)
 	// MUST be checked and returned properly.
-	//
-	// Example - Proper error handling:
-	//  err := client.DoWithReader(ctx, client.B().Get().Key("key").Build(),
-	//      func(r *bufio.Reader, typ byte) error {
-	//          if typ == '$' {
-	//              length, err := rueidis.ReadInt(r)
-	//              if err != nil {
-	//                  return err
-	//              }
-	//              if _, err := io.CopyN(writer, r, length); err != nil {
-	//                  return err
-	//              }
-	//              if _, err := r.Discard(2); err != nil { // \r\n
-	//                  return err
-	//              }
-	//          }
-	//          return nil
-	//      })
 	DoWithReader(ctx context.Context, cmd Completed, fn ReaderFunc) error
 
 	// Dedicated acquire a connection from the blocking connection pool, no one else can use the connection

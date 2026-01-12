@@ -1398,7 +1398,7 @@ func (p *pipe) DoWithReader(ctx context.Context, pool *pool, cmd Completed, fn R
 			return err
 		}
 
-		err = fn(p.r, 0)
+		err = fn(p.r)
 
 		if err != nil {
 			p.error.CompareAndSwap(nil, &errs{error: err})

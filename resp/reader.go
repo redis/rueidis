@@ -113,7 +113,7 @@ func (r *Reader) ReadStringBytes() ([]byte, error) {
 
 	switch b {
 	case '$', '=', '!': // Blob strings / verbatim / blob error
-		length, err := rueidis.ReadInt(r.r)
+		length, err := r.ReadInt()
 		if err != nil {
 			return nil, err
 		}
@@ -187,7 +187,7 @@ func (r *Reader) SkipValue() error {
 
 	case '$', '!', '=':
 		// Blob string / blob error / verbatim
-		length, err := rueidis.ReadInt(r.r)
+		length, err := r.ReadInt()
 		if err != nil {
 			return err
 		}
@@ -199,7 +199,7 @@ func (r *Reader) SkipValue() error {
 
 	case '*', '~':
 		// Array / set
-		count, err := rueidis.ReadInt(r.r)
+		count, err := r.ReadInt()
 		if err != nil {
 			return err
 		}
@@ -215,7 +215,7 @@ func (r *Reader) SkipValue() error {
 
 	case '%':
 		// Map: key + value
-		count, err := rueidis.ReadInt(r.r)
+		count, err := r.ReadInt()
 		if err != nil {
 			return err
 		}
@@ -239,6 +239,39 @@ func (r *Reader) SkipValue() error {
 	}
 }
 
+const (
+	unexpectedNoCRLF  = "received unexpected simple string message ending without CRLF"
+	unexpectedNumByte = "received unexpected number byte: "
+)
+
+var errChunked = errors.New("unbounded redis message")
+
+func (r *Reader) ReadInt() (v int64, err error) {
+	bs, err := r.r.ReadSlice('\n')
+	if err != nil {
+		return 0, err
+	}
+	if len(bs) < 3 {
+		return 0, errors.New(unexpectedNoCRLF)
+	}
+	if bs[0] == '?' {
+		return 0, errChunked
+	}
+	var s = int64(1)
+	if bs[0] == '-' {
+		s = -1
+		bs = bs[1:]
+	}
+	for _, c := range bs[:len(bs)-2] {
+		if d := int64(c - '0'); d >= 0 && d <= 9 {
+			v = v*10 + d
+		} else {
+			return 0, errors.New(unexpectedNumByte + strconv.Itoa(int(c)))
+		}
+	}
+	return v * s, nil
+}
+
 var ErrNotNull = errors.New("resp: value is not null")
 
 func (r *Reader) ReadNull() error {
@@ -259,7 +292,7 @@ func (r *Reader) ReadNull() error {
 
 	// RESP2 null bulk / null array
 	case '$', '*':
-		n, err := rueidis.ReadInt(r.r)
+		n, err := r.ReadInt()
 		if err != nil {
 			return err
 		}
