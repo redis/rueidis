@@ -653,7 +653,7 @@ func (p *pipe) _backgroundRead() (err error) {
 
 func (p *pipe) backgroundPing() {
 	var prev, recv int32
-    var mu sync.Mutex
+	var mu sync.Mutex
 
 	mu.Lock()
 	defer mu.Unlock()
@@ -1276,7 +1276,6 @@ func (p *pipe) DoWithReader(ctx context.Context, pool *pool, cmd Completed, fn R
 	}
 
 	state := atomic.LoadInt32(&p.state)
-
 	if state == 1 {
 		panic("DoWithReader with auto pipelining is a bug")
 	}
@@ -1287,105 +1286,123 @@ func (p *pipe) DoWithReader(ctx context.Context, pool *pool, cmd Completed, fn R
 		if waits != 1 {
 			panic("DoWithReader with racing is a bug")
 		}
-		dl, ok := ctx.Deadline()
-		if ok {
+
+		// Set deadline
+		if dl, ok := ctx.Deadline(); ok {
 			if p.timeout > 0 && !cmd.IsBlock() {
 				defaultDeadline := time.Now().Add(p.timeout)
 				if dl.After(defaultDeadline) {
 					dl = defaultDeadline
 				}
 			}
-			p.conn.SetDeadline(dl)
+			_ = p.conn.SetDeadline(dl)
 		} else if p.timeout > 0 && !cmd.IsBlock() {
-			p.conn.SetDeadline(time.Now().Add(p.timeout))
+			_ = p.conn.SetDeadline(time.Now().Add(p.timeout))
 		} else {
-			p.conn.SetDeadline(time.Time{})
+			_ = p.conn.SetDeadline(time.Time{})
 		}
 
-		// Write command and flush
+		// Write and flush command
 		_ = writeCmd(p.w, cmd.Commands())
 		if err := p.w.Flush(); err != nil {
 			p.error.CompareAndSwap(nil, &errs{error: err})
-			p.conn.Close()
+			_ = p.conn.Close()
 			p.background()
 			atomic.AddInt32(&p.blcksig, -1)
 			p.decrWaits()
-			pool.Store(p)
+			if pool != nil {
+				pool.Store(p)
+			}
 			return err
 		}
 
-		// Read response type, skipping push messages
+		// Skip push messages and read first non-push type
 		var typ byte
 		var err error
 	next:
 		if typ, err = p.r.ReadByte(); err != nil {
 			p.error.CompareAndSwap(nil, &errs{error: err})
-			p.conn.Close()
+			_ = p.conn.Close()
 			p.background()
 			atomic.AddInt32(&p.blcksig, -1)
 			p.decrWaits()
-			pool.Store(p)
+			if pool != nil {
+				pool.Store(p)
+			}
 			return err
 		}
-		if typ == '>' { // Push message - skip it
-			if _, err = readNextMessage(p.r); err != nil {
+		if typ == '>' { // Push message
+			if _, err := readNextMessage(p.r); err != nil {
 				p.error.CompareAndSwap(nil, &errs{error: err})
-				p.conn.Close()
+				_ = p.conn.Close()
 				p.background()
 				atomic.AddInt32(&p.blcksig, -1)
 				p.decrWaits()
-				pool.Store(p)
+				if pool != nil {
+					pool.Store(p)
+				}
 				return err
 			}
 			goto next
 		}
 
-		// Handle error responses - parse fully and return RedisError
-		// This allows cluster client to detect MOVED/ASK redirects
-		if typ == '-' || typ == '!' { // Simple error or Blob error
-			_ = p.r.UnreadByte() // Put type byte back
+		// Handle errors
+		if typ == '-' || typ == '!' {
+			_ = p.r.UnreadByte()
 			msg, err := readNextMessage(p.r)
 			if err != nil {
 				p.error.CompareAndSwap(nil, &errs{error: err})
-				p.conn.Close()
+				_ = p.conn.Close()
 				p.background()
 			}
 			atomic.AddInt32(&p.blcksig, -1)
 			p.decrWaits()
-			pool.Store(p)
+			if pool != nil {
+				pool.Store(p)
+			}
 			if err != nil {
 				return err
 			}
-			// Return as RedisError so cluster can check for MOVED/ASK
 			return (*RedisError)(&msg)
 		}
 
-		// Handle NULL response
+		// Handle null response
 		if typ == '_' {
-			_, err := p.r.Discard(2) // Discard \r\n
+			_, err := p.r.Discard(2) // \r\n
 			if err != nil {
 				p.error.CompareAndSwap(nil, &errs{error: err})
-				p.conn.Close()
+				_ = p.conn.Close()
 				p.background()
 			}
 			atomic.AddInt32(&p.blcksig, -1)
 			p.decrWaits()
-			pool.Store(p)
+			if pool != nil {
+				pool.Store(p)
+			}
 			if err != nil {
 				return err
 			}
 			return Nil
 		}
 
-		// SUCCESS: Non-error response - call user callback
-		err = fn(p.r, typ)
+		// Call callback: type byte is unread, callback reads it
+		if err := p.r.UnreadByte(); err != nil {
+			p.error.CompareAndSwap(nil, &errs{error: err})
+			_ = p.conn.Close()
+			p.background()
+			atomic.AddInt32(&p.blcksig, -1)
+			p.decrWaits()
+			if pool != nil {
+				pool.Store(p)
+			}
+			return err
+		}
 
-		// If callback returned an error, the connection state may be corrupted
-		// (e.g., callback failed to fully consume the response).
-		// Close the connection to prevent subsequent commands from reading corrupted data.
+		err = fn(p.r, 0)
+
 		if err != nil {
 			p.error.CompareAndSwap(nil, &errs{error: err})
-			p.conn.Close()
+			_ = p.conn.Close()
 			p.background()
 		}
 
@@ -1394,6 +1411,7 @@ func (p *pipe) DoWithReader(ctx context.Context, pool *pool, cmd Completed, fn R
 		if pool != nil {
 			pool.Store(p)
 		}
+
 		return err
 	}
 
