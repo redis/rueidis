@@ -521,11 +521,11 @@ client, err = rueidis.NewClient(rueidis.MustParseURL("unix:///run/redis.conf?db=
 
 Starting from Valkey 8.1, Valkey server provides the `availability-zone` information for clients to know where the server is located.
 For using this information to route requests to the replica located in the same availability zone,
-set the `EnableReplicaAZInfo` option and your `ReadNodeSelector` function. Rueidis provides the following helpers:
+set the `EnableReplicaAZInfo` option and your `ReadNodeSelector` function with helpers:
+
 - **PreferReplicaNodeSelector**: Prioritizes reading from any replica. Fallback to primary if no replicas are available.
 - **AZAffinityNodeSelector**: Prioritizes reading from replicas in the same availability zone, then any replica. Fallback to primary.
 - **AZAffinityReplicasAndPrimaryNodeSelector**: Prioritizes reading from replicas in the same availability zone, then primary in the same availability zone, then any replica. Fallback to primary.
-- **AZAffinityReplicaSelector**: A helper specifically for `ClientOption.ReplicaSelector`. Prioritizes replicas in the same availability zone.
 
 For example:
 ```go
