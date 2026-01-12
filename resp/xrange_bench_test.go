@@ -10,7 +10,7 @@ import (
 	"github.com/redis/rueidis"
 )
 
-func BenchmarkXRange1000Entries(b *testing.B) {
+func BenchmarkXRange(b *testing.B) {
 	ctx := context.Background()
 	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
 	if err != nil {
@@ -24,8 +24,10 @@ func BenchmarkXRange1000Entries(b *testing.B) {
 	// Clean up any existing stream
 	client.Do(ctx, client.B().Del().Key(streamKey).Build())
 
+	totalEntries := 1000
+
 	// Add 1000 entries to the stream
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < totalEntries; i++ {
 		err := client.Do(ctx, client.B().Xadd().
 			Key(streamKey).
 			Id("*").
@@ -58,8 +60,8 @@ func BenchmarkXRange1000Entries(b *testing.B) {
 				b.Fatal(err)
 			}
 
-			if len(entries) != 1000 {
-				b.Fatalf("expected 1000 entries, got %d", len(entries))
+			if len(entries) != totalEntries {
+				b.Fatalf("expected %d entries, got %d", totalEntries, len(entries))
 			}
 		}
 	})
@@ -133,8 +135,8 @@ func BenchmarkXRange1000Entries(b *testing.B) {
 				b.Fatal(err)
 			}
 
-			if len(results) != 1000 {
-				b.Fatalf("expected 1000 entries, got %d", entryCount)
+			if len(results) != totalEntries {
+				b.Fatalf("expected %d entries, got %d", totalEntries, entryCount)
 			}
 		}
 	})
@@ -143,13 +145,16 @@ func BenchmarkXRange1000Entries(b *testing.B) {
 	client.Do(ctx, client.B().Del().Key(streamKey).Build())
 }
 
+var testVal []byte
+
 func process(val []byte) {
 	if len(val) == 0 {
 		panic("empty value")
 	}
+	testVal = val
 }
 
-func BenchmarkXRead1000Entries(b *testing.B) {
+func BenchmarkXRead(b *testing.B) {
 	ctx := context.Background()
 	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
 	if err != nil {
@@ -163,8 +168,11 @@ func BenchmarkXRead1000Entries(b *testing.B) {
 	// Clean up any existing stream
 	client.Do(ctx, client.B().Del().Key(streamKey).Build())
 
-	// Add 1000 entries to the stream
-	for i := 0; i < 1000; i++ {
+	totalEntries := 1000
+	var batchSize int64 = 1000
+
+	// Add entries to the stream
+	for i := 0; i < totalEntries; i++ {
 		err := client.Do(ctx, client.B().Xadd().
 			Key(streamKey).
 			Id("*").
@@ -183,12 +191,12 @@ func BenchmarkXRead1000Entries(b *testing.B) {
 
 		for b.Loop() {
 			lastID := "0-0"
-			totalEntries := 0
+			consumedEntries := 0
 
-			// Read in batches of 10 until we've read all 1000 entries
-			for totalEntries < 1000 {
+			// Read in batches until we've read all entries
+			for consumedEntries < totalEntries {
 				result := client.Do(ctx, client.B().Xread().
-					Count(100).
+					Count(batchSize).
 					Streams().
 					Key(streamKey).
 					Id(lastID).
@@ -212,12 +220,12 @@ func BenchmarkXRead1000Entries(b *testing.B) {
 					break
 				}
 
-				totalEntries += len(entries)
+				consumedEntries += len(entries)
 				lastID = entries[len(entries)-1].ID
 			}
 
-			if totalEntries != 1000 {
-				b.Fatalf("expected 1000 entries, got %d", totalEntries)
+			if consumedEntries != totalEntries {
+				b.Fatalf("expected %d entries, got %d", totalEntries, consumedEntries)
 			}
 		}
 	})
@@ -229,15 +237,15 @@ func BenchmarkXRead1000Entries(b *testing.B) {
 
 		for b.Loop() {
 			lastID := "0-0"
-			totalEntries := 0
+			consumedEntries := 0
 
-			// Read in batches of 10 until we've read all 1000 entries
-			for totalEntries < 1000 {
+			// Read in batches until we've read all entries
+			for consumedEntries < totalEntries {
 				var batchEntries int
 				var newLastID string
 
 				err := client.DoWithReader(ctx, client.B().Xread().
-					Count(100).
+					Count(batchSize).
 					Streams().
 					Key(streamKey).
 					Id(lastID).
@@ -359,12 +367,12 @@ func BenchmarkXRead1000Entries(b *testing.B) {
 					break
 				}
 
-				totalEntries += batchEntries
+				consumedEntries += batchEntries
 				lastID = newLastID
 			}
 
-			if totalEntries != 1000 {
-				b.Fatalf("expected 1000 entries, got %d", totalEntries)
+			if consumedEntries != totalEntries {
+				b.Fatalf("expected %d entries, got %d", totalEntries, consumedEntries)
 			}
 		}
 	})
@@ -373,7 +381,7 @@ func BenchmarkXRead1000Entries(b *testing.B) {
 	client.Do(ctx, client.B().Del().Key(streamKey).Build())
 }
 
-func BenchmarkXReadStreaming(b *testing.B) {
+func BenchmarkBlockingXRead(b *testing.B) {
 	ctx := context.Background()
 	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
 	if err != nil {
@@ -385,6 +393,9 @@ func BenchmarkXReadStreaming(b *testing.B) {
 
 	// Clean up any existing stream
 	client.Do(ctx, client.B().Del().Key(streamKey).Build())
+
+	totalEntries := 100
+	var batchSize int64 = 1
 
 	// Benchmark 1: Using client.Do with AsXRead
 	b.Run("Do_AsXRead", func(b *testing.B) {
@@ -420,11 +431,12 @@ func BenchmarkXReadStreaming(b *testing.B) {
 			}()
 
 			lastID := "$" // Start from new entries only
-			totalEntries := 0
+			consumedEntries := 0
 
 			// Consumer: read entries as they arrive using blocking XREAD
-			for totalEntries < 100 {
+			for consumedEntries < totalEntries {
 				result := client.Do(ctx, client.B().Xread().
+					Count(batchSize).
 					Block(1000).
 					Streams().
 					Key(streamKey).
@@ -446,15 +458,15 @@ func BenchmarkXReadStreaming(b *testing.B) {
 
 				entries := streams[streamKey]
 				if len(entries) > 0 {
-					totalEntries += len(entries)
+					consumedEntries += len(entries)
 					lastID = entries[len(entries)-1].ID
 				}
 			}
 
 			close(done)
 
-			if totalEntries != 100 {
-				b.Fatalf("expected 100 entries, got %d", totalEntries)
+			if consumedEntries != totalEntries {
+				b.Fatalf("expected %d entries, got %d", totalEntries, consumedEntries)
 			}
 		}
 	})
@@ -493,15 +505,16 @@ func BenchmarkXReadStreaming(b *testing.B) {
 			}()
 
 			lastID := "$" // Start from new entries only
-			totalEntries := 0
+			consumedEntries := 0
 
 			// Consumer: read entries as they arrive using blocking XREAD
-			for totalEntries < 100 {
+			for consumedEntries < totalEntries {
 				var batchEntries int
 				var newLastID string
 
 				err := client.DoWithReader(ctx, client.B().Xread().
-					Block(1000). // Block for up to 1 second
+					Count(batchSize).
+					Block(1000).
 					Streams().
 					Key(streamKey).
 					Id(lastID).
@@ -612,15 +625,15 @@ func BenchmarkXReadStreaming(b *testing.B) {
 				}
 
 				if batchEntries > 0 {
-					totalEntries += batchEntries
+					consumedEntries += batchEntries
 					lastID = newLastID
 				}
 			}
 
 			close(done)
 
-			if totalEntries != 100 {
-				b.Fatalf("expected 100 entries, got %d", totalEntries)
+			if consumedEntries != totalEntries {
+				b.Fatalf("expected %d entries, got %d", totalEntries, consumedEntries)
 			}
 		}
 	})
