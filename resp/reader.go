@@ -91,6 +91,21 @@ func (r *Reader) ExpectArrayWithLen(expected int64) error {
 	return nil
 }
 
+func (r *Reader) ExpectMap() (int64, error) {
+	b, err := r.r.ReadByte()
+	if err != nil {
+		return 0, err
+	}
+	if b != '%' {
+		return 0, fmt.Errorf("expected map, got %q", b)
+	}
+	line, err := r.readLine()
+	if err != nil {
+		return 0, err
+	}
+	return strconv.ParseInt(unsafe.String(&line[0], len(line)), 10, 64)
+}
+
 func (r *Reader) ReadInt64() (int64, error) {
 	if b, err := r.r.ReadByte(); err != nil {
 		return 0, err
