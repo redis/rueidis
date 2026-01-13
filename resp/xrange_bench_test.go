@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"context"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
+	"unsafe"
 
 	"github.com/redis/rueidis"
 )
@@ -640,4 +642,332 @@ func BenchmarkBlockingXRead(b *testing.B) {
 
 	// Cleanup
 	client.Do(ctx, client.B().Del().Key(streamKey).Build())
+}
+
+// Simple publication struct for benchmark
+type BenchPub struct {
+	Offset uint64
+	Data   []byte
+}
+
+var testPubs []BenchPub
+
+func BenchmarkLuaScript(b *testing.B) {
+	ctx := context.Background()
+	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6379"}})
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer client.Close()
+
+	streamKey := "benchmark:lua:stream"
+	metaKey := "benchmark:lua:meta"
+
+	// Clean up any existing data
+	client.Do(ctx, client.B().Del().Key(streamKey).Build())
+	client.Do(ctx, client.B().Del().Key(metaKey).Build())
+
+	totalEntries := 100
+	requestLimit := strconv.Itoa(totalEntries)
+
+	// Add entries to the stream
+	for i := 0; i < totalEntries; i++ {
+		err := client.Do(ctx, client.B().Xadd().
+			Key(streamKey).
+			Id("*").
+			FieldValue().
+			FieldValue("d", "value"+strconv.Itoa(i)).
+			Build()).Error()
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+
+	// Set up metadata
+	client.Do(ctx, client.B().Hset().Key(metaKey).
+		FieldValue().
+		FieldValue("e", "v1").
+		FieldValue("o", "100").
+		Build())
+
+	// Lua script that returns {offset, epoch, pubs}
+	luaScript := rueidis.NewLuaScript(`
+local stream_key = KEYS[1]
+local meta_key = KEYS[2]
+local start = ARGV[1]
+local limit = ARGV[2]
+
+local stream_meta = redis.call("hmget", meta_key, "e", "o")
+local epoch = stream_meta[1]
+local offset = stream_meta[2]
+
+if epoch == false then
+    epoch = "v1"
+    offset = 0
+    redis.call("hset", meta_key, "e", epoch, "o", offset)
+end
+
+if offset == false then
+    offset = 0
+end
+
+local pubs = redis.call("xrange", stream_key, start, "+", "COUNT", limit)
+
+return { offset, epoch, pubs }
+`)
+
+	// Benchmark 1: Standard approach using Exec
+	b.Run("Do_Standard", func(b *testing.B) {
+		b.ResetTimer()
+		b.ReportAllocs()
+
+		for b.Loop() {
+			result := luaScript.Exec(ctx, client,
+				[]string{streamKey, metaKey},
+				[]string{"-", requestLimit})
+
+			if result.Error() != nil {
+				b.Fatal(result.Error())
+			}
+
+			replies, err := result.ToArray()
+			if err != nil {
+				b.Fatal(err)
+			}
+
+			if len(replies) < 3 {
+				b.Fatalf("expected at least 3 elements, got %d", len(replies))
+			}
+
+			// Parse offset
+			offset, err := replies[0].AsUint64()
+			if err != nil {
+				b.Fatal(err)
+			}
+
+			// Parse epoch
+			epoch, err := replies[1].ToString()
+			if err != nil {
+				b.Fatal(err)
+			}
+
+			// Parse publications
+			pubValues, err := replies[2].ToArray()
+			if err != nil {
+				b.Fatal(err)
+			}
+
+			pubs := make([]BenchPub, len(pubValues))
+			for i, v := range pubValues {
+				entry, err := v.ToArray()
+				if err != nil {
+					b.Fatal(err)
+				}
+				if len(entry) != 2 {
+					b.Fatal("invalid entry format")
+				}
+
+				// Parse ID to get offset
+				id, err := entry[0].ToString()
+				if err != nil {
+					b.Fatal(err)
+				}
+
+				hyphenIdx := strings.IndexByte(id, '-')
+				if hyphenIdx <= 0 {
+					b.Fatal("invalid stream id")
+				}
+				pubOffset, err := strconv.ParseUint(id[:hyphenIdx], 10, 64)
+				if err != nil {
+					b.Fatal(err)
+				}
+
+				// Parse fields
+				fieldsArr, err := entry[1].ToArray()
+				if err != nil {
+					b.Fatal(err)
+				}
+
+				var data []byte
+				for j := 0; j < len(fieldsArr)-1; j += 2 {
+					key, _ := fieldsArr[j].ToString()
+					if key != "d" {
+						continue
+					}
+					val, _ := fieldsArr[j+1].ToString()
+					data = []byte(val)
+					break
+				}
+
+				pubs[i] = BenchPub{
+					Offset: pubOffset,
+					Data:   data,
+				}
+			}
+
+			if offset == 0 || epoch == "" || len(pubs) != totalEntries {
+				b.Fatal("invalid result")
+			}
+			testPubs = pubs
+		}
+	})
+
+	// Benchmark 2: Optimized approach using ExecWithReader
+	b.Run("DoWithReader", func(b *testing.B) {
+		b.ResetTimer()
+		b.ReportAllocs()
+
+		for b.Loop() {
+			var offset uint64
+			var epoch string
+			var pubs []BenchPub
+
+			err := luaScript.ExecWithReader(ctx, client,
+				[]string{streamKey, metaKey},
+				[]string{"-", requestLimit},
+				func(reader *bufio.Reader) error {
+
+					respReader := NewReader(reader)
+
+					// Expect top-level array: [offset, epoch, pubs]
+					n, err := respReader.ExpectArray()
+					if err != nil {
+						return err
+					}
+					if n < 3 {
+						return err
+					}
+
+					// Parse offset (can be int or string)
+					switch respReader.PeekKind() {
+					case KindInt:
+						v, err := respReader.ReadInt64()
+						if err != nil {
+							return err
+						}
+						offset = uint64(v)
+					case KindString:
+						buf, err := respReader.ReadStringBytes()
+						if err != nil {
+							return err
+						}
+						// Use unsafe.String to avoid allocation
+						v, err := strconv.ParseUint(
+							unsafe.String(&buf[0], len(buf)),
+							10,
+							64,
+						)
+						if err != nil {
+							return err
+						}
+						offset = v
+					default:
+						return err
+					}
+
+					// Parse epoch (string)
+					epochBuf, err := respReader.ReadStringBytes()
+					if err != nil {
+						return err
+					}
+					// Make a safe copy
+					epochCopy := make([]byte, len(epochBuf))
+					copy(epochCopy, epochBuf)
+					epoch = rueidis.BinaryString(epochCopy)
+
+					// Parse publications array
+					pubCount, err := respReader.ExpectArray()
+					if err != nil {
+						return err
+					}
+
+					pubs = make([]BenchPub, pubCount)
+
+					for i := int64(0); i < pubCount; i++ {
+						// Each entry: [id, fields]
+						if _, err := respReader.ExpectArray(); err != nil {
+							return err
+						}
+
+						// Parse ID to extract offset
+						idBuf, err := respReader.ReadStringBytes()
+						if err != nil {
+							return err
+						}
+
+						// Find hyphen in ID without allocation using unsafe.String
+						idStr := unsafe.String(&idBuf[0], len(idBuf))
+						hyphenIdx := strings.IndexByte(idStr, '-')
+						if hyphenIdx <= 0 {
+							return err
+						}
+
+						// Parse offset from ID without allocation
+						pubOffset, err := strconv.ParseUint(
+							idStr[:hyphenIdx],
+							10,
+							64,
+						)
+						if err != nil {
+							return err
+						}
+
+						// Parse field-value pairs
+						fieldCount, err := respReader.ExpectArray()
+						if err != nil {
+							return err
+						}
+
+						var data []byte
+
+						for j := int64(0); j < fieldCount; j += 2 {
+							// Read key
+							key, err := respReader.ReadStringBytes()
+							if err != nil {
+								return err
+							}
+
+							// Check if this is the data field
+							isData := len(key) == 1 && key[0] == 'd'
+
+							if isData {
+								// Read value and process on-the-fly
+								vbuf, err := respReader.ReadStringBytes()
+								if err != nil {
+									return err
+								}
+								// Copy to our struct (simulating conversion)
+								data = make([]byte, len(vbuf))
+								copy(data, vbuf)
+							} else {
+								// Skip other fields
+								if err := respReader.SkipValue(); err != nil {
+									return err
+								}
+							}
+						}
+
+						pubs[i] = BenchPub{
+							Offset: pubOffset,
+							Data:   data,
+						}
+					}
+
+					return nil
+				})
+
+			if err != nil {
+				b.Fatal(err)
+			}
+
+			if offset == 0 || epoch == "" || len(pubs) != totalEntries {
+				b.Fatal("invalid result")
+			}
+			testPubs = pubs
+		}
+	})
+
+	// Cleanup
+	client.Do(ctx, client.B().Del().Key(streamKey).Build())
+	client.Do(ctx, client.B().Del().Key(metaKey).Build())
 }
