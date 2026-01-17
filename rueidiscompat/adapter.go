@@ -3483,8 +3483,10 @@ func (c *Compat) TFunctionLoad(ctx context.Context, lib string) *StatusCmd {
 	return newStatusCmd(resp)
 }
 
-// FIXME: should check nil of options
 func (c *Compat) TFunctionLoadArgs(ctx context.Context, lib string, options *TFunctionLoadOptions) *StatusCmd {
+	if options == nil {
+		return c.TFunctionLoad(ctx, lib)
+	}
 	b := c.client.B()
 	var cmd cmds.Completed
 	if options.Replace {
