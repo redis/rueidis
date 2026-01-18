@@ -9498,6 +9498,7 @@ func testAdapterCache(resp3 bool) {
 			Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
 			adapter.TFunctionDelete(ctx, "lib1")
 			adapter.TFunctionDelete(ctx, "lib2")
+			adapter.TFunctionDelete(ctx, "lib3")
 		})
 		// Copied from go-redis
 		// https://github.com/redis/go-redis/blob/f994ff1cd96299a5c8029ae3403af7b17ef06e8a/gears_commands_test.go
@@ -9511,6 +9512,10 @@ func testAdapterCache(resp3 bool) {
 			Expect(resultAdd).To(BeEquivalentTo("OK"))
 			opt.Replace = false
 			resultAdd, err = adapter.TFunctionLoadArgs(ctx, libCodeWithConfig("lib2"), opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultAdd).To(BeEquivalentTo("OK"))
+			// Test nil options - should behave like TFunctionLoad
+			resultAdd, err = adapter.TFunctionLoadArgs(ctx, libCode("lib3"), nil).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resultAdd).To(BeEquivalentTo("OK"))
 		})
