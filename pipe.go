@@ -23,7 +23,10 @@ import (
 const LibName = "rueidis"
 const LibVer = "1.0.70"
 
-var noHello = regexp.MustCompile("unknown command .?(HELLO|hello).?")
+var (
+	noHello = regexp.MustCompile("unknown command .?(HELLO|hello).?")
+	infoAZ  = regexp.MustCompile(`availability_zone:([^\r\n]+)`)
+)
 
 // See https://github.com/redis/rueidis/pull/691
 func isUnsubReply(msg *RedisMessage) bool {
@@ -168,15 +171,22 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 		helloCmd = append(helloCmd, "SETNAME", option.ClientName)
 	}
 
-	init := make([][]string, 0, 5)
-	if option.ClientTrackingOptions == nil {
-		init = append(init, helloCmd, []string{"CLIENT", "TRACKING", "ON", "OPTIN"})
-	} else {
-		init = append(init, helloCmd, append([]string{"CLIENT", "TRACKING", "ON"}, option.ClientTrackingOptions...))
+	init := make([][]string, 0, 6)
+
+	init = append(init, helloCmd)
+
+	if option.EnableReplicaAZInfo && option.AZFromInfo {
+		init = append(init, []string{"INFO", "SERVER"})
 	}
-	if option.DisableCache {
-		init = init[:1]
+
+	if !option.DisableCache {
+		if option.ClientTrackingOptions == nil {
+			init = append(init, []string{"CLIENT", "TRACKING", "ON", "OPTIN"})
+		} else {
+			init = append(init, append([]string{"CLIENT", "TRACKING", "ON"}, option.ClientTrackingOptions...))
+		}
 	}
+
 	if option.SelectDB != 0 {
 		init = append(init, []string{"SELECT", strconv.Itoa(option.SelectDB)})
 	}
@@ -224,6 +234,14 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 		for i, r := range resp.s[:count] {
 			if i == 0 {
 				p.info, err = r.AsMap()
+			} else if i == 1 && option.EnableReplicaAZInfo && option.AZFromInfo {
+				var infoStr string
+				infoStr, err = r.ToString()
+				if err == nil {
+					if sm := infoAZ.FindStringSubmatch(infoStr); len(sm) > 1 {
+						p.info["availability_zone"] = strmsg('+', sm[1])
+					}
+				}
 			} else {
 				err = r.Error()
 			}
@@ -271,6 +289,9 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 		}
 		helloIndex := len(init)
 		init = append(init, []string{"HELLO", "2"})
+		if option.EnableReplicaAZInfo && option.AZFromInfo {
+			init = append(init, []string{"INFO", "SERVER"})
+		}
 		if option.ClientName != "" {
 			init = append(init, []string{"CLIENT", "SETNAME", option.ClientName})
 		}
@@ -324,6 +345,14 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 				}
 				if i == helloIndex {
 					p.info, err = r.AsMap()
+				} else if option.EnableReplicaAZInfo && option.AZFromInfo && i == helloIndex+1 {
+					var infoStr string
+					infoStr, err = r.ToString()
+					if err == nil {
+						if sm := infoAZ.FindStringSubmatch(infoStr); len(sm) > 1 {
+							p.info["availability_zone"] = strmsg('+', sm[1])
+						}
+					}
 				}
 			}
 		}
@@ -652,7 +681,7 @@ func (p *pipe) _backgroundRead() (err error) {
 
 func (p *pipe) backgroundPing() {
 	var prev, recv int32
-    var mu sync.Mutex
+	var mu sync.Mutex
 
 	mu.Lock()
 	defer mu.Unlock()

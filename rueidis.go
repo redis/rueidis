@@ -281,6 +281,10 @@ type ClientOption struct {
 	// EnableReplicaAZInfo enables the client to load the replica node's availability zone.
 	// If true, the client will set the `AZ` field in `ReplicaInfo`.
 	EnableReplicaAZInfo bool
+
+	// AZFromInfo forces the `availability_zone` field to be taken from an INFO command instead of HELLO.
+	// Primarily used for AWS MemoryDB.
+	AZFromInfo bool
 }
 
 // SentinelOption contains MasterSet,

@@ -557,6 +557,9 @@ client, err := rueidis.NewClient(rueidis.ClientOption{
 })
 ```
 
+For deployments that only provide the availability zone via the INFO command, set the `AZFromInfo`
+ option as well as `EnableReplicaAZInfo`.
+
 ## Arbitrary Command
 
 If you want to construct commands that are absent from the command builder, you can use `client.B().Arbitrary()`:
