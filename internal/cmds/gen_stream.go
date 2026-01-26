@@ -178,11 +178,76 @@ func (c XaddId) FieldValue() XaddFieldValue {
 	return (XaddFieldValue)(c)
 }
 
+type XaddIdmpIdmpIdmp Incomplete
+
+func (c XaddIdmpIdmpIdmp) Pid(pid string) XaddIdmpIdmpPid {
+	c.cs.s = append(c.cs.s, pid)
+	return (XaddIdmpIdmpPid)(c)
+}
+
+type XaddIdmpIdmpIid Incomplete
+
+func (c XaddIdmpIdmpIid) Maxlen() XaddTrimStrategyMaxlen {
+	c.cs.s = append(c.cs.s, "MAXLEN")
+	return (XaddTrimStrategyMaxlen)(c)
+}
+
+func (c XaddIdmpIdmpIid) Minid() XaddTrimStrategyMinid {
+	c.cs.s = append(c.cs.s, "MINID")
+	return (XaddTrimStrategyMinid)(c)
+}
+
+func (c XaddIdmpIdmpIid) Id(id string) XaddId {
+	c.cs.s = append(c.cs.s, id)
+	return (XaddId)(c)
+}
+
+type XaddIdmpIdmpPid Incomplete
+
+func (c XaddIdmpIdmpPid) Iid(iid string) XaddIdmpIdmpIid {
+	c.cs.s = append(c.cs.s, iid)
+	return (XaddIdmpIdmpIid)(c)
+}
+
+type XaddIdmpIdmpautoIdmpauto Incomplete
+
+func (c XaddIdmpIdmpautoIdmpauto) Pid(pid string) XaddIdmpIdmpautoPid {
+	c.cs.s = append(c.cs.s, pid)
+	return (XaddIdmpIdmpautoPid)(c)
+}
+
+type XaddIdmpIdmpautoPid Incomplete
+
+func (c XaddIdmpIdmpautoPid) Maxlen() XaddTrimStrategyMaxlen {
+	c.cs.s = append(c.cs.s, "MAXLEN")
+	return (XaddTrimStrategyMaxlen)(c)
+}
+
+func (c XaddIdmpIdmpautoPid) Minid() XaddTrimStrategyMinid {
+	c.cs.s = append(c.cs.s, "MINID")
+	return (XaddTrimStrategyMinid)(c)
+}
+
+func (c XaddIdmpIdmpautoPid) Id(id string) XaddId {
+	c.cs.s = append(c.cs.s, id)
+	return (XaddId)(c)
+}
+
 type XaddKey Incomplete
 
 func (c XaddKey) Nomkstream() XaddNomkstream {
 	c.cs.s = append(c.cs.s, "NOMKSTREAM")
 	return (XaddNomkstream)(c)
+}
+
+func (c XaddKey) Idmpauto() XaddIdmpIdmpautoIdmpauto {
+	c.cs.s = append(c.cs.s, "IDMPAUTO")
+	return (XaddIdmpIdmpautoIdmpauto)(c)
+}
+
+func (c XaddKey) Idmp() XaddIdmpIdmpIdmp {
+	c.cs.s = append(c.cs.s, "IDMP")
+	return (XaddIdmpIdmpIdmp)(c)
 }
 
 func (c XaddKey) Maxlen() XaddTrimStrategyMaxlen {
@@ -201,6 +266,16 @@ func (c XaddKey) Id(id string) XaddId {
 }
 
 type XaddNomkstream Incomplete
+
+func (c XaddNomkstream) Idmpauto() XaddIdmpIdmpautoIdmpauto {
+	c.cs.s = append(c.cs.s, "IDMPAUTO")
+	return (XaddIdmpIdmpautoIdmpauto)(c)
+}
+
+func (c XaddNomkstream) Idmp() XaddIdmpIdmpIdmp {
+	c.cs.s = append(c.cs.s, "IDMP")
+	return (XaddIdmpIdmpIdmp)(c)
+}
 
 func (c XaddNomkstream) Maxlen() XaddTrimStrategyMaxlen {
 	c.cs.s = append(c.cs.s, "MAXLEN")
