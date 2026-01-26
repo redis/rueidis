@@ -922,14 +922,14 @@ func (c HotkeysStartDuration) Build() Completed {
 
 type HotkeysStartMetricsCount Incomplete
 
-func (c HotkeysStartMetricsCount) Cpu() HotkeysStartMetricsMetricCpu {
+func (c HotkeysStartMetricsCount) Cpu() HotkeysStartMetricsCpu {
 	c.cs.s = append(c.cs.s, "CPU")
-	return (HotkeysStartMetricsMetricCpu)(c)
+	return (HotkeysStartMetricsCpu)(c)
 }
 
-func (c HotkeysStartMetricsCount) Net() HotkeysStartMetricsMetricNet {
+func (c HotkeysStartMetricsCount) Net() HotkeysStartMetricsNet {
 	c.cs.s = append(c.cs.s, "NET")
-	return (HotkeysStartMetricsMetricNet)(c)
+	return (HotkeysStartMetricsNet)(c)
 }
 
 func (c HotkeysStartMetricsCount) Count(k int64) HotkeysStartCount {
@@ -957,76 +957,34 @@ func (c HotkeysStartMetricsCount) Build() Completed {
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type HotkeysStartMetricsMetricCpu Incomplete
+type HotkeysStartMetricsCpu Incomplete
 
-func (c HotkeysStartMetricsMetricCpu) Cpu() HotkeysStartMetricsMetricCpu {
-	c.cs.s = append(c.cs.s)
-	return c
-}
-
-func (c HotkeysStartMetricsMetricCpu) Net() HotkeysStartMetricsMetricNet {
+func (c HotkeysStartMetricsCpu) Net() HotkeysStartMetricsNet {
 	c.cs.s = append(c.cs.s, "NET")
-	return (HotkeysStartMetricsMetricNet)(c)
+	return (HotkeysStartMetricsNet)(c)
 }
 
-func (c HotkeysStartMetricsMetricCpu) Count(k int64) HotkeysStartCount {
+func (c HotkeysStartMetricsCpu) Count(k int64) HotkeysStartCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(k, 10))
 	return (HotkeysStartCount)(c)
 }
 
-func (c HotkeysStartMetricsMetricCpu) Duration(seconds int64) HotkeysStartDuration {
+func (c HotkeysStartMetricsCpu) Duration(seconds int64) HotkeysStartDuration {
 	c.cs.s = append(c.cs.s, "DURATION", strconv.FormatInt(seconds, 10))
 	return (HotkeysStartDuration)(c)
 }
 
-func (c HotkeysStartMetricsMetricCpu) Sample(ratio int64) HotkeysStartSample {
+func (c HotkeysStartMetricsCpu) Sample(ratio int64) HotkeysStartSample {
 	c.cs.s = append(c.cs.s, "SAMPLE", strconv.FormatInt(ratio, 10))
 	return (HotkeysStartSample)(c)
 }
 
-func (c HotkeysStartMetricsMetricCpu) Slots() HotkeysStartSlotsSlots {
+func (c HotkeysStartMetricsCpu) Slots() HotkeysStartSlotsSlots {
 	c.cs.s = append(c.cs.s, "SLOTS")
 	return (HotkeysStartSlotsSlots)(c)
 }
 
-func (c HotkeysStartMetricsMetricCpu) Build() Completed {
-	c.cs.Build()
-	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
-}
-
-type HotkeysStartMetricsMetricNet Incomplete
-
-func (c HotkeysStartMetricsMetricNet) Cpu() HotkeysStartMetricsMetricCpu {
-	c.cs.s = append(c.cs.s, "CPU")
-	return (HotkeysStartMetricsMetricCpu)(c)
-}
-
-func (c HotkeysStartMetricsMetricNet) Net() HotkeysStartMetricsMetricNet {
-	c.cs.s = append(c.cs.s)
-	return c
-}
-
-func (c HotkeysStartMetricsMetricNet) Count(k int64) HotkeysStartCount {
-	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(k, 10))
-	return (HotkeysStartCount)(c)
-}
-
-func (c HotkeysStartMetricsMetricNet) Duration(seconds int64) HotkeysStartDuration {
-	c.cs.s = append(c.cs.s, "DURATION", strconv.FormatInt(seconds, 10))
-	return (HotkeysStartDuration)(c)
-}
-
-func (c HotkeysStartMetricsMetricNet) Sample(ratio int64) HotkeysStartSample {
-	c.cs.s = append(c.cs.s, "SAMPLE", strconv.FormatInt(ratio, 10))
-	return (HotkeysStartSample)(c)
-}
-
-func (c HotkeysStartMetricsMetricNet) Slots() HotkeysStartSlotsSlots {
-	c.cs.s = append(c.cs.s, "SLOTS")
-	return (HotkeysStartSlotsSlots)(c)
-}
-
-func (c HotkeysStartMetricsMetricNet) Build() Completed {
+func (c HotkeysStartMetricsCpu) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
@@ -1036,6 +994,33 @@ type HotkeysStartMetricsMetrics Incomplete
 func (c HotkeysStartMetricsMetrics) Count(count int64) HotkeysStartMetricsCount {
 	c.cs.s = append(c.cs.s, strconv.FormatInt(count, 10))
 	return (HotkeysStartMetricsCount)(c)
+}
+
+type HotkeysStartMetricsNet Incomplete
+
+func (c HotkeysStartMetricsNet) Count(k int64) HotkeysStartCount {
+	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(k, 10))
+	return (HotkeysStartCount)(c)
+}
+
+func (c HotkeysStartMetricsNet) Duration(seconds int64) HotkeysStartDuration {
+	c.cs.s = append(c.cs.s, "DURATION", strconv.FormatInt(seconds, 10))
+	return (HotkeysStartDuration)(c)
+}
+
+func (c HotkeysStartMetricsNet) Sample(ratio int64) HotkeysStartSample {
+	c.cs.s = append(c.cs.s, "SAMPLE", strconv.FormatInt(ratio, 10))
+	return (HotkeysStartSample)(c)
+}
+
+func (c HotkeysStartMetricsNet) Slots() HotkeysStartSlotsSlots {
+	c.cs.s = append(c.cs.s, "SLOTS")
+	return (HotkeysStartSlotsSlots)(c)
+}
+
+func (c HotkeysStartMetricsNet) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 type HotkeysStartSample Incomplete

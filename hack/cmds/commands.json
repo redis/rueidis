@@ -3847,14 +3847,16 @@
             "type": "integer"
           },
           {
-            "name": "metric",
-            "type": "enum",
-            "enum": [
-              "CPU",
-              "NET"
-            ],
-            "optional": true,
-            "multiple": true
+            "name": "cpu",
+            "type": "pure-token",
+            "token": "CPU",
+            "optional": true
+          },
+          {
+            "name": "net",
+            "type": "pure-token",
+            "token": "NET",
+            "optional": true
           }
         ]
       },
