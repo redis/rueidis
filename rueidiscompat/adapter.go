@@ -2010,13 +2010,13 @@ func (c *Compat) XAdd(ctx context.Context, a XAddArgs) *StringCmd {
 		if a.Approx {
 			cmd = cmd.Args("MAXLEN", "~", strconv.FormatInt(a.MaxLen, 10))
 		} else {
-			cmd = cmd.Args("MAXLEN", strconv.FormatInt(a.MaxLen, 10))
+			cmd = cmd.Args("MAXLEN", "=", strconv.FormatInt(a.MaxLen, 10))
 		}
 	case a.MinID != "":
 		if a.Approx {
 			cmd = cmd.Args("MINID", "~", a.MinID)
 		} else {
-			cmd = cmd.Args("MINID", a.MinID)
+			cmd = cmd.Args("MINID", "=", a.MinID)
 		}
 	}
 	if a.Limit > 0 {
@@ -2210,7 +2210,7 @@ func (c *Compat) XAutoClaimJustID(ctx context.Context, a XAutoClaimArgs) *XAutoC
 // xTrim If approx is true, add the "~" parameter; otherwise it is the default "=" (redis default).
 // example:
 //
-//	XTRIM key MAXLEN/MINID threshold LIMIT limit.
+//	XTRIM key MAXLEN/MINID = threshold LIMIT limit.
 //	XTRIM key MAXLEN/MINID ~ threshold LIMIT limit.
 //
 // The redis-server version is lower than 6.2, please set the limit to 0.
@@ -2219,6 +2219,8 @@ func (c *Compat) xTrim(ctx context.Context, key, strategy string,
 	cmd := c.client.B().Arbitrary("XTRIM").Keys(key).Args(strategy)
 	if approx {
 		cmd = cmd.Args("~")
+	} else {
+		cmd = cmd.Args("=")
 	}
 	cmd = cmd.Args(threshold)
 	if limit > 0 {
