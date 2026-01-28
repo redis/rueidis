@@ -6,6 +6,6 @@ toolchain go1.24.11
 
 replace github.com/redis/rueidis => ../
 
-require github.com/redis/rueidis v1.0.70
+require github.com/redis/rueidis v1.0.71
 
 require golang.org/x/sys v0.39.0 // indirect

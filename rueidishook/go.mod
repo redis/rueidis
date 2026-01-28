@@ -10,8 +10,8 @@ replace (
 )
 
 require (
-	github.com/redis/rueidis v1.0.70
-	github.com/redis/rueidis/mock v1.0.70
+	github.com/redis/rueidis v1.0.71
+	github.com/redis/rueidis/mock v1.0.71
 	go.uber.org/mock v0.6.0
 )
 
