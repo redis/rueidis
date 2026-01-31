@@ -241,10 +241,18 @@ func (c *clusterClient) _refresh() (err error) {
 	var removes []conn
 
 	c.mu.RLock()
+	// Preserve old slot mappings to use as fallback for incomplete topology
+	oldWslots := c.wslots
+	oldRslots := c.rslots
 	for addr, cc := range c.conns {
 		if fresh, ok := conns[addr]; ok {
-			fresh.conn = cc.conn
-			conns[addr] = fresh
+			// Validate connection health before reusing
+			// If connection has error, it will be replaced with a new one
+			if cc.conn.Error() == nil {
+				fresh.conn = cc.conn
+				conns[addr] = fresh
+			}
+			// else: let the new connection be created (conns[addr] already has fresh conn from connFn)
 		} else {
 			removes = append(removes, cc.conn)
 		}
@@ -317,6 +325,19 @@ func (c *clusterClient) _refresh() (err error) {
 				for i := slot[0]; i <= slot[1] && i >= 0 && i < 16384; i++ {
 					wslots[i] = g.nodes[0].conn
 				}
+			}
+		}
+	}
+
+	// Preserve old slot mappings for any slots not covered by the new topology
+	// This prevents nil connections when CLUSTER SLOTS returns incomplete data
+	for i := 0; i < 16384; i++ {
+		if wslots[i] == nil && oldWslots[i] != nil {
+			wslots[i] = oldWslots[i]
+		}
+		if c.rOpt != nil && len(rslots) > 0 {
+			if len(rslots[i]) == 0 && len(oldRslots) > i && len(oldRslots[i]) > 0 {
+				rslots[i] = oldRslots[i]
 			}
 		}
 	}
@@ -469,6 +490,8 @@ func (c *clusterClient) _pick(slot uint16, toReplica bool) (p conn) {
 				}
 			}
 			p = nodes[rIndex].conn
+		} else {
+			p = c.wslots[slot] // fallback to master when replica slots are missing
 		}
 	} else {
 		p = c.wslots[slot]
@@ -628,6 +651,8 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 						}
 					}
 					cc = nodes[rIndex].conn
+				} else {
+					cc = c.wslots[slot] // fallback to master when replica slots are missing
 				}
 			} else {
 				cc = c.wslots[slot]
@@ -1117,6 +1142,8 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 						}
 					}
 					p = nodes[rIndex].conn
+				} else {
+					p = c.wslots[slot] // fallback to master when replica slots are missing
 				}
 			} else {
 				p = c.wslots[slot]

@@ -10957,3 +10957,159 @@ func TestClusterClient_Refresh_MissingSlotsForReplicas_DoMultiCache(t *testing.T
 		}
 	}
 }
+
+func TestClusterClient_Refresh_BrokenConnectionNotReused(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	var refreshCount int64
+	var brokenConnReused atomic.Bool
+
+	// Simulate a connection that becomes broken after first use
+	brokenConn := &mockConn{
+		ErrorFn: func() error {
+			return errors.New("connection broken")
+		},
+		DoOverride: map[string]func(cmd Completed) RedisResult{
+			"SET K1{d} V1": func(cmd Completed) RedisResult {
+				// If this broken connection is reused, set the flag
+				brokenConnReused.Store(true)
+				return newErrResult(errors.New("broken connection should not be reused"))
+			},
+			"CLUSTER SLOTS": func(cmd Completed) RedisResult {
+				atomic.AddInt64(&refreshCount, 1)
+				return slotsMultiResp
+			},
+		},
+	}
+
+	// Healthy connection that should be used after refresh
+	healthyConn := &mockConn{
+		DoOverride: map[string]func(cmd Completed) RedisResult{
+			"SET K1{d} V1": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "OK"), nil)
+			},
+			"CLUSTER SLOTS": func(cmd Completed) RedisResult {
+				atomic.AddInt64(&refreshCount, 1)
+				return slotsMultiResp
+			},
+		},
+	}
+
+	var connCreationCount int64
+	client, err := newClusterClient(
+		&ClientOption{
+			InitAddress: []string{"127.0.0.1:0"},
+		},
+		func(dst string, opt *ClientOption) conn {
+			count := atomic.AddInt64(&connCreationCount, 1)
+			if count == 1 {
+				// First connection is healthy initially
+				return healthyConn
+			} else if count == 2 {
+				// During refresh, this connection appears broken
+				// Simulating network issue that broke the connection
+				return brokenConn
+			}
+			// Third connection created should be used (healthy replacement)
+			return healthyConn
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	// First command should succeed with initial healthy connection
+	if v, err := client.Do(context.Background(), client.B().Set().Key("K1{d}").Value("V1").Build()).ToString(); err != nil || v != "OK" {
+		t.Fatalf("initial command failed: %v %v", v, err)
+	}
+
+	// Force a topology refresh which encounters the broken connection
+	if err := client.refresh(context.Background()); err != nil {
+		t.Fatalf("refresh failed: %v", err)
+	}
+
+	// Verify that refresh actually happened
+	if atomic.LoadInt64(&refreshCount) == 0 {
+		t.Fatal("topology refresh did not occur")
+	}
+
+	// Now execute command again - it should use a new healthy connection
+	// NOT the broken connection
+	if v, err := client.Do(context.Background(), client.B().Set().Key("K1{d}").Value("V1").Build()).ToString(); err != nil || v != "OK" {
+		t.Fatalf("command after refresh failed: %v %v", v, err)
+	}
+
+	// Verify that the broken connection was NOT reused
+	if brokenConnReused.Load() {
+		t.Fatal("broken connection was reused - connection health validation failed!")
+	}
+}
+
+func TestClusterClient_Refresh_BrokenConnectionReplacedForAllSlots(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	var brokenConnUsed int64
+
+	// Connection that reports error
+	brokenConn := &mockConn{
+		ErrorFn: func() error {
+			return errors.New("connection broken due to network issue")
+		},
+		DoOverride: map[string]func(cmd Completed) RedisResult{
+			"GET K1{d}": func(cmd Completed) RedisResult {
+				atomic.AddInt64(&brokenConnUsed, 1)
+				return newErrResult(errors.New("using broken connection"))
+			},
+			"CLUSTER SLOTS": func(cmd Completed) RedisResult {
+				return slotsMultiResp
+			},
+		},
+	}
+
+	healthyConn := &mockConn{
+		DoOverride: map[string]func(cmd Completed) RedisResult{
+			"GET K1{d}": func(cmd Completed) RedisResult {
+				return newResult(strmsg('+', "value1"), nil)
+			},
+			"CLUSTER SLOTS": func(cmd Completed) RedisResult {
+				return slotsMultiResp
+			},
+		},
+	}
+
+	var useHealthy atomic.Bool
+	client, err := newClusterClient(
+		&ClientOption{
+			InitAddress: []string{"127.0.0.1:0"},
+		},
+		func(dst string, opt *ClientOption) conn {
+			if useHealthy.Load() {
+				return healthyConn
+			}
+			// First pass: connection becomes broken
+			// After refresh with validation: should get healthy conn
+			useHealthy.Store(true)
+			return brokenConn
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	// Trigger topology refresh - broken connection should be detected and replaced
+	if err := client.refresh(context.Background()); err != nil {
+		t.Fatalf("refresh failed: %v", err)
+	}
+
+	// Execute command - should use healthy connection, not broken one
+	if v, err := client.Do(context.Background(), client.B().Get().Key("K1{d}").Build()).ToString(); err != nil || v != "value1" {
+		t.Fatalf("command failed: %v %v", v, err)
+	}
+
+	// Verify broken connection was never used for commands
+	if count := atomic.LoadInt64(&brokenConnUsed); count > 0 {
+		t.Fatalf("broken connection was used %d times - should be 0", count)
+	}
+}
