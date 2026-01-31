@@ -3817,6 +3817,98 @@
     "since": "2.0.0",
     "group": "hash"
   },
+  "HOTKEYS GET": {
+    "summary": "Returns lists of top K hotkeys depending on metrics chosen in HOTKEYS START command.",
+    "complexity": "O(K) where K is the number of hotkeys returned.",
+    "since": "8.6.0",
+    "group": "server"
+  },
+  "HOTKEYS RESET": {
+    "summary": "Release the resources used for hotkey tracking.",
+    "complexity": "O(1)",
+    "since": "8.6.0",
+    "group": "server"
+  },
+  "HOTKEYS START": {
+    "summary": "Starts hotkeys tracking.",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "metrics",
+        "type": "block",
+        "arguments": [
+          {
+            "name": "metrics",
+            "type": "pure-token",
+            "token": "METRICS"
+          },
+          {
+            "name": "count",
+            "type": "integer"
+          },
+          {
+            "name": "cpu",
+            "type": "pure-token",
+            "token": "CPU",
+            "optional": true
+          },
+          {
+            "name": "net",
+            "type": "pure-token",
+            "token": "NET",
+            "optional": true
+          }
+        ]
+      },
+      {
+        "command": "COUNT",
+        "name": "k",
+        "type": "integer",
+        "optional": true
+      },
+      {
+        "command": "DURATION",
+        "name": "seconds",
+        "type": "integer",
+        "optional": true
+      },
+      {
+        "command": "SAMPLE",
+        "name": "ratio",
+        "type": "integer",
+        "optional": true
+      },
+      {
+        "name": "slots",
+        "type": "block",
+        "optional": true,
+        "arguments": [
+          {
+            "name": "slots",
+            "type": "pure-token",
+            "token": "SLOTS"
+          },
+          {
+            "name": "count",
+            "type": "integer"
+          },
+          {
+            "name": "slot",
+            "type": "integer",
+            "multiple": true
+          }
+        ]
+      }
+    ],
+    "since": "8.6.0",
+    "group": "server"
+  },
+  "HOTKEYS STOP": {
+    "summary": "Stops hotkeys tracking.",
+    "complexity": "O(1)",
+    "since": "8.6.0",
+    "group": "server"
+  },
   "HPERSIST": {
     "summary": "Removes the expiration time for each specified field",
     "complexity": "O(N) where N is the number of specified fields",
