@@ -1339,6 +1339,70 @@ func (c *clusterClient) DoStream(ctx context.Context, cmd Completed) RedisResult
 	return ret
 }
 
+func (c *clusterClient) DoWithReader(ctx context.Context, cmd Completed, fn ReaderFunc) (err error) {
+	if err = c.doWithReader(ctx, cmd, fn); err == nil || err == Nil {
+		cmds.PutCompleted(cmd)
+	}
+	return err
+}
+
+func (c *clusterClient) doWithReader(ctx context.Context, cmd Completed, fn ReaderFunc) (err error) {
+	attempts := 1
+	redirects := 0
+retry:
+	cc, pickErr := c.pick(ctx, cmd.Slot(), c.toReplica(cmd))
+	if pickErr != nil {
+		return pickErr
+	}
+	err = cc.DoWithReader(ctx, cmd, fn)
+	if err == errConnExpired {
+		goto retry
+	}
+process:
+	switch addr, mode := c.shouldRefreshRetry(err, ctx); mode {
+	case RedirectMove:
+		redirects++
+		if c.opt.ClusterOption.MaxMovedRedirections > 0 && redirects > c.opt.ClusterOption.MaxMovedRedirections {
+			return err
+		}
+		ncc := c.redirectOrNew(addr, cc, cmd.Slot(), mode)
+	recover1:
+		err = ncc.DoWithReader(ctx, cmd, fn)
+		if err == errConnExpired {
+			goto recover1
+		}
+		cc = ncc
+		goto process
+	case RedirectAsk:
+		redirects++
+		if c.opt.ClusterOption.MaxMovedRedirections > 0 && redirects > c.opt.ClusterOption.MaxMovedRedirections {
+			return err
+		}
+		ncc := c.redirectOrNew(addr, cc, cmd.Slot(), mode)
+	recover2:
+		// Send ASKING command first, then the actual command
+		if askResp := ncc.Do(ctx, cmds.AskingCmd); askResp.NonRedisError() == nil {
+			err = ncc.DoWithReader(ctx, cmd, fn)
+			if err == errConnExpired {
+				goto recover2
+			}
+		} else {
+			err = askResp.NonRedisError()
+		}
+		cc = ncc
+		goto process
+	case RedirectRetry:
+		if c.retry && cmd.IsRetryable() {
+			shouldRetry := c.retryHandler.WaitOrSkipRetry(ctx, attempts, cmd, err)
+			if shouldRetry {
+				attempts++
+				goto retry
+			}
+		}
+	}
+	return err
+}
+
 func (c *clusterClient) DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisResultStream {
 	if len(multi) == 0 {
 		return RedisResultStream{e: io.EOF}
@@ -1519,6 +1583,33 @@ retry:
 		cmds.PutCompleted(cmd)
 	}
 	return resp
+}
+
+func (c *dedicatedClusterClient) DoWithReader(ctx context.Context, cmd Completed, fn ReaderFunc) (err error) {
+	attempts := 1
+retry:
+	if w, acquireErr := c.acquire(ctx, cmd.Slot()); acquireErr != nil {
+		err = acquireErr
+	} else {
+		// For dedicated clients, pass nil as pool since wire shouldn't be recycled
+		err = w.DoWithReader(ctx, nil, cmd, fn)
+		switch _, mode := c.client.shouldRefreshRetry(err, ctx); mode {
+		case RedirectRetry:
+			if c.retry && cmd.IsRetryable() && w.Error() == nil {
+				shouldRetry := c.retryHandler.WaitOrSkipRetry(
+					ctx, attempts, cmd, err,
+				)
+				if shouldRetry {
+					attempts++
+					goto retry
+				}
+			}
+		}
+	}
+	if err == nil || err == Nil {
+		cmds.PutCompleted(cmd)
+	}
+	return err
 }
 
 func (c *dedicatedClusterClient) DoMulti(ctx context.Context, multi ...Completed) (resp []RedisResult) {
