@@ -6707,6 +6707,47 @@
         "optional": true
       },
       {
+        "name": "idmp",
+        "type": "oneof",
+        "optional": true,
+        "arguments": [
+          {
+            "name": "idmpauto",
+            "type": "block",
+            "arguments": [
+              {
+                "name": "idmpauto",
+                "type": "pure-token",
+                "token": "IDMPAUTO"
+              },
+              {
+                "name": "pid",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "name": "idmp",
+            "type": "block",
+            "arguments": [
+              {
+                "name": "idmp",
+                "type": "pure-token",
+                "token": "IDMP"
+              },
+              {
+                "name": "pid",
+                "type": "string"
+              },
+              {
+                "name": "iid",
+                "type": "string"
+              }
+            ]
+          }
+        ]
+      },
+      {
         "name": "trim",
         "type": "block",
         "optional": true,
