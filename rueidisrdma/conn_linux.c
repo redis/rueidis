@@ -363,78 +363,103 @@ static int connRdmaHandleWrite(RdmaContext *ctx, uint32_t byte_len) {
     return VALKEY_OK;
 }
 
-static int connRdmaHandleCq(RdmaContext *ctx) {
+static int connRdmaHandleWc(RdmaContext *ctx, struct ibv_wc *wc) {
     struct rdma_cm_id *cm_id = ctx->cm_id;
-    struct ibv_cq *ev_cq = NULL;
-    void *ev_ctx = NULL;
-    struct ibv_wc wc = {0};
     valkeyRdmaCmd *cmd;
-    int ret;
 
-    if (ibv_get_cq_event(ctx->comp_channel, &ev_cq, &ev_ctx) < 0) {
-        if (errno != EAGAIN) {
-            valkeySetError(ctx, VALKEY_ERR_OTHER, "RDMA: get cq event failed");
-            return VALKEY_ERR;
-        }
-
-        return VALKEY_OK;
-    }
-
-    ibv_ack_cq_events(ev_cq, 1);
-    if (ibv_req_notify_cq(ev_cq, 0)) {
-        valkeySetError(ctx, VALKEY_ERR_OTHER, "RDMA: notify cq failed");
-        return VALKEY_ERR;
-    }
-
-pollcq:
-    ret = ibv_poll_cq(ctx->cq, 1, &wc);
-    if (ret < 0) {
-        valkeySetError(ctx, VALKEY_ERR_OTHER, "RDMA: poll cq failed");
-        return VALKEY_ERR;
-    } else if (ret == 0) {
-        return VALKEY_OK;
-    }
-
-    if (wc.status != IBV_WC_SUCCESS) {
+    if (wc->status != IBV_WC_SUCCESS) {
         valkeySetError(ctx, VALKEY_ERR_OTHER, "RDMA: send/recv failed");
         return VALKEY_ERR;
     }
 
-    switch (wc.opcode) {
+    switch (wc->opcode) {
     case IBV_WC_RECV:
-        cmd = (valkeyRdmaCmd *)(uintptr_t)wc.wr_id;
-        if (connRdmaHandleRecv(ctx, cm_id, cmd, wc.byte_len) == VALKEY_ERR) {
+        cmd = (valkeyRdmaCmd *)(uintptr_t)wc->wr_id;
+        if (connRdmaHandleRecv(ctx, cm_id, cmd, wc->byte_len) == VALKEY_ERR) {
             return VALKEY_ERR;
         }
-
         break;
-
     case IBV_WC_RECV_RDMA_WITH_IMM:
-        cmd = (valkeyRdmaCmd *)(uintptr_t)wc.wr_id;
-        if (connRdmaHandleRecvImm(ctx, cm_id, cmd, ntohl(wc.imm_data)) == VALKEY_ERR) {
+        cmd = (valkeyRdmaCmd *)(uintptr_t)wc->wr_id;
+        if (connRdmaHandleRecvImm(ctx, cm_id, cmd, ntohl(wc->imm_data)) == VALKEY_ERR) {
             return VALKEY_ERR;
         }
-
         break;
     case IBV_WC_RDMA_WRITE:
-        if (connRdmaHandleWrite(ctx, wc.byte_len) == VALKEY_ERR) {
+        if (connRdmaHandleWrite(ctx, wc->byte_len) == VALKEY_ERR) {
             return VALKEY_ERR;
         }
-
         break;
     case IBV_WC_SEND:
-        cmd = (valkeyRdmaCmd *)(uintptr_t)wc.wr_id;
+        cmd = (valkeyRdmaCmd *)(uintptr_t)wc->wr_id;
         if (connRdmaHandleSend(ctx, cmd) == VALKEY_ERR) {
             return VALKEY_ERR;
         }
-
         break;
     default:
         valkeySetError(ctx, VALKEY_ERR_OTHER, "RDMA: unexpected opcode");
         return VALKEY_ERR;
     }
 
-    goto pollcq;
+    return VALKEY_OK;
+}
+
+static int connRdmaHandleCq(RdmaContext *ctx) {
+    struct ibv_cq *ev_cq = NULL;
+    void *ev_ctx = NULL;
+    struct ibv_wc wc = {0};
+    int ret;
+
+    pthread_mutex_lock(&ctx->cq_mu);
+    for (;;) {
+        ret = ibv_poll_cq(ctx->cq, 1, &wc);
+        if (ret < 0) {
+            valkeySetError(ctx, VALKEY_ERR_OTHER, "RDMA: poll cq failed");
+            pthread_mutex_unlock(&ctx->cq_mu);
+            return VALKEY_ERR;
+        } else if (ret == 0) {
+            break;
+        }
+
+        if (connRdmaHandleWc(ctx, &wc) == VALKEY_ERR) {
+            pthread_mutex_unlock(&ctx->cq_mu);
+            return VALKEY_ERR;
+        }
+    }
+
+    if (ibv_get_cq_event(ctx->comp_channel, &ev_cq, &ev_ctx) < 0) {
+        if (errno != EAGAIN) {
+            valkeySetError(ctx, VALKEY_ERR_OTHER, "RDMA: get cq event failed");
+            pthread_mutex_unlock(&ctx->cq_mu);
+            return VALKEY_ERR;
+        }
+        pthread_mutex_unlock(&ctx->cq_mu);
+        return VALKEY_OK;
+    }
+
+    ibv_ack_cq_events(ev_cq, 1);
+    if (ibv_req_notify_cq(ev_cq, 0)) {
+        valkeySetError(ctx, VALKEY_ERR_OTHER, "RDMA: notify cq failed");
+        pthread_mutex_unlock(&ctx->cq_mu);
+        return VALKEY_ERR;
+    }
+
+    for (;;) {
+        ret = ibv_poll_cq(ctx->cq, 1, &wc);
+        if (ret < 0) {
+            valkeySetError(ctx, VALKEY_ERR_OTHER, "RDMA: poll cq failed");
+            pthread_mutex_unlock(&ctx->cq_mu);
+            return VALKEY_ERR;
+        } else if (ret == 0) {
+            pthread_mutex_unlock(&ctx->cq_mu);
+            return VALKEY_OK;
+        }
+
+        if (connRdmaHandleWc(ctx, &wc) == VALKEY_ERR) {
+            pthread_mutex_unlock(&ctx->cq_mu);
+            return VALKEY_ERR;
+        }
+    }
 }
 
 /* There are two FD(s) in use:
@@ -447,13 +472,9 @@ static int valkeyRdmaPollCqCm(RdmaContext *ctx, long timed) {
 #define VALKEY_RDMA_POLLFD_CQ 1
 #define VALKEY_RDMA_POLLFD_MAX 2
     struct pollfd pfd[VALKEY_RDMA_POLLFD_MAX];
-    long now = vk_msec_now();
+    struct ibv_wc wc = {0};
+    long now;
     int ret;
-
-    if (now >= timed) {
-        valkeySetError(ctx, VALKEY_ERR_IO, "RDMA: IO timeout");
-        return VALKEY_ERR;
-    }
 
     /* pfd[0] for CM event */
     pfd[VALKEY_RDMA_POLLFD_CM].fd = ctx->cm_channel->fd;
@@ -464,24 +485,57 @@ static int valkeyRdmaPollCqCm(RdmaContext *ctx, long timed) {
     pfd[VALKEY_RDMA_POLLFD_CQ].fd = ctx->comp_channel->fd;
     pfd[VALKEY_RDMA_POLLFD_CQ].events = POLLIN;
     pfd[VALKEY_RDMA_POLLFD_CQ].revents = 0;
-    ret = poll_noeintr(pfd, VALKEY_RDMA_POLLFD_MAX, timed - now);
-    if (ret < 0) {
-        valkeySetError(ctx, VALKEY_ERR_IO, "RDMA: Poll CQ/CM failed");
-        return VALKEY_ERR;
-    } else if (ret == 0) {
-        valkeySetError(ctx, VALKEY_ERR_IO, "Resource temporarily unavailable");
-        return VALKEY_ERR;
-    }
 
-    if (pfd[VALKEY_RDMA_POLLFD_CM].revents & POLLIN) {
-        valkeyRdmaCM(ctx, 0);
-        if (!(ctx->flags & VALKEY_CONNECTED)) {
-            valkeySetError(ctx, VALKEY_ERR_EOF, "Server closed the connection");
+    for (;;) {
+        now = vk_msec_now();
+        if (now >= timed) {
+            valkeySetError(ctx, VALKEY_ERR_IO, "RDMA: IO timeout");
             return VALKEY_ERR;
         }
-    }
 
-    return VALKEY_OK;
+        /* First, try to drain CQ without relying on events. */
+        for (;;) {
+            pthread_mutex_lock(&ctx->cq_mu);
+            ret = ibv_poll_cq(ctx->cq, 1, &wc);
+            if (ret < 0) {
+                valkeySetError(ctx, VALKEY_ERR_OTHER, "RDMA: poll cq failed");
+                pthread_mutex_unlock(&ctx->cq_mu);
+                return VALKEY_ERR;
+            } else if (ret == 0) {
+                pthread_mutex_unlock(&ctx->cq_mu);
+                break;
+            }
+            if (connRdmaHandleWc(ctx, &wc) == VALKEY_ERR) {
+                pthread_mutex_unlock(&ctx->cq_mu);
+                return VALKEY_ERR;
+            }
+            pthread_mutex_unlock(&ctx->cq_mu);
+        }
+
+        /* Poll for a short slice so we can re-check CQ even if no events. */
+        ret = poll_noeintr(pfd, VALKEY_RDMA_POLLFD_MAX, (int)valkeyMin(10, timed - now));
+        if (ret < 0) {
+            valkeySetError(ctx, VALKEY_ERR_IO, "RDMA: Poll CQ/CM failed");
+            return VALKEY_ERR;
+        } else if (ret == 0) {
+            continue;
+        }
+
+        if (pfd[VALKEY_RDMA_POLLFD_CM].revents & POLLIN) {
+            valkeyRdmaCM(ctx, 0);
+            if (!(ctx->flags & VALKEY_CONNECTED)) {
+                valkeySetError(ctx, VALKEY_ERR_EOF, "Server closed the connection");
+                return VALKEY_ERR;
+            }
+        }
+
+        if (pfd[VALKEY_RDMA_POLLFD_CQ].revents & POLLIN) {
+            if (connRdmaHandleCq(ctx) == VALKEY_ERR) {
+                return VALKEY_ERR;
+            }
+            return VALKEY_OK;
+        }
+    }
 }
 
 static size_t connRdmaSend(RdmaContext *ctx, struct rdma_cm_id *cm_id, const void *data, size_t data_len) {
@@ -815,7 +869,6 @@ ssize_t rdmaRead(RdmaContext *ctx, char *buf, size_t bufcap, long timeout_msec) 
     struct rdma_cm_id *cm_id = ctx->cm_id;
     long end;
     uint32_t toread, remained, topoll;
-
     end = vk_msec_now() + timeout_msec;
 
 pollcq:
@@ -836,15 +889,23 @@ pollcq:
     }
     pthread_mutex_unlock(&ctx->rx_mu);
 
-    pthread_mutex_lock(&ctx->cq_mu);
     pthread_mutex_lock(&ctx->rx_mu);
     topoll = ctx->recv_offset - ctx->rx_offset;
     pthread_mutex_unlock(&ctx->rx_mu);
-    if (topoll == 0 && (valkeyRdmaPollCqCm(ctx, end) != VALKEY_OK || connRdmaHandleCq(ctx) != VALKEY_OK)) {
-        pthread_mutex_unlock(&ctx->cq_mu);
-        return VALKEY_ERR;
+    while (topoll == 0) {
+        if (connRdmaHandleCq(ctx) != VALKEY_OK) {
+            return VALKEY_ERR;
+        }
+        pthread_mutex_lock(&ctx->rx_mu);
+        topoll = ctx->recv_offset - ctx->rx_offset;
+        pthread_mutex_unlock(&ctx->rx_mu);
+        if (topoll != 0) {
+            break;
+        }
+        if (valkeyRdmaPollCqCm(ctx, end) != VALKEY_OK) {
+            return VALKEY_ERR;
+        }
     }
-    pthread_mutex_unlock(&ctx->cq_mu);
     goto pollcq;
 }
 
@@ -853,7 +914,6 @@ ssize_t rdmaWrite(RdmaContext *ctx, const char *obuf, size_t data_len, long time
     long end;
     uint32_t towrite, topoll, wrote = 0;
     size_t ret;
-
     end = vk_msec_now() + timeout_msec;
 
 pollcq:
@@ -878,15 +938,23 @@ pollcq:
     }
 
 waitcq:
-    pthread_mutex_lock(&ctx->cq_mu);
     pthread_mutex_lock(&ctx->tx_mu);
     topoll = ctx->tx_offset - ctx->tx_length;
     pthread_mutex_unlock(&ctx->tx_mu);
-    if (topoll == 0 && (valkeyRdmaPollCqCm(ctx, end) != VALKEY_OK || connRdmaHandleCq(ctx) != VALKEY_OK)) {
-        pthread_mutex_unlock(&ctx->cq_mu);
-        return VALKEY_ERR;
+    while (topoll == 0) {
+        if (connRdmaHandleCq(ctx) != VALKEY_OK) {
+            return VALKEY_ERR;
+        }
+        pthread_mutex_lock(&ctx->tx_mu);
+        topoll = ctx->tx_offset - ctx->tx_length;
+        pthread_mutex_unlock(&ctx->tx_mu);
+        if (topoll != 0) {
+            break;
+        }
+        if (valkeyRdmaPollCqCm(ctx, end) != VALKEY_OK) {
+            return VALKEY_ERR;
+        }
     }
-    pthread_mutex_unlock(&ctx->cq_mu);
     goto pollcq;
 }
 
