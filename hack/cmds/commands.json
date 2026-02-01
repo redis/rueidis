@@ -6707,6 +6707,28 @@
         "optional": true
       },
       {
+        "name": "condition",
+        "type": "oneof",
+        "optional": true,
+        "arguments": [
+          {
+            "name": "keepref",
+            "type": "pure-token",
+            "token": "KEEPREF"
+          },
+          {
+            "name": "delref",
+            "type": "pure-token",
+            "token": "DELREF"
+          },
+          {
+            "name": "acked",
+            "type": "pure-token",
+            "token": "ACKED"
+          }
+        ]
+      },
+      {
         "name": "idmp",
         "type": "oneof",
         "optional": true,
@@ -6777,16 +6799,6 @@
             "command": "LIMIT",
             "name": "count",
             "type": "integer",
-            "optional": true
-          },
-          {
-            "name": "reference",
-            "type": "enum",
-            "enum": [
-              "KEEPREF",
-              "DELREF",
-              "ACKED"
-            ],
             "optional": true
           }
         ]
