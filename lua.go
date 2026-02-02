@@ -86,7 +86,6 @@ func newLuaScript(script string, readonly bool, noSha1, retryable bool, opts ...
 type Lua struct {
 	script    string
 	sha1      string
-	sha1Call  call
 	maxp      int
 	sha1Mu    sync.RWMutex
 	readonly  bool
@@ -111,25 +110,19 @@ func (s *Lua) Exec(ctx context.Context, c Client, keys, args []string) (resp Red
 		scriptSha1 = s.sha1
 		s.sha1Mu.RUnlock()
 
-		// If not loaded yet, use singleflight to load it.
 		if scriptSha1 == "" {
-			err := s.sha1Call.Do(ctx, func() error {
+			s.sha1Mu.Lock()
+			if s.sha1 == "" { // the double check
 				result := c.Do(ctx, c.B().ScriptLoad().Script(s.script).Build().ToRetryable())
 				if shaStr, err := result.ToString(); err == nil {
-					s.sha1Mu.Lock()
 					s.sha1 = shaStr
+				} else {
 					s.sha1Mu.Unlock()
-					return nil
+					return newErrResult(result.Error())
 				}
-				return result.Error()
-			})
-			if err != nil {
-				return newErrResult(err)
 			}
-			// Reload scriptSha1 after singleflight completes.
-			s.sha1Mu.RLock()
 			scriptSha1 = s.sha1
-			s.sha1Mu.RUnlock()
+			s.sha1Mu.Unlock()
 		}
 	} else {
 		scriptSha1 = s.sha1

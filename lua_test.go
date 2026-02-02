@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha1"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/rand"
 	"reflect"
@@ -524,6 +525,37 @@ func TestNewLuaScriptWithLoadSha1(t *testing.T) {
 	}
 	if !evalshaInvoked {
 		t.Fatal("EVALSHA should have been called")
+	}
+}
+
+func TestNewLuaScriptWithLoadSha1Error(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	body := strconv.Itoa(rand.Int())
+
+	k := []string{"1", "2"}
+	a := []string{"3", "4"}
+
+	expectedErr := errors.New("SCRIPT LOAD failed")
+
+	c := &client{
+		BFn: func() Builder {
+			return cmds.NewBuilder(cmds.NoSlot)
+		},
+		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
+			commands := cmd.Commands()
+			if reflect.DeepEqual(commands, []string{"SCRIPT", "LOAD", body}) {
+				return newErrResult(expectedErr)
+			}
+			t.Fatal("unexpected command")
+			return newResult(strmsg('+', "unexpected"), nil)
+		},
+	}
+
+	script := NewLuaScript(body, WithLoadSHA1(true))
+
+	result := script.Exec(context.Background(), c, k, a)
+	if result.Error() != expectedErr {
+		t.Fatalf("expected error %v, got %v", expectedErr, result.Error())
 	}
 }
 
