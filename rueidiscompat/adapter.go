@@ -6038,6 +6038,12 @@ func (c CacheCompat) Get(ctx context.Context, key string) *StringCmd {
 	return newStringCmd(resp)
 }
 
+func (c CacheCompat) MGet(ctx context.Context, keys ...string) *SliceCmd {
+	cmd := c.client.B().Mget().Key(keys...).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newSliceCmd(resp, false, keys...)
+}
+
 func (c CacheCompat) GetBit(ctx context.Context, key string, offset int64) *IntCmd {
 	cmd := c.client.B().Getbit().Key(key).Offset(offset).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
