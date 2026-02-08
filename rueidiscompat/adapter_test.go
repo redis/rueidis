@@ -7928,6 +7928,28 @@ func testAdapterCache(resp3 bool) {
 			Expect(mGet.Val()).To(Equal([]any{"hello1", nil, "hello2"}))
 		})
 
+		It("should MGetCache", func() {
+			mGetCache := adapter.Cache(time.Hour).MGetCache(ctx, "_", "key2")
+			Expect(mGetCache.Err()).NotTo(HaveOccurred())
+			Expect(mGetCache.Val()).To(Equal([]any{nil, nil}))
+
+			set := adapter.Set(ctx, "key1", "hello1", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			set = adapter.Set(ctx, "key2", "hello2", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			mGetCache = adapter.Cache(time.Hour).MGetCache(ctx, "key1", "key2", "_")
+			Expect(mGetCache.Err()).NotTo(HaveOccurred())
+			Expect(mGetCache.Val()).To(Equal([]any{"hello1", "hello2", nil}))
+
+			mGetCache = adapter.Cache(time.Hour).MGetCache(ctx, "key1", "_", "key2")
+			Expect(mGetCache.Err()).NotTo(HaveOccurred())
+			Expect(mGetCache.Val()).To(Equal([]any{"hello1", nil, "hello2"}))
+		})
+
 		It("should GetBit", func() {
 			setBit := adapter.SetBit(ctx, "key", 7, 1)
 			Expect(setBit.Err()).NotTo(HaveOccurred())
