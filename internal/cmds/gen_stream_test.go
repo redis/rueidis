@@ -51,6 +51,10 @@ func stream0(s Builder) {
 	s.Xautoclaim().Key("1").Group("1").Consumer("1").MinIdleTime("1").Start("1").Count(1).Build()
 	s.Xautoclaim().Key("1").Group("1").Consumer("1").MinIdleTime("1").Start("1").Justid().Build()
 	s.Xautoclaim().Key("1").Group("1").Consumer("1").MinIdleTime("1").Start("1").Build()
+	s.Xcfgset().Key("1").IdmpDuration().Duration(1).IdmpMaxsize().Maxsize(1).Build()
+	s.Xcfgset().Key("1").IdmpDuration().Duration(1).Build()
+	s.Xcfgset().Key("1").IdmpMaxsize().Maxsize(1).Build()
+	s.Xcfgset().Key("1").Build()
 	s.Xclaim().Key("1").Group("1").Consumer("1").MinIdleTime("1").Id("1").Id("1").Idle(1).Time(1).Retrycount(1).Force().Justid().Lastid().Build()
 	s.Xclaim().Key("1").Group("1").Consumer("1").MinIdleTime("1").Id("1").Id("1").Idle(1).Time(1).Retrycount(1).Force().Justid().Build()
 	s.Xclaim().Key("1").Group("1").Consumer("1").MinIdleTime("1").Id("1").Id("1").Idle(1).Time(1).Retrycount(1).Force().Lastid().Build()
@@ -101,13 +105,13 @@ func stream0(s Builder) {
 	s.Xpending().Key("1").Group("1").Build()
 	s.Xrange().Key("1").Start("1").End("1").Count(1).Build()
 	s.Xrange().Key("1").Start("1").End("1").Build()
+}
+
+func stream1(s Builder) {
 	s.Xread().Count(1).Block(1).Streams().Key("1").Key("1").Id("1").Id("1").Build()
 	s.Xread().Count(1).Streams().Key("1").Key("1").Id("1").Id("1").Build()
 	s.Xread().Block(1).Streams().Key("1").Key("1").Id("1").Id("1").Build()
 	s.Xread().Streams().Key("1").Key("1").Id("1").Id("1").Build()
-}
-
-func stream1(s Builder) {
 	s.Xreadgroup().Group("1", "1").Count(1).Block(1).Noack().Claim("1").Streams().Key("1").Key("1").Id("1").Id("1").Build()
 	s.Xreadgroup().Group("1", "1").Count(1).Block(1).Noack().Streams().Key("1").Key("1").Id("1").Id("1").Build()
 	s.Xreadgroup().Group("1", "1").Count(1).Block(1).Claim("1").Streams().Key("1").Key("1").Id("1").Id("1").Build()
