@@ -6938,6 +6938,51 @@
     "since": "5.0.0",
     "group": "stream"
   },
+  "XCFGSET": {
+    "summary": "Sets the IDMP configuration parameters for a stream.",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key",
+        "key_spec_index": 0
+      },
+      {
+        "name": "idmp-duration-block",
+        "type": "block",
+        "optional": true,
+        "arguments": [
+          {
+            "name": "idmp-duration-token",
+            "type": "pure-token",
+            "token": "IDMP-DURATION"
+          },
+          {
+            "name": "duration",
+            "type": "integer"
+          }
+        ]
+      },
+      {
+        "name": "idmp-maxsize-block",
+          "type": "block",
+          "optional": true,
+          "arguments": [
+            {
+              "name": "idmp-maxsize-token",
+              "type": "pure-token",
+              "token": "IDMP-MAXSIZE"
+            },
+            {
+              "name": "maxsize",
+              "type": "integer"
+            }
+          ]
+      }
+    ],
+    "since": "8.6.0",
+    "group": "stream"
+  },
   "XDEL": {
     "summary": "Removes the specified entries from the stream. Returns the number of items actually deleted, that may be different from the number of IDs passed in case certain IDs do not exist.",
     "complexity": "O(1) for each single item to delete in the stream, regardless of the stream size.",
