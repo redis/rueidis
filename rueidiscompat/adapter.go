@@ -264,6 +264,7 @@ type CoreCmdable interface {
 	XInfoStream(ctx context.Context, key string) *XInfoStreamCmd
 	XInfoStreamFull(ctx context.Context, key string, count int64) *XInfoStreamFullCmd
 	XInfoConsumers(ctx context.Context, key string, group string) *XInfoConsumersCmd
+	XCfgSet(ctx context.Context, a XCfgSetArgs) *StatusCmd
 
 	BZPopMax(ctx context.Context, timeout time.Duration, keys ...string) *ZWithKeyCmd
 	BZPopMin(ctx context.Context, timeout time.Duration, keys ...string) *ZWithKeyCmd
@@ -2015,6 +2016,13 @@ func (c *Compat) XAdd(ctx context.Context, a XAddArgs) *StringCmd {
 	if a.NoMkStream {
 		cmd = cmd.Args("NOMKSTREAM")
 	}
+	if a.ProducerID != "" {
+		if a.IdempotentAuto {
+			cmd = cmd.Args("IDMPAUTO", a.ProducerID)
+		} else if a.IdempotentID != "" {
+			cmd = cmd.Args("IDMP", a.ProducerID, a.IdempotentID)
+		}
+	}
 	switch {
 	case a.MaxLen > 0:
 		if a.Approx {
@@ -2288,6 +2296,18 @@ func (c *Compat) XInfoConsumers(ctx context.Context, key, group string) *XInfoCo
 	cmd := c.client.B().XinfoConsumers().Key(key).Group(group).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newXInfoConsumersCmd(resp)
+}
+
+func (c *Compat) XCfgSet(ctx context.Context, a XCfgSetArgs) *StatusCmd {
+	cmd := c.client.B().Arbitrary("XCFGSET").Keys(a.Stream)
+	if a.Duration > 0 {
+		cmd = cmd.Args("IDMP-DURATION", strconv.FormatInt(a.Duration, 10))
+	}
+	if a.MaxSize > 0 {
+		cmd = cmd.Args("IDMP-MAXSIZE", strconv.FormatInt(a.MaxSize, 10))
+	}
+	resp := c.client.Do(ctx, cmd.Build())
+	return newStatusCmd(resp)
 }
 
 // BZPopMax Redis `BZPOPMAX key [key ...] timeout` command.

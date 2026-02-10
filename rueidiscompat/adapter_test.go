@@ -136,6 +136,7 @@ var _ = Describe("RESP3 Commands", func() {
 	testAdapterCache(true)
 	testCluster(true)
 	testAdapterSearchRESP3()
+	testAdapterRedis86()
 })
 
 var _ = Describe("RESP2 Commands", func() {
@@ -11982,6 +11983,128 @@ func testAdapterCache(resp3 bool) {
 				// RESP2 v RESP3
 				Expect(cmd2.Val()[0]).To(Or(Equal([]interface{}{"boolean"}), Equal("boolean")))
 			})
+		})
+	})
+}
+
+func testAdapterRedis86() {
+	var adapter Cmdable
+
+	BeforeEach(func() {
+		adapter = adapterresp3redis86
+		Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
+		Expect(adapter.FlushAll(ctx).Err()).NotTo(HaveOccurred())
+	})
+
+	Describe("Redis 8.6+ commands", func() {
+		It("should XAdd with IDMP (idempotent production)", func() {
+			streamName := "idmp-stream"
+			id1, err := adapter.XAdd(ctx, XAddArgs{
+				Stream:       streamName,
+				ProducerID:   "producer1",
+				IdempotentID: "msg1",
+				Values:       map[string]any{"field": "value1"},
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(id1).NotTo(BeEmpty())
+
+			id2, err := adapter.XAdd(ctx, XAddArgs{
+				Stream:       streamName,
+				ProducerID:   "producer1",
+				IdempotentID: "msg1",
+				Values:       map[string]any{"field": "value2"},
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(id2).To(Equal(id1))
+
+			vals, err := adapter.XRange(ctx, streamName, "-", "+").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(HaveLen(1))
+			Expect(vals[0].ID).To(Equal(id1))
+
+			id3, err := adapter.XAdd(ctx, XAddArgs{
+				Stream:       streamName,
+				ProducerID:   "producer1",
+				IdempotentID: "msg2",
+				Values:       map[string]any{"field": "value3"},
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(id3).NotTo(Equal(id1))
+
+			vals, err = adapter.XRange(ctx, streamName, "-", "+").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(HaveLen(2))
+		})
+
+		It("should XAdd with IDMPAUTO (auto-generated idempotent ID)", func() {
+			streamName := "idmpauto-stream"
+
+			id1, err := adapter.XAdd(ctx, XAddArgs{
+				Stream:         streamName,
+				ProducerID:     "producer1",
+				IdempotentAuto: true,
+				Values:         map[string]any{"field": "value1", "order": "123"},
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(id1).NotTo(BeEmpty())
+
+			id2, err := adapter.XAdd(ctx, XAddArgs{
+				Stream:         streamName,
+				ProducerID:     "producer1",
+				IdempotentAuto: true,
+				Values:         map[string]any{"field": "value1", "order": "123"},
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(id2).To(Equal(id1))
+
+			vals, err := adapter.XRange(ctx, streamName, "-", "+").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(HaveLen(1))
+
+			id3, err := adapter.XAdd(ctx, XAddArgs{
+				Stream:         streamName,
+				ProducerID:     "producer1",
+				IdempotentAuto: true,
+				Values:         map[string]any{"field": "value2", "order": "456"},
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(id3).NotTo(Equal(id1))
+
+			vals, err = adapter.XRange(ctx, streamName, "-", "+").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(vals).To(HaveLen(2))
+		})
+
+		It("should XCfgSet configure idempotent production settings", func() {
+			streamName := "xcfgset-stream"
+
+			_, err := adapter.XAdd(ctx, XAddArgs{
+				Stream: streamName,
+				Values: map[string]any{"field": "value"},
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+
+			status, err := adapter.XCfgSet(ctx, XCfgSetArgs{
+				Stream:   streamName,
+				Duration: 200,
+				MaxSize:  500,
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal("OK"))
+
+			status, err = adapter.XCfgSet(ctx, XCfgSetArgs{
+				Stream:   streamName,
+				Duration: 300,
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal("OK"))
+
+			status, err = adapter.XCfgSet(ctx, XCfgSetArgs{
+				Stream:  streamName,
+				MaxSize: 1000,
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(status).To(Equal("OK"))
 		})
 	})
 }
