@@ -22,11 +22,16 @@ type s3 struct {
 
 type s4 struct {
 	A       string `redis:",key"`
-	B       int64  `json:"-" redis:",ver"`
+	B       int64  `redis:",ver"`
 	private int64
 }
 
 type s5 struct {
+	A       string `redis:",key"`
+	private int64
+}
+
+type s6 struct {
 	A string `redis:",key"`
 	B int64  `redis:",ver"`
 	C int64  `redis:",exat"`
@@ -47,7 +52,7 @@ func TestSchema(t *testing.T) {
 			t.Fatalf("unexpected msg %v", v)
 		}
 	})
-	t.Run("non string `redis:\",ver\"`", func(t *testing.T) {
+	t.Run("non int64 `redis:\",ver\"`", func(t *testing.T) {
 		if v := recovered(func() {
 			newSchema(reflect.TypeOf(s2{}))
 		}); !strings.Contains(v, "should be a int64") {
@@ -61,16 +66,21 @@ func TestSchema(t *testing.T) {
 			t.Fatalf("unexpected msg %v", v)
 		}
 	})
-	t.Run("missing `redis:\",ver\"`", func(t *testing.T) {
-		if v := recovered(func() {
-			newSchema(reflect.TypeOf(s4{}))
-		}); !strings.Contains(v, "should have one field with `redis:\",ver\"` tag") {
-			t.Fatalf("unexpected msg %v", v)
+	t.Run("ver is not verless", func(t *testing.T) {
+		v := newSchema(reflect.TypeOf(s4{}))
+		if v.verless {
+			t.Fatal("schema should not be verless")
+		}
+	})
+	t.Run("missing `redis:\",ver\"` should be verless", func(t *testing.T) {
+		v := newSchema(reflect.TypeOf(s5{}))
+		if !v.verless {
+			t.Fatal("schema should be verless")
 		}
 	})
 	t.Run("non time.Time `redis:\",exat\"`", func(t *testing.T) {
 		if v := recovered(func() {
-			newSchema(reflect.TypeOf(s5{}))
+			newSchema(reflect.TypeOf(s6{}))
 		}); !strings.Contains(v, "should be a time.Time") {
 			t.Fatalf("unexpected msg %v", v)
 		}
