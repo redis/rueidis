@@ -1255,6 +1255,12 @@ func (c *Pipeline) XInfoConsumers(ctx context.Context, key string, group string)
 	return ret
 }
 
+func (c *Pipeline) XCfgSet(ctx context.Context, a XCfgSetArgs) *StatusCmd {
+	ret := c.comp.XCfgSet(ctx, a)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) BZPopMax(ctx context.Context, timeout time.Duration, keys ...string) *ZWithKeyCmd {
 	ret := c.comp.BZPopMax(ctx, timeout, keys...)
 	c.rets = append(c.rets, ret)
