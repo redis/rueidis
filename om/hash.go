@@ -3,18 +3,19 @@ package om
 import (
 	"context"
 	"fmt"
-	"github.com/oklog/ulid/v2"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/oklog/ulid/v2"
 
 	"github.com/redis/rueidis"
 )
 
 // NewHashRepository creates a HashRepository.
 // The prefix parameter is used as redis key prefix. The entity stored by the repository will be named in the form of `{prefix}:{id}`
-// The schema parameter should be a struct with fields tagged with `redis:",key"` and `redis:",ver"`
+// The schema parameter should be a struct with fields tagged with `redis:",key"`. The `redis:",ver"` tag is optional for optimistic locking.
 func NewHashRepository[T any](prefix string, schema T, client rueidis.Client, opts ...RepositoryOption) Repository[T] {
 	repo := &HashRepository[T]{
 		prefix: prefix,
@@ -104,7 +105,7 @@ func (r *HashRepository[T]) toExec(entity *T) (verf reflect.Value, exec rueidis.
 }
 
 // Save the entity under the redis key of `{prefix}:{id}`.
-// It also uses the `redis:",ver"` field and lua script to perform optimistic locking and prevent lost update.
+// If the entity has a `redis:",ver"` field, it uses optimistic locking to prevent lost updates.
 func (r *HashRepository[T]) Save(ctx context.Context, entity *T) (err error) {
 	verf, exec := r.toExec(entity)
 	str, err := hashSaveScript.Exec(ctx, r.client, exec.Keys, exec.Args).ToString()

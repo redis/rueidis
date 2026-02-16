@@ -16,7 +16,7 @@ import (
 
 type Example struct {
     Key  string    `json:"key" redis:",key"`   // the redis:",key" is required to indicate which field is the ULID key
-    Ver  int64     `json:"ver" redis:",ver"`   // the redis:",ver" is required to do optimistic locking to prevent lost update
+    Ver  int64     `json:"ver" redis:",ver"`   // the redis:",ver" is optional for optimistic locking to prevent lost update
     ExAt time.Time `json:"exat" redis:",exat"` // the redis:",exat" is optional for setting record expiry with unix timestamp
     Str  string    `json:"str"`                // both NewHashRepository and NewJSONRepository use json tag as field name
 }
@@ -95,6 +95,27 @@ repo2 := om.NewHashRepository("my_prefix", Example{}, c, om.WithIndexName("my_in
 Setting a `redis:",exat"` tag on a `time.Time` field will set `PEXPIREAT` on the record accordingly when calling `.Save()`.
 
 If the `time.Time` is zero, then the expiry will be untouched when calling `.Save()`.
+
+### Optimistic Locking with Version Field
+
+The `redis:",ver"` tag on an `int64` field enables optimistic locking to prevent lost updates. When saving an entity:
+- If the version in Redis doesn't match the entity's version, `Save()` returns `ErrVersionMismatch`
+- On successful save, the version is automatically incremented
+
+If you don't need optimistic locking, you can omit the `redis:",ver"` field entirely:
+
+```golang
+type VerlessExample struct {
+    Key  string `redis:",key"`
+    Data string `json:"data"`
+}
+
+repo := om.NewHashRepository("my_prefix", VerlessExample{}, c)
+exp := repo.NewEntity()
+exp.Data = "value"
+repo.Save(ctx, exp) // succeeds without version checking
+repo.Save(ctx, exp) // succeeds again - no version conflict
+```
 
 ### Object Mapping Limitation
 
