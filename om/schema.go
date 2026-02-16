@@ -71,7 +71,7 @@ func newSchema(t reflect.Type) schema {
 
 	// ver is no longer required
 	if s.ver == nil {
-		s.ver = &field{reflect.TypeOf(int64(0)), "", -1, false, true, false}
+		s.ver = &field{typ: reflect.TypeOf(int64(0)), name: "", idx: -1, isKey: false, isVer: true, isExt: false}
 		s.verless = true
 	}
 

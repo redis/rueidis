@@ -104,11 +104,9 @@ func (r *JSONRepository[T]) Save(ctx context.Context, entity *T) (err error) {
 	verf, exec = r.toExec(entity)
 	str, err := jsonSaveScript.Exec(ctx, r.client, exec.Keys, exec.Args).ToString()
 	if rueidis.IsRedisNil(err) {
-		if r.schema.verless {
-			return nil
-		}
 		return ErrVersionMismatch
-	} else if err == nil {
+	}
+	if err == nil && !r.schema.verless {
 		ver, _ := strconv.ParseInt(str, 10, 64)
 		verf.SetInt(ver)
 	}
@@ -126,16 +124,13 @@ func (r *JSONRepository[T]) SaveMulti(ctx context.Context, entities ...*T) []err
 	for i, resp := range jsonSaveScript.ExecMulti(ctx, r.client, exec...) {
 		str, err := resp.ToString()
 		if rueidis.IsRedisNil(err) {
-			if r.schema.verless {
-				continue
-			}
 			errs[i] = ErrVersionMismatch
 			continue
 		}
-		if err == nil {
+		if err == nil && !r.schema.verless {
 			ver, _ := strconv.ParseInt(str, 10, 64)
 			verf[i].SetInt(ver)
-		} else {
+		} else if err != nil {
 			errs[i] = err
 		}
 	}
@@ -233,7 +228,6 @@ func (r *JSONRepository[T]) CreateAndAliasIndex(ctx context.Context, cmdFn func(
 	return nil
 }
 
-
 // DropIndex uses FT.DROPINDEX from the RediSearch module to drop the index whose name is `jsonidx:{prefix}`
 func (r *JSONRepository[T]) DropIndex(ctx context.Context) error {
 	return r.client.Do(ctx, r.client.B().FtDropindex().Index(r.idx).Build()).Error()
@@ -280,7 +274,7 @@ if (ARGV[1] == '')
 then
   redis.call('JSON.SET',KEYS[1],'$',ARGV[3])
   if #ARGV == 4 then redis.call('PEXPIREAT',KEYS[1],ARGV[4]) end
-  return nil
+  return ARGV[2]
 end
 local v = redis.call('JSON.GET',KEYS[1],ARGV[1])
 if (not v or v == ARGV[2])

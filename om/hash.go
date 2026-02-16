@@ -109,11 +109,9 @@ func (r *HashRepository[T]) Save(ctx context.Context, entity *T) (err error) {
 	verf, exec := r.toExec(entity)
 	str, err := hashSaveScript.Exec(ctx, r.client, exec.Keys, exec.Args).ToString()
 	if rueidis.IsRedisNil(err) {
-		if r.schema.verless {
-			return nil
-		}
 		return ErrVersionMismatch
-	} else if err == nil {
+	}
+	if err == nil && !r.schema.verless {
 		ver, _ := strconv.ParseInt(str, 10, 64)
 		verf.SetInt(ver)
 	}
@@ -131,16 +129,13 @@ func (r *HashRepository[T]) SaveMulti(ctx context.Context, entities ...*T) []err
 	for i, resp := range hashSaveScript.ExecMulti(ctx, r.client, exec...) {
 		str, err := resp.ToString()
 		if rueidis.IsRedisNil(err) {
-			if r.schema.verless {
-				continue
-			}
 			errs[i] = ErrVersionMismatch
 			continue
 		}
-		if err == nil {
+		if err == nil && !r.schema.verless {
 			ver, _ := strconv.ParseInt(str, 10, 64)
 			verf[i].SetInt(ver)
-		} else {
+		} else if err != nil {
 			errs[i] = err
 		}
 	}
@@ -297,7 +292,7 @@ then
   then
     if e then redis.call('PEXPIREAT',KEYS[1],e) end
   end
-  return nil
+  return ARGV[2]
 end
 local v = redis.call('HGET',KEYS[1],ARGV[1])
 if (not v or v == ARGV[2])
