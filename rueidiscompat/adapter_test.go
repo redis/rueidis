@@ -716,7 +716,7 @@ func testAdapter(resp3 bool) {
 			// if too much time (>1s) is used during command execution, it may also cause the test to fail.
 			// so the ObjectIdleTime result should be <=now-start+1s
 			// link: https://github.com/redis/redis/blob/5b48d900498c85bbf4772c1d466c214439888115/src/object.c#L1265-L1272
-			Expect(idleTime.Val()).To(BeNumerically("<=", time.Now().Sub(start)+time.Second))
+			Expect(idleTime.Val()).To(BeNumerically("<=", time.Since(start)+time.Second))
 		})
 
 		It("should Persist", func() {
@@ -7906,6 +7906,28 @@ func testAdapterCache(resp3 bool) {
 			Expect(get.Val()).To(Equal("hello"))
 		})
 
+		It("should MGet", func() {
+			mGet := adapter.Cache(time.Hour).MGet(ctx, "_", "key2")
+			Expect(mGet.Err()).NotTo(HaveOccurred())
+			Expect(mGet.Val()).To(Equal([]any{nil, nil}))
+
+			set := adapter.Set(ctx, "key1", "hello1", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			set = adapter.Set(ctx, "key2", "hello2", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			mGet = adapter.Cache(time.Hour).MGet(ctx, "key1", "key2", "_")
+			Expect(mGet.Err()).NotTo(HaveOccurred())
+			Expect(mGet.Val()).To(Equal([]any{"hello1", "hello2", nil}))
+
+			mGet = adapter.Cache(time.Hour).MGet(ctx, "key1", "_", "key2")
+			Expect(mGet.Err()).NotTo(HaveOccurred())
+			Expect(mGet.Val()).To(Equal([]any{"hello1", nil, "hello2"}))
+		})
+
 		It("should GetBit", func() {
 			setBit := adapter.SetBit(ctx, "key", 7, 1)
 			Expect(setBit.Err()).NotTo(HaveOccurred())
@@ -9498,6 +9520,7 @@ func testAdapterCache(resp3 bool) {
 			Expect(adapter.FlushDB(ctx).Err()).NotTo(HaveOccurred())
 			adapter.TFunctionDelete(ctx, "lib1")
 			adapter.TFunctionDelete(ctx, "lib2")
+			adapter.TFunctionDelete(ctx, "lib3")
 		})
 		// Copied from go-redis
 		// https://github.com/redis/go-redis/blob/f994ff1cd96299a5c8029ae3403af7b17ef06e8a/gears_commands_test.go
@@ -9511,6 +9534,10 @@ func testAdapterCache(resp3 bool) {
 			Expect(resultAdd).To(BeEquivalentTo("OK"))
 			opt.Replace = false
 			resultAdd, err = adapter.TFunctionLoadArgs(ctx, libCodeWithConfig("lib2"), opt).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(resultAdd).To(BeEquivalentTo("OK"))
+			// Test nil options - should behave like TFunctionLoad
+			resultAdd, err = adapter.TFunctionLoadArgs(ctx, libCode("lib3"), nil).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resultAdd).To(BeEquivalentTo("OK"))
 		})

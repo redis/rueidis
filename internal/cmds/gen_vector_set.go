@@ -592,6 +592,11 @@ func (c Vsim) Key(key string) VsimKey {
 
 type VsimCount Incomplete
 
+func (c VsimCount) Epsilon(delta float32) VsimEpsilon {
+	c.cs.s = append(c.cs.s, "EPSILON", strconv.FormatFloat(float64(delta), 'f', -1, 64))
+	return (VsimEpsilon)(c)
+}
+
 func (c VsimCount) Ef(searchExplorationFactor int64) VsimEf {
 	c.cs.s = append(c.cs.s, "EF", strconv.FormatInt(searchExplorationFactor, 10))
 	return (VsimEf)(c)
@@ -645,6 +650,38 @@ func (c VsimEf) Nothread() VsimNothread {
 }
 
 func (c VsimEf) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type VsimEpsilon Incomplete
+
+func (c VsimEpsilon) Ef(searchExplorationFactor int64) VsimEf {
+	c.cs.s = append(c.cs.s, "EF", strconv.FormatInt(searchExplorationFactor, 10))
+	return (VsimEf)(c)
+}
+
+func (c VsimEpsilon) Filter(expression string) VsimFilter {
+	c.cs.s = append(c.cs.s, "FILTER", expression)
+	return (VsimFilter)(c)
+}
+
+func (c VsimEpsilon) FilterEf(maxFilteringEffort int64) VsimFilterEf {
+	c.cs.s = append(c.cs.s, "FILTER-EF", strconv.FormatInt(maxFilteringEffort, 10))
+	return (VsimFilterEf)(c)
+}
+
+func (c VsimEpsilon) Truth() VsimTruth {
+	c.cs.s = append(c.cs.s, "TRUTH")
+	return (VsimTruth)(c)
+}
+
+func (c VsimEpsilon) Nothread() VsimNothread {
+	c.cs.s = append(c.cs.s, "NOTHREAD")
+	return (VsimNothread)(c)
+}
+
+func (c VsimEpsilon) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
@@ -736,6 +773,11 @@ func (c VsimQueryTypeEleElement) Count(num int64) VsimCount {
 	return (VsimCount)(c)
 }
 
+func (c VsimQueryTypeEleElement) Epsilon(delta float32) VsimEpsilon {
+	c.cs.s = append(c.cs.s, "EPSILON", strconv.FormatFloat(float64(delta), 'f', -1, 64))
+	return (VsimEpsilon)(c)
+}
+
 func (c VsimQueryTypeEleElement) Ef(searchExplorationFactor int64) VsimEf {
 	c.cs.s = append(c.cs.s, "EF", strconv.FormatInt(searchExplorationFactor, 10))
 	return (VsimEf)(c)
@@ -788,6 +830,11 @@ func (c VsimQueryTypeFp32Vector) Withattribs() VsimWithattribs {
 func (c VsimQueryTypeFp32Vector) Count(num int64) VsimCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(num, 10))
 	return (VsimCount)(c)
+}
+
+func (c VsimQueryTypeFp32Vector) Epsilon(delta float32) VsimEpsilon {
+	c.cs.s = append(c.cs.s, "EPSILON", strconv.FormatFloat(float64(delta), 'f', -1, 64))
+	return (VsimEpsilon)(c)
 }
 
 func (c VsimQueryTypeFp32Vector) Ef(searchExplorationFactor int64) VsimEf {
@@ -853,6 +900,11 @@ func (c VsimQueryTypeValuesVector) Count(num int64) VsimCount {
 	return (VsimCount)(c)
 }
 
+func (c VsimQueryTypeValuesVector) Epsilon(delta float32) VsimEpsilon {
+	c.cs.s = append(c.cs.s, "EPSILON", strconv.FormatFloat(float64(delta), 'f', -1, 64))
+	return (VsimEpsilon)(c)
+}
+
 func (c VsimQueryTypeValuesVector) Ef(searchExplorationFactor int64) VsimEf {
 	c.cs.s = append(c.cs.s, "EF", strconv.FormatInt(searchExplorationFactor, 10))
 	return (VsimEf)(c)
@@ -902,6 +954,11 @@ func (c VsimWithattribs) Count(num int64) VsimCount {
 	return (VsimCount)(c)
 }
 
+func (c VsimWithattribs) Epsilon(delta float32) VsimEpsilon {
+	c.cs.s = append(c.cs.s, "EPSILON", strconv.FormatFloat(float64(delta), 'f', -1, 64))
+	return (VsimEpsilon)(c)
+}
+
 func (c VsimWithattribs) Ef(searchExplorationFactor int64) VsimEf {
 	c.cs.s = append(c.cs.s, "EF", strconv.FormatInt(searchExplorationFactor, 10))
 	return (VsimEf)(c)
@@ -942,6 +999,11 @@ func (c VsimWithscores) Withattribs() VsimWithattribs {
 func (c VsimWithscores) Count(num int64) VsimCount {
 	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(num, 10))
 	return (VsimCount)(c)
+}
+
+func (c VsimWithscores) Epsilon(delta float32) VsimEpsilon {
+	c.cs.s = append(c.cs.s, "EPSILON", strconv.FormatFloat(float64(delta), 'f', -1, 64))
+	return (VsimEpsilon)(c)
 }
 
 func (c VsimWithscores) Ef(searchExplorationFactor int64) VsimEf {

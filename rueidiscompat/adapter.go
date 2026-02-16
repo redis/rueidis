@@ -60,6 +60,8 @@ type Cmdable interface {
 	SSubscribe(ctx context.Context, channels ...string) PubSub
 
 	Watch(ctx context.Context, fn func(Tx) error, keys ...string) error
+
+	Client() rueidis.Client
 }
 
 type CoreCmdable interface {
@@ -639,8 +641,31 @@ type CacheCompat struct {
 	ttl    time.Duration
 }
 
-func NewAdapter(client rueidis.Client) Cmdable {
-	return &Compat{client: client, maxp: runtime.GOMAXPROCS(0)}
+// AdapterOption is a functional option type for NewAdapter
+type AdapterOption func(c *Compat)
+
+// WithNodeScaleoutLimit sets the maximum parallelism for node scaleout operations.
+// If not set, defaults to runtime.GOMAXPROCS(0).
+// Values less than 1 will be set to 1.
+func WithNodeScaleoutLimit(limit int) AdapterOption {
+	return func(c *Compat) {
+		if limit < 1 {
+			limit = 1
+		}
+		c.maxp = limit
+	}
+}
+
+func NewAdapter(client rueidis.Client, options ...AdapterOption) Cmdable {
+	c := &Compat{client: client, maxp: runtime.GOMAXPROCS(0)}
+	for _, opt := range options {
+		opt(c)
+	}
+	return c
+}
+
+func (c *Compat) Client() rueidis.Client {
+	return c.client
 }
 
 func (c *Compat) Cache(ttl time.Duration) CacheCompat {
@@ -1991,13 +2016,13 @@ func (c *Compat) XAdd(ctx context.Context, a XAddArgs) *StringCmd {
 		if a.Approx {
 			cmd = cmd.Args("MAXLEN", "~", strconv.FormatInt(a.MaxLen, 10))
 		} else {
-			cmd = cmd.Args("MAXLEN", strconv.FormatInt(a.MaxLen, 10))
+			cmd = cmd.Args("MAXLEN", "=", strconv.FormatInt(a.MaxLen, 10))
 		}
 	case a.MinID != "":
 		if a.Approx {
 			cmd = cmd.Args("MINID", "~", a.MinID)
 		} else {
-			cmd = cmd.Args("MINID", a.MinID)
+			cmd = cmd.Args("MINID", "=", a.MinID)
 		}
 	}
 	if a.Limit > 0 {
@@ -2191,7 +2216,7 @@ func (c *Compat) XAutoClaimJustID(ctx context.Context, a XAutoClaimArgs) *XAutoC
 // xTrim If approx is true, add the "~" parameter; otherwise it is the default "=" (redis default).
 // example:
 //
-//	XTRIM key MAXLEN/MINID threshold LIMIT limit.
+//	XTRIM key MAXLEN/MINID = threshold LIMIT limit.
 //	XTRIM key MAXLEN/MINID ~ threshold LIMIT limit.
 //
 // The redis-server version is lower than 6.2, please set the limit to 0.
@@ -2200,6 +2225,8 @@ func (c *Compat) xTrim(ctx context.Context, key, strategy string,
 	cmd := c.client.B().Arbitrary("XTRIM").Keys(key).Args(strategy)
 	if approx {
 		cmd = cmd.Args("~")
+	} else {
+		cmd = cmd.Args("=")
 	}
 	cmd = cmd.Args(threshold)
 	if limit > 0 {
@@ -3464,8 +3491,10 @@ func (c *Compat) TFunctionLoad(ctx context.Context, lib string) *StatusCmd {
 	return newStatusCmd(resp)
 }
 
-// FIXME: should check nil of options
 func (c *Compat) TFunctionLoadArgs(ctx context.Context, lib string, options *TFunctionLoadOptions) *StatusCmd {
+	if options == nil {
+		return c.TFunctionLoad(ctx, lib)
+	}
 	b := c.client.B()
 	var cmd cmds.Completed
 	if options.Replace {
@@ -6013,6 +6042,12 @@ func (c CacheCompat) Get(ctx context.Context, key string) *StringCmd {
 	cmd := c.client.B().Get().Key(key).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newStringCmd(resp)
+}
+
+func (c CacheCompat) MGet(ctx context.Context, keys ...string) *SliceCmd {
+	cmd := c.client.B().Mget().Key(keys...).Cache()
+	resp := c.client.DoCache(ctx, cmd, c.ttl)
+	return newSliceCmd(resp, false, keys...)
 }
 
 func (c CacheCompat) GetBit(ctx context.Context, key string, offset int64) *IntCmd {

@@ -163,6 +163,8 @@ retry:
 			}
 
 			if rueidis.IsRedisNil(err) { // successfully set client id on the key as a lock
+				// attach TTL pointer to context for potential modification via OverrideCacheTTL
+				ctx = context.WithValue(ctx, ttlKey, &ttl)
 				if val, err = fn(ctx, key); err == nil {
 					err = setkey.Exec(ctx, c.client, []string{key}, []string{id, val, strconv.FormatInt(ttl.Milliseconds(), 10)}).Error()
 				}
@@ -221,6 +223,19 @@ func (c *Client) Close() {
 }
 
 const PlaceholderPrefix = "rueidisid:"
+
+type ctxKey struct{}
+
+var ttlKey = ctxKey{}
+
+// OverrideCacheTTL sets a custom TTL for the cache entry being populated in the current context.
+// It can be called in the callback function passed to CacheAsideClient.Get() to customize
+// the TTL based on the data being cached.
+func OverrideCacheTTL(ctx context.Context, ttl time.Duration) {
+	if p, ok := ctx.Value(ttlKey).(*time.Duration); ok {
+		*p = ttl
+	}
+}
 
 var (
 	delkey      = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("DEL",KEYS[1]) else return 0 end`)

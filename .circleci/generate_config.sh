@@ -17,7 +17,7 @@ jobs:
     steps:
       - checkout
       - go/install:
-          version: 1.22.0
+          version: 1.24.9
 EOF
 
 # Loop through each module and generate job configurations
@@ -40,6 +40,10 @@ EOF
       - run: # test ./$module_name/go.mod
           name: Test $module_name
           command: |
+            if [ "$module_name" == "rueidisrdma" ]; then
+              sudo apt-get update -y
+              sudo apt-get install -y libibverbs-dev librdmacm-dev rdma-core
+            fi
             cd "\$CIRCLE_WORKING_DIRECTORY/$module_name"
             list=\$(go list ./... | circleci tests split --split-by=timings)
             echo "Test Packages: \$list"

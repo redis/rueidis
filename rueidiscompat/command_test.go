@@ -744,7 +744,7 @@ func TestSetErr(t *testing.T) {
 
 	// Set an error using the SetErr method
 	errMsg := "test error"
-	cmd.SetErr(fmt.Errorf(errMsg))
+	cmd.SetErr(fmt.Errorf("%s", errMsg))
 
 	// Check if the error is properly set in the command object
 	if cmd.Err() == nil {

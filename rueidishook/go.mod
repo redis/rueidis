@@ -1,8 +1,8 @@
 module github.com/redis/rueidis/rueidishook
 
-go 1.23.0
+go 1.24.9
 
-toolchain go1.23.4
+toolchain go1.24.11
 
 replace (
 	github.com/redis/rueidis => ../
@@ -10,9 +10,9 @@ replace (
 )
 
 require (
-	github.com/redis/rueidis v1.0.67
-	github.com/redis/rueidis/mock v1.0.67
-	go.uber.org/mock v0.5.0
+	github.com/redis/rueidis v1.0.71
+	github.com/redis/rueidis/mock v1.0.71
+	go.uber.org/mock v0.6.0
 )
 
-require golang.org/x/sys v0.31.0 // indirect
+require golang.org/x/sys v0.39.0 // indirect

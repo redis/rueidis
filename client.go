@@ -56,7 +56,7 @@ retry:
 		if err == errConnExpired {
 			goto retry
 		}
-		if c.retry && cmd.IsReadOnly() && c.isRetryable(err, ctx) {
+		if c.retry && cmd.IsRetryable() && c.isRetryable(err, ctx) {
 			if c.retryHandler.WaitOrSkipRetry(ctx, attempts, cmd, err) {
 				attempts++
 				goto retry
@@ -120,7 +120,7 @@ retry:
 			goto recover
 		}
 	}
-	if c.retry && allReadOnly(multi) {
+	if c.retry && allRetryable(multi) {
 		for i, resp := range resps {
 			if c.isRetryable(resp.Error(), ctx) {
 				shouldRetry := c.retryHandler.WaitOrSkipRetry(
@@ -275,7 +275,7 @@ retry:
 		return newErrResult(err)
 	}
 	resp = c.wire.Do(ctx, cmd)
-	if c.retry && cmd.IsReadOnly() && isRetryable(resp.Error(), c.wire, ctx) {
+	if c.retry && cmd.IsRetryable() && isRetryable(resp.Error(), c.wire, ctx) {
 		shouldRetry := c.retryHandler.WaitOrSkipRetry(
 			ctx, attempts, cmd, resp.Error(),
 		)
@@ -297,7 +297,7 @@ func (c *dedicatedSingleClient) DoMulti(ctx context.Context, multi ...Completed)
 	attempts := 1
 	retryable := c.retry
 	if retryable {
-		retryable = allReadOnly(multi)
+		retryable = allRetryable(multi)
 	}
 retry:
 	if err := c.check(); err != nil {
@@ -392,9 +392,9 @@ func isRetryable(err error, w wire, ctx context.Context) bool {
 	return true
 }
 
-func allReadOnly(multi []Completed) bool {
+func allRetryable(multi []Completed) bool {
 	for _, cmd := range multi {
-		if cmd.IsWrite() {
+		if !cmd.IsRetryable() {
 			return false
 		}
 	}

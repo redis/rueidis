@@ -504,15 +504,19 @@ func tests(f io.Writer, structs map[string]goStruct, prefix string) {
 
 	fmt.Fprintf(f, "func TestCommand_InitSlot_%s(t *testing.T) {\n", prefix)
 	fmt.Fprintf(f, "\tvar s = NewBuilder(InitSlot)\n")
-	for i := 0; i <= len(paths)/mod; i++ {
-		fmt.Fprintf(f, "\tt.Run(\"%d\", func(t *testing.T) { %s%d(s) })\n", i, prefix, i)
+	for i := range paths {
+		if i%mod == 0 {
+			fmt.Fprintf(f, "\tt.Run(\"%d\", func(t *testing.T) { %s%d(s) })\n", i/mod, prefix, i/mod)
+		}
 	}
 	fmt.Fprintf(f, "}\n\n")
 
 	fmt.Fprintf(f, "func TestCommand_NoSlot_%s(t *testing.T) {\n", prefix)
 	fmt.Fprintf(f, "\tvar s = NewBuilder(NoSlot)\n")
-	for i := 0; i <= len(paths)/mod; i++ {
-		fmt.Fprintf(f, "\tt.Run(\"%d\", func(t *testing.T) { %s%d(s) })\n", i, prefix, i)
+	for i := range paths {
+		if i%mod == 0 {
+			fmt.Fprintf(f, "\tt.Run(\"%d\", func(t *testing.T) { %s%d(s) })\n", i/mod, prefix, i/mod)
+		}
 	}
 	fmt.Fprintf(f, "}\n\n")
 
@@ -573,7 +577,7 @@ func testParams(defs []parameter) string {
 			params = append(params, `[]string{"1"}`)
 		case "string":
 			params = append(params, `"1"`)
-		case "int64", "uint64", "float64":
+		case "int64", "float32", "uint64", "float64":
 			params = append(params, `1`)
 		case "time.Duration":
 			params = append(params, `time.Second`)
@@ -887,6 +891,8 @@ func printBuilder(w io.Writer, parent, next goStruct) {
 				var follows []string
 				for _, p := range next.BuildDef.Parameters {
 					switch toGoType(p.Type) {
+					case "float32":
+						appends = append(appends, fmt.Sprintf("strconv.FormatFloat(float64(%s), 'f', -1, 64)", toGoName(p.Name)))
 					case "float64":
 						appends = append(appends, fmt.Sprintf("strconv.FormatFloat(%s, 'f', -1, 64)", toGoName(p.Name)))
 					case "int64":

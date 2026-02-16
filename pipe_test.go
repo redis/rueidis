@@ -76,6 +76,15 @@ func (r *redisExpect) ReplyBlobString(replies ...string) *redisExpect {
 	return r
 }
 
+func (r *redisExpect) ReplyVerbatimString(replies ...string) *redisExpect {
+	for _, reply := range replies {
+		if r.err == nil {
+			r.Reply(strmsg('=', reply))
+		}
+	}
+	return r
+}
+
 func (r *redisExpect) ReplyError(replies ...string) *redisExpect {
 	for _, reply := range replies {
 		if r.err == nil {
@@ -110,7 +119,7 @@ func (r *redisMock) Close() {
 func write(o io.Writer, m RedisMessage) (err error) {
 	_, err = o.Write([]byte{m.typ})
 	switch m.typ {
-	case '$':
+	case '$', '=':
 		_, _ = o.Write(append([]byte(strconv.Itoa(len(m.string()))), '\r', '\n'))
 		_, err = o.Write(append([]byte(m.string()), '\r', '\n'))
 	case '+', '-', '_':
@@ -251,6 +260,81 @@ func TestNewPipe(t *testing.T) {
 		n1.Close()
 		n2.Close()
 	})
+	t.Run("Auth without Username AZ from INFO", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+		go func() {
+			mock.Expect("HELLO", "3", "AUTH", "default", "pa", "SETNAME", "cn").
+				Reply(slicemsg(
+					'%',
+					[]RedisMessage{
+						strmsg('+', "proto"),
+						{typ: ':', intlen: 3},
+					},
+				))
+			mock.Expect("INFO", "SERVER").
+				ReplyVerbatimString(`txt:# Server
+redis_version:7.2.4
+server_name:valkey
+valkey_version:7.3.0
+redis_git_sha1:0
+redis_git_dirty:0
+redis_build_id:0
+redis_mode:cluster
+os:Amazon MemoryDB
+arch_bits:64
+monotonic_clock:ARM CNTVCT @ 121 ticks/us
+multiplexing_api:epoll
+atomicvar_api:c11-builtin
+gcc_version:0.0.0
+process_id:1
+run_id:63c3785f34bcf381b8652586ad4e57779ff59ede
+tcp_port:6379
+server_time_usec:1768651545574803
+uptime_in_seconds:1451582
+uptime_in_days:16
+hz:10
+configured_hz:10
+lru_clock:7043865
+executable:-
+config_file:-
+availability_zone:us-west-1a
+`)
+			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
+				ReplyString("OK")
+			mock.Expect("SELECT", "1").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "NO-TOUCH", "ON").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "NO-EVICT", "ON").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", "libname").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", "1").
+				ReplyString("OK")
+		}()
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
+			SelectDB:            1,
+			Password:            "pa",
+			ClientName:          "cn",
+			ClientNoEvict:       true,
+			ClientSetInfo:       []string{"libname", "1"},
+			ClientNoTouch:       true,
+			EnableReplicaAZInfo: true,
+			AZFromInfo:          true,
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		go func() { mock.Expect("PING").ReplyString("OK") }()
+		if p.AZ() != "us-west-1a" {
+			t.Fatalf("unexpected az: %v", p.AZ())
+		}
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
 	t.Run("AlwaysRESP2", func(t *testing.T) {
 		n1, n2 := net.Pipe()
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
@@ -289,6 +373,85 @@ func TestNewPipe(t *testing.T) {
 			ClientNoTouch: true,
 			AlwaysRESP2:   true,
 			DisableCache:  true,
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		go func() { mock.Expect("PING").ReplyString("OK") }()
+		if p.AZ() != "us-west-1a" {
+			t.Fatalf("unexpected az: %v", p.AZ())
+		}
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
+	t.Run("AlwaysRESP2 AZ from INFO", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+		go func() {
+			mock.Expect("AUTH", "pa").
+				ReplyString("OK")
+			mock.Expect("HELLO", "2").
+				Reply(slicemsg(
+					'*',
+					[]RedisMessage{
+						strmsg('+', "proto"),
+						{typ: ':', intlen: 2},
+					},
+				))
+			mock.Expect("INFO", "SERVER").
+				ReplyBlobString(`# Server
+redis_version:7.2.4
+server_name:valkey
+valkey_version:7.3.0
+redis_git_sha1:0
+redis_git_dirty:0
+redis_build_id:0
+redis_mode:cluster
+os:Amazon MemoryDB
+arch_bits:64
+monotonic_clock:ARM CNTVCT @ 121 ticks/us
+multiplexing_api:epoll
+atomicvar_api:c11-builtin
+gcc_version:0.0.0
+process_id:1
+run_id:63c3785f34bcf381b8652586ad4e57779ff59ede
+tcp_port:6379
+server_time_usec:1768651545574803
+uptime_in_seconds:1451582
+uptime_in_days:16
+hz:10
+configured_hz:10
+lru_clock:7043865
+executable:-
+config_file:-
+availability_zone:us-west-1a
+`)
+			mock.Expect("CLIENT", "SETNAME", "cn").
+				ReplyString("OK")
+			mock.Expect("SELECT", "1").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "NO-TOUCH", "ON").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "NO-EVICT", "ON").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", "libname").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", "1").
+				ReplyString("OK")
+		}()
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
+			SelectDB:            1,
+			Password:            "pa",
+			ClientName:          "cn",
+			ClientNoEvict:       true,
+			ClientSetInfo:       []string{"libname", "1"},
+			ClientNoTouch:       true,
+			AlwaysRESP2:         true,
+			DisableCache:        true,
+			EnableReplicaAZInfo: true,
+			AZFromInfo:          true,
 		})
 		if err != nil {
 			t.Fatalf("pipe setup failed: %v", err)
@@ -5637,5 +5800,100 @@ func TestNoHelloRegex(t *testing.T) {
 				t.Fatalf("unexpected match %v", match)
 			}
 		})
+	}
+}
+
+// TestPipe_BackgroundPing_NoDataRace tests that backgroundPing doesn't have data races
+// when timer callbacks fire repeatedly. This is the simplest test to catch the race.
+// This test will fail with -race if the data race exists in backgroundPing.
+func TestPipe_BackgroundPing_NoDataRace(t *testing.T) {
+	t.Parallel()
+
+	if testing.Short() {
+		t.Skip("Skipping race detection test in short mode")
+	}
+
+	// Use the existing setup function with a short keep-alive interval
+	option := ClientOption{
+		ConnWriteTimeout: 100 * time.Millisecond,
+	}
+	option.Dialer.KeepAlive = 20 * time.Millisecond // Short interval for rapid timer firings
+
+	p, mock, cancel, closeConn := setup(t, option)
+	defer cancel()
+	_ = closeConn
+	_ = mock
+	_ = p
+
+	// Simply let the pipe exist with background ping active
+	// The background ping timer will fire multiple times
+	// If there's a race in the prev variable or timer access, -race will catch it
+	time.Sleep(300 * time.Millisecond) // Let timer fire ~15 times
+
+	// The race detector will report any concurrent access to 'prev' variable
+}
+
+// TestPipe_BackgroundPing_ConcurrentClients tests backgroundPing with multiple
+// concurrent clients, each with their own background ping timers.
+func TestPipe_BackgroundPing_ConcurrentClients(t *testing.T) {
+	t.Parallel()
+
+	if testing.Short() {
+		t.Skip("Skipping concurrent race test in short mode")
+	}
+
+	numClients := 10
+	var wg sync.WaitGroup
+
+	for i := 0; i < numClients; i++ {
+		wg.Add(1)
+		go func(clientID int) {
+			defer wg.Done()
+
+			// Use the existing setup function with a short keep-alive interval
+			option := ClientOption{
+				ConnWriteTimeout: 100 * time.Millisecond,
+			}
+			option.Dialer.KeepAlive = 30 * time.Millisecond
+
+			_, _, cancel, _ := setup(t, option)
+			defer cancel()
+
+			// Let the pipe exist with background ping active
+			time.Sleep(200 * time.Millisecond) // Let timer fire multiple times
+		}(i)
+	}
+
+	wg.Wait()
+}
+
+// TestPipe_BackgroundPing_RapidConnectDisconnect reproduces the scenario
+// where pipes are created and destroyed rapidly (like crash recovery).
+func TestPipe_BackgroundPing_RapidConnectDisconnect(t *testing.T) {
+	t.Parallel()
+
+	if testing.Short() {
+		t.Skip("Skipping rapid connect/disconnect test in short mode")
+	}
+
+	for iteration := 0; iteration < 20; iteration++ {
+		// Use the existing setup function with a short keep-alive interval
+		option := ClientOption{
+			ConnWriteTimeout: 100 * time.Millisecond,
+		}
+		option.Dialer.KeepAlive = 40 * time.Millisecond
+
+		p, _, cancel, _ := setup(t, option)
+
+		// Brief operation period
+		time.Sleep(50 * time.Millisecond)
+
+		// Immediate close (like consumer crash)
+		cancel()
+
+		// Brief pause to let background goroutines settle
+		time.Sleep(5 * time.Millisecond)
+
+		_ = p
 	}
 }
