@@ -60,6 +60,8 @@ type Cmdable interface {
 	SSubscribe(ctx context.Context, channels ...string) PubSub
 
 	Watch(ctx context.Context, fn func(Tx) error, keys ...string) error
+
+	Client() rueidis.Client
 }
 
 type CoreCmdable interface {
@@ -660,6 +662,10 @@ func NewAdapter(client rueidis.Client, options ...AdapterOption) Cmdable {
 		opt(c)
 	}
 	return c
+}
+
+func (c *Compat) Client() rueidis.Client {
+	return c.client
 }
 
 func (c *Compat) Cache(ttl time.Duration) CacheCompat {

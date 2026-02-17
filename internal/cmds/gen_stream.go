@@ -552,6 +552,74 @@ func (c XautoclaimStart) Build() Completed {
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
+type Xcfgset Incomplete
+
+func (b Builder) Xcfgset() (c Xcfgset) {
+	c = Xcfgset{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "XCFGSET")
+	return c
+}
+
+func (c Xcfgset) Key(key string) XcfgsetKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (XcfgsetKey)(c)
+}
+
+type XcfgsetIdmpDurationBlockDuration Incomplete
+
+func (c XcfgsetIdmpDurationBlockDuration) IdmpMaxsize() XcfgsetIdmpMaxsizeBlockIdmpMaxsizeTokenIdmpMaxsize {
+	c.cs.s = append(c.cs.s, "IDMP-MAXSIZE")
+	return (XcfgsetIdmpMaxsizeBlockIdmpMaxsizeTokenIdmpMaxsize)(c)
+}
+
+func (c XcfgsetIdmpDurationBlockDuration) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type XcfgsetIdmpDurationBlockIdmpDurationTokenIdmpDuration Incomplete
+
+func (c XcfgsetIdmpDurationBlockIdmpDurationTokenIdmpDuration) Duration(duration int64) XcfgsetIdmpDurationBlockDuration {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(duration, 10))
+	return (XcfgsetIdmpDurationBlockDuration)(c)
+}
+
+type XcfgsetIdmpMaxsizeBlockIdmpMaxsizeTokenIdmpMaxsize Incomplete
+
+func (c XcfgsetIdmpMaxsizeBlockIdmpMaxsizeTokenIdmpMaxsize) Maxsize(maxsize int64) XcfgsetIdmpMaxsizeBlockMaxsize {
+	c.cs.s = append(c.cs.s, strconv.FormatInt(maxsize, 10))
+	return (XcfgsetIdmpMaxsizeBlockMaxsize)(c)
+}
+
+type XcfgsetIdmpMaxsizeBlockMaxsize Incomplete
+
+func (c XcfgsetIdmpMaxsizeBlockMaxsize) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type XcfgsetKey Incomplete
+
+func (c XcfgsetKey) IdmpDuration() XcfgsetIdmpDurationBlockIdmpDurationTokenIdmpDuration {
+	c.cs.s = append(c.cs.s, "IDMP-DURATION")
+	return (XcfgsetIdmpDurationBlockIdmpDurationTokenIdmpDuration)(c)
+}
+
+func (c XcfgsetKey) IdmpMaxsize() XcfgsetIdmpMaxsizeBlockIdmpMaxsizeTokenIdmpMaxsize {
+	c.cs.s = append(c.cs.s, "IDMP-MAXSIZE")
+	return (XcfgsetIdmpMaxsizeBlockIdmpMaxsizeTokenIdmpMaxsize)(c)
+}
+
+func (c XcfgsetKey) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
 type Xclaim Incomplete
 
 func (b Builder) Xclaim() (c Xclaim) {
