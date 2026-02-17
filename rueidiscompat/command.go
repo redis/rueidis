@@ -103,7 +103,7 @@ func (cmd *Cmd) from(res rueidis.RedisResult) {
 		return
 	}
 	cmd.SetVal(val)
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 func newCmd(res rueidis.RedisResult) *Cmd {
@@ -365,7 +365,7 @@ func (cmd *StringCmd) from(res rueidis.RedisResult) {
 	val, err := res.ToString()
 	cmd.SetErr(err)
 	cmd.SetVal(val)
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 func newStringCmd(res rueidis.RedisResult) *StringCmd {
@@ -444,7 +444,7 @@ func (cmd *BoolCmd) from(res rueidis.RedisResult) {
 	}
 	cmd.SetVal(val)
 	cmd.SetErr(err)
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 func newBoolCmd(res rueidis.RedisResult) *BoolCmd {
@@ -486,7 +486,7 @@ func (cmd *DurationCmd) from(res rueidis.RedisResult) {
 		return
 	}
 	cmd.SetVal(time.Duration(val))
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 func newDurationCmd(res rueidis.RedisResult, precision time.Duration) *DurationCmd {
@@ -542,7 +542,7 @@ func (cmd *SliceCmd) from(res rueidis.RedisResult) {
 		}
 	}
 	cmd.SetVal(vals)
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 // newSliceCmd returns SliceCmd according to input arguments, if the caller is JSONObjKeys,
@@ -571,7 +571,7 @@ func (cmd *StringSliceCmd) from(res rueidis.RedisResult) {
 	val, err := res.AsStrSlice()
 	cmd.SetVal(val)
 	cmd.SetErr(err)
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 func newStringSliceCmd(res rueidis.RedisResult) *StringSliceCmd {
@@ -588,7 +588,7 @@ type IntSliceCmd struct {
 
 func (cmd *IntSliceCmd) from(res rueidis.RedisResult) {
 	cmd.val, cmd.err = res.AsIntSlice()
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 func newIntSliceCmd(res rueidis.RedisResult) *IntSliceCmd {
@@ -597,7 +597,7 @@ func newIntSliceCmd(res rueidis.RedisResult) *IntSliceCmd {
 	return cmd
 }
 
-func (cmd *IntSliceCmd) SetIsCacheHit(isCacheHit bool) {
+func (cmd *IntSliceCmd) setIsCacheHit(isCacheHit bool) {
 	cmd.isCacheHit = isCacheHit
 }
 
@@ -640,7 +640,7 @@ func (cmd *BoolSliceCmd) from(res rueidis.RedisResult) {
 		val = append(val, i == 1)
 	}
 	cmd.SetVal(val)
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 func newBoolSliceCmd(res rueidis.RedisResult) *BoolSliceCmd {
@@ -657,7 +657,7 @@ func (cmd *FloatSliceCmd) from(res rueidis.RedisResult) {
 	val, err := res.AsFloatSlice()
 	cmd.SetErr(err)
 	cmd.SetVal(val)
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 func newFloatSliceCmd(res rueidis.RedisResult) *FloatSliceCmd {
@@ -679,7 +679,7 @@ func (cmd *ZSliceCmd) from(res rueidis.RedisResult) {
 			return
 		}
 		cmd.SetVal([]Z{{Member: s.Member, Score: s.Score}})
-		cmd.SetIsCacheHit(res.IsCacheHit())
+		cmd.setIsCacheHit(res.IsCacheHit())
 	} else {
 		scores, err := res.AsZScores()
 		if err != nil {
@@ -691,7 +691,7 @@ func (cmd *ZSliceCmd) from(res rueidis.RedisResult) {
 			val = append(val, Z{Member: s.Member, Score: s.Score})
 		}
 		cmd.SetVal(val)
-		cmd.SetIsCacheHit(res.IsCacheHit())
+		cmd.setIsCacheHit(res.IsCacheHit())
 	}
 }
 
@@ -715,7 +715,7 @@ func (cmd *FloatCmd) from(res rueidis.RedisResult) {
 	val, err := res.AsFloat64()
 	cmd.SetErr(err)
 	cmd.SetVal(val)
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 func newFloatCmd(res rueidis.RedisResult) *FloatCmd {
@@ -910,7 +910,7 @@ func (cmd *StringStringMapCmd) from(res rueidis.RedisResult) {
 	val, err := res.AsStrMap()
 	cmd.SetErr(err)
 	cmd.SetVal(val)
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 func newStringStringMapCmd(res rueidis.RedisResult) *StringStringMapCmd {
@@ -1783,7 +1783,7 @@ func (cmd *RankWithScoreCmd) from(res rueidis.RedisResult) {
 			cmd.val.Score, _ = vs[1].AsFloat64()
 		}
 	}
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 func newRankWithScoreCmd(res rueidis.RedisResult) *RankWithScoreCmd {
@@ -2058,7 +2058,7 @@ func (cmd *GeoPosCmd) from(res rueidis.RedisResult) {
 		})
 	}
 	cmd.SetVal(val)
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 func newGeoPosCmd(res rueidis.RedisResult) *GeoPosCmd {
@@ -2073,7 +2073,7 @@ type GeoLocationCmd struct {
 
 func (cmd *GeoLocationCmd) from(res rueidis.RedisResult) {
 	cmd.val, cmd.err = res.AsGeosearch()
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 func newGeoLocationCmd(res rueidis.RedisResult) *GeoLocationCmd {
@@ -2707,7 +2707,7 @@ func (cmd *BFInfoCmd) from(res rueidis.RedisResult) {
 		return
 	}
 	cmd.SetVal(info)
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 func newBFInfoCmd(res rueidis.RedisResult) *BFInfoCmd {
@@ -2798,7 +2798,7 @@ func (cmd *CFInfoCmd) from(res rueidis.RedisResult) {
 		return
 	}
 	cmd.SetVal(info)
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 func newCFInfoCmd(res rueidis.RedisResult) *CFInfoCmd {
@@ -2835,7 +2835,7 @@ func (cmd *CMSInfoCmd) from(res rueidis.RedisResult) {
 		return
 	}
 	cmd.SetVal(info)
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 func newCMSInfoCmd(res rueidis.RedisResult) *CMSInfoCmd {
@@ -2891,7 +2891,7 @@ func (cmd *TopKInfoCmd) from(res rueidis.RedisResult) {
 		return
 	}
 	cmd.SetVal(info)
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 func newTopKInfoCmd(res rueidis.RedisResult) *TopKInfoCmd {
@@ -2911,7 +2911,7 @@ func (cmd *MapStringIntCmd) from(res rueidis.RedisResult) {
 		return
 	}
 	cmd.SetVal(m)
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 func newMapStringIntCmd(res rueidis.RedisResult) *MapStringIntCmd {
@@ -3319,7 +3319,7 @@ func (cmd *JSONCmd) from(res rueidis.RedisResult) {
 		cmd.SetErr(err)
 		return
 	}
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 	switch {
 	// JSON.GET
 	case msg.IsString():
@@ -3401,7 +3401,7 @@ func (cmd *IntPointerSliceCmd) from(res rueidis.RedisResult) {
 		intPtrSlice[i] = &length
 	}
 	cmd.SetVal(intPtrSlice)
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 // newIntPointerSliceCmd initialises an IntPointerSliceCmd
@@ -3434,7 +3434,7 @@ func (cmd *JSONSliceCmd) from(res rueidis.RedisResult) {
 		anySlice[i] = anyE
 	}
 	cmd.SetVal(anySlice)
-	cmd.SetIsCacheHit(res.IsCacheHit())
+	cmd.setIsCacheHit(res.IsCacheHit())
 }
 
 func newJSONSliceCmd(res rueidis.RedisResult) *JSONSliceCmd {
