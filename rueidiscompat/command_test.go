@@ -1184,7 +1184,7 @@ func TestClientInfoParsing(t *testing.T) {
 	}
 }
 
-// TestCacheHitCmd tests the IsCacheHit and SetIsCacheHit functionality for Cmd
+// TestCacheHitCmd tests the IsCacheHit and setIsCacheHit functionality for Cmd
 func TestCacheHitCmd(t *testing.T) {
 	cmd := &Cmd{}
 
@@ -1194,19 +1194,19 @@ func TestCacheHitCmd(t *testing.T) {
 	}
 
 	// Test setting cache hit to true
-	cmd.SetIsCacheHit(true)
+	cmd.setIsCacheHit(true)
 	if !cmd.IsCacheHit() {
-		t.Error("Expected IsCacheHit to be true after SetIsCacheHit(true), got false")
+		t.Error("Expected IsCacheHit to be true after setIsCacheHit(true), got false")
 	}
 
 	// Test setting cache hit back to false
-	cmd.SetIsCacheHit(false)
+	cmd.setIsCacheHit(false)
 	if cmd.IsCacheHit() {
-		t.Error("Expected IsCacheHit to be false after SetIsCacheHit(false), got true")
+		t.Error("Expected IsCacheHit to be false after setIsCacheHit(false), got true")
 	}
 }
 
-// TestCacheHitStringCmd tests the IsCacheHit and SetIsCacheHit functionality for StringCmd
+// TestCacheHitStringCmd tests the IsCacheHit and setIsCacheHit functionality for StringCmd
 func TestCacheHitStringCmd(t *testing.T) {
 	cmd := &StringCmd{}
 
@@ -1216,9 +1216,9 @@ func TestCacheHitStringCmd(t *testing.T) {
 	}
 
 	// Test setting cache hit to true
-	cmd.SetIsCacheHit(true)
+	cmd.setIsCacheHit(true)
 	if !cmd.IsCacheHit() {
-		t.Error("Expected IsCacheHit to be true after SetIsCacheHit(true), got false")
+		t.Error("Expected IsCacheHit to be true after setIsCacheHit(true), got false")
 	}
 
 	cmd.SetVal("test")
@@ -1227,7 +1227,7 @@ func TestCacheHitStringCmd(t *testing.T) {
 	}
 }
 
-// TestCacheHitBoolCmd tests the IsCacheHit and SetIsCacheHit functionality for BoolCmd
+// TestCacheHitBoolCmd tests the IsCacheHit and setIsCacheHit functionality for BoolCmd
 func TestCacheHitBoolCmd(t *testing.T) {
 	cmd := &BoolCmd{}
 
@@ -1236,9 +1236,9 @@ func TestCacheHitBoolCmd(t *testing.T) {
 		t.Error("Expected default IsCacheHit to be false, got true")
 	}
 
-	cmd.SetIsCacheHit(true)
+	cmd.setIsCacheHit(true)
 	if !cmd.IsCacheHit() {
-		t.Error("Expected IsCacheHit to be true after SetIsCacheHit(true), got false")
+		t.Error("Expected IsCacheHit to be true after setIsCacheHit(true), got false")
 	}
 
 	cmd.SetVal(true)
@@ -1247,7 +1247,7 @@ func TestCacheHitBoolCmd(t *testing.T) {
 	}
 }
 
-// TestCacheHitIntCmd tests the IsCacheHit and SetIsCacheHit functionality for IntCmd
+// TestCacheHitIntCmd tests the IsCacheHit and setIsCacheHit functionality for IntCmd
 func TestCacheHitIntCmd(t *testing.T) {
 	cmd := &IntCmd{}
 
@@ -1256,9 +1256,9 @@ func TestCacheHitIntCmd(t *testing.T) {
 		t.Error("Expected default IsCacheHit to be false, got true")
 	}
 
-	cmd.SetIsCacheHit(true)
+	cmd.setIsCacheHit(true)
 	if !cmd.IsCacheHit() {
-		t.Error("Expected IsCacheHit to be true after SetIsCacheHit(true), got false")
+		t.Error("Expected IsCacheHit to be true after setIsCacheHit(true), got false")
 	}
 
 	cmd.SetVal(int64(42))
@@ -1267,7 +1267,7 @@ func TestCacheHitIntCmd(t *testing.T) {
 	}
 }
 
-// TestCacheHitIntSliceCmd tests the IsCacheHit and SetIsCacheHit functionality for IntSliceCmd
+// TestCacheHitIntSliceCmd tests the IsCacheHit and setIsCacheHit functionality for IntSliceCmd
 func TestCacheHitIntSliceCmd(t *testing.T) {
 	cmd := &IntSliceCmd{}
 
@@ -1276,9 +1276,9 @@ func TestCacheHitIntSliceCmd(t *testing.T) {
 		t.Error("Expected default IsCacheHit to be false, got true")
 	}
 
-	cmd.SetIsCacheHit(true)
+	cmd.setIsCacheHit(true)
 	if !cmd.IsCacheHit() {
-		t.Error("Expected IsCacheHit to be true after SetIsCacheHit(true), got false")
+		t.Error("Expected IsCacheHit to be true after setIsCacheHit(true), got false")
 	}
 
 	cmd.SetVal([]int64{1, 2, 3})
@@ -1287,7 +1287,7 @@ func TestCacheHitIntSliceCmd(t *testing.T) {
 	}
 }
 
-// TestCacheHitSliceCmd tests the IsCacheHit and SetIsCacheHit functionality for SliceCmd
+// TestCacheHitSliceCmd tests the IsCacheHit and setIsCacheHit functionality for SliceCmd
 func TestCacheHitSliceCmd(t *testing.T) {
 	cmd := &SliceCmd{}
 
@@ -1296,9 +1296,9 @@ func TestCacheHitSliceCmd(t *testing.T) {
 		t.Error("Expected default IsCacheHit to be false, got true")
 	}
 
-	cmd.SetIsCacheHit(true)
+	cmd.setIsCacheHit(true)
 	if !cmd.IsCacheHit() {
-		t.Error("Expected IsCacheHit to be true after SetIsCacheHit(true), got false")
+		t.Error("Expected IsCacheHit to be true after setIsCacheHit(true), got false")
 	}
 
 	cmd.SetVal([]any{1, "two", 3.0})
@@ -1307,7 +1307,7 @@ func TestCacheHitSliceCmd(t *testing.T) {
 	}
 }
 
-// TestCacheHitStringSliceCmd tests the IsCacheHit and SetIsCacheHit functionality for StringSliceCmd
+// TestCacheHitStringSliceCmd tests the IsCacheHit and setIsCacheHit functionality for StringSliceCmd
 func TestCacheHitStringSliceCmd(t *testing.T) {
 	cmd := &StringSliceCmd{}
 
@@ -1316,9 +1316,9 @@ func TestCacheHitStringSliceCmd(t *testing.T) {
 		t.Error("Expected default IsCacheHit to be false, got true")
 	}
 
-	cmd.SetIsCacheHit(true)
+	cmd.setIsCacheHit(true)
 	if !cmd.IsCacheHit() {
-		t.Error("Expected IsCacheHit to be true after SetIsCacheHit(true), got false")
+		t.Error("Expected IsCacheHit to be true after setIsCacheHit(true), got false")
 	}
 
 	cmd.SetVal([]string{"a", "b", "c"})
@@ -1327,7 +1327,7 @@ func TestCacheHitStringSliceCmd(t *testing.T) {
 	}
 }
 
-// TestCacheHitBoolSliceCmd tests the IsCacheHit and SetIsCacheHit functionality for BoolSliceCmd
+// TestCacheHitBoolSliceCmd tests the IsCacheHit and setIsCacheHit functionality for BoolSliceCmd
 func TestCacheHitBoolSliceCmd(t *testing.T) {
 	cmd := &BoolSliceCmd{}
 
@@ -1336,9 +1336,9 @@ func TestCacheHitBoolSliceCmd(t *testing.T) {
 		t.Error("Expected default IsCacheHit to be false, got true")
 	}
 
-	cmd.SetIsCacheHit(true)
+	cmd.setIsCacheHit(true)
 	if !cmd.IsCacheHit() {
-		t.Error("Expected IsCacheHit to be true after SetIsCacheHit(true), got false")
+		t.Error("Expected IsCacheHit to be true after setIsCacheHit(true), got false")
 	}
 
 	cmd.SetVal([]bool{true, false, true})
@@ -1347,7 +1347,7 @@ func TestCacheHitBoolSliceCmd(t *testing.T) {
 	}
 }
 
-// TestCacheHitFloatSliceCmd tests the IsCacheHit and SetIsCacheHit functionality for FloatSliceCmd
+// TestCacheHitFloatSliceCmd tests the IsCacheHit and setIsCacheHit functionality for FloatSliceCmd
 func TestCacheHitFloatSliceCmd(t *testing.T) {
 	cmd := &FloatSliceCmd{}
 
@@ -1356,9 +1356,9 @@ func TestCacheHitFloatSliceCmd(t *testing.T) {
 		t.Error("Expected default IsCacheHit to be false, got true")
 	}
 
-	cmd.SetIsCacheHit(true)
+	cmd.setIsCacheHit(true)
 	if !cmd.IsCacheHit() {
-		t.Error("Expected IsCacheHit to be true after SetIsCacheHit(true), got false")
+		t.Error("Expected IsCacheHit to be true after setIsCacheHit(true), got false")
 	}
 
 	cmd.SetVal([]float64{1.5, 2.5, 3.5})
@@ -1367,7 +1367,7 @@ func TestCacheHitFloatSliceCmd(t *testing.T) {
 	}
 }
 
-// TestCacheHitZSliceCmd tests the IsCacheHit and SetIsCacheHit functionality for ZSliceCmd
+// TestCacheHitZSliceCmd tests the IsCacheHit and setIsCacheHit functionality for ZSliceCmd
 func TestCacheHitZSliceCmd(t *testing.T) {
 	cmd := &ZSliceCmd{}
 
@@ -1376,9 +1376,9 @@ func TestCacheHitZSliceCmd(t *testing.T) {
 		t.Error("Expected default IsCacheHit to be false, got true")
 	}
 
-	cmd.SetIsCacheHit(true)
+	cmd.setIsCacheHit(true)
 	if !cmd.IsCacheHit() {
-		t.Error("Expected IsCacheHit to be true after SetIsCacheHit(true), got false")
+		t.Error("Expected IsCacheHit to be true after setIsCacheHit(true), got false")
 	}
 
 	cmd.SetVal([]Z{{Member: "a", Score: 1.0}, {Member: "b", Score: 2.0}})
@@ -1387,7 +1387,7 @@ func TestCacheHitZSliceCmd(t *testing.T) {
 	}
 }
 
-// TestCacheHitFloatCmd tests the IsCacheHit and SetIsCacheHit functionality for FloatCmd
+// TestCacheHitFloatCmd tests the IsCacheHit and setIsCacheHit functionality for FloatCmd
 func TestCacheHitFloatCmd(t *testing.T) {
 	cmd := &FloatCmd{}
 
@@ -1396,9 +1396,9 @@ func TestCacheHitFloatCmd(t *testing.T) {
 		t.Error("Expected default IsCacheHit to be false, got true")
 	}
 
-	cmd.SetIsCacheHit(true)
+	cmd.setIsCacheHit(true)
 	if !cmd.IsCacheHit() {
-		t.Error("Expected IsCacheHit to be true after SetIsCacheHit(true), got false")
+		t.Error("Expected IsCacheHit to be true after setIsCacheHit(true), got false")
 	}
 
 	cmd.SetVal(3.14)
@@ -1407,7 +1407,7 @@ func TestCacheHitFloatCmd(t *testing.T) {
 	}
 }
 
-// TestCacheHitStringStringMapCmd tests the IsCacheHit and SetIsCacheHit functionality for StringStringMapCmd
+// TestCacheHitStringStringMapCmd tests the IsCacheHit and setIsCacheHit functionality for StringStringMapCmd
 func TestCacheHitStringStringMapCmd(t *testing.T) {
 	cmd := &StringStringMapCmd{}
 
@@ -1416,9 +1416,9 @@ func TestCacheHitStringStringMapCmd(t *testing.T) {
 		t.Error("Expected default IsCacheHit to be false, got true")
 	}
 
-	cmd.SetIsCacheHit(true)
+	cmd.setIsCacheHit(true)
 	if !cmd.IsCacheHit() {
-		t.Error("Expected IsCacheHit to be true after SetIsCacheHit(true), got false")
+		t.Error("Expected IsCacheHit to be true after setIsCacheHit(true), got false")
 	}
 
 	cmd.SetVal(map[string]string{"key": "value"})
@@ -1427,7 +1427,7 @@ func TestCacheHitStringStringMapCmd(t *testing.T) {
 	}
 }
 
-// TestCacheHitDurationCmd tests the IsCacheHit and SetIsCacheHit functionality for DurationCmd
+// TestCacheHitDurationCmd tests the IsCacheHit and setIsCacheHit functionality for DurationCmd
 func TestCacheHitDurationCmd(t *testing.T) {
 	cmd := &DurationCmd{}
 
@@ -1436,9 +1436,9 @@ func TestCacheHitDurationCmd(t *testing.T) {
 		t.Error("Expected default IsCacheHit to be false, got true")
 	}
 
-	cmd.SetIsCacheHit(true)
+	cmd.setIsCacheHit(true)
 	if !cmd.IsCacheHit() {
-		t.Error("Expected IsCacheHit to be true after SetIsCacheHit(true), got false")
+		t.Error("Expected IsCacheHit to be true after setIsCacheHit(true), got false")
 	}
 
 	cmd.SetVal(time.Second)
