@@ -52,7 +52,7 @@ type baseCmd[T any] struct {
 	isCacheHit bool
 }
 
-func (cmd *baseCmd[T]) SetIsCacheHit(val bool) {
+func (cmd *baseCmd[T]) setIsCacheHit(val bool) {
 	cmd.isCacheHit = val
 }
 
