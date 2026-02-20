@@ -2,7 +2,9 @@ package rueidisotel
 
 import (
 	"context"
+	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -115,44 +117,93 @@ type commandMetrics struct {
 	opAttr     bool
 }
 
-func (c *commandMetrics) recordDuration(ctx context.Context, op string, now time.Time) {
-	opts := c.recordOpts
+var (
+	metricRecordOptionPool = &sync.Pool{
+		New: func() any { return &[]metric.RecordOption{} },
+	}
+	metricAddOptionPool = &sync.Pool{
+		New: func() any { return &[]metric.AddOption{} },
+	}
+)
 
-	labeler, hasLabeler := ctx.Value(labelerContextKey).(*Labeler)
-	hasLabelerAttrs := hasLabeler && len(labeler.attrs) > 0
+func (c *commandMetrics) recordDuration(ctx context.Context, op string, startTime time.Time) {
+	count := len(c.recordOpts)
 
-	if c.opAttr && hasLabelerAttrs {
-		opts = append(c.recordOpts,
-			metric.WithAttributeSet(attribute.NewSet(attribute.String("operation", op))),
-			metric.WithAttributeSet(attribute.NewSet(labeler.attrs...)))
-	} else if c.opAttr {
-		opts = append(c.recordOpts, metric.WithAttributeSet(attribute.NewSet(attribute.String("operation", op))))
-	} else if hasLabelerAttrs {
-		opts = append(c.recordOpts, metric.WithAttributeSet(attribute.NewSet(labeler.attrs...)))
+	var opOpt metric.RecordOption
+	if c.opAttr {
+		opOpt = metric.WithAttributeSet(attribute.NewSet(attribute.String("operation", op)))
+		count++
 	}
 
-	c.duration.Record(ctx, time.Since(now).Seconds(), opts...)
+	var labelerOpt metric.RecordOption
+	if labeler, ok := ctx.Value(labelerContextKey).(*Labeler); ok && len(labeler.attrs) != 0 {
+		labelerOpt = metric.WithAttributeSet(attribute.NewSet(labeler.attrs...))
+		count++
+	}
+
+	var opts *[]metric.RecordOption
+	if count == len(c.recordOpts) {
+		opts = &c.recordOpts
+	} else {
+		opts = metricRecordOptionPool.Get().(*[]metric.RecordOption)
+		defer func() {
+			*opts = (*opts)[:0]
+			metricRecordOptionPool.Put(opts)
+		}()
+
+		*opts = slices.Grow(*opts, count)
+		*opts = append(*opts, c.recordOpts...)
+		if opOpt != nil {
+			*opts = append(*opts, opOpt)
+		}
+		if labelerOpt != nil {
+			*opts = append(*opts, labelerOpt)
+		}
+	}
+
+	c.duration.Record(ctx, time.Since(startTime).Seconds(), *opts...)
 }
 
 func (c *commandMetrics) recordError(ctx context.Context, op string, err error) {
-	if err != nil && !rueidis.IsRedisNil(err) {
-		opts := c.addOpts
-
-		labeler, hasLabeler := ctx.Value(labelerContextKey).(*Labeler)
-		hasLabelerAttrs := hasLabeler && len(labeler.attrs) > 0
-
-		if c.opAttr && hasLabelerAttrs {
-			opts = append(c.addOpts,
-				metric.WithAttributeSet(attribute.NewSet(attribute.String("operation", op))),
-				metric.WithAttributeSet(attribute.NewSet(labeler.attrs...)))
-		} else if c.opAttr {
-			opts = append(c.addOpts, metric.WithAttributeSet(attribute.NewSet(attribute.String("operation", op))))
-		} else if hasLabelerAttrs {
-			opts = append(c.addOpts, metric.WithAttributeSet(attribute.NewSet(labeler.attrs...)))
-		}
-
-		c.errors.Add(ctx, 1, opts...)
+	if err == nil || rueidis.IsRedisNil(err) {
+		return
 	}
+
+	count := len(c.addOpts)
+
+	var opOpt metric.AddOption
+	if c.opAttr {
+		opOpt = metric.WithAttributeSet(attribute.NewSet(attribute.String("operation", op)))
+		count++
+	}
+
+	var labelerOpt metric.AddOption
+	if labeler, ok := ctx.Value(labelerContextKey).(*Labeler); ok && len(labeler.attrs) != 0 {
+		labelerOpt = metric.WithAttributeSet(attribute.NewSet(labeler.attrs...))
+		count++
+	}
+
+	var opts *[]metric.AddOption
+	if count == len(c.addOpts) {
+		opts = &c.addOpts
+	} else {
+		opts = metricAddOptionPool.Get().(*[]metric.AddOption)
+		defer func() {
+			*opts = (*opts)[:0]
+			metricAddOptionPool.Put(opts)
+		}()
+
+		*opts = slices.Grow(*opts, count)
+		*opts = append(*opts, c.addOpts...)
+		if opOpt != nil {
+			*opts = append(*opts, opOpt)
+		}
+		if labelerOpt != nil {
+			*opts = append(*opts, labelerOpt)
+		}
+	}
+
+	c.errors.Add(ctx, 1, *opts...)
 }
 
 type otelclient struct {
@@ -166,8 +217,6 @@ type otelclient struct {
 	sAttrs          trace.SpanStartEventOption
 	tAttrs          trace.SpanStartEventOption
 	dbStmtFunc      StatementFunc
-	addOpts         []metric.AddOption
-	recordOpts      []metric.RecordOption
 	histogramOption HistogramOption
 	commandMetrics
 }
@@ -313,8 +362,6 @@ func (o *otelclient) Nodes() map[string]rueidis.Client {
 			meter:           o.meter,
 			cscMiss:         o.cscMiss,
 			cscHits:         o.cscHits,
-			addOpts:         o.addOpts,
-			recordOpts:      o.recordOpts,
 			sAttrs:          serverAttrs(addr),
 			tAttrs:          o.tAttrs,
 			histogramOption: o.histogramOption,

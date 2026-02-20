@@ -43,7 +43,7 @@ func WithMeterProvider(provider metric.MeterProvider) Option {
 // This may cause memory usage to increase with the number of commands used.
 func WithOperationMetricAttr() Option {
 	return func(cli *otelclient) {
-		cli.commandMetrics.opAttr = true
+		cli.opAttr = true
 	}
 }
 
@@ -169,9 +169,7 @@ func newClient(opts ...Option) (*otelclient, error) {
 	if err != nil {
 		return nil, err
 	}
-	cli.commandMetrics.addOpts = cli.addOpts
-	cli.commandMetrics.recordOpts = cli.recordOpts
-	cli.commandMetrics.duration, err = cli.meter.Float64Histogram(
+	cli.duration, err = cli.meter.Float64Histogram(
 		"rueidis_command_duration_seconds",
 		metric.WithUnit("s"),
 		metric.WithExplicitBucketBoundaries(defaultHistogramBuckets...),
@@ -179,7 +177,7 @@ func newClient(opts ...Option) (*otelclient, error) {
 	if err != nil {
 		return nil, err
 	}
-	cli.commandMetrics.errors, err = cli.meter.Int64Counter("rueidis_command_errors")
+	cli.errors, err = cli.meter.Int64Counter("rueidis_command_errors")
 	if err != nil {
 		return nil, err
 	}

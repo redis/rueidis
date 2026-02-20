@@ -12,6 +12,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric/noop"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata"
 	"go.opentelemetry.io/otel/sdk/metric/metricdata/metricdatatest"
@@ -530,4 +531,38 @@ func ExampleWithClient_openTelemetry() {
 	}
 	client = WithClient(client)
 	defer client.Close()
+}
+
+func Benchmark_recordDuration(b *testing.B) {
+	startTime := time.Now()
+	recordOpts := []metricapi.RecordOption{
+		metricapi.WithAttributeSet(attribute.NewSet(attribute.String("key", "val"))),
+	}
+
+	b.Run("without_extra_opts", func(b *testing.B) {
+		metrics := &commandMetrics{
+			duration:   noop.Float64Histogram{},
+			recordOpts: recordOpts,
+		}
+
+		for b.Loop() {
+			metrics.recordDuration(b.Context(), "GET", startTime)
+		}
+	})
+	b.Run("with_extra_opts", func(b *testing.B) {
+		ctx := b.Context()
+		labeler, _ := LabelerFromContext(ctx)
+		labeler.Add(attribute.String("ctx_key", "ctx_val"))
+		ctx = ContextWithLabeler(ctx, labeler)
+
+		metrics := &commandMetrics{
+			duration:   noop.Float64Histogram{},
+			recordOpts: recordOpts,
+			opAttr:     true,
+		}
+
+		for b.Loop() {
+			metrics.recordDuration(ctx, "GET", startTime)
+		}
+	})
 }
