@@ -10,10 +10,11 @@ import (
 const ignoreField = "-"
 
 type schema struct {
-	key    *field
-	ver    *field
-	ext    *field
-	fields map[string]*field
+	key     *field
+	ver     *field
+	ext     *field
+	fields  map[string]*field
+	verless bool
 }
 
 type field struct {
@@ -67,8 +68,11 @@ func newSchema(t reflect.Type) schema {
 	if s.key == nil {
 		panic(fmt.Sprintf("schema %q should have one field with `redis:\",key\"` tag", t))
 	}
+
+	// ver is no longer required
 	if s.ver == nil {
-		panic(fmt.Sprintf("schema %q should have one field with `redis:\",ver\"` tag", t))
+		s.ver = &field{typ: reflect.TypeOf(int64(0)), name: "", idx: -1, isKey: false, isVer: true, isExt: false}
+		s.verless = true
 	}
 
 	return s

@@ -31,6 +31,12 @@ type HashTestStruct struct {
 	JSON  json.RawMessage
 }
 
+type Verless struct {
+	Key  string `redis:",key"`
+	Val  int64
+	JSON json.RawMessage
+}
+
 type Unsupported struct {
 	Key string `redis:",key"`
 	Ver int64  `redis:",ver"`
@@ -339,6 +345,213 @@ func TestNewHashRepository(t *testing.T) {
 	})
 }
 
+//gocyclo:ignore
+func TestNewHashRepositoryVerless(t *testing.T) {
+	ctx := context.Background()
+
+	client := setup(t)
+	client.Do(ctx, client.B().Flushall().Build())
+	defer client.Close()
+
+	repo := NewHashRepository("hash", Verless{}, client)
+
+	t.Run("NewEntity", func(t *testing.T) {
+		e := repo.NewEntity()
+		ulid.MustParse(e.Key)
+	})
+
+	t.Run("Save", func(t *testing.T) {
+		e := repo.NewEntity()
+		// test save
+		e.Val = rand.Int63()
+		e.JSON = []byte(`[1]`)
+		if err := repo.Save(ctx, e); err != nil {
+			t.Fatal(err)
+		}
+
+		// confirm no version related errors with second save
+		if err := repo.Save(ctx, e); err != nil {
+			t.Fatal(err)
+		}
+
+		t.Run("Fetch", func(t *testing.T) {
+			ei, err := repo.Fetch(ctx, e.Key)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if e == ei {
+				t.Fatalf("e's address should not be the same as ee's")
+			}
+			if !reflect.DeepEqual(e, ei) {
+				t.Fatalf("e should be the same as ee")
+			}
+		})
+
+		t.Run("FetchCache", func(t *testing.T) {
+			ei, err := repo.FetchCache(ctx, e.Key, time.Minute)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if e == ei {
+				t.Fatalf("e's address should not be the same as ee's")
+			}
+			if !reflect.DeepEqual(e, ei) {
+				t.Fatalf("ee should be the same as e")
+			}
+		})
+
+		t.Run("Search", func(t *testing.T) {
+			err := repo.CreateIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
+				return schema.FieldName("Val").Text().Build()
+			})
+			time.Sleep(time.Second)
+			if err != nil {
+				t.Fatal(err)
+			}
+			n, records, err := repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
+				return search.Query("*").Build()
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n != 1 {
+				t.Fatalf("unexpected total count %v", n)
+			}
+			if len(records) != 1 {
+				t.Fatalf("unexpected return count %v", n)
+			}
+			if !reflect.DeepEqual(e, records[0]) {
+				t.Fatalf("items[0] should be the same as e")
+			}
+			if err = repo.DropIndex(ctx); err != nil {
+				t.Fatal(err)
+			}
+		})
+
+		t.Run("Search Sort", func(t *testing.T) {
+			err := repo.CreateIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
+				return schema.FieldName("Val").Text().Sortable().Build()
+			})
+			time.Sleep(time.Second)
+			if err != nil {
+				t.Fatal(err)
+			}
+			n, records, err := repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
+				return search.Query("*").Sortby("Val").Build()
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n != 1 {
+				t.Fatalf("unexpected total count %v", n)
+			}
+			if len(records) != 1 {
+				t.Fatalf("unexpected return count %v", n)
+			}
+			if !reflect.DeepEqual(e, records[0]) {
+				t.Fatalf("items[0] should be the same as e")
+			}
+			if err = repo.DropIndex(ctx); err != nil {
+				t.Fatal(err)
+			}
+		})
+
+		t.Run("Delete", func(t *testing.T) {
+			if err := repo.Remove(ctx, e.Key); err != nil {
+				t.Fatal(err)
+			}
+			ei, err := repo.Fetch(ctx, e.Key)
+			if !IsRecordNotFound(err) {
+				t.Fatalf("should not be found, but got %v", ei)
+			}
+			_, err = repo.FetchCache(ctx, e.Key, time.Minute)
+			if !IsRecordNotFound(err) {
+				t.Fatalf("should not be found, but got %v", e)
+			}
+		})
+
+		t.Run("Alter Index", func(t *testing.T) {
+			err := repo.CreateIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
+				return schema.FieldName("Val").Text().Build()
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			time.Sleep(time.Second)
+			var entities []*Verless
+			for i := 3; i >= 1; i-- {
+				e := repo.NewEntity()
+				e.Val = rand.Int63()
+				e.JSON = []byte(fmt.Sprintf("[%d]", i))
+				err = repo.Save(ctx, e)
+				if err != nil {
+					t.Fatal(err)
+				}
+				entities = append(entities, e)
+			}
+			time.Sleep(time.Second)
+			_, _, err = repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
+				return search.Query("*").Sortby("JSON").Build()
+			})
+			if err == nil {
+				t.Fatalf("search by property not loaded nor in schema")
+			}
+			err = repo.AlterIndex(ctx, func(alter FtAlterIndex) rueidis.Completed {
+				return alter.
+					Schema().Add().Field("JSON").Options("TEXT", "SORTABLE").
+					Build()
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			time.Sleep(time.Second)
+			n, records, err := repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
+				return search.Query("*").Sortby("JSON").Build()
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n != 3 {
+				t.Fatalf("unexpected total count %v", n)
+			}
+			if len(records) != 3 {
+				t.Fatalf("unexpected return count %v", n)
+			}
+			if !reflect.DeepEqual(entities[2], records[0]) {
+				t.Fatalf("entities[0] should be the same as records[2]")
+			}
+			if err = repo.DropIndex(ctx); err != nil {
+				t.Fatal(err)
+			}
+		})
+	})
+
+	t.Run("SaveMulti", func(t *testing.T) {
+		entities := []*Verless{
+			repo.NewEntity(),
+			repo.NewEntity(),
+			repo.NewEntity(),
+		}
+
+		for _, e := range entities {
+			e.Val = rand.Int63()
+		}
+
+		for _, err := range repo.SaveMulti(context.Background(), entities...) {
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		// confirm no version related errors
+		for _, err := range repo.SaveMulti(context.Background(), entities...) {
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+	})
+}
+
 type HashTestTTLStruct struct {
 	Key  string    `redis:",key"`
 	Ver  int64     `redis:",ver"`
@@ -535,4 +748,126 @@ func verifyAliasTarget(t *testing.T, ctx context.Context, client rueidis.Client,
 	if actualIndex != expectedIndex {
 		t.Fatalf("alias does not point to the expected index. expected=%s got=%s", expectedIndex, actualIndex)
 	}
+}
+
+type HashTestVerlessTTLStruct struct {
+	Key  string    `redis:",key"`
+	Exat time.Time `redis:",exat"`
+}
+
+//gocyclo:ignore
+func TestNewHashRepositoryVerlessTTL(t *testing.T) {
+	ctx := context.Background()
+
+	client := setup(t)
+	client.Do(ctx, client.B().Flushall().Build())
+	defer client.Close()
+
+	repo := NewHashRepository("hashttl", HashTestVerlessTTLStruct{}, client)
+
+	t.Run("NewEntity", func(t *testing.T) {
+		e := repo.NewEntity()
+		ulid.MustParse(e.Key)
+	})
+
+	t.Run("Save", func(t *testing.T) {
+		e := repo.NewEntity()
+		e.Exat = time.Now().Add(time.Minute)
+		if err := repo.Save(ctx, e); err != nil {
+			t.Fatal(err)
+		}
+
+		// confirm no version related errors with second save
+		if err := repo.Save(ctx, e); err != nil {
+			t.Fatal(err)
+		}
+
+		t.Run("ExpireAt", func(t *testing.T) {
+			exat, err := client.Do(ctx, client.B().Pexpiretime().Key("hashttl:"+e.Key).Build()).AsInt64()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if exat != e.Exat.UnixMilli() {
+				t.Fatalf("wrong exat")
+			}
+		})
+
+		t.Run("Fetch", func(t *testing.T) {
+			ei, err := repo.Fetch(ctx, e.Key)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if e == ei {
+				t.Fatalf("e's address should not be the same as ee's")
+			}
+			e.Exat = e.Exat.Truncate(time.Millisecond)
+			ei.Exat = ei.Exat.Truncate(time.Millisecond)
+			if !e.Exat.Equal(ei.Exat) {
+				t.Fatalf("e should be the same as ee %v %v", e, ei)
+			}
+		})
+
+		t.Run("FetchCache", func(t *testing.T) {
+			ei, err := repo.FetchCache(ctx, e.Key, time.Minute)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if e == ei {
+				t.Fatalf("e's address should not be the same as ee's")
+			}
+			e.Exat = e.Exat.Truncate(time.Millisecond)
+			ei.Exat = ei.Exat.Truncate(time.Millisecond)
+			if !e.Exat.Equal(ei.Exat) {
+				t.Fatalf("ee should be the same as e %v %v", e, ei)
+			}
+		})
+		t.Run("Delete", func(t *testing.T) {
+			if err := repo.Remove(ctx, e.Key); err != nil {
+				t.Fatal(err)
+			}
+			ei, err := repo.Fetch(ctx, e.Key)
+			if !IsRecordNotFound(err) {
+				t.Fatalf("should not be found, but got %v", ei)
+			}
+			_, err = repo.FetchCache(ctx, e.Key, time.Minute)
+			if !IsRecordNotFound(err) {
+				t.Fatalf("should not be found, but got %v", e)
+			}
+		})
+	})
+
+	t.Run("SaveMulti", func(t *testing.T) {
+		entities := []*HashTestVerlessTTLStruct{
+			repo.NewEntity(),
+			repo.NewEntity(),
+			repo.NewEntity(),
+		}
+
+		for _, e := range entities {
+			e.Exat = time.Now().Add(time.Minute)
+		}
+
+		for _, err := range repo.SaveMulti(context.Background(), entities...) {
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		// confirm no version related errors
+		for _, err := range repo.SaveMulti(context.Background(), entities...) {
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		for _, e := range entities {
+			exat, err := client.Do(ctx, client.B().Pexpiretime().Key("hashttl:"+e.Key).Build()).AsInt64()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if exat != e.Exat.UnixMilli() {
+				t.Fatalf("wrong exat")
+			}
+		}
+	})
 }

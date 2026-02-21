@@ -2,6 +2,7 @@ package om
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"testing"
@@ -16,6 +17,12 @@ type JSONTestStruct struct {
 	Nested struct{ F1 string }
 	Val    []byte
 	Ver    int64 `redis:",ver"`
+}
+
+type JSONVerless struct {
+	Key    string `redis:",key"`
+	Nested struct{ F1 string }
+	Val    []byte
 }
 
 func TestNewJsonRepositoryMismatch(t *testing.T) {
@@ -89,7 +96,7 @@ func TestNewJSONRepository(t *testing.T) {
 
 		// test ErrVersionMismatch
 		e.Ver = 0
-		if err := repo.Save(ctx, e); err != ErrVersionMismatch {
+		if err := repo.Save(ctx, e); !errors.Is(err, ErrVersionMismatch) {
 			t.Fatalf("save should fail if ErrVersionMismatch, got: %v", err)
 		}
 		e.Ver = 1 // restore
@@ -290,7 +297,7 @@ func TestNewJSONRepository(t *testing.T) {
 
 		for i, err := range repo.SaveMulti(context.Background(), entities...) {
 			if i == len(entities)-1 {
-				if err != ErrVersionMismatch {
+				if !errors.Is(err, ErrVersionMismatch) {
 					t.Fatalf("unexpected err %v", err)
 				}
 			} else {
@@ -300,6 +307,239 @@ func TestNewJSONRepository(t *testing.T) {
 				if entities[i].Ver != 2 {
 					t.Fatalf("unexpected ver %d", entities[i].Ver)
 				}
+			}
+		}
+	})
+}
+
+//gocyclo:ignore
+func TestNewJSONRepositoryVerless(t *testing.T) {
+	ctx := context.Background()
+
+	client := setup(t)
+	client.Do(ctx, client.B().Flushall().Build())
+	defer client.Close()
+
+	repo := NewJSONRepository("json", JSONVerless{}, client)
+
+	t.Run("IndexName", func(t *testing.T) {
+		if name := repo.IndexName(); name != "jsonidx:json" {
+			t.Fatal("unexpected value")
+		}
+	})
+
+	t.Run("NewEntity", func(t *testing.T) {
+		e := repo.NewEntity()
+		ulid.MustParse(e.Key)
+	})
+
+	t.Run("Save", func(t *testing.T) {
+		e := repo.NewEntity()
+
+		// test save
+		e.Val = []byte("any")
+		if err := repo.Save(ctx, e); err != nil {
+			t.Fatal(err)
+		}
+
+		// confirm no version related errors with second save
+		if err := repo.Save(ctx, e); err != nil {
+			t.Fatal(err)
+		}
+
+		t.Run("Fetch", func(t *testing.T) {
+			ei, err := repo.Fetch(ctx, e.Key)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if e == ei {
+				t.Fatalf("e's address should not be the same as ee's")
+			}
+			if !reflect.DeepEqual(e, ei) {
+				t.Fatalf("e should be the same as ee")
+			}
+		})
+
+		t.Run("FetchCache", func(t *testing.T) {
+			ei, err := repo.FetchCache(ctx, e.Key, time.Minute)
+			if err != nil {
+				t.Fatal(err)
+			}
+			ee := ei
+			if e == ee {
+				t.Fatalf("e's address should not be the same as ee's")
+			}
+			if !reflect.DeepEqual(e, ee) {
+				t.Fatalf("ee should be the same as e")
+			}
+		})
+
+		t.Run("Search", func(t *testing.T) {
+			err := repo.CreateIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
+				return schema.FieldName("$.Val").Text().Build()
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			time.Sleep(time.Second)
+			n, records, err := repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
+				return search.Query("*").Build()
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n != 1 {
+				t.Fatalf("unexpected total count %v", n)
+			}
+			if len(records) != 1 {
+				t.Fatalf("unexpected return count %v", n)
+			}
+			if !reflect.DeepEqual(e, records[0]) {
+				t.Fatalf("items[0] should be the same as e")
+			}
+			n, records, err = repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
+				return search.Query("*").Dialect(3).Build()
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n != 1 {
+				t.Fatalf("unexpected total count %v", n)
+			}
+			if len(records) != 1 {
+				t.Fatalf("unexpected return count %v", n)
+			}
+			if !reflect.DeepEqual(e, records[0]) {
+				t.Fatalf("items[0] should be the same as e")
+			}
+			if err = repo.DropIndex(ctx); err != nil {
+				t.Fatal(err)
+			}
+		})
+
+		t.Run("Search Sort", func(t *testing.T) {
+			err := repo.CreateIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
+				return schema.FieldName("$.Val").Text().Sortable().Build()
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			time.Sleep(time.Second)
+			n, records, err := repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
+				return search.Query("*").Sortby("$.Val").Build()
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n != 1 {
+				t.Fatalf("unexpected total count %v", n)
+			}
+			if len(records) != 1 {
+				t.Fatalf("unexpected return count %v", n)
+			}
+			if !reflect.DeepEqual(e, records[0]) {
+				t.Fatalf("items[0] should be the same as e")
+			}
+			if err = repo.DropIndex(ctx); err != nil {
+				t.Fatal(err)
+			}
+		})
+
+		t.Run("Delete", func(t *testing.T) {
+			if err := repo.Remove(ctx, e.Key); err != nil {
+				t.Fatal(err)
+			}
+			ei, err := repo.Fetch(ctx, e.Key)
+			if !IsRecordNotFound(err) {
+				t.Fatalf("should not be found, but got %v", ei)
+			}
+			_, err = repo.FetchCache(ctx, e.Key, time.Minute)
+			if !IsRecordNotFound(err) {
+				t.Fatalf("should not be found, but got %v", e)
+			}
+		})
+
+		t.Run("Alter Index", func(t *testing.T) {
+			err := repo.CreateIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
+				return schema.FieldName("$.Val").Text().Build()
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			time.Sleep(time.Second)
+			var entities []*JSONVerless
+			for i := 3; i >= 1; i-- {
+				e := repo.NewEntity()
+				e.Val = []byte("any")
+				e.Nested = struct {
+					F1 string
+				}{
+					F1: fmt.Sprintf("%d", i),
+				}
+				err = repo.Save(ctx, e)
+				if err != nil {
+					t.Fatal(err)
+				}
+				entities = append(entities, e)
+			}
+			time.Sleep(time.Second)
+			n, records, err := repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
+				return search.Query("*").Sortby("$.Nested.F1").Build()
+			})
+			if err == nil {
+				t.Fatalf("search by property not loaded nor in schema")
+			}
+			err = repo.AlterIndex(ctx, func(alter FtAlterIndex) rueidis.Completed {
+				return alter.
+					Schema().Add().Field("$.Nested.F1").Options("TEXT", "SORTABLE").
+					Build()
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			time.Sleep(time.Second)
+			n, records, err = repo.Search(ctx, func(search FtSearchIndex) rueidis.Completed {
+				return search.Query("*").Sortby("$.Nested.F1").Build()
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if n != 3 {
+				t.Fatalf("unexpected total count %v", n)
+			}
+			if len(records) != 3 {
+				t.Fatalf("unexpected return count %v", n)
+			}
+			if !reflect.DeepEqual(entities[2], records[0]) {
+				t.Fatalf("entities[0] should be the same as records[2]")
+			}
+			if err = repo.DropIndex(ctx); err != nil {
+				t.Fatal(err)
+			}
+		})
+	})
+
+	t.Run("SaveMulti", func(t *testing.T) {
+		entities := []*JSONVerless{
+			repo.NewEntity(),
+			repo.NewEntity(),
+			repo.NewEntity(),
+		}
+
+		for _, e := range entities {
+			e.Val = []byte("any")
+		}
+
+		for _, err := range repo.SaveMulti(context.Background(), entities...) {
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		// confirm no version related errors
+		for _, err := range repo.SaveMulti(context.Background(), entities...) {
+			if err != nil {
+				t.Fatal(err)
 			}
 		}
 	})
@@ -340,7 +580,7 @@ func TestNewJSONTTLRepository(t *testing.T) {
 
 		// test ErrVersionMismatch
 		e.Ver = 0
-		if err := repo.Save(ctx, e); err != ErrVersionMismatch {
+		if err := repo.Save(ctx, e); !errors.Is(err, ErrVersionMismatch) {
 			t.Fatalf("save should fail if ErrVersionMismatch, got: %v", err)
 		}
 		e.Ver = 1 // restore
@@ -424,7 +664,7 @@ func TestNewJSONTTLRepository(t *testing.T) {
 
 		for i, err := range repo.SaveMulti(context.Background(), entities...) {
 			if i == len(entities)-1 {
-				if err != ErrVersionMismatch {
+				if !errors.Is(err, ErrVersionMismatch) {
 					t.Fatalf("unexpected err %v", err)
 				}
 			} else {
@@ -476,5 +716,130 @@ func TestCreateAndAliasIndex_JSON(t *testing.T) {
 		}
 
 		verifyAliasTarget(t, ctx, client, repo.IndexName(), repo.IndexName()+"_v2")
+	})
+}
+
+type JSONTestVerlessTTLStruct struct {
+	Key  string    `redis:",key"`
+	Exat time.Time `redis:",exat"`
+}
+
+//gocyclo:ignore
+func TestNewJSONVerlessTTLRepository(t *testing.T) {
+	ctx := context.Background()
+
+	client := setup(t)
+	client.Do(ctx, client.B().Flushall().Build())
+	defer client.Close()
+
+	repo := NewJSONRepository("jsonttl", JSONTestVerlessTTLStruct{}, client)
+
+	t.Run("NewEntity", func(t *testing.T) {
+		e := repo.NewEntity()
+		ulid.MustParse(e.Key)
+	})
+
+	t.Run("Save", func(t *testing.T) {
+		e := repo.NewEntity()
+
+		// test save
+		e.Exat = time.Now().Add(time.Minute)
+		if err := repo.Save(ctx, e); err != nil {
+			t.Fatal(err)
+		}
+
+		// confirm no version related errors with second save
+		if err := repo.Save(ctx, e); err != nil {
+			t.Fatal(err)
+		}
+
+		t.Run("ExpireAt", func(t *testing.T) {
+			exat, err := client.Do(ctx, client.B().Pexpiretime().Key("jsonttl:"+e.Key).Build()).AsInt64()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if exat != e.Exat.UnixMilli() {
+				t.Fatalf("wrong exat")
+			}
+		})
+
+		t.Run("Fetch", func(t *testing.T) {
+			ei, err := repo.Fetch(ctx, e.Key)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if e == ei {
+				t.Fatalf("e's address should not be the same as ee's")
+			}
+			e.Exat = e.Exat.Truncate(time.Nanosecond)
+			ei.Exat = ei.Exat.Truncate(time.Nanosecond)
+			if !e.Exat.Equal(ei.Exat) {
+				t.Fatalf("e should be the same as ee %v, %v", e, ei)
+			}
+		})
+
+		t.Run("FetchCache", func(t *testing.T) {
+			ei, err := repo.FetchCache(ctx, e.Key, time.Minute)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if e == ei {
+				t.Fatalf("e's address should not be the same as ee's")
+			}
+			e.Exat = e.Exat.Truncate(time.Nanosecond)
+			ei.Exat = ei.Exat.Truncate(time.Nanosecond)
+			if !e.Exat.Equal(ei.Exat) {
+				t.Fatalf("ee should be the same as e %v, %v", e, ei)
+			}
+		})
+
+		t.Run("Delete", func(t *testing.T) {
+			if err := repo.Remove(ctx, e.Key); err != nil {
+				t.Fatal(err)
+			}
+			ei, err := repo.Fetch(ctx, e.Key)
+			if !IsRecordNotFound(err) {
+				t.Fatalf("should not be found, but got %v", ei)
+			}
+			_, err = repo.FetchCache(ctx, e.Key, time.Minute)
+			if !IsRecordNotFound(err) {
+				t.Fatalf("should not be found, but got %v", e)
+			}
+		})
+	})
+
+	t.Run("SaveMulti", func(t *testing.T) {
+		entities := []*JSONTestVerlessTTLStruct{
+			repo.NewEntity(),
+			repo.NewEntity(),
+			repo.NewEntity(),
+		}
+
+		for _, e := range entities {
+			e.Exat = time.Now().Add(time.Minute)
+		}
+
+		for _, err := range repo.SaveMulti(context.Background(), entities...) {
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		// confirm no version related errors
+		for _, err := range repo.SaveMulti(context.Background(), entities...) {
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		for _, e := range entities {
+			exat, err := client.Do(ctx, client.B().Pexpiretime().Key("jsonttl:"+e.Key).Build()).AsInt64()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if exat != e.Exat.UnixMilli() {
+				t.Fatalf("wrong exat")
+			}
+		}
 	})
 }
