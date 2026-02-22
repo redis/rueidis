@@ -1147,12 +1147,12 @@ func TestWriteSinglePipelineFlush(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(times)
 
-	for i := 0; i < times; i++ {
+	for range times {
 		go func() {
 			ExpectOK(t, p.Do(context.Background(), cmds.NewCompleted([]string{"PING"})))
 		}()
 	}
-	for i := 0; i < times; i++ {
+	for range times {
 		mock.Expect("PING").ReplyString("OK")
 	}
 }
@@ -1168,12 +1168,12 @@ func TestWriteWithMaxFlushDelay(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(times)
 
-	for i := 0; i < times; i++ {
+	for range times {
 		go func() {
 			ExpectOK(t, p.Do(context.Background(), cmds.NewCompleted([]string{"PING"})))
 		}()
 	}
-	for i := 0; i < times; i++ {
+	for range times {
 		mock.Expect("PING").ReplyString("OK")
 	}
 }
@@ -1189,7 +1189,7 @@ func TestBlockWriteWithNoMaxFlushDelay(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(times)
 
-	for i := 0; i < times; i++ {
+	for range times {
 		go func() {
 			for _, resp := range p.DoMulti(context.Background(),
 				cmds.NewBlockingCompleted([]string{"PING"}),
@@ -1198,7 +1198,7 @@ func TestBlockWriteWithNoMaxFlushDelay(t *testing.T) {
 			}
 		}()
 	}
-	for i := 0; i < times; i++ {
+	for range times {
 		mock.Expect("PING").ReplyString("OK").Expect("PING").ReplyString("OK")
 	}
 }
@@ -1223,7 +1223,7 @@ func TestWriteMultiPipelineFlush(t *testing.T) {
 	wg := sync.WaitGroup{}
 	wg.Add(times)
 
-	for i := 0; i < times; i++ {
+	for range times {
 		go func() {
 			for _, resp := range p.DoMulti(context.Background(), cmds.NewCompleted([]string{"PING"}), cmds.NewCompleted([]string{"PING"})).s {
 				ExpectOK(t, resp)
@@ -1231,7 +1231,7 @@ func TestWriteMultiPipelineFlush(t *testing.T) {
 		}()
 	}
 
-	for i := 0; i < times; i++ {
+	for range times {
 		mock.Expect("PING").Expect("PING").ReplyString("OK").ReplyString("OK")
 	}
 }
@@ -1454,7 +1454,7 @@ func TestNoReplyExceedRingSize(t *testing.T) {
 	times := (2 << (DefaultRingScale - 1)) * 3
 	wait := make(chan struct{})
 	go func() {
-		for i := 0; i < times; i++ {
+		for range times {
 			if err := p.Do(context.Background(), cmds.UnsubscribeCmd).Error(); err != nil {
 				t.Errorf("unexpected err %v", err)
 			}
@@ -1462,7 +1462,7 @@ func TestNoReplyExceedRingSize(t *testing.T) {
 		close(wait)
 	}()
 
-	for i := 0; i < times; i++ {
+	for range times {
 		mock.Expect("UNSUBSCRIBE").Reply(slicemsg('>', []RedisMessage{
 			strmsg('+', "unsubscribe"),
 			strmsg('+', "1"),
@@ -1497,7 +1497,7 @@ func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
 	times := 2000
 	wg := sync.WaitGroup{}
 	wg.Add(times)
-	for i := 0; i < times; i++ {
+	for i := range times {
 		go func(i int) {
 			defer wg.Done()
 			v := strconv.Itoa(i)
@@ -1506,7 +1506,7 @@ func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
 			}
 		}(i)
 	}
-	for i := 0; i < times; i++ {
+	for range times {
 		m, _ := mock.ReadMessage()
 		mock.Expect().ReplyString(m.values()[1].string()).
 			Reply(slicemsg('>', []RedisMessage{strmsg('+', "should be ignore")}))
@@ -1553,7 +1553,7 @@ func TestClientSideCaching(t *testing.T) {
 	times := 2000
 	wg := sync.WaitGroup{}
 	wg.Add(times)
-	for i := 0; i < times; i++ {
+	for range times {
 		go func() {
 			defer wg.Done()
 			v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
@@ -1645,7 +1645,7 @@ func TestClientSideCachingBCAST(t *testing.T) {
 	times := 2000
 	wg := sync.WaitGroup{}
 	wg.Add(times)
-	for i := 0; i < times; i++ {
+	for range times {
 		go func() {
 			defer wg.Done()
 			v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
@@ -1737,7 +1737,7 @@ func TestClientSideCachingOPTOUT(t *testing.T) {
 	times := 2000
 	wg := sync.WaitGroup{}
 	wg.Add(times)
-	for i := 0; i < times; i++ {
+	for range times {
 		go func() {
 			defer wg.Done()
 			v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
@@ -1898,7 +1898,7 @@ func TestClientSideCachingMGet(t *testing.T) {
 	// single flight
 	miss := uint64(0)
 	hits := uint64(0)
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewMGetCompleted([]string{"MGET", "a1", "a2", "a3"})), 10*time.Second).ToMessage()
 		arr, _ := v.ToArray()
 		if len(arr) != 3 {
@@ -2032,7 +2032,7 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 	// single flight
 	miss := uint64(0)
 	hits := uint64(0)
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewMGetCompleted([]string{"JSON.MGET", "a1", "a2", "a3", "$"})), 10*time.Second).ToMessage()
 		arr, _ := v.ToArray()
 		if len(arr) != 3 {
@@ -2311,7 +2311,7 @@ func TestClientSideCachingDoMultiCache(t *testing.T) {
 		// single flight
 		miss := uint64(0)
 		hits := uint64(0)
-		for i := 0; i < 2; i++ {
+		for range 2 {
 			arr := p.DoMultiCache(context.Background(), []CacheableTTL{
 				CT(Cacheable(cmds.NewCompleted([]string{"GET", "a1"})), time.Second*10),
 				CT(Cacheable(cmds.NewCompleted([]string{"GET", "a2"})), time.Second*10),
@@ -2811,7 +2811,7 @@ func TestClientSideCachingRedis6InvalidationBug1(t *testing.T) {
 	times := 2000
 	wg := sync.WaitGroup{}
 	wg.Add(times)
-	for i := 0; i < times; i++ {
+	for range times {
 		go func() {
 			defer wg.Done()
 			v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
@@ -2873,7 +2873,7 @@ func TestClientSideCachingRedis6InvalidationBug2(t *testing.T) {
 	times := 2000
 	wg := sync.WaitGroup{}
 	wg.Add(times)
-	for i := 0; i < times; i++ {
+	for range times {
 		go func() {
 			defer wg.Done()
 			v, _ := p.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second).ToMessage()
@@ -3542,7 +3542,6 @@ func TestPubSub(t *testing.T) {
 			"punsubscribe",
 			"sunsubscribe",
 		} {
-			command := command
 			t.Run(command, func(t *testing.T) {
 				ctx := context.Background()
 				p, mock, cancel, _ := setup(t, ClientOption{})
@@ -4409,7 +4408,7 @@ func TestExitOnWriteError(t *testing.T) {
 
 	closeConn()
 
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected cached result, expected io err, got %v", err)
 		}
@@ -4426,7 +4425,7 @@ func TestExitOnPubSubSubscribeWriteError(t *testing.T) {
 	wg := sync.WaitGroup{}
 	times := 2000
 	wg.Add(times)
-	for i := 0; i < times; i++ {
+	for range times {
 		go func() {
 			defer wg.Done()
 			atomic.AddInt64(&count, 1)
@@ -4448,7 +4447,7 @@ func TestExitOnWriteMultiError(t *testing.T) {
 
 	closeConn()
 
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		if err := p.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected result, expected io err, got %v", err)
 		}
@@ -4521,7 +4520,7 @@ func TestExitOnFlowBufferFullAndConnError(t *testing.T) {
 	p.background()
 
 	// fill the buffer
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		go func() {
 			if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 				t.Errorf("unexpected result, expected io err, got %v", err)
@@ -4529,7 +4528,7 @@ func TestExitOnFlowBufferFullAndConnError(t *testing.T) {
 		}()
 	}
 	// let writer loop over the buffer
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		mock.Expect("GET", "a")
 	}
 
@@ -4554,7 +4553,7 @@ func TestExitOnFlowBufferFullAndPingTimeout(t *testing.T) {
 	p.background()
 
 	// fill the buffer
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		go func() {
 			if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error(); !errors.Is(err, os.ErrDeadlineExceeded) {
 				t.Errorf("unexpected result, expected context.DeadlineExceeded, got %v", err)
@@ -4562,7 +4561,7 @@ func TestExitOnFlowBufferFullAndPingTimeout(t *testing.T) {
 		}()
 	}
 	// let writer loop over the buffer
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		mock.Expect("GET", "a")
 	}
 
@@ -4584,7 +4583,7 @@ func TestExitAllGoroutineOnWriteError(t *testing.T) {
 	wg := sync.WaitGroup{}
 	times := 2000
 	wg.Add(times)
-	for i := 0; i < times; i++ {
+	for range times {
 		go func() {
 			defer wg.Done()
 			if err := conn.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
@@ -4607,7 +4606,7 @@ func TestExitOnReadError(t *testing.T) {
 		closeConn()
 	}()
 
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected result, expected io err, got %v", err)
 		}
@@ -4623,7 +4622,7 @@ func TestExitOnReadMultiError(t *testing.T) {
 		closeConn()
 	}()
 
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		if err := p.DoMulti(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
 			t.Errorf("unexpected result, expected io err, got %v", err)
 		}
@@ -4642,7 +4641,7 @@ func TestExitAllGoroutineOnReadError(t *testing.T) {
 	wg := sync.WaitGroup{}
 	times := 2000
 	wg.Add(times)
-	for i := 0; i < times; i++ {
+	for range times {
 		go func() {
 			defer wg.Done()
 			if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); err != io.EOF && !strings.HasPrefix(err.Error(), "io:") {
@@ -4666,7 +4665,7 @@ func TestCloseAndWaitPendingCMDs(t *testing.T) {
 	)
 
 	wg.Add(loop)
-	for i := 0; i < loop; i++ {
+	for range loop {
 		go func() {
 			defer wg.Done()
 			if v, _ := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).ToMessage(); v.string() != "b" {
@@ -4674,7 +4673,7 @@ func TestCloseAndWaitPendingCMDs(t *testing.T) {
 			}
 		}()
 	}
-	for i := 0; i < loop; i++ {
+	for i := range loop {
 		r := mock.Expect("GET", "a")
 		if i == loop-1 {
 			go p.Close()
@@ -5095,7 +5094,7 @@ func TestSyncModeSwitchingWithDeadlineExceed_Do(t *testing.T) {
 	defer cancel()
 
 	var wg sync.WaitGroup
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		wg.Add(1)
 		go func() {
 			if err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).NonRedisError(); !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, os.ErrDeadlineExceeded) {
@@ -5121,7 +5120,7 @@ func TestSyncModeSwitchingWithDeadlineExceed_DoMulti(t *testing.T) {
 	defer cancel()
 
 	var wg sync.WaitGroup
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		wg.Add(1)
 		go func() {
 			if err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].NonRedisError(); !errors.Is(err, context.DeadlineExceeded) && !errors.Is(err, os.ErrDeadlineExceeded) {
@@ -5328,7 +5327,7 @@ func TestOngoingCancelContextInPipelineMode_Do(t *testing.T) {
 
 	canceled := int32(0)
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		go func() {
 			_, err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).ToString()
 			if errors.Is(err, context.Canceled) {
@@ -5351,7 +5350,7 @@ func TestOngoingCancelContextInPipelineMode_Do(t *testing.T) {
 		time.Sleep(time.Millisecond * 100)
 	}
 	// the rest command is still send
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		mock.Expect("GET", "a").ReplyString("OK")
 	}
 	close()
@@ -5369,7 +5368,7 @@ func TestOngoingWriteTimeoutInPipelineMode_Do(t *testing.T) {
 
 	timeout := int32(0)
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		go func() {
 			_, err := p.Do(ctx, cmds.NewCompleted([]string{"GET", "a"})).ToString()
 			if errors.Is(err, os.ErrDeadlineExceeded) {
@@ -5402,7 +5401,7 @@ func TestOngoingCancelContextInPipelineMode_DoMulti(t *testing.T) {
 
 	canceled := int32(0)
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		go func() {
 			_, err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].ToString()
 			if errors.Is(err, context.Canceled) {
@@ -5425,7 +5424,7 @@ func TestOngoingCancelContextInPipelineMode_DoMulti(t *testing.T) {
 		time.Sleep(time.Millisecond * 100)
 	}
 	// the rest command is still send
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		mock.Expect("GET", "a").ReplyString("OK")
 	}
 	close()
@@ -5443,7 +5442,7 @@ func TestOngoingWriteTimeoutInPipelineMode_DoMulti(t *testing.T) {
 
 	timeout := int32(0)
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		go func() {
 			_, err := p.DoMulti(ctx, cmds.NewCompleted([]string{"GET", "a"})).s[0].ToString()
 			if errors.Is(err, os.ErrDeadlineExceeded) {
@@ -5845,7 +5844,7 @@ func TestPipe_BackgroundPing_ConcurrentClients(t *testing.T) {
 	numClients := 10
 	var wg sync.WaitGroup
 
-	for i := 0; i < numClients; i++ {
+	for i := range numClients {
 		wg.Add(1)
 		go func(clientID int) {
 			defer wg.Done()
@@ -5876,7 +5875,7 @@ func TestPipe_BackgroundPing_RapidConnectDisconnect(t *testing.T) {
 		t.Skip("Skipping rapid connect/disconnect test in short mode")
 	}
 
-	for iteration := 0; iteration < 20; iteration++ {
+	for range 20 {
 		// Use the existing setup function with a short keep-alive interval
 		option := ClientOption{
 			ConnWriteTimeout: 100 * time.Millisecond,

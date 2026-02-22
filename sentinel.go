@@ -560,7 +560,7 @@ func (c *sentinelClient) _refresh() (err error) {
 						errs <- c._switchTarget(replica, false)
 					}(errs, replica)
 
-					for i := 0; i < 2; i++ {
+					for range 2 {
 						if e := <-errs; e != nil {
 							err = e
 							break

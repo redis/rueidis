@@ -17,7 +17,7 @@ func TestFlowBuffer(t *testing.T) {
 		buffer := newFlowBuffer(DefaultRingScale)
 		size := 5000
 		fixture := make(map[string]struct{}, size)
-		for i := 0; i < size; i++ {
+		for i := range size {
 			fixture[strconv.Itoa(i)] = struct{}{}
 		}
 
@@ -47,7 +47,7 @@ func TestFlowBuffer(t *testing.T) {
 		buffer := newFlowBuffer(DefaultRingScale)
 		size := 5000
 		fixture := make(map[string]struct{}, size)
-		for i := 0; i < size; i++ {
+		for i := range size {
 			fixture[strconv.Itoa(i)] = struct{}{}
 		}
 
@@ -64,7 +64,7 @@ func TestFlowBuffer(t *testing.T) {
 			}
 			_, cmd2, ch, _ := buffer.NextResultCh()
 			buffer.FinishResult()
-			for j := 0; j < len(cmd1); j++ {
+			for j := range cmd1 {
 				if cmd1[j].Commands()[0] != cmd2[j].Commands()[0] {
 					t.Fatalf("cmds read by NextWriteCmd and NextResultCh is not the same one")
 				}
@@ -139,7 +139,7 @@ func TestFlowBuffer(t *testing.T) {
 
 	t.Run("PutOne Context Is Done", func(t *testing.T) {
 		buffer := newFlowBuffer(1)
-		for i := 0; i < (1 << 1); i++ {
+		for i := range 1 << 1 {
 			buffer.PutOne(context.Background(), cmds.NewCompleted([]string{strconv.Itoa(i)}))
 		}
 
@@ -151,10 +151,10 @@ func TestFlowBuffer(t *testing.T) {
 			t.Fatalf("Expected context.DeadlineExceeded error, got %v", err)
 		}
 
-		for i := 0; i < (1 << 1); i++ {
+		for range 1 << 1 {
 			buffer.NextWriteCmd()
 		}
-		for i := 0; i < (1 << 1); i++ {
+		for range 1 << 1 {
 			buffer.NextResultCh()
 			buffer.FinishResult()
 		}
@@ -162,7 +162,7 @@ func TestFlowBuffer(t *testing.T) {
 
 	t.Run("PutMulti Context Is Done", func(t *testing.T) {
 		buffer := newFlowBuffer(1)
-		for i := 0; i < (1 << 1); i++ {
+		for i := range 1 << 1 {
 			buffer.PutMulti(context.Background(), cmds.NewMultiCompleted([][]string{{strconv.Itoa(i)}}), nil)
 		}
 
@@ -174,10 +174,10 @@ func TestFlowBuffer(t *testing.T) {
 			t.Fatalf("Expected context.Canceled error, got %v", err)
 		}
 
-		for i := 0; i < (1 << 1); i++ {
+		for range 1 << 1 {
 			buffer.NextWriteCmd()
 		}
-		for i := 0; i < (1 << 1); i++ {
+		for range 1 << 1 {
 			buffer.NextResultCh()
 			buffer.FinishResult()
 		}

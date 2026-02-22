@@ -185,7 +185,7 @@ func TestMuxDialSuppress(t *testing.T) {
 	}, func(_ context.Context) wire {
 		return &mockWire{}
 	})
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		go func() {
 			atomic.AddInt64(&waits, 1)
 			m.Info()
@@ -217,7 +217,7 @@ func TestMuxReuseWire(t *testing.T) {
 		})
 		defer checkClean(t)
 		defer m.Close()
-		for i := 0; i < 2; i++ {
+		for range 2 {
 			if err := m.Do(context.Background(), cmds.NewCompleted([]string{"PING"})).Error(); err != nil {
 				t.Fatalf("unexpected error %v", err)
 			}
@@ -757,7 +757,7 @@ func TestMuxDelegation(t *testing.T) {
 
 		builder := cmds.NewBuilder(cmds.NoSlot)
 		commands := make([]CacheableTTL, 4)
-		for c := 0; c < len(commands); c++ {
+		for c := range commands {
 			commands[c] = CT(builder.Get().Key(strconv.Itoa(c)).Cache(), time.Second)
 		}
 		if err := m.DoMultiCache(context.Background(), commands...).s[0].Error(); !errors.Is(err, context.DeadlineExceeded) {
@@ -823,7 +823,7 @@ func TestMuxDelegation(t *testing.T) {
 
 		wg := sync.WaitGroup{}
 		wg.Add(2)
-		for i := 0; i < 2; i++ {
+		for range 2 {
 			go func() {
 				if val, err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"BLOCK"})).ToString(); err != nil {
 					t.Errorf("unexpected error %v", err)
@@ -834,10 +834,10 @@ func TestMuxDelegation(t *testing.T) {
 				}
 			}()
 		}
-		for i := 0; i < 2; i++ {
+		for range 2 {
 			<-blocked
 		}
-		for i := 0; i < 2; i++ {
+		for range 2 {
 			responses <- newResult(strmsg('+', "BLOCK_COMMANDS_RESPONSE"), nil)
 		}
 		wg.Wait()
@@ -911,7 +911,7 @@ func TestMuxDelegation(t *testing.T) {
 
 		wg := sync.WaitGroup{}
 		wg.Add(2)
-		for i := 0; i < 2; i++ {
+		for range 2 {
 			go func() {
 				if val, err := m.DoMulti(
 					context.Background(),
@@ -926,10 +926,10 @@ func TestMuxDelegation(t *testing.T) {
 				}
 			}()
 		}
-		for i := 0; i < 2; i++ {
+		for range 2 {
 			<-blocked
 		}
-		for i := 0; i < 2; i++ {
+		for range 2 {
 			responses <- newResult(strmsg('+', "BLOCK_COMMANDS_RESPONSE"), nil)
 		}
 		wg.Wait()
@@ -964,10 +964,10 @@ func TestMuxDelegation(t *testing.T) {
 
 		wg := sync.WaitGroup{}
 		wg.Add(2)
-		for i := 0; i < 2; i++ {
+		for range 2 {
 			go func() {
 				pipeline := make(Commands, DefaultBlockingPipeline)
-				for i := 0; i < len(pipeline); i++ {
+				for i := range pipeline {
 					pipeline[i] = cmds.NewCompleted([]string{"SET"})
 				}
 				if val, err := m.DoMulti(context.Background(), pipeline...).s[0].ToString(); err != nil {
@@ -979,10 +979,10 @@ func TestMuxDelegation(t *testing.T) {
 				}
 			}()
 		}
-		for i := 0; i < 2; i++ {
+		for range 2 {
 			<-blocked
 		}
-		for i := 0; i < 2; i++ {
+		for range 2 {
 			responses <- newResult(strmsg('+', "BLOCK_COMMANDS_RESPONSE"), nil)
 		}
 		wg.Wait()

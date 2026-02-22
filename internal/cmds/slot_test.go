@@ -9,7 +9,7 @@ import (
 
 func TestSlot(t *testing.T) {
 	t.Run("use tag", func(t *testing.T) {
-		for i := 0; i < 10000; i++ {
+		for range 10000 {
 			key1 := strconv.Itoa(rand.Int())
 			key2 := fmt.Sprintf("%s{%s}%s", strconv.Itoa(rand.Int()), key1, strconv.Itoa(rand.Int()))
 			if slot(key1) != slot(key2) {
@@ -18,7 +18,7 @@ func TestSlot(t *testing.T) {
 		}
 	})
 	t.Run("not use tag", func(t *testing.T) {
-		for i := 0; i < 1000; i++ {
+		for i := range 1000 {
 			key1 := strconv.Itoa(i)
 			key2 := fmt.Sprintf("%s{}", key1)
 			if slot(key1) == slot(key2) {

@@ -233,12 +233,12 @@ func TestNewStandaloneClientMultiReplicasDelegation(t *testing.T) {
 
 	ctx := context.Background()
 
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		if err := c.Do(ctx, c.B().Get().Key("k").Build()).Error(); err == nil || err.Error() != "replica" {
 			t.Fatalf("unexpected err %v", err)
 		}
 	}
-	for i := 0; i < len(counts); i++ {
+	for i := range len(counts) {
 		if atomic.LoadInt32(&counts[i]) == 0 {
 			t.Fatalf("replica %d was not called", i)
 		}
@@ -682,7 +682,7 @@ func TestStandalonePickMultipleReplicas(t *testing.T) {
 	defer s.Close()
 
 	// Test that pick() returns a valid replica for multiple replicas
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		client := s.pick(0)
 		if client != s.replicas[0] && client != s.replicas[1] {
 			t.Errorf("expected one of the replica clients, got different client")
@@ -1059,7 +1059,7 @@ func TestStandaloneReadNodeSelector(t *testing.T) {
 		defer client.Close()
 
 		// Verify same-AZ replica (replica1) is selected when executing GET command
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			result := client.Do(context.Background(), client.B().Get().Key("key").Build())
 			if val, _ := result.ToString(); val != "replica1" {
 				t.Fatalf("expected same-AZ replica1 to be selected, got %s", val)

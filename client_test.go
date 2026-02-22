@@ -1700,7 +1700,7 @@ func BenchmarkSingleClient_DoCache(b *testing.B) {
 		b.Fatal(err)
 	}
 	keys := make([]string, 10000)
-	for i := 0; i < 10000; i++ {
+	for i := range 10000 {
 		keys[i] = strconv.Itoa(i)
 	}
 	mset := client.B().Mset().KeyValue()

@@ -28,7 +28,7 @@ func (m *mockRetryHandler) WaitForRetry(ctx context.Context, duration time.Durat
 }
 
 func TestDefaultRetryDelay(t *testing.T) {
-	for i := 0; i < 100; i++ {
+	for i := range 100 {
 		err := errors.New("test")
 		got := defaultRetryDelayFn(i, Completed{}, err)
 

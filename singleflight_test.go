@@ -15,7 +15,7 @@ func TestSingleFlight(t *testing.T) {
 
 	sg := call{}
 
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		go func() {
 			if ret := sg.Do(context.Background(), func() error {
 				atomic.AddInt64(&calls, 1)

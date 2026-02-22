@@ -68,7 +68,7 @@ func TestLRU(t *testing.T) {
 		lru := setup(t)
 		wg := sync.WaitGroup{}
 		wg.Add(count)
-		for i := 0; i < count; i++ {
+		for range count {
 			go func() {
 				defer wg.Done()
 				if v, _ := lru.Flight("1", "GET", TTL, time.Now()); v.typ != 0 {
@@ -164,7 +164,7 @@ func TestLRU(t *testing.T) {
 		m := strmsg('+', "this Update should have no effect")
 		m.setExpireAt(time.Now().Add(PTTL * time.Millisecond).UnixMilli())
 		lru.Update("1", "GET", m)
-		for i := 0; i < 2; i++ { // entry should be always nil after the first call if Close
+		for range 2 { // entry should be always nil after the first call if Close
 			if v, entry := lru.Flight("1", "GET", TTL, time.Now()); v.typ != 0 || entry != nil {
 				t.Fatalf("got unexpected value from the first Flight: %v %v", v, entry)
 			}
@@ -279,7 +279,7 @@ func TestLRU(t *testing.T) {
 		lru := setup(t)
 		wg := sync.WaitGroup{}
 		wg.Add(count)
-		for i := 0; i < count; i++ {
+		for range count {
 			go func() {
 				defer wg.Done()
 				if v, _ := flights(lru, time.Now(), TTL, "GET", "1"); v.typ != 0 {
@@ -375,7 +375,7 @@ func TestLRU(t *testing.T) {
 		m := strmsg('+', "this Update should have no effect")
 		m.setExpireAt(time.Now().Add(PTTL * time.Millisecond).UnixMilli())
 		lru.Update("1", "GET", m)
-		for i := 0; i < 2; i++ { // entry should be always nil after the first call if Close
+		for range 2 { // entry should be always nil after the first call if Close
 			if v, entry := flights(lru, time.Now(), TTL, "GET", "1"); v.typ != 0 || entry != nil {
 				t.Fatalf("got unexpected value from the first Flight: %v %v", v, entry)
 			}
@@ -510,8 +510,7 @@ func TestEntry(t *testing.T) {
 	})
 	t.Run("Wait with cancel", func(t *testing.T) {
 		e := cacheEntry{ch: make(chan struct{})}
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
+		ctx := t.Context()
 		go func() {
 			e.val = RedisMessage{typ: 1}
 			close(e.ch)

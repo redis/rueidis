@@ -402,7 +402,7 @@ func allRetryable(multi []Completed) bool {
 }
 
 func chooseSlot(multi []Completed) uint16 {
-	for i := 0; i < len(multi); i++ {
+	for i := range multi {
 		if multi[i].Slot() != cmds.InitSlot {
 			for j := i + 1; j < len(multi); j++ {
 				if multi[j].Slot() != cmds.InitSlot && multi[j].Slot() != multi[i].Slot() {

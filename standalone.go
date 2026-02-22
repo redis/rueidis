@@ -2,6 +2,7 @@ package rueidis
 
 import (
 	"context"
+	"maps"
 	"math/rand/v2"
 	"sync/atomic"
 	"time"
@@ -33,7 +34,7 @@ func newStandaloneClient(opt *ClientOption, connFn connFn, retryer retryHandler)
 		replicaConn := connFn(opt.Standalone.ReplicaAddress[i], opt)
 		if err := replicaConn.Dial(); err != nil {
 			s.primary.Load().Close() // close primary if any replica fails
-			for j := 0; j < i; j++ {
+			for j := range i {
 				s.replicas[j].Close()
 			}
 			return nil, err
@@ -297,13 +298,9 @@ func (s *standalone) Dedicate() (client DedicatedClient, cancel func()) {
 
 func (s *standalone) Nodes() map[string]Client {
 	nodes := make(map[string]Client, len(s.replicas)+1)
-	for addr, client := range s.primary.Load().Nodes() {
-		nodes[addr] = client
-	}
+	maps.Copy(nodes, s.primary.Load().Nodes())
 	for _, replica := range s.replicas {
-		for addr, client := range replica.Nodes() {
-			nodes[addr] = client
-		}
+		maps.Copy(nodes, replica.Nodes())
 	}
 	return nodes
 }

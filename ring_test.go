@@ -17,7 +17,7 @@ func TestRing(t *testing.T) {
 		ring := newRing(DefaultRingScale)
 		size := 5000
 		fixture := make(map[string]struct{}, size)
-		for i := 0; i < size; i++ {
+		for i := range size {
 			fixture[strconv.Itoa(i)] = struct{}{}
 		}
 
@@ -47,7 +47,7 @@ func TestRing(t *testing.T) {
 		ring := newRing(DefaultRingScale)
 		size := 5000
 		fixture := make(map[string]struct{}, size)
-		for i := 0; i < size; i++ {
+		for i := range size {
 			fixture[strconv.Itoa(i)] = struct{}{}
 		}
 
@@ -64,7 +64,7 @@ func TestRing(t *testing.T) {
 			}
 			_, cmd2, ch, _ := ring.NextResultCh()
 			ring.FinishResult()
-			for j := 0; j < len(cmd1); j++ {
+			for j := range cmd1 {
 				if cmd1[j].Commands()[0] != cmd2[j].Commands()[0] {
 					t.Fatalf("cmds read by NextWriteCmd and NextResultCh is not the same one")
 				}

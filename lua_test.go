@@ -691,14 +691,14 @@ func TestNewLuaScriptWithLoadSha1Concurrent(t *testing.T) {
 
 	// Execute concurrently to verify singleflight works correctly
 	done := make(chan bool)
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		go func() {
 			script.Exec(context.Background(), c, k, a)
 			done <- true
 		}()
 	}
 
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		<-done
 	}
 
@@ -973,7 +973,7 @@ func BenchmarkLuaScript_Exec(b *testing.B) {
 
 	// Setup: create test keys with numeric values
 	k := make([]string, numKeys)
-	for i := 0; i < numKeys; i++ {
+	for i := range numKeys {
 		key := keyPrefix + strconv.Itoa(i+1)
 		k[i] = key
 		if err := c.Do(ctx, c.B().Set().Key(key).Value(strconv.Itoa((i+1)*10)).Build()).Error(); err != nil {
@@ -1070,9 +1070,9 @@ func BenchmarkLuaScript_ExecMulti(b *testing.B) {
 	multipliers := []string{"1.2", "2.0", "0.5", "1.8", "3.0"}
 	thresholds := []string{"150", "200", "50", "300", "500"}
 
-	for i := 0; i < numExecs; i++ {
+	for i := range numExecs {
 		keys := make([]string, keysPerExec)
-		for j := 0; j < keysPerExec; j++ {
+		for j := range keysPerExec {
 			keyNum := i*keysPerExec + j + 1
 			keys[j] = keyPrefix + strconv.Itoa(keyNum)
 		}

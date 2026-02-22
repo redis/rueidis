@@ -654,7 +654,7 @@ func TestMSet(t *testing.T) {
 		}
 		t.Run("Delegate Do", func(t *testing.T) {
 			keys := make(map[string]string, 100)
-			for i := 0; i < 100; i++ {
+			for i := range 100 {
 				keys[strconv.Itoa(i)] = strconv.Itoa(i)
 			}
 			cpy := make(map[string]struct{}, len(keys))
@@ -805,7 +805,7 @@ func TestMSetNX(t *testing.T) {
 		}
 		t.Run("Delegate Do", func(t *testing.T) {
 			keys := make(map[string]string, 100)
-			for i := 0; i < 100; i++ {
+			for i := range 100 {
 				keys[strconv.Itoa(i)] = strconv.Itoa(i)
 			}
 			cpy := make(map[string]struct{}, len(keys))
@@ -1325,7 +1325,7 @@ func TestJsonMSet(t *testing.T) {
 		}
 		t.Run("Delegate Do", func(t *testing.T) {
 			keys := make(map[string]string, 100)
-			for i := 0; i < 100; i++ {
+			for i := range 100 {
 				keys[strconv.Itoa(i)] = strconv.Itoa(i)
 			}
 			cpy := make(map[string]struct{}, len(keys))

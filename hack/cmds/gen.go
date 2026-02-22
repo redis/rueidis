@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"unicode"
@@ -821,11 +822,8 @@ func printBuilder(w io.Writer, parent, next goStruct) {
 		}
 	}
 
-	for _, cmd := range next.BuildDef.Command {
-		if cmd == "BLOCK" {
-			fmt.Fprintf(w, "\tc.cf |= int16(blockTag)\n")
-			break
-		}
+	if slices.Contains(next.BuildDef.Command, "BLOCK") {
+		fmt.Fprintf(w, "\tc.cf |= int16(blockTag)\n")
 	}
 
 	var appends []string
@@ -1013,7 +1011,7 @@ func name(s string) (name string) {
 	case "\"\"":
 		return "Empty"
 	}
-	for _, n := range strings.Split(strings.NewReplacer("-", " ", "_", " ", ":", " ", "/", " ", ".", " ", "*", "all").Replace(s), " ") {
+	for n := range strings.SplitSeq(strings.NewReplacer("-", " ", "_", " ", ":", " ", "/", " ", ".", " ", "*", "all").Replace(s), " ") {
 		name += ucFirst(strings.ToLower(n))
 	}
 	return name

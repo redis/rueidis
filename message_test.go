@@ -2096,7 +2096,7 @@ func TestRedisMessage(t *testing.T) {
 			if m2.CachePXAT() != now.Add(time.Second*time.Duration(i)).UnixMilli() {
 				t.Fatal("should have the same ttl")
 			}
-			for l := 0; l < siz; l++ {
+			for l := range siz {
 				var m3 RedisMessage
 				if err := m3.CacheUnmarshalView(bs2[:l]); err != ErrCacheUnmarshal {
 					t.Fatal("should fail as expected")

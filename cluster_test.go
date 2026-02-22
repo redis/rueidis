@@ -1608,20 +1608,20 @@ func TestClusterClientInit(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 
-		for i := 0; i < 16384; i++ {
+		for i := range 16384 {
 			if client.wslots[i] != primaryNodeConn {
 				t.Fatalf("unexpected node assigned to pslot %d", i)
 			}
 		}
 
-		for i := 0; i < 16384; i++ {
+		for i := range 16384 {
 			if len(client.rslots[i]) != 4 {
 				t.Fatalf("unexpected number of replicas for rslot %d, expected 4, got %d", i, len(client.rslots[i]))
 			}
 		}
 
-		for i := 0; i < 16384; i++ {
-			for j := 0; j < 4; j++ {
+		for i := range 16384 {
+			for j := range 4 {
 				if j == 0 && client.rslots[i][j].conn != primaryNodeConn {
 					t.Fatalf("unexpected node assigned to rslot %d at index %d", i, j)
 				} else if j == 1 && client.rslots[i][j].conn != replicaNodeConn1 {
@@ -1805,11 +1805,11 @@ func TestClusterClient(t *testing.T) {
 
 	t.Run("Delegate DoMulti Multi Slot", func(t *testing.T) {
 		multi := make([]Completed, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			multi[i] = client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Build()
 		}
 		resps := client.DoMulti(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
@@ -1843,11 +1843,11 @@ func TestClusterClient(t *testing.T) {
 
 	t.Run("Delegate DoMultiCache Multi Slot", func(t *testing.T) {
 		multi := make([]CacheableTTL, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			multi[i] = CT(client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Cache(), time.Second)
 		}
 		resps := client.DoMultiCache(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
@@ -2417,11 +2417,11 @@ func TestClusterClient_SendToOnlyPrimaryNodes(t *testing.T) {
 
 	t.Run("DoMulti Multi Slot", func(t *testing.T) {
 		multi := make([]Completed, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			multi[i] = client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Build()
 		}
 		resps := client.DoMulti(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
@@ -2449,11 +2449,11 @@ func TestClusterClient_SendToOnlyPrimaryNodes(t *testing.T) {
 
 	t.Run("DoMultiCache Multi Slot", func(t *testing.T) {
 		multi := make([]CacheableTTL, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			multi[i] = CT(client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Cache(), time.Second)
 		}
 		resps := client.DoMultiCache(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
@@ -2916,11 +2916,11 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 
 	t.Run("DoMulti Multi Slot", func(t *testing.T) {
 		multi := make([]Completed, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			multi[i] = client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Build()
 		}
 		resps := client.DoMulti(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
@@ -2948,11 +2948,11 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 
 	t.Run("DoMultiCache Multi Slot", func(t *testing.T) {
 		multi := make([]CacheableTTL, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			multi[i] = CT(client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Cache(), time.Second)
 		}
 		resps := client.DoMultiCache(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
@@ -3484,11 +3484,11 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 
 	t.Run("DoMulti Multi Slot All Read Operations", func(t *testing.T) {
 		multi := make([]Completed, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			multi[i] = client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Build()
 		}
 		resps := client.DoMulti(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
@@ -3496,7 +3496,7 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 	})
 	t.Run("DoMulti Multi Slot Read & Write Operations", func(t *testing.T) {
 		multi := make([]Completed, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if i%2 == 0 {
 				multi[i] = client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Build()
 			} else {
@@ -3504,7 +3504,7 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 			}
 		}
 		resps := client.DoMulti(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if i%2 == 0 {
 				if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 					t.Fatalf("unexpected response %v %v", v, err)
@@ -3538,11 +3538,11 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 
 	t.Run("DoMultiCache Multi Slot", func(t *testing.T) {
 		multi := make([]CacheableTTL, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			multi[i] = CT(client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Cache(), time.Second)
 		}
 		resps := client.DoMultiCache(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
@@ -4244,7 +4244,7 @@ func TestClusterClientErr(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			if v, err := client.Do(context.Background(), client.B().Get().Key("a").Build()).ToString(); err != nil || v != "b" {
 				t.Fatalf("unexpected resp %v %v", v, err)
 			}
@@ -4319,7 +4319,7 @@ func TestClusterClientErr(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			if v, err := client.DoMulti(context.Background(), client.B().Get().Key("a").Build())[0].ToString(); err != nil || v != "a" {
 				t.Fatalf("unexpected resp %v %v", v, err)
 			}
@@ -5369,7 +5369,7 @@ func TestClusterClientErr(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			if v, err := client.DoCache(context.Background(), client.B().Get().Key("a").Cache(), 100).ToString(); err != nil || v != "b" {
 				t.Fatalf("unexpected resp %v %v", v, err)
 			}
@@ -5444,7 +5444,7 @@ func TestClusterClientErr(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			if v, err := client.DoMultiCache(context.Background(), CT(client.B().Get().Key("a").Cache(), 100))[0].ToString(); err != nil || v != "a" {
 				t.Fatalf("unexpected resp %v %v", v, err)
 			}
@@ -5984,7 +5984,7 @@ func TestClusterClientReplicaOnly_PickMasterIfNoReplica(t *testing.T) {
 			t.Fatalf("unexpected err %v", err)
 		}
 
-		for slot := 0; slot < 8193; slot++ {
+		for slot := range 8193 {
 			if client.wslots[slot] == client.conns["127.0.0.2:1"].conn {
 				continue
 			}
@@ -6079,11 +6079,11 @@ func TestClusterShardsParsing(t *testing.T) {
 func TestConnectToNonAvailableCluster(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 	var wg sync.WaitGroup
-	for i := 0; i < 4; i++ {
+	for range 4 {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for i := 0; i < 100; i++ {
+			for range 100 {
 				_, err := NewClient(ClientOption{
 					InitAddress: []string{"127.0.0.1:3000", "127.0.0.1:3001", "127.0.0.1:3002"},
 				})
@@ -7560,11 +7560,11 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 
 	t.Run("DoMulti Multi Slot All Read Operations", func(t *testing.T) {
 		multi := make([]Completed, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			multi[i] = client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Build()
 		}
 		resps := client.DoMulti(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
@@ -7572,7 +7572,7 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 	})
 	t.Run("DoMulti Multi Slot Read & Write Operations", func(t *testing.T) {
 		multi := make([]Completed, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if i%2 == 0 {
 				multi[i] = client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Build()
 			} else {
@@ -7580,7 +7580,7 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 			}
 		}
 		resps := client.DoMulti(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if i%2 == 0 {
 				if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 					t.Fatalf("unexpected response %v %v", v, err)
@@ -7614,11 +7614,11 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 
 	t.Run("DoMultiCache Multi Slot", func(t *testing.T) {
 		multi := make([]CacheableTTL, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			multi[i] = CT(client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Cache(), time.Second)
 		}
 		resps := client.DoMultiCache(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
@@ -8073,11 +8073,11 @@ func TestClusterClient_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T
 
 	t.Run("DoMulti Multi Slot", func(t *testing.T) {
 		multi := make([]Completed, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			multi[i] = client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Build()
 		}
 		resps := client.DoMulti(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
@@ -8105,11 +8105,11 @@ func TestClusterClient_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T
 
 	t.Run("DoMultiCache Multi Slot", func(t *testing.T) {
 		multi := make([]CacheableTTL, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			multi[i] = CT(client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Cache(), time.Second)
 		}
 		resps := client.DoMultiCache(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
@@ -9031,7 +9031,7 @@ func TestClusterClient_SendToAlternatePrimaryAndReplicaNodes(t *testing.T) {
 
 	t.Run("DoMulti Multi Slot Large", func(t *testing.T) {
 		var cmds []Completed
-		for i := 0; i < 500; i++ {
+		for range 500 {
 			cmds = append(cmds, client.B().Get().Key("K1{a}").Build())
 		}
 		resps := client.DoMulti(context.Background(), cmds...)
@@ -9056,7 +9056,7 @@ func TestClusterClient_SendToAlternatePrimaryAndReplicaNodes(t *testing.T) {
 
 	t.Run("DoMultiCache Multi Slot Large", func(t *testing.T) {
 		var cmds []CacheableTTL
-		for i := 0; i < 500; i++ {
+		for range 500 {
 			cmds = append(cmds, CT(client.B().Get().Key("K1{a}").Cache(), time.Second))
 		}
 		resps := client.DoMultiCache(context.Background(), cmds...)
@@ -9185,11 +9185,11 @@ func TestClusterClient_ReadNodeSelector_SendToOnlyPrimaryNodeWhenPrimaryNodeSele
 
 	t.Run("DoMulti Multi Slot", func(t *testing.T) {
 		multi := make([]Completed, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			multi[i] = client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Build()
 		}
 		resps := client.DoMulti(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
@@ -9217,11 +9217,11 @@ func TestClusterClient_ReadNodeSelector_SendToOnlyPrimaryNodeWhenPrimaryNodeSele
 
 	t.Run("DoMultiCache Multi Slot", func(t *testing.T) {
 		multi := make([]CacheableTTL, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			multi[i] = CT(client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Cache(), time.Second)
 		}
 		resps := client.DoMultiCache(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
@@ -9686,11 +9686,11 @@ func TestClusterClient_ReadNodeSelector_SendToOnlyPrimaryNodeWhenIndexIsOutOfRan
 
 	t.Run("DoMulti Multi Slot", func(t *testing.T) {
 		multi := make([]Completed, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			multi[i] = client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Build()
 		}
 		resps := client.DoMulti(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
@@ -9718,11 +9718,11 @@ func TestClusterClient_ReadNodeSelector_SendToOnlyPrimaryNodeWhenIndexIsOutOfRan
 
 	t.Run("DoMultiCache Multi Slot", func(t *testing.T) {
 		multi := make([]CacheableTTL, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			multi[i] = CT(client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Cache(), time.Second)
 		}
 		resps := client.DoMultiCache(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
@@ -10263,11 +10263,11 @@ func TestClusterClient_ReadNodeSelector_SendReadOperationToReplicaNodeWriteOpera
 
 	t.Run("DoMulti Multi Slot All Read Operations", func(t *testing.T) {
 		multi := make([]Completed, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			multi[i] = client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Build()
 		}
 		resps := client.DoMulti(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
@@ -10275,7 +10275,7 @@ func TestClusterClient_ReadNodeSelector_SendReadOperationToReplicaNodeWriteOpera
 	})
 	t.Run("DoMulti Multi Slot Read & Write Operations", func(t *testing.T) {
 		multi := make([]Completed, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if i%2 == 0 {
 				multi[i] = client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Build()
 			} else {
@@ -10283,7 +10283,7 @@ func TestClusterClient_ReadNodeSelector_SendReadOperationToReplicaNodeWriteOpera
 			}
 		}
 		resps := client.DoMulti(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if i%2 == 0 {
 				if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 					t.Fatalf("unexpected response %v %v", v, err)
@@ -10317,11 +10317,11 @@ func TestClusterClient_ReadNodeSelector_SendReadOperationToReplicaNodeWriteOpera
 
 	t.Run("DoMultiCache Multi Slot", func(t *testing.T) {
 		multi := make([]CacheableTTL, 500)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			multi[i] = CT(client.B().Get().Key(fmt.Sprintf("K1{%d}", i)).Cache(), time.Second)
 		}
 		resps := client.DoMultiCache(context.Background(), multi...)
-		for i := 0; i < len(multi); i++ {
+		for i := range multi {
 			if v, err := resps[i].ToString(); err != nil || v != fmt.Sprintf("GET K1{%d}", i) {
 				t.Fatalf("unexpected response %v %v", v, err)
 			}
@@ -10760,7 +10760,7 @@ func TestClusterClient_ReadNodeSelector_SendToAlternatePrimaryAndReplicaNodes(t 
 
 	t.Run("DoMulti Multi Slot Large", func(t *testing.T) {
 		var cmds []Completed
-		for i := 0; i < 500; i++ {
+		for range 500 {
 			cmds = append(cmds, client.B().Get().Key("K1{a}").Build())
 		}
 		resps := client.DoMulti(context.Background(), cmds...)
@@ -10785,7 +10785,7 @@ func TestClusterClient_ReadNodeSelector_SendToAlternatePrimaryAndReplicaNodes(t 
 
 	t.Run("DoMultiCache Multi Slot Large", func(t *testing.T) {
 		var cmds []CacheableTTL
-		for i := 0; i < 500; i++ {
+		for range 500 {
 			cmds = append(cmds, CT(client.B().Get().Key("K1{a}").Cache(), time.Second))
 		}
 		resps := client.DoMultiCache(context.Background(), cmds...)

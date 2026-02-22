@@ -19,7 +19,7 @@ func parallel(p int) (chan func(), func()) {
 	ch := make(chan func(), p)
 	wg := sync.WaitGroup{}
 	wg.Add(p)
-	for i := 0; i < p; i++ {
+	for range p {
 		go func() {
 			defer func() {
 				recover()
@@ -43,7 +43,7 @@ func testFlush(t *testing.T, client Client) {
 	para := 8
 
 	kvs := make(map[string]string, keys)
-	for i := 0; i < keys; i++ {
+	for i := range keys {
 		kvs["f"+strconv.Itoa(i)] = strconv.FormatInt(rand.Int63(), 10)
 	}
 
@@ -123,7 +123,7 @@ func testSETGET(t *testing.T, client Client, csc bool) {
 	prefix := strconv.Itoa(rand.Intn(100000))
 
 	kvs := make(map[string]string, keys)
-	for i := 0; i < keys; i++ {
+	for i := range keys {
 		kvs[prefix+strconv.Itoa(i)] = strconv.FormatInt(rand.Int63(), 10)
 	}
 
@@ -312,7 +312,7 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 	para := 8
 
 	kvs := make(map[string]string, keys)
-	for i := 0; i < keys; i++ {
+	for i := range keys {
 		kvs["m"+strconv.Itoa(i)] = strconv.FormatInt(rand.Int63(), 10)
 	}
 
@@ -320,7 +320,7 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 	jobs, wait := parallel(para)
 	for i := 0; i < keys && !t.Failed(); i += batch {
 		commands := make(Commands, 0, batch)
-		for j := 0; j < batch; j++ {
+		for j := range batch {
 			key := "m" + strconv.Itoa(i+j)
 			commands = append(commands, client.B().Set().Key(key).Value(kvs[key]).Build())
 		}
@@ -343,7 +343,7 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 	for i := 0; i < keys*2 && !t.Failed(); i += batch {
 		cmdkeys := make([]string, 0, batch)
 		commands := make(Commands, 0, batch)
-		for j := 0; j < batch; j++ {
+		for range batch {
 			cmdkeys = append(cmdkeys, "m"+strconv.Itoa(rand.Intn(keys*2)))
 			commands = append(commands, client.B().Get().Key(cmdkeys[len(cmdkeys)-1]).Build())
 		}
@@ -366,7 +366,7 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 	for i := 0; i < keys*2 && !t.Failed(); i += batch {
 		cmdkeys := make([]string, 0, batch)
 		commands := make(Commands, 0, batch)
-		for j := 0; j < batch; j++ {
+		for range batch {
 			cmdkeys = append(cmdkeys, "m"+strconv.Itoa(rand.Intn(keys)))
 			commands = append(commands, client.B().Get().Key(cmdkeys[len(cmdkeys)-1]).Build())
 		}
@@ -393,7 +393,7 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 	for i := 0; i < keys*100 && !t.Failed(); i += batch {
 		cmdkeys := make([]string, 0, batch)
 		commands := make(Commands, 0, batch)
-		for j := 0; j < batch; j++ {
+		for range batch {
 			cmdkeys = append(cmdkeys, "m"+strconv.Itoa(rand.Intn(keys)))
 			commands = append(commands, client.B().Get().Key(cmdkeys[len(cmdkeys)-1]).Build())
 		}
@@ -424,7 +424,7 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 	for i := 0; i < keys*10 && !t.Failed(); i += batch {
 		cmdkeys := make([]string, 0, batch)
 		commands := make([]CacheableTTL, 0, batch)
-		for j := 0; j < batch; j++ {
+		for range batch {
 			cmdkeys = append(cmdkeys, "m"+strconv.Itoa(rand.Intn(keys/100)))
 			commands = append(commands, CT(client.B().Get().Key(cmdkeys[len(cmdkeys)-1]).Cache(), time.Minute))
 		}
@@ -461,7 +461,7 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 	for i := 0; i < keys*2 && !t.Failed(); i += batch {
 		cmdkeys := make([]string, 0, batch)
 		commands := make(Commands, 0, batch)
-		for j := 0; j < batch; j++ {
+		for j := range batch {
 			cmdkeys = append(cmdkeys, "m"+strconv.Itoa(i+j))
 			commands = append(commands, client.B().Del().Key(cmdkeys[len(cmdkeys)-1]).Build())
 		}
@@ -486,7 +486,7 @@ func testMultiSETGET(t *testing.T, client Client, csc bool) {
 	for i := 0; i < keys/100 && !t.Failed(); i += batch {
 		cmdkeys := make([]string, 0, batch)
 		commands := make([]CacheableTTL, 0, batch)
-		for j := 0; j < batch; j++ {
+		for j := range batch {
 			cmdkeys = append(cmdkeys, "m"+strconv.Itoa(i+j))
 			commands = append(commands, CT(client.B().Get().Key(cmdkeys[len(cmdkeys)-1]).Cache(), time.Minute))
 		}
@@ -509,7 +509,7 @@ func testMultiSETGETHelpers(t *testing.T, client Client, csc bool) {
 	keys := 10000
 
 	kvs := make(map[string]string, keys)
-	for i := 0; i < keys; i++ {
+	for i := range keys {
 		kvs["z"+strconv.Itoa(i)] = strconv.FormatInt(rand.Int63(), 10)
 	}
 
@@ -522,7 +522,7 @@ func testMultiSETGETHelpers(t *testing.T, client Client, csc bool) {
 
 	t.Logf("testing GET with %d keys\n", keys*2)
 	cmdKeys := make([]string, keys*2)
-	for i := 0; i < len(cmdKeys); i++ {
+	for i := range cmdKeys {
 		cmdKeys[i] = "z" + strconv.Itoa(i)
 	}
 	validate := func(resp map[string]RedisMessage) {
@@ -640,14 +640,14 @@ func testBlockingZPOP(t *testing.T, client Client) {
 
 	t.Logf("testing BZPOPMIN blocking concurrently with ZADD with %d items\n", items)
 	go func() {
-		for i := 0; i < items; i++ {
+		for i := range items {
 			v, err := client.Do(ctx, client.B().Zadd().Key(key).ScoreMember().ScoreMember(float64(i), strconv.Itoa(i)).Build()).AsInt64()
 			if err != nil || v != 1 {
 				t.Errorf("unexpected ZADD response %v %v", v, err)
 			}
 		}
 	}()
-	for i := 0; i < items; i++ {
+	for i := range items {
 		arr, err := client.Do(ctx, client.B().Bzpopmin().Key(key).Timeout(0).Build()).AsStrSlice()
 		if err != nil || (arr[0] != key || arr[1] != arr[2] || arr[1] != strconv.Itoa(i)) {
 			t.Fatalf("unexpected BZPOPMIN response %v %v", arr, err)
@@ -665,7 +665,7 @@ func testBlockingXREAD(t *testing.T, client Client) {
 
 	t.Logf("testing blocking XREAD concurrently with XADD with %d items\n", items)
 	go func() {
-		for i := 0; i < items; i++ {
+		for i := range items {
 			v := strconv.Itoa(i)
 			v, err := client.Do(ctx, client.B().Xadd().Key(key).Id("*").FieldValue().FieldValue(v, v).Build()).ToString()
 			if err != nil || v == "" {
@@ -674,7 +674,7 @@ func testBlockingXREAD(t *testing.T, client Client) {
 		}
 	}()
 	id := "0"
-	for i := 0; i < items; i++ {
+	for i := range items {
 		m, err := client.Do(ctx, client.B().Xread().Count(1).Block(0).Streams().Key(key).Id(id).Build()).AsXRead()
 		if err != nil {
 			t.Fatalf("unexpected XREAD response %v %v", m, err)
@@ -695,7 +695,7 @@ func testBlockingXREAD(t *testing.T, client Client) {
 func testPubSub(t *testing.T, client Client) {
 	msgs := 5000
 	mmap := make(map[string]struct{})
-	for i := 0; i < msgs; i++ {
+	for i := range msgs {
 		mmap[strconv.Itoa(i)] = struct{}{}
 	}
 	t.Logf("testing pubsub with %v messages\n", msgs)
@@ -767,7 +767,7 @@ func testPubSub(t *testing.T, client Client) {
 
 	t.Logf("testing pubsub hooks with 500 messages\n")
 
-	for i := 0; i < 500; i++ {
+	for i := range 500 {
 		cc, cancel := client.Dedicate()
 		msg := strconv.Itoa(i)
 		ch := cc.SetPubSubHooks(PubSubHooks{
@@ -791,7 +791,7 @@ func testPubSub(t *testing.T, client Client) {
 func testPubSubSharded(t *testing.T, client Client) {
 	msgs := 5000
 	mmap := make(map[string]struct{})
-	for i := 0; i < msgs; i++ {
+	for i := range msgs {
 		mmap[strconv.Itoa(i)] = struct{}{}
 	}
 	t.Logf("testing pubsub with %v messages\n", msgs)
@@ -847,7 +847,7 @@ func testPubSubSharded(t *testing.T, client Client) {
 
 	t.Logf("testing pubsub hooks with 500 messages\n")
 
-	for i := 0; i < 500; i++ {
+	for i := range 500 {
 		cc, cancel := client.Dedicate()
 		msg := strconv.Itoa(i)
 		ch := cc.SetPubSubHooks(PubSubHooks{
@@ -874,7 +874,7 @@ func testLua(t *testing.T, client Client) {
 	keys := 1000
 	para := 4
 	kvs := make(map[string]string, keys)
-	for i := 0; i < keys; i++ {
+	for i := range keys {
 		kvs["l"+strconv.Itoa(i)] = strconv.FormatInt(rand.Int63(), 10)
 	}
 
@@ -900,7 +900,6 @@ func run(t *testing.T, client Client, cases ...func(*testing.T, Client)) {
 	wg := sync.WaitGroup{}
 	wg.Add(len(cases))
 	for _, c := range cases {
-		c := c
 		go func() {
 			c(t, client)
 			wg.Done()

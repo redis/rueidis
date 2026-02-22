@@ -129,7 +129,7 @@ type gate struct {
 
 func makegate(size int32) *gate {
 	csc := make([]chan struct{}, size)
-	for i := 0; i < len(csc); i++ {
+	for i := range csc {
 		csc[i] = make(chan struct{}, 1)
 	}
 	return &gate{ch: make(chan struct{}, 1), csc: csc}

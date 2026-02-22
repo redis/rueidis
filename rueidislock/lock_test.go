@@ -80,7 +80,7 @@ func TestLocker_WithContext_MultipleLocker(t *testing.T) {
 	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
 		lockers := make([]*locker, 10)
 		sum := make([]int, len(lockers))
-		for i := 0; i < len(lockers); i++ {
+		for i := range lockers {
 			lockers[i] = newLocker(t, noLoop, setpx, nocsc)
 			lockers[i].timeout = time.Second
 		}
@@ -97,7 +97,7 @@ func TestLocker_WithContext_MultipleLocker(t *testing.T) {
 		for i, l := range lockers {
 			go func(i int, l *locker) {
 				defer wg.Done()
-				for j := 0; j < cnt; j++ {
+				for range cnt {
 					_, cancel, err := l.WithContext(ctx, lck)
 					if err != nil {
 						t.Error(err)
@@ -362,7 +362,7 @@ func TestLocker_WithContext_AutoExtendConcurrent(t *testing.T) {
 			t.Fatal(err1)
 		}
 		go func() {
-			for i := 0; i < 4; i++ {
+			for range 4 {
 				select {
 				case <-ctx1.Done():
 					t.Errorf("unexpected context canceled %v", ctx1.Err())
@@ -408,7 +408,7 @@ func TestLocker_WithContext_AutoExtend(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		for i := 0; i < 2; i++ {
+		for range 2 {
 			select {
 			case <-ctx.Done():
 				t.Fatalf("unexpected context canceled %v", ctx.Err())
@@ -469,7 +469,7 @@ func TestLocker_WithContext_CancelContext(t *testing.T) {
 
 		wg := sync.WaitGroup{}
 		wg.Add(100)
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			go func() {
 				if _, _, err := locker.WithContext(ctx, lck); !errors.Is(err, context.Canceled) {
 					t.Error(err)
@@ -592,7 +592,7 @@ func TestLocker_TryWithContext_MultipleLocker(t *testing.T) {
 	test := func(t *testing.T, noLoop, setpx, nocsc bool) {
 		lockers := make([]*locker, 10)
 		sum := make([]int, len(lockers))
-		for i := 0; i < len(lockers); i++ {
+		for i := range lockers {
 			lockers[i] = newLocker(t, noLoop, setpx, nocsc)
 			lockers[i].timeout = time.Second
 		}
@@ -609,7 +609,7 @@ func TestLocker_TryWithContext_MultipleLocker(t *testing.T) {
 		for i, l := range lockers {
 			go func(i int, l *locker) {
 				defer wg.Done()
-				for j := 0; j < cnt; j++ {
+				for range cnt {
 					for {
 						_, cancel, err := l.TryWithContext(ctx, lck)
 						if err != nil && !errors.Is(err, ErrNotLocked) {
@@ -652,7 +652,7 @@ func TestLocker_WithContext_MissingPeers(t *testing.T) {
 		defer locker.Close()
 
 		lck := strconv.Itoa(rand.Int())
-		for i := 0; i < 100; i++ {
+		for range 100 {
 			ctx, cancel, err := locker.WithContext(context.Background(), lck)
 			if err != nil {
 				t.Fatal(err)
@@ -661,7 +661,7 @@ func TestLocker_WithContext_MissingPeers(t *testing.T) {
 			g := locker.gates[lck]
 			locker.mu.RUnlock()
 			var wg sync.WaitGroup
-			for i := 0; i < 100; i++ {
+			for range 100 {
 				wg.Add(1)
 				go func() {
 					if _, _, err := locker.WithContext(ctx, lck); !errors.Is(err, context.Canceled) {
@@ -745,7 +745,7 @@ func TestLocker_Close(t *testing.T) {
 
 		wg := sync.WaitGroup{}
 		wg.Add(10)
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			go func() {
 				if _, _, err := locker.WithContext(context.Background(), lck); !errors.Is(err, ErrLockerClosed) {
 					t.Error(err)

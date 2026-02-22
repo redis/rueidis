@@ -103,7 +103,7 @@ func TestReadNextMessage(t *testing.T) {
 	b := bytes.NewBuffer(nil)
 	r := bufio.NewReader(b)
 
-	for i := 0; i < iteration; i++ {
+	for range iteration {
 		for k, g := range generators {
 			b.WriteByte(k)
 			b.WriteString(g(rand.Int63(), rand.Float64(), random(k == '+' || k == '-' || k == '(')))
@@ -120,7 +120,7 @@ func TestReadNextMessage(t *testing.T) {
 }
 
 func TestWriteCmdAndRead(t *testing.T) {
-	for i := 0; i < iteration; i++ {
+	for range iteration {
 		b := bytes.NewBuffer(nil)
 		o := bufio.NewWriter(b)
 		cmd := make([]string, randN(20))
@@ -151,7 +151,7 @@ func TestWriteCmdAndRead(t *testing.T) {
 }
 
 func TestReadI(t *testing.T) {
-	for i := 0; i < iteration; i++ {
+	for range iteration {
 		int1 := rand.Int63() - rand.Int63()
 		int2, err := readI(source(strconv.FormatInt(int1, 10)))
 		if err != nil {
@@ -614,7 +614,7 @@ func TestWriteSReadS(t *testing.T) {
 }
 
 func TWriterAndReader(t *testing.T, writer func(*bufio.Writer, byte, string) error, reader func(*bufio.Reader) (*byte, int64, error), trim bool) {
-	for i := 0; i < iteration; i++ {
+	for range iteration {
 		b := bytes.NewBuffer(nil)
 		o := bufio.NewWriter(b)
 		str1 := random(trim)
@@ -641,7 +641,7 @@ func TestRand(t *testing.T) {
 		m, err = readNextMessage(in)
 		return
 	}
-	for i := 0; i < iteration; i++ {
+	for range iteration {
 		if _, err := read(bufio.NewReader(strings.NewReader(random(false)))); err != nil {
 			if err != io.EOF &&
 				err.Error() != "panic as expected" &&
@@ -663,7 +663,7 @@ func TestChunkedStringRand(t *testing.T) {
 		return
 	}
 
-	for i := 0; i < iteration; i++ {
+	for range iteration {
 		if _, err := read(bufio.NewReader(strings.NewReader(chunkedPrefix + random(false)))); err != nil &&
 			err != io.EOF &&
 			err != errChunked &&
