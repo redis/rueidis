@@ -57,18 +57,20 @@ func TestAdapter(t *testing.T) {
 }
 
 var (
-	err                error
-	ctx                context.Context
-	clientresp2        rueidis.Client
-	clientsearchresp2  rueidis.Client
-	clusterresp2       rueidis.Client
-	clientresp3        rueidis.Client
-	clusterresp3       rueidis.Client
-	adapterresp2       Cmdable
-	adaptersearchresp2 Cmdable
-	adaptercluster2    Cmdable
-	adapterresp3       Cmdable
-	adaptercluster3    Cmdable
+	err                 error
+	ctx                 context.Context
+	clientresp2         rueidis.Client
+	clientsearchresp2   rueidis.Client
+	clusterresp2        rueidis.Client
+	clientresp3         rueidis.Client
+	clusterresp3        rueidis.Client
+	clientresp3redis86  rueidis.Client
+	adapterresp2        Cmdable
+	adaptersearchresp2  Cmdable
+	adaptercluster2     Cmdable
+	adapterresp3        Cmdable
+	adaptercluster3     Cmdable
+	adapterresp3redis86 Cmdable
 )
 
 var _ = BeforeSuite(func() {
@@ -85,6 +87,12 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	adapterresp3 = NewAdapter(clientresp3)
 	adaptercluster3 = NewAdapter(clusterresp3)
+	clientresp3redis86, err = rueidis.NewClient(rueidis.ClientOption{
+		InitAddress: []string{"127.0.0.1:6382"},
+		ClientName:  "rueidis",
+	})
+	Expect(err).NotTo(HaveOccurred())
+	adapterresp3redis86 = NewAdapter(clientresp3redis86)
 	clientresp2, err = rueidis.NewClient(rueidis.ClientOption{
 		InitAddress:  []string{"127.0.0.1:6356"},
 		ClientName:   "rueidis",
@@ -113,6 +121,11 @@ var _ = AfterSuite(func() {
 	Expect(adapterresp3.FlushDB(ctx).Err()).NotTo(HaveOccurred())
 	Expect(adapterresp3.Quit(ctx).Err()).NotTo(HaveOccurred())
 	clientresp3.Close()
+
+	Expect(adapterresp3redis86.FlushDB(ctx).Err()).NotTo(HaveOccurred())
+	Expect(adapterresp3redis86.Quit(ctx).Err()).NotTo(HaveOccurred())
+	clientresp3redis86.Close()
+
 	Expect(adapterresp2.FlushDB(ctx).Err()).NotTo(HaveOccurred())
 	Expect(adapterresp2.Quit(ctx).Err()).NotTo(HaveOccurred())
 	clientresp2.Close()
