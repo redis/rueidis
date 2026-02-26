@@ -58,9 +58,9 @@ func LabelerFromContext(ctx context.Context) (*Labeler, bool) {
 // Example:
 //
 //	// Check if labeler exists in context, create new context only if needed
-//	labeler, ok := valkeyotel.LabelerFromContext(ctx)
+//	labeler, ok := rueidisotel.LabelerFromContext(ctx)
 //	if !ok {
-//		ctx = valkeyotel.ContextWithLabeler(ctx, labeler)
+//		ctx = rueidisotel.ContextWithLabeler(ctx, labeler)
 //	}
 //	labeler.Add(attribute.String("key_pattern", "book"))
 //	client.DoCache(ctx, client.B().Get().Key("book:123").Cache(), time.Minute)
@@ -283,13 +283,7 @@ func (o *otelclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl tim
 	}
 
 	resp = o.client.DoCache(ctx, cmd, ttl)
-	if resp.NonRedisError() == nil {
-		if resp.IsCacheHit() {
-			o.recordCacheHit(ctx)
-		} else {
-			o.recordCacheMiss(ctx)
-		}
-	}
+	o.recordCacheHitMiss(ctx, resp)
 	o.end(span, resp.Error())
 	o.recordError(ctx, op, resp.Error())
 	return
@@ -301,13 +295,7 @@ func (o *otelclient) DoMultiCache(ctx context.Context, multi ...rueidis.Cacheabl
 	ctx, span := o.start(ctx, op, multiCacheableSum(multi))
 	resps = o.client.DoMultiCache(ctx, multi...)
 	for _, resp := range resps {
-		if resp.NonRedisError() == nil {
-			if resp.IsCacheHit() {
-				o.recordCacheHit(ctx)
-			} else {
-				o.recordCacheMiss(ctx)
-			}
-		}
+		o.recordCacheHitMiss(ctx, resp)
 	}
 	err := firstError(resps)
 	o.end(span, err)
@@ -380,20 +368,33 @@ func (o *otelclient) Close() {
 	o.client.Close()
 }
 
-func (o *otelclient) recordCacheHit(ctx context.Context) {
-	opts := o.addOpts
-	if labeler, ok := ctx.Value(labelerContextKey).(*Labeler); ok && len(labeler.attrs) > 0 {
-		opts = append(o.addOpts, metric.WithAttributeSet(attribute.NewSet(labeler.attrs...)))
+func (o *otelclient) recordCacheHitMiss(ctx context.Context, resp rueidis.RedisResult) {
+	if resp.NonRedisError() != nil {
+		return
 	}
-	o.cscHits.Add(ctx, 1, opts...)
-}
 
-func (o *otelclient) recordCacheMiss(ctx context.Context) {
-	opts := o.addOpts
-	if labeler, ok := ctx.Value(labelerContextKey).(*Labeler); ok && len(labeler.attrs) > 0 {
-		opts = append(o.addOpts, metric.WithAttributeSet(attribute.NewSet(labeler.attrs...)))
+	var opts *[]metric.AddOption
+	if labeler, ok := ctx.Value(labelerContextKey).(*Labeler); ok && len(labeler.attrs) != 0 {
+		opts = metricAddOptionPool.Get().(*[]metric.AddOption)
+		defer func() {
+			*opts = (*opts)[:0]
+			metricAddOptionPool.Put(opts)
+		}()
+
+		*opts = slices.Grow(*opts, len(o.addOpts)+1)
+		*opts = append(*opts, o.addOpts...)
+
+		labelerOpt := metric.WithAttributeSet(attribute.NewSet(labeler.attrs...))
+		*opts = append(*opts, labelerOpt)
+	} else {
+		opts = &o.addOpts
 	}
-	o.cscMiss.Add(ctx, 1, opts...)
+
+	if resp.IsCacheHit() {
+		o.cscHits.Add(ctx, 1, *opts...)
+	} else {
+		o.cscMiss.Add(ctx, 1, *opts...)
+	}
 }
 
 var _ rueidis.DedicatedClient = (*dedicated)(nil)
