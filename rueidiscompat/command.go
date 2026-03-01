@@ -2272,14 +2272,23 @@ type LPosArgs struct {
 
 // Note: MaxLen/MaxLenApprox and MinID are in conflict, only one of them can be used.
 type XAddArgs struct {
-	Values     any
-	Stream     string
-	MinID      string
-	ID         string
-	MaxLen     int64
-	Limit      int64
-	NoMkStream bool
-	Approx     bool
+	Values         any
+	Stream         string
+	MinID          string
+	ID             string
+	MaxLen         int64
+	Limit          int64
+	NoMkStream     bool
+	Approx         bool
+	ProducerID     string
+	IdempotentID   string
+	IdempotentAuto bool
+}
+
+type XCfgSetArgs struct {
+	Stream   string
+	Duration int64
+	MaxSize  int64
 }
 
 type XReadArgs struct {
