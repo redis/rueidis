@@ -599,9 +599,10 @@ var _ = Describe("Commands", func() {
 			cmd := &JSONCmd{}
 			cmd.SetVal("a")
 			Expect(cmd.Val()).To(Equal("a"))
-			v, _ := cmd.Result()
-			Expect(v).To(Equal("a"))
 			cmd.SetErr(err)
+			v, err1 := cmd.Result()
+			Expect(v).To(Equal("a"))
+			Expect(err1).To(Equal(err))
 			Expect(cmd.Err()).To(Equal(err))
 		}
 	})
@@ -683,6 +684,7 @@ func testCmd(resp3 bool) {
 		Expect(tm2).To(BeTemporally("==", tm))
 	})
 }
+
 func TestGeoSearchQueryArgs(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -756,6 +758,7 @@ func TestSetErr(t *testing.T) {
 		t.Errorf("expected error message: %s, got: %s", errMsg, cmd.Err().Error())
 	}
 }
+
 func TestStringInvalid(t *testing.T) {
 	agg := Invalid
 	expected := ""

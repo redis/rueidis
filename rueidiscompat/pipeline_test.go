@@ -114,6 +114,19 @@ func testAdapterPipeline(resp3 bool) {
 		Expect(echo.Err()).To(MatchError(placeholder.err))
 		Expect(ping.Err()).To(MatchError(placeholder.err))
 	})
+
+	if resp3 {
+		It("should catch first cmder error", func() {
+			k1 := "_k1_not_exists"
+			var cmder *JSONCmd
+			_, err := adapter.Pipelined(ctx, func(pipe Pipeliner) error {
+				pipe.Del(ctx, k1)
+				cmder = pipe.JSONGet(ctx, k1)
+				return nil
+			})
+			Expect(err).To(Equal(cmder.Err()))
+		})
+	}
 }
 
 func TestPipeliner(t *testing.T) {
@@ -122,7 +135,7 @@ func TestPipeliner(t *testing.T) {
 
 	m := mock.NewClient(ctrl)
 
-	var testPipeline = func(t *testing.T, p *Pipeline) {
+	testPipeline := func(t *testing.T, p *Pipeline) {
 		p.Command(ctx)
 		p.CommandList(ctx, FilterBy{})
 		p.CommandGetKeys(ctx, "1", "2")

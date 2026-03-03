@@ -1278,7 +1278,6 @@ func newXAutoClaimJustIDCmd(res rueidis.RedisResult) *XAutoClaimJustIDCmd {
 	cmd := &XAutoClaimJustIDCmd{}
 	cmd.from(res)
 	return cmd
-
 }
 
 func (cmd *XAutoClaimJustIDCmd) SetVal(val []string, start string) {
@@ -3312,14 +3311,14 @@ func (cmd *JSONCmd) Val() string {
 // https://github.com/redis/go-redis/blob/v9.3.0/json.go#L105
 func (cmd *JSONCmd) Expanded() (any, error) {
 	if cmd.typ == TYP_STRING {
-		return cmd.Val(), nil
+		return cmd.Val(), cmd.Err()
 	}
 	// TYP_ARRAY
-	return cmd.expanded, nil
+	return cmd.expanded, cmd.Err()
 }
 
 func (cmd *JSONCmd) Result() (string, error) {
-	return cmd.Val(), nil
+	return cmd.Val(), cmd.Err()
 }
 
 func (cmd *JSONCmd) from(res rueidis.RedisResult) {
@@ -5132,7 +5131,6 @@ func (cmd *SlowLogCmd) from(res rueidis.RedisResult) {
 	logEntries := make([]*SlowLog, 0, len(arr))
 	for _, msg := range arr {
 		log, err := msg.ToArray()
-
 		if err != nil {
 			cmd.SetErr(err)
 			return
@@ -5456,7 +5454,6 @@ func (cmd *FunctionStatsCmd) from(res rueidis.RedisResult) {
 				return
 			}
 		}
-
 	}
 	cmd.SetVal(fstats)
 }
@@ -5508,7 +5505,6 @@ type Engine struct {
 }
 
 func (cmd *FunctionStatsCmd) parseEngines(msg rueidis.RedisMessage) ([]Engine, error) {
-
 	engineMap, err := msg.AsMap()
 	if err != nil {
 		if rueidis.IsRedisNil(err) {

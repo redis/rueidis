@@ -51,6 +51,10 @@ func (c *TxPipeline) Exec(ctx context.Context) ([]Cmder, error) {
 			err: resp[i+1].NonRedisError(),
 			val: r,
 		})))
+
+		if err == nil {
+			err = rets[i].Err()
+		}
 	}
 	return rets, err
 }

@@ -2994,6 +2994,7 @@ func (c *Pipeline) FT_List(ctx context.Context) *StringSliceCmd {
 	c.rets = append(c.rets, ret)
 	return ret
 }
+
 func (c *Pipeline) FTAggregate(ctx context.Context, index string, query string) *MapStringInterfaceCmd {
 	ret := c.comp.FTAggregate(ctx, index, query)
 	c.rets = append(c.rets, ret)
@@ -3213,11 +3214,12 @@ func (c *Pipeline) Exec(ctx context.Context) ([]Cmder, error) {
 
 	var err error
 	for i, r := range p.DoMulti(ctx, cmds...) {
-		if r.NonRedisError() != nil {
-			err = r.NonRedisError()
-		}
 		rets[i].SetErr(nil)
 		rets[i].from(r)
+
+		if err == nil {
+			err = rets[i].Err()
+		}
 	}
 
 	return rets, err
