@@ -1368,6 +1368,12 @@ type XInfoStream struct {
 	RadixTreeNodes       int64
 	Groups               int64
 	EntriesAdded         int64
+	IDMPDuration         int64
+	IDMPMaxSize          int64
+	PIDsTracked          int64
+	IIDsTracked          int64
+	IIDsAdded            int64
+	IIDsDuplicates       int64
 }
 type XInfoStreamCmd struct {
 	baseCmd[XInfoStream]
@@ -1392,6 +1398,27 @@ func (cmd *XInfoStreamCmd) from(res rueidis.RedisResult) {
 	if v, ok := kv["groups"]; ok {
 		val.Groups, _ = v.AsInt64()
 	}
+	if v, ok := kv["entries-added"]; ok {
+		val.EntriesAdded, _ = v.AsInt64()
+	}
+	if v, ok := kv["idmp-duration"]; ok {
+		val.IDMPDuration, _ = v.AsInt64()
+	}
+	if v, ok := kv["idmp-maxsize"]; ok {
+		val.IDMPMaxSize, _ = v.AsInt64()
+	}
+	if v, ok := kv["pids-tracked"]; ok {
+		val.PIDsTracked, _ = v.AsInt64()
+	}
+	if v, ok := kv["iids-tracked"]; ok {
+		val.IIDsTracked, _ = v.AsInt64()
+	}
+	if v, ok := kv["iids-added"]; ok {
+		val.IIDsAdded, _ = v.AsInt64()
+	}
+	if v, ok := kv["iids-duplicates"]; ok {
+		val.IIDsDuplicates, _ = v.AsInt64()
+	}
 	if v, ok := kv["last-generated-id"]; ok {
 		val.LastGeneratedID, _ = v.ToString()
 	}
@@ -1400,9 +1427,6 @@ func (cmd *XInfoStreamCmd) from(res rueidis.RedisResult) {
 	}
 	if v, ok := kv["recorded-first-entry-id"]; ok {
 		val.RecordedFirstEntryID, _ = v.ToString()
-	}
-	if v, ok := kv["entries-added"]; ok {
-		val.EntriesAdded, _ = v.AsInt64()
 	}
 	if v, ok := kv["first-entry"]; ok {
 		if r, err := v.AsXRangeEntry(); err == nil {
@@ -1463,6 +1487,12 @@ type XInfoStreamFull struct {
 	RadixTreeKeys        int64
 	RadixTreeNodes       int64
 	EntriesAdded         int64
+	IDMPDuration         int64
+	IDMPMaxSize          int64
+	PIDsTracked          int64
+	IIDsTracked          int64
+	IIDsAdded            int64
+	IIDsDuplicates       int64
 }
 
 type XInfoStreamFullCmd struct {
@@ -1485,11 +1515,29 @@ func (cmd *XInfoStreamFullCmd) from(res rueidis.RedisResult) {
 	if v, ok := kv["radix-tree-nodes"]; ok {
 		val.RadixTreeNodes, _ = v.AsInt64()
 	}
-	if v, ok := kv["last-generated-id"]; ok {
-		val.LastGeneratedID, _ = v.ToString()
-	}
 	if v, ok := kv["entries-added"]; ok {
 		val.EntriesAdded, _ = v.AsInt64()
+	}
+	if v, ok := kv["idmp-duration"]; ok {
+		val.IDMPDuration, _ = v.AsInt64()
+	}
+	if v, ok := kv["idmp-maxsize"]; ok {
+		val.IDMPMaxSize, _ = v.AsInt64()
+	}
+	if v, ok := kv["pids-tracked"]; ok {
+		val.PIDsTracked, _ = v.AsInt64()
+	}
+	if v, ok := kv["iids-tracked"]; ok {
+		val.IIDsTracked, _ = v.AsInt64()
+	}
+	if v, ok := kv["iids-added"]; ok {
+		val.IIDsAdded, _ = v.AsInt64()
+	}
+	if v, ok := kv["iids-duplicates"]; ok {
+		val.IIDsDuplicates, _ = v.AsInt64()
+	}
+	if v, ok := kv["last-generated-id"]; ok {
+		val.LastGeneratedID, _ = v.ToString()
 	}
 	if v, ok := kv["max-deleted-entry-id"]; ok {
 		val.MaxDeletedEntryID, _ = v.ToString()

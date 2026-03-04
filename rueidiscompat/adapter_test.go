@@ -6126,6 +6126,12 @@ func testAdapter(resp3 bool) {
 				Expect(err).NotTo(HaveOccurred())
 				res.RadixTreeKeys = 0
 				res.RadixTreeNodes = 0
+				res.IDMPDuration = 0
+				res.IDMPMaxSize = 0
+				res.PIDsTracked = 0
+				res.IIDsTracked = 0
+				res.IIDsAdded = 0
+				res.IIDsDuplicates = 0
 
 				if resp3 {
 					Expect(res).To(Equal(XInfoStream{
@@ -6173,6 +6179,12 @@ func testAdapter(resp3 bool) {
 				Expect(err).NotTo(HaveOccurred())
 				res.RadixTreeKeys = 0
 				res.RadixTreeNodes = 0
+				res.IDMPDuration = 0
+				res.IDMPMaxSize = 0
+				res.PIDsTracked = 0
+				res.IIDsTracked = 0
+				res.IIDsAdded = 0
+				res.IIDsDuplicates = 0
 
 				if resp3 {
 					Expect(res).To(Equal(XInfoStream{
@@ -6206,6 +6218,12 @@ func testAdapter(resp3 bool) {
 					Expect(err).NotTo(HaveOccurred())
 					res.RadixTreeKeys = 0
 					res.RadixTreeNodes = 0
+					res.IDMPDuration = 0
+					res.IDMPMaxSize = 0
+					res.PIDsTracked = 0
+					res.IIDsTracked = 0
+					res.IIDsAdded = 0
+					res.IIDsDuplicates = 0
 
 					// Verify DeliveryTime
 					now := time.Now()
@@ -12105,6 +12123,56 @@ func testAdapterRedis86() {
 			}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(status).To(Equal("OK"))
+		})
+
+		It("should XINFO STREAM with IDMP fields", func() {
+			streamName := "xinfo-idmp-stream"
+
+			_, err := adapter.XAdd(ctx, XAddArgs{
+				Stream: streamName,
+				Values: map[string]any{"field1": "value1"},
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = adapter.XAdd(ctx, XAddArgs{
+				Stream: streamName,
+				Values: map[string]any{"field2": "value2"},
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+
+			res, err := adapter.XInfoStream(ctx, streamName).Result()
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(res.Length).To(Equal(int64(2)))
+			Expect(res.EntriesAdded).To(Equal(int64(2)))
+			Expect(res.IDMPDuration).To(Equal(int64(100)))
+			Expect(res.IDMPMaxSize).To(Equal(int64(100)))
+			Expect(res.PIDsTracked).To(BeNumerically(">=", 0))
+			Expect(res.IIDsTracked).To(BeNumerically(">=", 0))
+			Expect(res.IIDsAdded).To(BeNumerically(">=", 0))
+			Expect(res.IIDsDuplicates).To(BeNumerically(">=", 0))
+		})
+
+		It("should XINFO STREAM FULL with IDMP fields", func() {
+			streamName := "xinfo-full-idmp-stream"
+
+			_, err := adapter.XAdd(ctx, XAddArgs{
+				Stream: streamName,
+				Values: map[string]any{"field1": "value1"},
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+
+			res, err := adapter.XInfoStreamFull(ctx, streamName, 0).Result()
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(res.Length).To(Equal(int64(1)))
+			Expect(res.EntriesAdded).To(Equal(int64(1)))
+			Expect(res.IDMPDuration).To(Equal(int64(100)))
+			Expect(res.IDMPMaxSize).To(Equal(int64(100)))
+			Expect(res.PIDsTracked).To(BeNumerically(">=", 0))
+			Expect(res.IIDsTracked).To(BeNumerically(">=", 0))
+			Expect(res.IIDsAdded).To(BeNumerically(">=", 0))
+			Expect(res.IIDsDuplicates).To(BeNumerically(">=", 0))
 		})
 	})
 }
