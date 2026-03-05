@@ -557,7 +557,7 @@ client, err := rueidis.NewClient(rueidis.ClientOption{
 })
 ```
 
-For deployments that only provide the availability zone via the INFO command, set the `AZFromInfo`
+For deployments that only provide the availability zone via the INFO command (e.g. AWS ElastiCache for Valkey 7.2+), set the `AZFromInfo`
  option as well as `EnableReplicaAZInfo`.
 
 ## Arbitrary Command
