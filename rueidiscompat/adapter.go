@@ -770,6 +770,7 @@ func (c *Compat) ExpireAt(ctx context.Context, key string, timestamp time.Time) 
 	resp := c.client.Do(ctx, cmd)
 	return newBoolCmd(resp)
 }
+
 func (c *Compat) ExpireTime(ctx context.Context, key string) *DurationCmd {
 	cmd := c.client.B().Expiretime().Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
@@ -844,6 +845,7 @@ func (c *Compat) ObjectIdleTime(ctx context.Context, key string) *DurationCmd {
 	resp := c.client.Do(ctx, cmd)
 	return newDurationCmd(resp, time.Second)
 }
+
 func (c *Compat) Persist(ctx context.Context, key string) *BoolCmd {
 	cmd := c.client.B().Persist().Key(key).Build()
 	resp := c.client.Do(ctx, cmd)
@@ -2233,7 +2235,8 @@ func (c *Compat) XAutoClaimJustID(ctx context.Context, a XAutoClaimArgs) *XAutoC
 //
 // The redis-server version is lower than 6.2, please set the limit to 0.
 func (c *Compat) xTrim(ctx context.Context, key, strategy string,
-	approx bool, threshold string, limit int64) *IntCmd {
+	approx bool, threshold string, limit int64,
+) *IntCmd {
 	cmd := c.client.B().Arbitrary("XTRIM").Keys(key).Args(strategy)
 	if approx {
 		cmd = cmd.Args("~")
@@ -2620,6 +2623,7 @@ func (c *Compat) ZRemRangeByRank(ctx context.Context, key string, start, stop in
 	resp := c.client.Do(ctx, cmd)
 	return newIntCmd(resp)
 }
+
 func (c *Compat) ZRemRangeByScore(ctx context.Context, key, min, max string) *IntCmd {
 	cmd := c.client.B().Zremrangebyscore().Key(key).Min(min).Max(max).Build()
 	resp := c.client.Do(ctx, cmd)
@@ -3747,6 +3751,7 @@ func (c *Compat) CFAdd(ctx context.Context, key string, element interface{}) *Bo
 	cmd := c.client.B().CfAdd().Key(key).Item(str(element)).Build()
 	return newBoolCmd(c.client.Do(ctx, cmd))
 }
+
 func (c *Compat) CFAddNX(ctx context.Context, key string, element interface{}) *BoolCmd {
 	cmd := c.client.B().CfAddnx().Key(key).Item(str(element)).Build()
 	return newBoolCmd(c.client.Do(ctx, cmd))
@@ -4020,8 +4025,8 @@ func (c *Compat) TDigestCDF(ctx context.Context, key string, elements ...float64
 func (c *Compat) TDigestCreate(ctx context.Context, key string) *StatusCmd {
 	cmd := c.client.B().TdigestCreate().Key(key).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
-
 }
+
 func (c *Compat) TDigestCreateWithCompression(ctx context.Context, key string, compression int64) *StatusCmd {
 	cmd := c.client.B().TdigestCreate().Key(key).Compression(compression).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
@@ -6468,27 +6473,27 @@ func (c CacheCompat) BFInfoExpansion(ctx context.Context, key string) *BFInfoCmd
 	return newBFInfoCmd(resp)
 }
 
-func (c *CacheCompat) CFCount(ctx context.Context, key string, element interface{}) *IntCmd {
+func (c CacheCompat) CFCount(ctx context.Context, key string, element interface{}) *IntCmd {
 	cmd := c.client.B().CfCount().Key(key).Item(str(element)).Cache()
 	return newIntCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c *CacheCompat) CFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
+func (c CacheCompat) CFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
 	cmd := c.client.B().CfExists().Key(key).Item(str(element)).Cache()
 	return newBoolCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c *CacheCompat) CFInfo(ctx context.Context, key string) *CFInfoCmd {
+func (c CacheCompat) CFInfo(ctx context.Context, key string) *CFInfoCmd {
 	cmd := c.client.B().CfInfo().Key(key).Cache()
 	return newCFInfoCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c *CacheCompat) CMSInfo(ctx context.Context, key string) *CMSInfoCmd {
+func (c CacheCompat) CMSInfo(ctx context.Context, key string) *CMSInfoCmd {
 	cmd := c.client.B().CmsInfo().Key(key).Cache()
 	return newCMSInfoCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c *CacheCompat) CMSQuery(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
+func (c CacheCompat) CMSQuery(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
 	_cmd := c.client.B().CmsQuery().Key(key)
 	for _, e := range elements {
 		_cmd.Item(str(e))
@@ -6497,17 +6502,17 @@ func (c *CacheCompat) CMSQuery(ctx context.Context, key string, elements ...inte
 	return newIntSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c *CacheCompat) TopKInfo(ctx context.Context, key string) *TopKInfoCmd {
+func (c CacheCompat) TopKInfo(ctx context.Context, key string) *TopKInfoCmd {
 	cmd := c.client.B().TopkInfo().Key(key).Cache()
 	return newTopKInfoCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c *CacheCompat) TopKList(ctx context.Context, key string) *StringSliceCmd {
+func (c CacheCompat) TopKList(ctx context.Context, key string) *StringSliceCmd {
 	cmd := c.client.B().TopkList().Key(key).Cache()
 	return newStringSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c *CacheCompat) TopKQuery(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
+func (c CacheCompat) TopKQuery(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
 	_cmd := c.client.B().TopkQuery().Key(key)
 	for _, e := range elements {
 		_cmd.Item(str(e))
@@ -6516,7 +6521,7 @@ func (c *CacheCompat) TopKQuery(ctx context.Context, key string, elements ...int
 	return newBoolSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c *CacheCompat) JSONArrIndex(ctx context.Context, key, path string, value ...interface{}) *IntSliceCmd {
+func (c CacheCompat) JSONArrIndex(ctx context.Context, key, path string, value ...interface{}) *IntSliceCmd {
 	_cmd := c.client.B().JsonArrindex().Key(key).Path(path)
 	switch len(value) {
 	case 1:
@@ -6535,37 +6540,37 @@ func (c *CacheCompat) JSONArrIndex(ctx context.Context, key, path string, value 
 	return newIntSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c *CacheCompat) JSONArrLen(ctx context.Context, key, path string) *IntSliceCmd {
+func (c CacheCompat) JSONArrLen(ctx context.Context, key, path string) *IntSliceCmd {
 	cmd := c.client.B().JsonArrlen().Key(key).Path(path).Cache()
 	return newIntSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c *CacheCompat) JSONGet(ctx context.Context, key string, paths ...string) *JSONCmd {
+func (c CacheCompat) JSONGet(ctx context.Context, key string, paths ...string) *JSONCmd {
 	cmd := c.client.B().JsonGet().Key(key).Path(paths...).Cache()
 	return newJSONCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c *CacheCompat) JSONMGet(ctx context.Context, path string, keys ...string) *JSONSliceCmd {
+func (c CacheCompat) JSONMGet(ctx context.Context, path string, keys ...string) *JSONSliceCmd {
 	cmd := c.client.B().JsonMget().Key(keys...).Path(path).Cache()
 	return newJSONSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c *CacheCompat) JSONObjKeys(ctx context.Context, key, path string) *SliceCmd {
+func (c CacheCompat) JSONObjKeys(ctx context.Context, key, path string) *SliceCmd {
 	cmd := c.client.B().JsonObjkeys().Key(key).Path(path).Cache()
 	return newSliceCmd(c.client.DoCache(ctx, cmd, c.ttl), true)
 }
 
-func (c *CacheCompat) JSONObjLen(ctx context.Context, key, path string) *IntPointerSliceCmd {
+func (c CacheCompat) JSONObjLen(ctx context.Context, key, path string) *IntPointerSliceCmd {
 	cmd := c.client.B().JsonObjlen().Key(key).Path(path).Cache()
 	return newIntPointerSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c *CacheCompat) JSONStrLen(ctx context.Context, key, path string) *IntPointerSliceCmd {
+func (c CacheCompat) JSONStrLen(ctx context.Context, key, path string) *IntPointerSliceCmd {
 	cmd := c.client.B().JsonStrlen().Key(key).Path(path).Cache()
 	return newIntPointerSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c *CacheCompat) JSONType(ctx context.Context, key, path string) *JSONSliceCmd {
+func (c CacheCompat) JSONType(ctx context.Context, key, path string) *JSONSliceCmd {
 	cmd := c.client.B().JsonType().Key(key).Path(path).Cache()
 	return newJSONSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
