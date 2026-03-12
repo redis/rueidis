@@ -743,6 +743,13 @@ func (p *pipe) handlePush(values []RedisMessage) (reply bool, unsubscribe bool) 
 				p.onInvalidations(values[1].values())
 			}
 		}
+		if fn := p.pshks.Load().hooks.onInvalidations; fn != nil {
+			if values[1].IsNil() {
+				fn(nil)
+			} else {
+				fn(values[1].values())
+			}
+		}
 	case "message":
 		if len(values) >= 3 {
 			m := PubSubMessage{Channel: values[1].string(), Message: values[2].string()}
@@ -885,9 +892,9 @@ func (p *pipe) CleanSubscriptions() {
 		p.Close()
 	} else if atomic.LoadInt32(&p.state) == 1 {
 		if p.version >= 7 {
-			p.DoMulti(context.Background(), cmds.UnsubscribeCmd, cmds.PUnsubscribeCmd, cmds.SUnsubscribeCmd, cmds.DiscardCmd)
+			p.DoMulti(context.Background(), cmds.UnsubscribeCmd, cmds.PUnsubscribeCmd, cmds.SUnsubscribeCmd, cmds.ClientTrackingOffCmd, cmds.DiscardCmd)
 		} else {
-			p.DoMulti(context.Background(), cmds.UnsubscribeCmd, cmds.PUnsubscribeCmd, cmds.DiscardCmd)
+			p.DoMulti(context.Background(), cmds.UnsubscribeCmd, cmds.PUnsubscribeCmd, cmds.ClientTrackingOffCmd, cmds.DiscardCmd)
 		}
 	}
 }

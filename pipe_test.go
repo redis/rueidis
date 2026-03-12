@@ -3017,6 +3017,48 @@ func TestOnInvalidations(t *testing.T) {
 	}
 }
 
+func TestOnInvalidationsViaHooks(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	ch := make(chan []RedisMessage)
+	p, mock, cancel, _ := setup(t, ClientOption{})
+
+	p.SetPubSubHooks(PubSubHooks{
+		onInvalidations: func(messages []RedisMessage) {
+			ch <- messages
+		},
+	})
+
+	go func() {
+		mock.Expect().Reply(slicemsg(
+			'>',
+			[]RedisMessage{
+				strmsg('+', "invalidate"),
+				slicemsg('*', []RedisMessage{strmsg('+', "a")}),
+			},
+		))
+	}()
+
+	if messages := <-ch; messages[0].string() != "a" {
+		t.Fatalf("unexpected invalidation %v", messages)
+	}
+
+	go func() {
+		mock.Expect().Reply(slicemsg(
+			'>',
+			[]RedisMessage{
+				strmsg('+', "invalidate"),
+				{typ: '_'},
+			},
+		))
+	}()
+
+	if messages := <-ch; messages != nil {
+		t.Fatalf("unexpected invalidation %v", messages)
+	}
+
+	go cancel()
+}
+
 func TestConnLifetime(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 
@@ -5471,7 +5513,7 @@ func TestPipe_CleanSubscriptions_6(t *testing.T) {
 	go func() {
 		p.CleanSubscriptions()
 	}()
-	mock.Expect("UNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("PUNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("DISCARD").Reply(
+	mock.Expect("UNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("PUNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("CLIENT", "TRACKING", "OFF").Expect("DISCARD").Reply(
 		slicemsg('>', []RedisMessage{
 			strmsg('+', "unsubscribe"),
 			{typ: '_'},
@@ -5484,6 +5526,7 @@ func TestPipe_CleanSubscriptions_6(t *testing.T) {
 			{typ: ':', intlen: 2},
 		}),
 		strmsg('+', "PONG"),
+		strmsg('+', "OK"),
 		strmsg('+', "OK"),
 	)
 }
@@ -5514,7 +5557,7 @@ func TestPipe_CleanSubscriptions_7(t *testing.T) {
 	go func() {
 		p.CleanSubscriptions()
 	}()
-	mock.Expect("UNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("PUNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("SUNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("DISCARD").Reply(
+	mock.Expect("UNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("PUNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("SUNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("CLIENT", "TRACKING", "OFF").Expect("DISCARD").Reply(
 		slicemsg('>', []RedisMessage{
 			strmsg('+', "unsubscribe"),
 			{typ: '_'},
@@ -5533,6 +5576,7 @@ func TestPipe_CleanSubscriptions_7(t *testing.T) {
 			{typ: ':', intlen: 3},
 		}),
 		strmsg('+', "PONG"),
+		strmsg('+', "OK"),
 		strmsg('+', "OK"),
 	)
 }

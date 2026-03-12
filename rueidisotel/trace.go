@@ -452,6 +452,10 @@ func (d *dedicated) SetPubSubHooks(hooks rueidis.PubSubHooks) <-chan error {
 	return d.client.SetPubSubHooks(hooks)
 }
 
+func (d *dedicated) SetOnInvalidations(fn func([]rueidis.RedisMessage)) <-chan error {
+	return d.client.SetOnInvalidations(fn)
+}
+
 func (d *dedicated) Close() {
 	d.client.Close()
 }
