@@ -31,6 +31,7 @@ type PubSubHooks struct {
 	OnMessage func(m PubSubMessage)
 	// OnSubscription will be called when receiving "subscribe", "unsubscribe", "psubscribe" and "punsubscribe" event.
 	OnSubscription func(s PubSubSubscription)
+	// onInvalidations will be called when receiving "invalidate" event.
 	onInvalidations func([]RedisMessage)
 }
 

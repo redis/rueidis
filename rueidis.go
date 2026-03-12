@@ -417,6 +417,7 @@ type DedicatedClient interface {
 	// SetOnInvalidations is an alternative way to receive client-side caching invalidation messages
 	// on a dedicated connection instead of using the OnInvalidations callback in ClientOption.
 	// This is useful when using CLIENT TRACKING on a dedicated connection.
+	// Note that fn will be called sequentially but in another goroutine.
 	// The return value will be either:
 	//   1. an error channel, if fn is not nil, or
 	//   2. nil, if fn is nil. (used for reset)
