@@ -3,7 +3,6 @@ package rueidisotel
 import (
 	"context"
 	"slices"
-	"strings"
 	"sync"
 	"time"
 
@@ -109,12 +108,34 @@ func WithDBStatement(f StatementFunc) Option {
 // StatementFunc is the function that maps a command's tokens to a string to put in the db.statement attribute
 type StatementFunc func(cmdTokens []string) string
 
+// WithOpNameResolver sets a custom [OpNameResolver] used to determine
+// the operation name for metrics and spans produced by the client.
+//
+// By default, [DefaultOpNameResolver] is used.
+func WithOpNameResolver(resolver OpNameResolver) Option {
+	return func(o *otelclient) {
+		o.opNameResolver = resolver
+	}
+}
+
+// WithSpanNameFormatter sets a custom function used to format span names created by the client.
+func WithSpanNameFormatter(fn SpanNameFormatterFunc) Option {
+	return func(o *otelclient) {
+		o.spanNameFormatter = fn
+	}
+}
+
+// SpanNameFormatterFunc defines a function that formats the name of a span.
+type SpanNameFormatterFunc func(ctx context.Context, op string) string
+
 type commandMetrics struct {
-	duration   metric.Float64Histogram
-	errors     metric.Int64Counter
-	addOpts    []metric.AddOption
-	recordOpts []metric.RecordOption
-	opAttr     bool
+	duration          metric.Float64Histogram
+	errors            metric.Int64Counter
+	addOpts           []metric.AddOption
+	recordOpts        []metric.RecordOption
+	opAttr            bool
+	opNameResolver    OpNameResolver
+	spanNameFormatter SpanNameFormatterFunc
 }
 
 var (
@@ -226,8 +247,9 @@ func (o *otelclient) B() rueidis.Builder {
 }
 
 func (o *otelclient) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult) {
-	op := first(cmd.Commands())
+	op := o.opNameResolver.OpName(ctx, cmd)
 	defer o.recordDuration(ctx, op, time.Now())
+
 	ctx, span := o.start(ctx, op, sum(cmd.Commands()))
 	if o.dbStmtFunc != nil {
 		span.SetAttributes(dbstmt.String(o.dbStmtFunc(cmd.Commands())))
@@ -240,8 +262,9 @@ func (o *otelclient) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidi
 }
 
 func (o *otelclient) DoMulti(ctx context.Context, multi ...rueidis.Completed) (resp []rueidis.RedisResult) {
-	op := multiFirst(multi)
+	op := o.opNameResolver.MultiOpName(ctx, multi)
 	defer o.recordDuration(ctx, op, time.Now())
+
 	ctx, span := o.start(ctx, op, multiSum(multi))
 	resp = o.client.DoMulti(ctx, multi...)
 	err := firstError(resp)
@@ -251,8 +274,9 @@ func (o *otelclient) DoMulti(ctx context.Context, multi ...rueidis.Completed) (r
 }
 
 func (o *otelclient) DoStream(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResultStream) {
-	op := first(cmd.Commands())
+	op := o.opNameResolver.OpName(ctx, cmd)
 	defer o.recordDuration(ctx, op, time.Now())
+
 	ctx, span := o.start(ctx, op, sum(cmd.Commands()))
 	if o.dbStmtFunc != nil {
 		span.SetAttributes(dbstmt.String(o.dbStmtFunc(cmd.Commands())))
@@ -265,8 +289,9 @@ func (o *otelclient) DoStream(ctx context.Context, cmd rueidis.Completed) (resp 
 }
 
 func (o *otelclient) DoMultiStream(ctx context.Context, multi ...rueidis.Completed) (resp rueidis.MultiRedisResultStream) {
-	op := multiFirst(multi)
+	op := o.opNameResolver.MultiOpName(ctx, multi)
 	defer o.recordDuration(ctx, op, time.Now())
+
 	ctx, span := o.start(ctx, op, multiSum(multi))
 	resp = o.client.DoMultiStream(ctx, multi...)
 	o.end(span, resp.Error())
@@ -275,8 +300,9 @@ func (o *otelclient) DoMultiStream(ctx context.Context, multi ...rueidis.Complet
 }
 
 func (o *otelclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl time.Duration) (resp rueidis.RedisResult) {
-	op := first(cmd.Commands())
+	op := o.opNameResolver.OpName(ctx, rueidis.Completed(cmd))
 	defer o.recordDuration(ctx, op, time.Now())
+
 	ctx, span := o.start(ctx, op, sum(cmd.Commands()))
 	if o.dbStmtFunc != nil {
 		span.SetAttributes(dbstmt.String(o.dbStmtFunc(cmd.Commands())))
@@ -290,8 +316,9 @@ func (o *otelclient) DoCache(ctx context.Context, cmd rueidis.Cacheable, ttl tim
 }
 
 func (o *otelclient) DoMultiCache(ctx context.Context, multi ...rueidis.CacheableTTL) (resps []rueidis.RedisResult) {
-	op := multiCacheableFirst(multi)
+	op := o.opNameResolver.MultiCacheableOpName(ctx, multi)
 	defer o.recordDuration(ctx, op, time.Now())
+
 	ctx, span := o.start(ctx, op, multiCacheableSum(multi))
 	resps = o.client.DoMultiCache(ctx, multi...)
 	for _, resp := range resps {
@@ -329,7 +356,9 @@ func (o *otelclient) Dedicate() (rueidis.DedicatedClient, func()) {
 }
 
 func (o *otelclient) Receive(ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
-	ctx, span := o.start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()))
+	op := o.opNameResolver.OpName(ctx, subscribe)
+	ctx, span := o.start(ctx, op, sum(subscribe.Commands()))
+
 	if o.dbStmtFunc != nil {
 		span.SetAttributes(dbstmt.String(o.dbStmtFunc(subscribe.Commands())))
 	}
@@ -413,8 +442,9 @@ func (d *dedicated) B() rueidis.Builder {
 }
 
 func (d *dedicated) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis.RedisResult) {
-	op := first(cmd.Commands())
+	op := d.opNameResolver.OpName(ctx, cmd)
 	defer d.recordDuration(ctx, op, time.Now())
+
 	ctx, span := d.start(ctx, op, sum(cmd.Commands()))
 	if d.dbStmtFunc != nil {
 		span.SetAttributes(dbstmt.String(d.dbStmtFunc(cmd.Commands())))
@@ -427,8 +457,9 @@ func (d *dedicated) Do(ctx context.Context, cmd rueidis.Completed) (resp rueidis
 }
 
 func (d *dedicated) DoMulti(ctx context.Context, multi ...rueidis.Completed) (resp []rueidis.RedisResult) {
-	op := multiFirst(multi)
+	op := d.opNameResolver.MultiOpName(ctx, multi)
 	defer d.recordDuration(ctx, op, time.Now())
+
 	ctx, span := d.start(ctx, op, multiSum(multi))
 	resp = d.client.DoMulti(ctx, multi...)
 	err := firstError(resp)
@@ -438,7 +469,9 @@ func (d *dedicated) DoMulti(ctx context.Context, multi ...rueidis.Completed) (re
 }
 
 func (d *dedicated) Receive(ctx context.Context, subscribe rueidis.Completed, fn func(msg rueidis.PubSubMessage)) (err error) {
-	ctx, span := d.start(ctx, first(subscribe.Commands()), sum(subscribe.Commands()))
+	op := d.opNameResolver.OpName(ctx, subscribe)
+
+	ctx, span := d.start(ctx, op, sum(subscribe.Commands()))
 	if d.dbStmtFunc != nil {
 		span.SetAttributes(dbstmt.String(d.dbStmtFunc(subscribe.Commands())))
 	}
@@ -454,10 +487,6 @@ func (d *dedicated) SetPubSubHooks(hooks rueidis.PubSubHooks) <-chan error {
 
 func (d *dedicated) Close() {
 	d.client.Close()
-}
-
-func first(s []string) string {
-	return s[0]
 }
 
 func sum(s []string) (v int) {
@@ -476,7 +505,7 @@ func firstError(s []rueidis.RedisResult) error {
 	return nil
 }
 
-func multiSum(multi []rueidis.Completed) (v int) {
+func multiSum(multi rueidis.Commands) (v int) {
 	for _, cmd := range multi {
 		v += sum(cmd.Commands())
 	}
@@ -490,59 +519,9 @@ func multiCacheableSum(multi []rueidis.CacheableTTL) (v int) {
 	return v
 }
 
-func multiFirst(multi []rueidis.Completed) string {
-	if len(multi) == 0 {
-		return ""
-	}
-
-	if len(multi) > 5 {
-		multi = multi[:5]
-	}
-	size := 0
-	for _, cmd := range multi {
-		size += len(first(cmd.Commands()))
-	}
-	size += len(multi) - 1
-
-	sb := strings.Builder{}
-	sb.Grow(size)
-	for i, cmd := range multi {
-		sb.WriteString(first(cmd.Commands()))
-		if i != len(multi)-1 {
-			sb.WriteString(" ")
-		}
-	}
-
-	return sb.String()
-}
-
-func multiCacheableFirst(multi []rueidis.CacheableTTL) string {
-	if len(multi) == 0 {
-		return ""
-	}
-
-	if len(multi) > 5 {
-		multi = multi[:5]
-	}
-	size := 0
-	for _, cmd := range multi {
-		size += len(first(cmd.Cmd.Commands()))
-	}
-	size += len(multi) - 1
-
-	sb := strings.Builder{}
-	sb.Grow(size)
-	for i, cmd := range multi {
-		sb.WriteString(first(cmd.Cmd.Commands()))
-		if i != len(multi)-1 {
-			sb.WriteString(" ")
-		}
-	}
-	return sb.String()
-}
-
 func (o *otelclient) start(ctx context.Context, op string, size int) (context.Context, trace.Span) {
-	return startSpan(o.tracer, ctx, op, size, o.sAttrs, o.tAttrs)
+	spanName := o.spanNameFormatter(ctx, op)
+	return startSpan(o.tracer, ctx, spanName, size, o.sAttrs, o.tAttrs)
 }
 
 func (o *otelclient) end(span trace.Span, err error) {
@@ -550,7 +529,8 @@ func (o *otelclient) end(span trace.Span, err error) {
 }
 
 func (d *dedicated) start(ctx context.Context, op string, size int) (context.Context, trace.Span) {
-	return startSpan(d.tracer, ctx, op, size, d.sAttrs, d.tAttrs)
+	spanName := d.spanNameFormatter(ctx, op)
+	return startSpan(d.tracer, ctx, spanName, size, d.sAttrs, d.tAttrs)
 }
 
 func (d *dedicated) end(span trace.Span, err error) {

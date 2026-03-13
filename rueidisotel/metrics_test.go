@@ -82,8 +82,7 @@ func TestNewClient(t *testing.T) {
 	t.Run("DialFn by default", func(t *testing.T) {
 		_, err := NewClient(rueidis.ClientOption{
 			InitAddress: []string{"127.0.0.1:6379"},
-		},
-		)
+		})
 		if err != nil {
 			t.Error(err)
 		}

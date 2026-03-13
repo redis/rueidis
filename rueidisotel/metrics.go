@@ -8,12 +8,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/redis/rueidis"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/redis/rueidis"
 )
 
 var (
@@ -155,6 +156,12 @@ func newClient(opts ...Option) (*otelclient, error) {
 	if cli.tracerProvider == nil {
 		cli.tracerProvider = otel.GetTracerProvider() // Default to global TracerProvider
 	}
+	if cli.opNameResolver == nil {
+		cli.opNameResolver = &DefaultOpNameResolver{Limit: 5}
+	}
+	if cli.spanNameFormatter == nil {
+		cli.spanNameFormatter = defaultSpanNameFormatter
+	}
 
 	// Now that we have the meterProvider and tracerProvider, get the Meter and Tracer
 	cli.meter = cli.meterProvider.Meter(name)
@@ -245,4 +252,8 @@ func serverAttrs(dst string) trace.SpanStartEventOption {
 		}
 	}
 	return trace.WithAttributes(attribute.String("server.address", dst))
+}
+
+func defaultSpanNameFormatter(_ context.Context, op string) string {
+	return op
 }
