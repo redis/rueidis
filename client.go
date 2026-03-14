@@ -86,6 +86,27 @@ func (c *singleClient) DoMultiStream(ctx context.Context, multi ...Completed) Mu
 	return s
 }
 
+func (c *singleClient) DoWithReader(ctx context.Context, cmd Completed, fn ReaderFunc) (err error) {
+	attempts := 1
+retry:
+	err = c.conn.DoWithReader(ctx, cmd, fn)
+	if err != nil {
+		if err == errConnExpired {
+			goto retry
+		}
+		if c.retry && cmd.IsRetryable() && c.isRetryable(err, ctx) {
+			if c.retryHandler.WaitOrSkipRetry(ctx, attempts, cmd, err) {
+				attempts++
+				goto retry
+			}
+		}
+	}
+	if err == nil || err == Nil {
+		cmds.PutCompleted(cmd)
+	}
+	return err
+}
+
 func (c *singleClient) DoMulti(ctx context.Context, multi ...Completed) (resps []RedisResult) {
 	if len(multi) == 0 {
 		return nil
@@ -319,6 +340,29 @@ retry:
 		}
 	}
 	return resp
+}
+
+func (c *dedicatedSingleClient) DoWithReader(ctx context.Context, cmd Completed, fn ReaderFunc) (err error) {
+	attempts := 1
+retry:
+	if err := c.check(); err != nil {
+		return err
+	}
+	// For dedicated clients, pass nil as pool since wire shouldn't be recycled
+	err = c.wire.DoWithReader(ctx, nil, cmd, fn)
+	if c.retry && cmd.IsRetryable() && isRetryable(err, c.wire, ctx) {
+		shouldRetry := c.retryHandler.WaitOrSkipRetry(
+			ctx, attempts, cmd, err,
+		)
+		if shouldRetry {
+			attempts++
+			goto retry
+		}
+	}
+	if err == nil || err == Nil {
+		cmds.PutCompleted(cmd)
+	}
+	return err
 }
 
 func (c *dedicatedSingleClient) Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) (err error) {
