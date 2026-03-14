@@ -346,3 +346,17 @@ func (mr *DedicatedClientMockRecorder) SetPubSubHooks(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPubSubHooks", reflect.TypeOf((*DedicatedClient)(nil).SetPubSubHooks), arg0)
 }
+
+// SetOnInvalidations mocks base method.
+func (m *DedicatedClient) SetOnInvalidations(arg0 func([]rueidis.RedisMessage)) <-chan error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetOnInvalidations", arg0)
+	ret0, _ := ret[0].(<-chan error)
+	return ret0
+}
+
+// SetOnInvalidations indicates an expected call of SetOnInvalidations.
+func (mr *DedicatedClientMockRecorder) SetOnInvalidations(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetOnInvalidations", reflect.TypeOf((*DedicatedClient)(nil).SetOnInvalidations), arg0)
+}

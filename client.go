@@ -354,6 +354,10 @@ func (c *dedicatedSingleClient) SetPubSubHooks(hooks PubSubHooks) <-chan error {
 	return c.wire.SetPubSubHooks(hooks)
 }
 
+func (c *dedicatedSingleClient) SetOnInvalidations(fn func([]RedisMessage)) <-chan error {
+	return c.SetPubSubHooks(PubSubHooks{onInvalidations: fn})
+}
+
 func (c *dedicatedSingleClient) Close() {
 	c.wire.Close()
 	c.release()

@@ -1611,6 +1611,10 @@ func (c *dedicatedClusterClient) SetPubSubHooks(hooks PubSubHooks) <-chan error 
 	return ch
 }
 
+func (c *dedicatedClusterClient) SetOnInvalidations(fn func([]RedisMessage)) <-chan error {
+	return c.SetPubSubHooks(PubSubHooks{onInvalidations: fn})
+}
+
 func (c *dedicatedClusterClient) Close() {
 	c.mu.Lock()
 	if p := c.pshks; p != nil {
