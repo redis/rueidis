@@ -3057,6 +3057,10 @@ func TestOnInvalidationsViaHooks(t *testing.T) {
 	}
 
 	go cancel()
+
+	if messages := <-ch; messages != nil {
+		t.Fatalf("unexpected invalidation %v", messages)
+	}
 }
 
 func TestConnLifetime(t *testing.T) {

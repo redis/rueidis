@@ -434,7 +434,8 @@ func (p *pipe) _background() {
 	p.nsubs.Close()
 	p.psubs.Close()
 	p.ssubs.Close()
-	if old := p.pshks.Swap(emptypshks); old.close != nil {
+	old := p.pshks.Swap(emptypshks)
+	if old.close != nil {
 		old.close <- err
 		close(old.close)
 	}
@@ -450,6 +451,9 @@ func (p *pipe) _background() {
 	}
 	if p.onInvalidations != nil {
 		p.onInvalidations(nil)
+	}
+	if old.hooks.onInvalidations != nil {
+		old.hooks.onInvalidations(nil)
 	}
 
 	resp := newErrResult(err)
