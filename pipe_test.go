@@ -5513,7 +5513,7 @@ func TestPipe_CleanSubscriptions_6(t *testing.T) {
 	go func() {
 		p.CleanSubscriptions()
 	}()
-	mock.Expect("UNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("PUNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("CLIENT", "TRACKING", "OFF").Expect("DISCARD").Reply(
+	mock.Expect("UNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("PUNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("DISCARD").Reply(
 		slicemsg('>', []RedisMessage{
 			strmsg('+', "unsubscribe"),
 			{typ: '_'},
@@ -5526,7 +5526,6 @@ func TestPipe_CleanSubscriptions_6(t *testing.T) {
 			{typ: ':', intlen: 2},
 		}),
 		strmsg('+', "PONG"),
-		strmsg('+', "OK"),
 		strmsg('+', "OK"),
 	)
 }
@@ -5557,7 +5556,7 @@ func TestPipe_CleanSubscriptions_7(t *testing.T) {
 	go func() {
 		p.CleanSubscriptions()
 	}()
-	mock.Expect("UNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("PUNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("SUNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("CLIENT", "TRACKING", "OFF").Expect("DISCARD").Reply(
+	mock.Expect("UNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("PUNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("SUNSUBSCRIBE").Expect(cmds.PingCmd.Commands()...).Expect("DISCARD").Reply(
 		slicemsg('>', []RedisMessage{
 			strmsg('+', "unsubscribe"),
 			{typ: '_'},
@@ -5576,7 +5575,6 @@ func TestPipe_CleanSubscriptions_7(t *testing.T) {
 			{typ: ':', intlen: 3},
 		}),
 		strmsg('+', "PONG"),
-		strmsg('+', "OK"),
 		strmsg('+', "OK"),
 	)
 }

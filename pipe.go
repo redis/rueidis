@@ -892,9 +892,9 @@ func (p *pipe) CleanSubscriptions() {
 		p.Close()
 	} else if atomic.LoadInt32(&p.state) == 1 {
 		if p.version >= 7 {
-			p.DoMulti(context.Background(), cmds.UnsubscribeCmd, cmds.PUnsubscribeCmd, cmds.SUnsubscribeCmd, cmds.ClientTrackingOffCmd, cmds.DiscardCmd)
+			p.DoMulti(context.Background(), cmds.UnsubscribeCmd, cmds.PUnsubscribeCmd, cmds.SUnsubscribeCmd, cmds.DiscardCmd)
 		} else {
-			p.DoMulti(context.Background(), cmds.UnsubscribeCmd, cmds.PUnsubscribeCmd, cmds.ClientTrackingOffCmd, cmds.DiscardCmd)
+			p.DoMulti(context.Background(), cmds.UnsubscribeCmd, cmds.PUnsubscribeCmd, cmds.DiscardCmd)
 		}
 	}
 }

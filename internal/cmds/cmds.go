@@ -87,11 +87,6 @@ var (
 		cf: unsubTag,
 	}
 
-	// ClientTrackingOffCmd is predefined CLIENT TRACKING OFF
-	ClientTrackingOffCmd = Completed{
-		cs: newCommandSlice([]string{"CLIENT", "TRACKING", "OFF"}),
-	}
-
 	// DiscardCmd is predefined DISCARD
 	DiscardCmd = Completed{
 		cs: newCommandSlice([]string{"DISCARD"}),
