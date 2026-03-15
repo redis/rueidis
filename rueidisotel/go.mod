@@ -7,7 +7,7 @@ toolchain go1.24.11
 replace github.com/redis/rueidis => ../
 
 require (
-	github.com/redis/rueidis v1.0.72
+	github.com/redis/rueidis v1.0.73
 	go.opentelemetry.io/otel v1.40.0
 	go.opentelemetry.io/otel/metric v1.40.0
 	go.opentelemetry.io/otel/sdk v1.40.0
