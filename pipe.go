@@ -57,6 +57,7 @@ type wire interface {
 
 	CleanSubscriptions()
 	SetPubSubHooks(hooks PubSubHooks) <-chan error
+	GetPubSubHooks() PubSubHooks
 	SetOnCloseHook(fn func(error))
 	StopTimer() bool
 	ResetTimer() bool
@@ -434,7 +435,8 @@ func (p *pipe) _background() {
 	p.nsubs.Close()
 	p.psubs.Close()
 	p.ssubs.Close()
-	if old := p.pshks.Swap(emptypshks); old.close != nil {
+	old := p.pshks.Swap(emptypshks)
+	if old.close != nil {
 		old.close <- err
 		close(old.close)
 	}
@@ -450,6 +452,9 @@ func (p *pipe) _background() {
 	}
 	if p.onInvalidations != nil {
 		p.onInvalidations(nil)
+	}
+	if old.hooks.onInvalidations != nil {
+		old.hooks.onInvalidations(nil)
 	}
 
 	resp := newErrResult(err)
@@ -743,6 +748,13 @@ func (p *pipe) handlePush(values []RedisMessage) (reply bool, unsubscribe bool) 
 				p.onInvalidations(values[1].values())
 			}
 		}
+		if fn := p.pshks.Load().hooks.onInvalidations; fn != nil {
+			if values[1].IsNil() {
+				fn(nil)
+			} else {
+				fn(values[1].values())
+			}
+		}
 	case "message":
 		if len(values) >= 3 {
 			m := PubSubMessage{Channel: values[1].string(), Message: values[2].string()}
@@ -892,6 +904,16 @@ func (p *pipe) CleanSubscriptions() {
 	}
 }
 
+func (p *pipe) GetPubSubHooks() PubSubHooks {
+	if p.r2p != nil {
+		return p.r2p.pipe(context.Background()).GetPubSubHooks()
+	}
+	if pshks := p.pshks.Load(); pshks != emptypshks {
+		return pshks.orig
+	}
+	return PubSubHooks{}
+}
+
 func (p *pipe) SetPubSubHooks(hooks PubSubHooks) <-chan error {
 	if p.r2p != nil {
 		return p.r2p.pipe(context.Background()).SetPubSubHooks(hooks)
@@ -902,6 +924,7 @@ func (p *pipe) SetPubSubHooks(hooks PubSubHooks) <-chan error {
 		}
 		return nil
 	}
+	orig := hooks
 	if hooks.OnMessage == nil {
 		hooks.OnMessage = func(m PubSubMessage) {}
 	}
@@ -909,7 +932,7 @@ func (p *pipe) SetPubSubHooks(hooks PubSubHooks) <-chan error {
 		hooks.OnSubscription = func(s PubSubSubscription) {}
 	}
 	ch := make(chan error, 1)
-	if old := p.pshks.Swap(&pshks{hooks: hooks, close: ch}); old.close != nil {
+	if old := p.pshks.Swap(&pshks{hooks: hooks, orig: orig, close: ch}); old.close != nil {
 		close(old.close)
 	}
 	if err := p.Error(); err != nil {
@@ -1781,6 +1804,7 @@ func (r *r2p) Close() {
 
 type pshks struct {
 	hooks PubSubHooks
+	orig  PubSubHooks
 	close chan error
 }
 

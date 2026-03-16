@@ -1607,8 +1607,21 @@ func (c *dedicatedClusterClient) SetPubSubHooks(hooks PubSubHooks) <-chan error 
 		return nil
 	}
 	ch := make(chan error, 1)
-	c.pshks = &pshks{hooks: hooks, close: ch}
+	c.pshks = &pshks{hooks: hooks, orig: hooks, close: ch}
 	return ch
+}
+
+func (c *dedicatedClusterClient) SetOnInvalidations(fn func([]RedisMessage)) <-chan error {
+	c.mu.Lock()
+	var hooks PubSubHooks
+	if c.wire != nil {
+		hooks = c.wire.GetPubSubHooks()
+	} else if c.pshks != nil {
+		hooks = c.pshks.hooks
+	}
+	c.mu.Unlock()
+	hooks.onInvalidations = fn
+	return c.SetPubSubHooks(hooks)
 }
 
 func (c *dedicatedClusterClient) Close() {

@@ -1201,6 +1201,10 @@ func (m *mockWire) SetPubSubHooks(hooks PubSubHooks) <-chan error {
 	return nil
 }
 
+func (m *mockWire) GetPubSubHooks() PubSubHooks {
+	return PubSubHooks{}
+}
+
 func (m *mockWire) SetOnCloseHook(fn func(error)) {
 	if m.SetOnCloseHookFn != nil {
 		m.SetOnCloseHookFn(fn)
