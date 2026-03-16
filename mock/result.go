@@ -226,5 +226,6 @@ type errs struct{ error }
 
 type pshks struct {
 	hooks rueidis.PubSubHooks
+	orig  rueidis.PubSubHooks
 	close chan error
 }

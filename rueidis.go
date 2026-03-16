@@ -422,7 +422,7 @@ type DedicatedClient interface {
 	//   1. an error channel, if fn is not nil, or
 	//   2. nil, if fn is nil. (used for reset)
 	// In the former case, the error channel is guaranteed to be closed when fn will not be called anymore.
-	// Note that CLIENT TRACKING will be automatically turned off when the invalidation hook is cleared.
+	// Note that callers are responsible for turning off CLIENT TRACKING when it is no longer needed.
 	SetOnInvalidations(fn func([]RedisMessage)) <-chan error
 }
 

@@ -57,6 +57,7 @@ type wire interface {
 
 	CleanSubscriptions()
 	SetPubSubHooks(hooks PubSubHooks) <-chan error
+	GetPubSubHooks() PubSubHooks
 	SetOnCloseHook(fn func(error))
 	StopTimer() bool
 	ResetTimer() bool
@@ -903,6 +904,16 @@ func (p *pipe) CleanSubscriptions() {
 	}
 }
 
+func (p *pipe) GetPubSubHooks() PubSubHooks {
+	if p.r2p != nil {
+		return p.r2p.pipe(context.Background()).GetPubSubHooks()
+	}
+	if pshks := p.pshks.Load(); pshks != emptypshks {
+		return pshks.orig
+	}
+	return PubSubHooks{}
+}
+
 func (p *pipe) SetPubSubHooks(hooks PubSubHooks) <-chan error {
 	if p.r2p != nil {
 		return p.r2p.pipe(context.Background()).SetPubSubHooks(hooks)
@@ -913,6 +924,7 @@ func (p *pipe) SetPubSubHooks(hooks PubSubHooks) <-chan error {
 		}
 		return nil
 	}
+	orig := hooks
 	if hooks.OnMessage == nil {
 		hooks.OnMessage = func(m PubSubMessage) {}
 	}
@@ -920,7 +932,7 @@ func (p *pipe) SetPubSubHooks(hooks PubSubHooks) <-chan error {
 		hooks.OnSubscription = func(s PubSubSubscription) {}
 	}
 	ch := make(chan error, 1)
-	if old := p.pshks.Swap(&pshks{hooks: hooks, close: ch}); old.close != nil {
+	if old := p.pshks.Swap(&pshks{hooks: hooks, orig: orig, close: ch}); old.close != nil {
 		close(old.close)
 	}
 	if err := p.Error(); err != nil {
@@ -1792,6 +1804,7 @@ func (r *r2p) Close() {
 
 type pshks struct {
 	hooks PubSubHooks
+	orig  PubSubHooks
 	close chan error
 }
 
