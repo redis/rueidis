@@ -115,6 +115,11 @@ func (l *rateLimiter) AllowN(ctx context.Context, identifier string, n int64, op
 	key := rueidis.BinaryString(bufs.keyBuf[offset:])
 
 	offset = len(bufs.keyBuf)
+	bufs.keyBuf = append(bufs.keyBuf, key...)
+	bufs.keyBuf = append(bufs.keyBuf, ":ex"...)
+	expiresAtKey := rueidis.BinaryString(bufs.keyBuf[offset:])
+
+	offset = len(bufs.keyBuf)
 	bufs.keyBuf = strconv.AppendInt(bufs.keyBuf, n, 10)
 	arg1 := rueidis.BinaryString(bufs.keyBuf[offset:])
 
@@ -126,7 +131,7 @@ func (l *rateLimiter) AllowN(ctx context.Context, identifier string, n int64, op
 	bufs.keyBuf = strconv.AppendInt(bufs.keyBuf, now.UnixMilli(), 10)
 	arg3 := rueidis.BinaryString(bufs.keyBuf[offset:])
 
-	resp := rateLimitScript.Exec(ctx, l.client, []string{key}, []string{arg1, arg2, arg3})
+	resp := rateLimitScript.Exec(ctx, l.client, []string{key, expiresAtKey}, []string{arg1, arg2, arg3})
 	if err := resp.Error(); err != nil {
 		return Result{}, err
 	}
