@@ -166,7 +166,7 @@ local rate_limit_key = KEYS[1]
 local increment_amount = tonumber(ARGV[1])
 local next_expires_at = tonumber(ARGV[2])
 local current_time = tonumber(ARGV[3])
-local expires_at_key = rate_limit_key .. ":ex"
+local expires_at_key = KEYS[2]
 local expires_at = tonumber(redis.call("get", expires_at_key))
 if not expires_at or expires_at < current_time then
   redis.call("set", rate_limit_key, 0, "pxat", next_expires_at + 1000)
