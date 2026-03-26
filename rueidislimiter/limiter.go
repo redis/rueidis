@@ -115,6 +115,11 @@ func (l *rateLimiter) AllowN(ctx context.Context, identifier string, n int64, op
 	key := rueidis.BinaryString(bufs.keyBuf[offset:])
 
 	offset = len(bufs.keyBuf)
+	bufs.keyBuf = append(bufs.keyBuf, key...)
+	bufs.keyBuf = append(bufs.keyBuf, ":ex"...)
+	expiresAtKey := rueidis.BinaryString(bufs.keyBuf[offset:])
+
+	offset = len(bufs.keyBuf)
 	bufs.keyBuf = strconv.AppendInt(bufs.keyBuf, n, 10)
 	arg1 := rueidis.BinaryString(bufs.keyBuf[offset:])
 
@@ -126,7 +131,7 @@ func (l *rateLimiter) AllowN(ctx context.Context, identifier string, n int64, op
 	bufs.keyBuf = strconv.AppendInt(bufs.keyBuf, now.UnixMilli(), 10)
 	arg3 := rueidis.BinaryString(bufs.keyBuf[offset:])
 
-	resp := rateLimitScript.Exec(ctx, l.client, []string{key}, []string{arg1, arg2, arg3})
+	resp := rateLimitScript.Exec(ctx, l.client, []string{key, expiresAtKey}, []string{arg1, arg2, arg3})
 	if err := resp.Error(); err != nil {
 		return Result{}, err
 	}
@@ -161,7 +166,7 @@ local rate_limit_key = KEYS[1]
 local increment_amount = tonumber(ARGV[1])
 local next_expires_at = tonumber(ARGV[2])
 local current_time = tonumber(ARGV[3])
-local expires_at_key = rate_limit_key .. ":ex"
+local expires_at_key = KEYS[2]
 local expires_at = tonumber(redis.call("get", expires_at_key))
 if not expires_at or expires_at < current_time then
   redis.call("set", rate_limit_key, 0, "pxat", next_expires_at + 1000)
