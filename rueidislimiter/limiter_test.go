@@ -3,6 +3,7 @@ package rueidislimiter_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -356,6 +357,50 @@ func TestRateLimiter_Limit(t *testing.T) {
 
 	if got := limiter.Limit(); got != 42 {
 		t.Fatalf("Limit() = %v, want %v", got, 42)
+	}
+}
+
+func TestRateLimiter_AllowN_Dragonfly(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
+
+	limiter, err := rueidislimiter.NewRateLimiter(rueidislimiter.RateLimiterOption{
+		ClientOption: rueidis.ClientOption{
+			InitAddress: []string{"127.0.0.1:6333"},
+		},
+		KeyPrefix: "dragonfly_allow_n_test",
+		Limit:     2,
+		Window:    time.Second,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	id := fmt.Sprintf("id-%d", time.Now().UnixNano())
+
+	result, err := limiter.AllowN(context.Background(), id, 1)
+	if err != nil {
+		t.Fatalf("AllowN() first call error = %v", err)
+	}
+	if !result.Allowed || result.Remaining != 1 {
+		t.Fatalf("AllowN() first call = %+v, want Allowed=true Remaining=1", result)
+	}
+
+	result, err = limiter.AllowN(context.Background(), id, 1)
+	if err != nil {
+		t.Fatalf("AllowN() second call error = %v", err)
+	}
+	if !result.Allowed || result.Remaining != 0 {
+		t.Fatalf("AllowN() second call = %+v, want Allowed=true Remaining=0", result)
+	}
+
+	result, err = limiter.AllowN(context.Background(), id, 1)
+	if err != nil {
+		t.Fatalf("AllowN() third call error = %v", err)
+	}
+	if result.Allowed || result.Remaining != 0 {
+		t.Fatalf("AllowN() third call = %+v, want Allowed=false Remaining=0", result)
 	}
 }
 
