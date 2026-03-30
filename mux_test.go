@@ -474,7 +474,7 @@ func TestMuxReuseWire(t *testing.T) {
 		}
 	})
 
-	t.Run("send CLIENT TRACKING OFF on store when version >= 6", func(t *testing.T) {
+	t.Run("send CLIENT TRACKING OFF on store when onInvalidations was set", func(t *testing.T) {
 		cleaned := false
 		trackingOffCalls := 0
 
@@ -483,8 +483,8 @@ func TestMuxReuseWire(t *testing.T) {
 				// leave first wire for pipeline calls
 			},
 			{
-				VersionFn: func() int {
-					return 6
+				GetPubSubHooksFn: func() PubSubHooks {
+					return PubSubHooks{onInvalidations: func([]RedisMessage) {}}
 				},
 				CleanSubscriptionsFn: func() {
 					cleaned = true
@@ -518,7 +518,7 @@ func TestMuxReuseWire(t *testing.T) {
 		}
 	})
 
-	t.Run("skip CLIENT TRACKING OFF on store when version < 6", func(t *testing.T) {
+	t.Run("skip CLIENT TRACKING OFF on store when no onInvalidations was set", func(t *testing.T) {
 		cleaned := false
 		doCalled := false
 
@@ -527,8 +527,8 @@ func TestMuxReuseWire(t *testing.T) {
 				// leave first wire for pipeline calls
 			},
 			{
-				VersionFn: func() int {
-					return 5
+				GetPubSubHooksFn: func() PubSubHooks {
+					return PubSubHooks{OnMessage: func(PubSubMessage) {}}
 				},
 				CleanSubscriptionsFn: func() {
 					cleaned = true
@@ -553,7 +553,7 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("CleanSubscriptions not called")
 		}
 		if doCalled {
-			t.Fatalf("CLIENT TRACKING OFF should not be sent for version < 6")
+			t.Fatalf("CLIENT TRACKING OFF should not be sent when onInvalidations was not set")
 		}
 	})
 }
@@ -1219,6 +1219,7 @@ type mockWire struct {
 
 	CleanSubscriptionsFn func()
 	SetPubSubHooksFn     func(hooks PubSubHooks) <-chan error
+	GetPubSubHooksFn     func() PubSubHooks
 	SetOnCloseHookFn     func(fn func(error))
 }
 
@@ -1285,6 +1286,9 @@ func (m *mockWire) SetPubSubHooks(hooks PubSubHooks) <-chan error {
 }
 
 func (m *mockWire) GetPubSubHooks() PubSubHooks {
+	if m.GetPubSubHooksFn != nil {
+		return m.GetPubSubHooksFn()
+	}
 	return PubSubHooks{}
 }
 
