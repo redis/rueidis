@@ -396,6 +396,9 @@ func (m *mux) Acquire(ctx context.Context) wire {
 func (m *mux) Store(w wire) {
 	w.SetPubSubHooks(PubSubHooks{})
 	w.CleanSubscriptions()
+	if w.Version() >= 6 {
+		w.Do(context.Background(), cmds.ClientTrackingOffCmd)
+	}
 	m.dpool.Store(w)
 }
 

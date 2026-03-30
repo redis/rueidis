@@ -417,12 +417,14 @@ type DedicatedClient interface {
 	// SetOnInvalidations is an alternative way to receive client-side caching invalidation messages
 	// on a dedicated connection instead of using the OnInvalidations callback in ClientOption.
 	// This is useful when using CLIENT TRACKING on a dedicated connection.
+	// Existing PubSubHooks set via SetPubSubHooks are preserved; only the invalidation callback is replaced.
 	// Note that fn will be called sequentially but in another goroutine.
 	// The return value will be either:
-	//   1. an error channel, if fn is not nil, or
-	//   2. nil, if fn is nil. (used for reset)
+	//   1. an error channel, if the resulting hook set is non-zero, or
+	//   2. nil, if clearing fn leaves no hooks installed.
 	// In the former case, the error channel is guaranteed to be closed when fn will not be called anymore.
-	// Note that callers are responsible for turning off CLIENT TRACKING when it is no longer needed.
+	// When the dedicated connection is returned to the pool, CLIENT TRACKING OFF is sent automatically
+	// so that no tracking state is retained across reuse.
 	SetOnInvalidations(fn func([]RedisMessage)) <-chan error
 }
 

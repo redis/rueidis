@@ -473,6 +473,89 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("CleanSubscriptions not called")
 		}
 	})
+
+	t.Run("send CLIENT TRACKING OFF on store when version >= 6", func(t *testing.T) {
+		cleaned := false
+		trackingOffCalls := 0
+
+		m, checkClean := setupMux([]*mockWire{
+			{
+				// leave first wire for pipeline calls
+			},
+			{
+				VersionFn: func() int {
+					return 6
+				},
+				CleanSubscriptionsFn: func() {
+					cleaned = true
+				},
+				DoFn: func(cmd Completed) RedisResult {
+					got := cmd.Commands()
+					if len(got) == 3 && got[0] == "CLIENT" && got[1] == "TRACKING" && got[2] == "OFF" {
+						trackingOffCalls++
+						return newResult(strmsg('+', "OK"), nil)
+					}
+					t.Fatalf("unexpected command: %v", got)
+					return RedisResult{}
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+
+		if err := m.Dial(); err != nil {
+			t.Fatalf("unexpected dial error %v", err)
+		}
+
+		wire1 := m.Acquire(context.Background())
+		m.Store(wire1)
+
+		if !cleaned {
+			t.Fatalf("CleanSubscriptions not called")
+		}
+		if trackingOffCalls != 1 {
+			t.Fatalf("unexpected CLIENT TRACKING OFF calls: %d", trackingOffCalls)
+		}
+	})
+
+	t.Run("skip CLIENT TRACKING OFF on store when version < 6", func(t *testing.T) {
+		cleaned := false
+		doCalled := false
+
+		m, checkClean := setupMux([]*mockWire{
+			{
+				// leave first wire for pipeline calls
+			},
+			{
+				VersionFn: func() int {
+					return 5
+				},
+				CleanSubscriptionsFn: func() {
+					cleaned = true
+				},
+				DoFn: func(cmd Completed) RedisResult {
+					doCalled = true
+					return newResult(strmsg('+', "OK"), nil)
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+
+		if err := m.Dial(); err != nil {
+			t.Fatalf("unexpected dial error %v", err)
+		}
+
+		wire1 := m.Acquire(context.Background())
+		m.Store(wire1)
+
+		if !cleaned {
+			t.Fatalf("CleanSubscriptions not called")
+		}
+		if doCalled {
+			t.Fatalf("CLIENT TRACKING OFF should not be sent for version < 6")
+		}
+	})
 }
 
 //gocyclo:ignore
