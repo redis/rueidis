@@ -1607,7 +1607,7 @@ func (c *dedicatedClusterClient) SetPubSubHooks(hooks PubSubHooks) <-chan error 
 		return nil
 	}
 	ch := make(chan error, 1)
-	c.pshks = &pshks{hooks: hooks, orig: hooks, close: ch}
+	c.pshks = &pshks{hooks: hooks, close: ch}
 	return ch
 }
 

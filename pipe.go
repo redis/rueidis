@@ -759,60 +759,78 @@ func (p *pipe) handlePush(values []RedisMessage) (reply bool, unsubscribe bool) 
 		if len(values) >= 3 {
 			m := PubSubMessage{Channel: values[1].string(), Message: values[2].string()}
 			p.nsubs.Publish(values[1].string(), m)
-			p.pshks.Load().hooks.OnMessage(m)
+			if fn := p.pshks.Load().hooks.OnMessage; fn != nil {
+				fn(m)
+			}
 		}
 	case "pmessage":
 		if len(values) >= 4 {
 			m := PubSubMessage{Pattern: values[1].string(), Channel: values[2].string(), Message: values[3].string()}
 			p.psubs.Publish(values[1].string(), m)
-			p.pshks.Load().hooks.OnMessage(m)
+			if fn := p.pshks.Load().hooks.OnMessage; fn != nil {
+				fn(m)
+			}
 		}
 	case "smessage":
 		if len(values) >= 3 {
 			m := PubSubMessage{Channel: values[1].string(), Message: values[2].string()}
 			p.ssubs.Publish(values[1].string(), m)
-			p.pshks.Load().hooks.OnMessage(m)
+			if fn := p.pshks.Load().hooks.OnMessage; fn != nil {
+				fn(m)
+			}
 		}
 	case "unsubscribe":
 		if len(values) >= 3 {
 			s := PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].intlen}
 			p.nsubs.Unsubscribe(s)
-			p.pshks.Load().hooks.OnSubscription(s)
+			if fn := p.pshks.Load().hooks.OnSubscription; fn != nil {
+				fn(s)
+			}
 		}
 		return true, true
 	case "punsubscribe":
 		if len(values) >= 3 {
 			s := PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].intlen}
 			p.psubs.Unsubscribe(s)
-			p.pshks.Load().hooks.OnSubscription(s)
+			if fn := p.pshks.Load().hooks.OnSubscription; fn != nil {
+				fn(s)
+			}
 		}
 		return true, true
 	case "sunsubscribe":
 		if len(values) >= 3 {
 			s := PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].intlen}
 			p.ssubs.Unsubscribe(s)
-			p.pshks.Load().hooks.OnSubscription(s)
+			if fn := p.pshks.Load().hooks.OnSubscription; fn != nil {
+				fn(s)
+			}
 		}
 		return true, true
 	case "subscribe":
 		if len(values) >= 3 {
 			s := PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].intlen}
 			p.nsubs.Confirm(s)
-			p.pshks.Load().hooks.OnSubscription(s)
+			if fn := p.pshks.Load().hooks.OnSubscription; fn != nil {
+				fn(s)
+			}
 		}
 		return true, false
 	case "psubscribe":
 		if len(values) >= 3 {
 			s := PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].intlen}
 			p.psubs.Confirm(s)
-			p.pshks.Load().hooks.OnSubscription(s)
+			if fn := p.pshks.Load().hooks.OnSubscription; fn != nil {
+				fn(s)
+			}
 		}
 		return true, false
 	case "ssubscribe":
 		if len(values) >= 3 {
 			s := PubSubSubscription{Kind: values[0].string(), Channel: values[1].string(), Count: values[2].intlen}
 			p.ssubs.Confirm(s)
-			p.pshks.Load().hooks.OnSubscription(s)
+			if fn := p.pshks.Load().hooks.OnSubscription; fn != nil {
+				fn(s)
+			}
 		}
 		return true, false
 	}
@@ -909,7 +927,7 @@ func (p *pipe) GetPubSubHooks() PubSubHooks {
 		return p.r2p.pipe(context.Background()).GetPubSubHooks()
 	}
 	if pshks := p.pshks.Load(); pshks != emptypshks {
-		return pshks.orig
+		return pshks.hooks
 	}
 	return PubSubHooks{}
 }
@@ -924,15 +942,8 @@ func (p *pipe) SetPubSubHooks(hooks PubSubHooks) <-chan error {
 		}
 		return nil
 	}
-	orig := hooks
-	if hooks.OnMessage == nil {
-		hooks.OnMessage = func(m PubSubMessage) {}
-	}
-	if hooks.OnSubscription == nil {
-		hooks.OnSubscription = func(s PubSubSubscription) {}
-	}
 	ch := make(chan error, 1)
-	if old := p.pshks.Swap(&pshks{hooks: hooks, orig: orig, close: ch}); old.close != nil {
+	if old := p.pshks.Swap(&pshks{hooks: hooks, close: ch}); old.close != nil {
 		close(old.close)
 	}
 	if err := p.Error(); err != nil {
@@ -1804,17 +1815,10 @@ func (r *r2p) Close() {
 
 type pshks struct {
 	hooks PubSubHooks
-	orig  PubSubHooks
 	close chan error
 }
 
-var emptypshks = &pshks{
-	hooks: PubSubHooks{
-		OnMessage:      func(m PubSubMessage) {},
-		OnSubscription: func(s PubSubSubscription) {},
-	},
-	close: nil,
-}
+var emptypshks = &pshks{}
 
 var emptyclhks = func(error) {}
 
