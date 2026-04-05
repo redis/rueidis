@@ -4641,8 +4641,8 @@ func testAdapter(resp3 bool) {
 
 				zRange, err := adapter.ZRangeArgs(ctx, ZRangeArgs{
 					Key:     "zset",
-					Start:   1,
-					Stop:    4,
+					Start:   4,
+					Stop:    1,
 					ByScore: true,
 					Rev:     true,
 					Offset:  1,
@@ -4653,8 +4653,8 @@ func testAdapter(resp3 bool) {
 
 				zRange, err = adapter.ZRangeArgs(ctx, ZRangeArgs{
 					Key:    "zset",
-					Start:  "-",
-					Stop:   "+",
+					Start:  "+",
+					Stop:   "-",
 					ByLex:  true,
 					Rev:    true,
 					Offset: 2,
@@ -4675,8 +4675,8 @@ func testAdapter(resp3 bool) {
 				// withScores.
 				zSlice, err := adapter.ZRangeArgsWithScores(ctx, ZRangeArgs{
 					Key:     "zset",
-					Start:   1,
-					Stop:    4,
+					Start:   4,
+					Stop:    1,
 					ByScore: true,
 					Rev:     true,
 					Offset:  1,
@@ -4901,8 +4901,8 @@ func testAdapter(resp3 bool) {
 
 				rangeStore, err := adapter.ZRangeStore(ctx, "new-zset", ZRangeArgs{
 					Key:     "zset",
-					Start:   1,
-					Stop:    4,
+					Start:   4,
+					Stop:    1,
 					ByScore: true,
 					Rev:     true,
 					Offset:  1,
@@ -8378,8 +8378,8 @@ func testAdapterCache(resp3 bool) {
 
 			zRange, err := adapter.Cache(time.Hour).ZRangeArgs(ctx, ZRangeArgs{
 				Key:     "zset",
-				Start:   1,
-				Stop:    4,
+				Start:   4,
+				Stop:    1,
 				ByScore: true,
 				Rev:     true,
 				Offset:  1,
@@ -8390,8 +8390,8 @@ func testAdapterCache(resp3 bool) {
 
 			zRange, err = adapter.Cache(time.Hour).ZRangeArgs(ctx, ZRangeArgs{
 				Key:    "zset",
-				Start:  "-",
-				Stop:   "+",
+				Start:  "+",
+				Stop:   "-",
 				ByLex:  true,
 				Rev:    true,
 				Offset: 2,
@@ -8412,8 +8412,8 @@ func testAdapterCache(resp3 bool) {
 			// withScores.
 			zSlice, err := adapter.Cache(time.Hour).ZRangeArgsWithScores(ctx, ZRangeArgs{
 				Key:     "zset",
-				Start:   1,
-				Stop:    4,
+				Start:   4,
+				Stop:    1,
 				ByScore: true,
 				Rev:     true,
 				Offset:  1,
