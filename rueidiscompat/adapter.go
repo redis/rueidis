@@ -2494,11 +2494,7 @@ func (c *Compat) ZPopMin(ctx context.Context, key string, count ...int64) *ZSlic
 
 func (c *Compat) zRangeArgs(withScores bool, z ZRangeArgs) rueidis.Completed {
 	cmd := c.client.B().Arbitrary("ZRANGE").Keys(z.Key)
-	if z.Rev && (z.ByScore || z.ByLex) {
-		cmd = cmd.Args(str(z.Stop), str(z.Start))
-	} else {
-		cmd = cmd.Args(str(z.Start), str(z.Stop))
-	}
+	cmd = cmd.Args(str(z.Start), str(z.Stop))
 	if z.ByScore {
 		cmd = cmd.Args("BYSCORE")
 	} else if z.ByLex {
@@ -2580,11 +2576,7 @@ func (c *Compat) ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) *ZSlice
 
 func (c *Compat) ZRangeStore(ctx context.Context, dst string, z ZRangeArgs) *IntCmd {
 	cmd := c.client.B().Arbitrary("ZRANGESTORE").Keys(dst, z.Key)
-	if z.Rev && (z.ByScore || z.ByLex) {
-		cmd = cmd.Args(str(z.Stop), str(z.Start))
-	} else {
-		cmd = cmd.Args(str(z.Start), str(z.Stop))
-	}
+	cmd = cmd.Args(str(z.Start), str(z.Stop))
 	if z.ByScore {
 		cmd = cmd.Args("BYSCORE")
 	} else if z.ByLex {
@@ -6268,11 +6260,7 @@ func (c CacheCompat) ZMScore(ctx context.Context, key string, members ...string)
 
 func (c CacheCompat) zRangeArgs(withScores bool, z ZRangeArgs) rueidis.Cacheable {
 	cmd := c.client.B().Arbitrary("ZRANGE").Keys(z.Key)
-	if z.Rev && (z.ByScore || z.ByLex) {
-		cmd = cmd.Args(str(z.Stop), str(z.Start))
-	} else {
-		cmd = cmd.Args(str(z.Start), str(z.Stop))
-	}
+	cmd = cmd.Args(str(z.Start), str(z.Stop))
 	if z.ByScore {
 		cmd = cmd.Args("BYSCORE")
 	} else if z.ByLex {
