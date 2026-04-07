@@ -1959,3 +1959,273 @@ func TestAZAffinityNodesSelection(t *testing.T) {
 		}))
 	})
 }
+
+// TestClusterHelpersMgetcmdspRecycle exercises doMultiSet / clusterMGet / clusterJsonMGet
+// paths that return *mgetcmds to the pool only when no result has a non-Redis error.
+func TestClusterHelpersMgetcmdspRecycle(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	cluster := func() (*mockConn, *clusterClient) {
+		m := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return slotsResp
+			},
+		}
+		client, err := newClusterClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("newClusterClient: %v", err)
+		}
+		return m, client
+	}
+
+	t.Run("doMultiSet_skips_mgetcmdsp_Put_when_any_non_redis_error", func(t *testing.T) {
+		m, client := cluster()
+		m.DoMultiFn = func(cmd ...Completed) *redisresults {
+			out := make([]RedisResult, len(cmd))
+			for i, c := range cmd {
+				if c.Commands()[1] == "{x}dead" {
+					out[i] = newErrResult(context.DeadlineExceeded)
+				} else {
+					out[i] = newResult(strmsg('+', "OK"), nil)
+				}
+			}
+			return &redisresults{s: out}
+		}
+		errs := MSet(client, context.Background(), map[string]string{
+			"{x}ok":   "1",
+			"{x}dead": "2",
+		})
+		if errs["{x}ok"] != nil {
+			t.Fatalf("ok key: %v", errs["{x}ok"])
+		}
+		if !errors.Is(errs["{x}dead"], context.DeadlineExceeded) {
+			t.Fatalf("dead key: got %v", errs["{x}dead"])
+		}
+	})
+
+	t.Run("doMultiSet_Put_mgetcmdsp_when_only_redis_level_errors", func(t *testing.T) {
+		m, client := cluster()
+		m.DoMultiFn = func(cmd ...Completed) *redisresults {
+			out := make([]RedisResult, len(cmd))
+			for i := range cmd {
+				out[i] = newResult(strmsg(typeSimpleErr, "ERR oops"), nil)
+			}
+			return &redisresults{s: out}
+		}
+		errs := MSet(client, context.Background(), map[string]string{"{x}a": "1", "{x}b": "2"})
+		for k, e := range errs {
+			var re *RedisError
+			if !errors.As(e, &re) {
+				t.Fatalf("key %s: want *RedisError, got %T %v", k, e, e)
+			}
+		}
+	})
+
+	t.Run("clusterMGet_empty_keys", func(t *testing.T) {
+		_, client := cluster()
+		v, err := MGet(client, context.Background(), []string{})
+		if err != nil || v == nil {
+			t.Fatalf("got %v %v", v, err)
+		}
+	})
+
+	t.Run("clusterMGet_direct_empty_keys", func(t *testing.T) {
+		_, client := cluster()
+		v, err := clusterMGet(client, context.Background(), []string{})
+		if err != nil || v == nil || len(v) != 0 {
+			t.Fatalf("got %v %v", v, err)
+		}
+	})
+
+	t.Run("clusterMGet_same_slot_two_keys_recycles_mgetcmdsp", func(t *testing.T) {
+		m, client := cluster()
+		m.DoMultiFn = func(cmd ...Completed) *redisresults {
+			if len(cmd) != 1 {
+				t.Fatalf("want 1 merged MGET, got %d", len(cmd))
+			}
+			args := cmd[0].Commands()
+			if args[0] != "MGET" {
+				t.Fatalf("got %v", args)
+			}
+			vals := make([]RedisMessage, len(args)-1)
+			for j := 1; j < len(args); j++ {
+				vals[j-1] = strmsg('+', args[j])
+			}
+			return &redisresults{s: []RedisResult{newResult(slicemsg('*', vals), nil)}}
+		}
+		v, err := MGet(client, context.Background(), []string{"{s}a", "{s}b"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		va, vb := v["{s}a"], v["{s}b"]
+		if va.string() != "{s}a" || vb.string() != "{s}b" {
+			t.Fatalf("unexpected map %v", v)
+		}
+	})
+
+	t.Run("clusterMGet_defers_mgetcmdsp_Put_when_ToArray_fails_without_non_redis", func(t *testing.T) {
+		m, client := cluster()
+		m.DoMultiFn = func(cmd ...Completed) *redisresults {
+			if len(cmd) != 1 {
+				t.Fatalf("want 1 MGET batch, got %d", len(cmd))
+			}
+			// Non-array success: no r.err, so first-loop recycle stays true; ToArray then errors.
+			return &redisresults{s: []RedisResult{newResult(strmsg('+', "not-an-array"), nil)}}
+		}
+		_, err := MGet(client, context.Background(), []string{"{s}only"})
+		if err == nil {
+			t.Fatal("expected ToArray / parse error")
+		}
+	})
+
+	t.Run("clusterMGet_first_loop_break_on_later_non_redis", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		m, client := cluster()
+		m.DoMultiFn = func(cmd ...Completed) *redisresults {
+			if len(cmd) < 2 {
+				t.Fatalf("want at least 2 MGET commands, got %d", len(cmd))
+			}
+			out := make([]RedisResult, len(cmd))
+			for i := range cmd {
+				if i == 0 {
+					args := cmd[i].Commands()
+					vals := make([]RedisMessage, len(args)-1)
+					for j := 1; j < len(args); j++ {
+						vals[j-1] = strmsg('+', args[j])
+					}
+					out[i] = newResult(slicemsg('*', vals), nil)
+				} else {
+					out[i] = newErrResult(context.Canceled)
+				}
+			}
+			return &redisresults{s: out}
+		}
+		_, err := MGet(client, ctx, []string{"1", "2"})
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("got %v", err)
+		}
+	})
+
+	t.Run("clusterMGet_skips_mgetcmdsp_Put_on_non_redis_error", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		m, client := cluster()
+		m.DoMultiFn = func(cmd ...Completed) *redisresults {
+			s := make([]RedisResult, len(cmd))
+			for i := range s {
+				s[i] = newErrResult(context.Canceled)
+			}
+			return &redisresults{s: s}
+		}
+		_, err := MGet(client, ctx, []string{"1", "2"})
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("got %v", err)
+		}
+	})
+
+	t.Run("clusterJsonMGet_empty_keys", func(t *testing.T) {
+		_, client := cluster()
+		v, err := JsonMGet(client, context.Background(), []string{}, "$")
+		if err != nil || v == nil {
+			t.Fatalf("got %v %v", v, err)
+		}
+	})
+
+	t.Run("clusterJsonMGet_direct_empty_keys", func(t *testing.T) {
+		_, client := cluster()
+		v, err := clusterJsonMGet(client, context.Background(), []string{}, "$")
+		if err != nil || v == nil || len(v) != 0 {
+			t.Fatalf("got %v %v", v, err)
+		}
+	})
+
+	t.Run("clusterJsonMGet_same_slot_two_keys_recycles_mgetcmdsp", func(t *testing.T) {
+		m, client := cluster()
+		m.DoMultiFn = func(cmd ...Completed) *redisresults {
+			if len(cmd) != 1 {
+				t.Fatalf("want 1 merged JSON.MGET, got %d", len(cmd))
+			}
+			args := cmd[0].Commands()
+			if args[0] != "JSON.MGET" || args[len(args)-1] != "$" {
+				t.Fatalf("got %v", args)
+			}
+			vals := make([]RedisMessage, len(args)-2)
+			for j := 1; j < len(args)-1; j++ {
+				vals[j-1] = strmsg('+', args[j])
+			}
+			return &redisresults{s: []RedisResult{newResult(slicemsg('*', vals), nil)}}
+		}
+		v, err := JsonMGet(client, context.Background(), []string{"{s}x", "{s}y"}, "$")
+		if err != nil {
+			t.Fatal(err)
+		}
+		vx, vy := v["{s}x"], v["{s}y"]
+		if vx.string() != "{s}x" || vy.string() != "{s}y" {
+			t.Fatalf("unexpected map %v", v)
+		}
+	})
+
+	t.Run("clusterJsonMGet_defers_mgetcmdsp_Put_when_ToArray_fails_without_non_redis", func(t *testing.T) {
+		m, client := cluster()
+		m.DoMultiFn = func(cmd ...Completed) *redisresults {
+			if len(cmd) != 1 {
+				t.Fatalf("want 1 JSON.MGET batch, got %d", len(cmd))
+			}
+			return &redisresults{s: []RedisResult{newResult(strmsg('+', "not-array"), nil)}}
+		}
+		_, err := JsonMGet(client, context.Background(), []string{"{s}j"}, "$")
+		if err == nil {
+			t.Fatal("expected error from ToArray")
+		}
+	})
+
+	t.Run("clusterJsonMGet_first_loop_break_on_later_non_redis", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		m, client := cluster()
+		m.DoMultiFn = func(cmd ...Completed) *redisresults {
+			if len(cmd) < 2 {
+				t.Fatalf("want at least 2 JSON.MGET commands, got %d", len(cmd))
+			}
+			out := make([]RedisResult, len(cmd))
+			for i := range cmd {
+				if i == 0 {
+					args := cmd[i].Commands()
+					vals := make([]RedisMessage, len(args)-2)
+					for j := 1; j < len(args)-1; j++ {
+						vals[j-1] = strmsg('+', args[j])
+					}
+					out[i] = newResult(slicemsg('*', vals), nil)
+				} else {
+					out[i] = newErrResult(context.Canceled)
+				}
+			}
+			return &redisresults{s: out}
+		}
+		_, err := JsonMGet(client, ctx, []string{"1", "2"}, "$")
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("got %v", err)
+		}
+	})
+
+	t.Run("clusterJsonMGet_skips_mgetcmdsp_Put_on_non_redis_error", func(t *testing.T) {
+		ctx, cancel := context.WithCancel(context.Background())
+		cancel()
+		m, client := cluster()
+		m.DoMultiFn = func(cmd ...Completed) *redisresults {
+			s := make([]RedisResult, len(cmd))
+			for i := range s {
+				s[i] = newErrResult(context.Canceled)
+			}
+			return &redisresults{s: s}
+		}
+		_, err := JsonMGet(client, ctx, []string{"1", "2"}, "$")
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("got %v", err)
+		}
+	})
+}
