@@ -3017,6 +3017,167 @@ func TestOnInvalidations(t *testing.T) {
 	}
 }
 
+func TestOnInvalidationsViaHooks(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	ch := make(chan []RedisMessage)
+	p, mock, cancel, _ := setup(t, ClientOption{})
+
+	p.SetPubSubHooks(PubSubHooks{
+		onInvalidations: func(messages []RedisMessage) {
+			ch <- messages
+		},
+	})
+
+	go func() {
+		mock.Expect().Reply(slicemsg(
+			'>',
+			[]RedisMessage{
+				strmsg('+', "invalidate"),
+				slicemsg('*', []RedisMessage{strmsg('+', "a")}),
+			},
+		))
+	}()
+
+	if messages := <-ch; messages[0].string() != "a" {
+		t.Fatalf("unexpected invalidation %v", messages)
+	}
+
+	go func() {
+		mock.Expect().Reply(slicemsg(
+			'>',
+			[]RedisMessage{
+				strmsg('+', "invalidate"),
+				{typ: '_'},
+			},
+		))
+	}()
+
+	if messages := <-ch; messages != nil {
+		t.Fatalf("unexpected invalidation %v", messages)
+	}
+
+	go cancel()
+
+	if messages := <-ch; messages != nil {
+		t.Fatalf("unexpected invalidation %v", messages)
+	}
+}
+
+func TestSetOnInvalidationsPreservesExistingHooks(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	msgCh := make(chan PubSubMessage, 1)
+	invCh := make(chan []RedisMessage, 1)
+	p, mock, cancel, _ := setup(t, ClientOption{})
+
+	p.SetPubSubHooks(PubSubHooks{
+		OnMessage: func(m PubSubMessage) {
+			msgCh <- m
+		},
+	})
+
+	// SetOnInvalidations should preserve existing OnMessage
+	p.SetPubSubHooks(func() PubSubHooks {
+		hooks := p.GetPubSubHooks()
+		hooks.onInvalidations = func(messages []RedisMessage) {
+			invCh <- messages
+		}
+		return hooks
+	}())
+
+	// verify OnMessage still works
+	go func() {
+		mock.Expect().Reply(slicemsg(
+			'>',
+			[]RedisMessage{
+				strmsg('+', "message"),
+				strmsg('+', "ch1"),
+				strmsg('+', "hello"),
+			},
+		))
+	}()
+
+	if msg := <-msgCh; msg.Message != "hello" {
+		t.Fatalf("unexpected message %v", msg)
+	}
+
+	// verify onInvalidations works
+	go func() {
+		mock.Expect().Reply(slicemsg(
+			'>',
+			[]RedisMessage{
+				strmsg('+', "invalidate"),
+				slicemsg('*', []RedisMessage{strmsg('+', "b")}),
+			},
+		))
+	}()
+
+	if messages := <-invCh; messages[0].string() != "b" {
+		t.Fatalf("unexpected invalidation %v", messages)
+	}
+
+	go cancel()
+}
+
+func TestSetOnInvalidationsNilPreservesOtherHooks(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	msgCh := make(chan PubSubMessage, 1)
+	p, mock, cancel, _ := setup(t, ClientOption{})
+
+	// set both OnMessage and onInvalidations
+	p.SetPubSubHooks(PubSubHooks{
+		OnMessage: func(m PubSubMessage) {
+			msgCh <- m
+		},
+		onInvalidations: func(messages []RedisMessage) {},
+	})
+
+	// clear only onInvalidations
+	p.SetPubSubHooks(func() PubSubHooks {
+		hooks := p.GetPubSubHooks()
+		hooks.onInvalidations = nil
+		return hooks
+	}())
+
+	// verify OnMessage still works
+	go func() {
+		mock.Expect().Reply(slicemsg(
+			'>',
+			[]RedisMessage{
+				strmsg('+', "message"),
+				strmsg('+', "ch1"),
+				strmsg('+', "world"),
+			},
+		))
+	}()
+
+	if msg := <-msgCh; msg.Message != "world" {
+		t.Fatalf("unexpected message %v", msg)
+	}
+
+	go cancel()
+}
+
+func TestSetOnInvalidationsNilResetsWhenNoOtherHooks(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, _, cancel, _ := setup(t, ClientOption{})
+	defer cancel()
+
+	// set only onInvalidations
+	p.SetPubSubHooks(PubSubHooks{
+		onInvalidations: func(messages []RedisMessage) {},
+	})
+
+	// clear onInvalidations via GetPubSubHooks + nil
+	hooks := p.GetPubSubHooks()
+	hooks.onInvalidations = nil
+	ch := p.SetPubSubHooks(hooks)
+
+	// should return nil (reset), not an error channel
+	if ch != nil {
+		t.Fatalf("expected nil channel for zero hooks, got %v", ch)
+	}
+}
+
 func TestConnLifetime(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 

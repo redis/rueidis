@@ -473,6 +473,89 @@ func TestMuxReuseWire(t *testing.T) {
 			t.Fatalf("CleanSubscriptions not called")
 		}
 	})
+
+	t.Run("send CLIENT TRACKING OFF on store when onInvalidations was set", func(t *testing.T) {
+		cleaned := false
+		trackingOffCalls := 0
+
+		m, checkClean := setupMux([]*mockWire{
+			{
+				// leave first wire for pipeline calls
+			},
+			{
+				GetPubSubHooksFn: func() PubSubHooks {
+					return PubSubHooks{onInvalidations: func([]RedisMessage) {}}
+				},
+				CleanSubscriptionsFn: func() {
+					cleaned = true
+				},
+				DoFn: func(cmd Completed) RedisResult {
+					got := cmd.Commands()
+					if len(got) == 3 && got[0] == "CLIENT" && got[1] == "TRACKING" && got[2] == "OFF" {
+						trackingOffCalls++
+						return newResult(strmsg('+', "OK"), nil)
+					}
+					t.Fatalf("unexpected command: %v", got)
+					return RedisResult{}
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+
+		if err := m.Dial(); err != nil {
+			t.Fatalf("unexpected dial error %v", err)
+		}
+
+		wire1 := m.Acquire(context.Background())
+		m.Store(wire1)
+
+		if !cleaned {
+			t.Fatalf("CleanSubscriptions not called")
+		}
+		if trackingOffCalls != 1 {
+			t.Fatalf("unexpected CLIENT TRACKING OFF calls: %d", trackingOffCalls)
+		}
+	})
+
+	t.Run("skip CLIENT TRACKING OFF on store when no onInvalidations was set", func(t *testing.T) {
+		cleaned := false
+		doCalled := false
+
+		m, checkClean := setupMux([]*mockWire{
+			{
+				// leave first wire for pipeline calls
+			},
+			{
+				GetPubSubHooksFn: func() PubSubHooks {
+					return PubSubHooks{OnMessage: func(PubSubMessage) {}}
+				},
+				CleanSubscriptionsFn: func() {
+					cleaned = true
+				},
+				DoFn: func(cmd Completed) RedisResult {
+					doCalled = true
+					return newResult(strmsg('+', "OK"), nil)
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+
+		if err := m.Dial(); err != nil {
+			t.Fatalf("unexpected dial error %v", err)
+		}
+
+		wire1 := m.Acquire(context.Background())
+		m.Store(wire1)
+
+		if !cleaned {
+			t.Fatalf("CleanSubscriptions not called")
+		}
+		if doCalled {
+			t.Fatalf("CLIENT TRACKING OFF should not be sent when onInvalidations was not set")
+		}
+	})
 }
 
 //gocyclo:ignore
@@ -1136,6 +1219,7 @@ type mockWire struct {
 
 	CleanSubscriptionsFn func()
 	SetPubSubHooksFn     func(hooks PubSubHooks) <-chan error
+	GetPubSubHooksFn     func() PubSubHooks
 	SetOnCloseHookFn     func(fn func(error))
 }
 
@@ -1199,6 +1283,13 @@ func (m *mockWire) SetPubSubHooks(hooks PubSubHooks) <-chan error {
 		return m.SetPubSubHooksFn(hooks)
 	}
 	return nil
+}
+
+func (m *mockWire) GetPubSubHooks() PubSubHooks {
+	if m.GetPubSubHooksFn != nil {
+		return m.GetPubSubHooksFn()
+	}
+	return PubSubHooks{}
 }
 
 func (m *mockWire) SetOnCloseHook(fn func(error)) {
