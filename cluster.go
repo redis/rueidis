@@ -195,6 +195,8 @@ func (c *clusterClient) _refresh() (err error) {
 	c.mu.RUnlock()
 
 	var result clusterslots
+	var bestResult clusterslots
+	var bestCoverage int64
 	for i := 0; i < cap(results); i++ {
 		if i&3 == 0 { // batch CLUSTER SLOTS/CLUSTER SHARDS for every 4 connections
 			for j := i; j < i+4 && j < len(pending); j++ {
@@ -206,8 +208,30 @@ func (c *clusterClient) _refresh() (err error) {
 		result = <-results
 		err = result.reply.Error()
 		if len(result.reply.val.values()) != 0 {
-			break
+			var coverage int64
+			for _, v := range result.reply.val.values() {
+				shard, _ := v.AsMap()
+				shardSlots := shard["slots"]
+				slotPairs := shardSlots.values()
+				for k := 0; k+1 < len(slotPairs); k += 2 {
+					start, _ := slotPairs[k].AsInt64()
+					end, _ := slotPairs[k+1].AsInt64()
+					coverage += end - start + 1
+				}
+			}
+			if coverage >= 16384 {
+				bestResult = result
+				break
+			}
+			if coverage > bestCoverage {
+				bestResult = result
+				bestCoverage = coverage
+			}
 		}
+	}
+	if bestCoverage > 0 || bestResult.addr != "" {
+		result = bestResult
+		err = nil
 	}
 	if err != nil {
 		return err
@@ -490,6 +514,9 @@ func (c *clusterClient) pick(ctx context.Context, slot uint16, toReplica bool) (
 }
 
 func (c *clusterClient) redirectOrNew(addr string, prev conn, slot uint16, mode RedirectMode) conn {
+	if host, _, err := net.SplitHostPort(addr); err != nil || host == "" || host == "?" {
+		return prev
+	}
 	c.mu.RLock()
 	cc := c.conns[addr]
 	c.mu.RUnlock()
