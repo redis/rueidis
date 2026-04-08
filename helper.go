@@ -288,19 +288,6 @@ func clusterMGet(client Client, ctx context.Context, keys []string) (ret map[str
 	resps := client.DoMulti(ctx, cmds.s...)
 	defer resultsp.Put(&redisresults{s: resps})
 
-	recycle := true
-	for _, resp := range resps {
-		if resp.NonRedisError() != nil {
-			recycle = false
-			break
-		}
-	}
-	defer func() {
-		if recycle {
-			mgetcmdsp.Put(cmds)
-		}
-	}()
-
 	for i, resp := range resps {
 		arr, err := resp.ToArray()
 		if err != nil {
@@ -309,11 +296,9 @@ func clusterMGet(client Client, ctx context.Context, keys []string) (ret map[str
 		for j, val := range arr {
 			ret[cmds.s[i].Commands()[j+1]] = val
 		}
-	}
-
-	for i := range cmds.s {
 		intl.PutCompletedForce(cmds.s[i])
 	}
+	mgetcmdsp.Put(cmds)
 	return ret, nil
 }
 
@@ -346,19 +331,6 @@ func clusterJsonMGet(client Client, ctx context.Context, keys []string, path str
 	resps := client.DoMulti(ctx, cmds.s...)
 	defer resultsp.Put(&redisresults{s: resps})
 
-	recycle := true
-	for _, resp := range resps {
-		if resp.NonRedisError() != nil {
-			recycle = false
-			break
-		}
-	}
-	defer func() {
-		if recycle {
-			mgetcmdsp.Put(cmds)
-		}
-	}()
-
 	for i, resp := range resps {
 		arr, err := resp.ToArray()
 		if err != nil {
@@ -367,11 +339,9 @@ func clusterJsonMGet(client Client, ctx context.Context, keys []string, path str
 		for j, val := range arr {
 			ret[cmds.s[i].Commands()[j+1]] = val
 		}
-	}
-
-	for i := range cmds.s {
 		intl.PutCompletedForce(cmds.s[i])
 	}
+	mgetcmdsp.Put(cmds)
 	return ret, nil
 }
 
