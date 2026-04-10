@@ -27,9 +27,13 @@
 package rueidiscompat
 
 import (
+	"context"
+	"errors"
 	"runtime"
+	"sync/atomic"
 	"testing"
 
+	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/mock"
 	"go.uber.org/mock/gomock"
 )
@@ -75,6 +79,212 @@ func TestWithNodeScaleoutLimit(t *testing.T) {
 		compat = adapter.(*Compat)
 		if compat.maxp != 1 {
 			t.Errorf("expected maxp to be 1, got %d", compat.maxp)
+		}
+	})
+}
+
+func TestForEachMaster(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("calls fn for each master node", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		masterNode := mock.NewClient(ctrl)
+		replicaNode := mock.NewClient(ctrl)
+		clusterClient := mock.NewClient(ctrl)
+
+		clusterClient.EXPECT().Nodes().Return(map[string]rueidis.Client{
+			"master:6379":  masterNode,
+			"replica:6380": replicaNode,
+		})
+
+		masterNode.EXPECT().Do(gomock.Any(), mock.Match("ROLE")).Return(
+			mock.Result(mock.RedisArray(mock.RedisString("master"))),
+		)
+		replicaNode.EXPECT().Do(gomock.Any(), mock.Match("ROLE")).Return(
+			mock.Result(mock.RedisArray(mock.RedisString("slave"))),
+		)
+
+		var called atomic.Int32
+		adapter := NewAdapter(clusterClient)
+		err := adapter.ForEachMaster(ctx, func(ctx context.Context, client Cmdable) error {
+			called.Add(1)
+			return nil
+		})
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if called.Load() != 1 {
+			t.Errorf("expected fn to be called 1 time, got %d", called.Load())
+		}
+	})
+
+	t.Run("returns first error from fn", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		masterNode := mock.NewClient(ctrl)
+		clusterClient := mock.NewClient(ctrl)
+
+		clusterClient.EXPECT().Nodes().Return(map[string]rueidis.Client{
+			"master:6379": masterNode,
+		})
+
+		masterNode.EXPECT().Do(gomock.Any(), mock.Match("ROLE")).Return(
+			mock.Result(mock.RedisArray(mock.RedisString("master"))),
+		)
+
+		expectedErr := errors.New("test error")
+		adapter := NewAdapter(clusterClient)
+		err := adapter.ForEachMaster(ctx, func(ctx context.Context, client Cmdable) error {
+			return expectedErr
+		})
+		if err == nil {
+			t.Error("expected an error, got nil")
+		} else if err.Error() != expectedErr.Error() {
+			t.Errorf("expected error %v, got %v", expectedErr, err)
+		}
+	})
+
+	t.Run("does not call fn when no master nodes", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		replicaNode := mock.NewClient(ctrl)
+		clusterClient := mock.NewClient(ctrl)
+
+		clusterClient.EXPECT().Nodes().Return(map[string]rueidis.Client{
+			"replica:6380": replicaNode,
+		})
+
+		replicaNode.EXPECT().Do(gomock.Any(), mock.Match("ROLE")).Return(
+			mock.Result(mock.RedisArray(mock.RedisString("slave"))),
+		)
+
+		var called atomic.Int32
+		adapter := NewAdapter(clusterClient)
+		err := adapter.ForEachMaster(ctx, func(ctx context.Context, client Cmdable) error {
+			called.Add(1)
+			return nil
+		})
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if called.Load() != 0 {
+			t.Errorf("expected fn to not be called, got %d", called.Load())
+		}
+	})
+
+	t.Run("returns error when ROLE command fails", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		node := mock.NewClient(ctrl)
+		clusterClient := mock.NewClient(ctrl)
+
+		clusterClient.EXPECT().Nodes().Return(map[string]rueidis.Client{
+			"node:6379": node,
+		})
+
+		roleErr := errors.New("connection refused")
+		node.EXPECT().Do(gomock.Any(), mock.Match("ROLE")).Return(
+			mock.ErrorResult(roleErr),
+		)
+
+		adapter := NewAdapter(clusterClient)
+		err := adapter.ForEachMaster(ctx, func(ctx context.Context, client Cmdable) error {
+			t.Error("fn should not be called when ROLE fails")
+			return nil
+		})
+		if err == nil {
+			t.Error("expected an error, got nil")
+		}
+	})
+
+	t.Run("calls fn with multiple master nodes", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		master1 := mock.NewClient(ctrl)
+		master2 := mock.NewClient(ctrl)
+		clusterClient := mock.NewClient(ctrl)
+
+		clusterClient.EXPECT().Nodes().Return(map[string]rueidis.Client{
+			"master1:6379": master1,
+			"master2:6380": master2,
+		})
+
+		master1.EXPECT().Do(gomock.Any(), mock.Match("ROLE")).Return(
+			mock.Result(mock.RedisArray(mock.RedisString("master"))),
+		)
+		master2.EXPECT().Do(gomock.Any(), mock.Match("ROLE")).Return(
+			mock.Result(mock.RedisArray(mock.RedisString("master"))),
+		)
+
+		var called atomic.Int32
+		adapter := NewAdapter(clusterClient)
+		err := adapter.ForEachMaster(ctx, func(ctx context.Context, client Cmdable) error {
+			called.Add(1)
+			return nil
+		})
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if called.Load() != 2 {
+			t.Errorf("expected fn to be called 2 times, got %d", called.Load())
+		}
+	})
+
+	t.Run("works with empty nodes map", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		clusterClient := mock.NewClient(ctrl)
+
+		clusterClient.EXPECT().Nodes().Return(map[string]rueidis.Client{})
+
+		var called atomic.Int32
+		adapter := NewAdapter(clusterClient)
+		err := adapter.ForEachMaster(ctx, func(ctx context.Context, client Cmdable) error {
+			called.Add(1)
+			return nil
+		})
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if called.Load() != 0 {
+			t.Errorf("expected fn to not be called, got %d", called.Load())
+		}
+	})
+
+	t.Run("provides a working Cmdable to fn", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		masterNode := mock.NewClient(ctrl)
+		clusterClient := mock.NewClient(ctrl)
+
+		clusterClient.EXPECT().Nodes().Return(map[string]rueidis.Client{
+			"master:6379": masterNode,
+		})
+
+		masterNode.EXPECT().Do(gomock.Any(), mock.Match("ROLE")).Return(
+			mock.Result(mock.RedisArray(mock.RedisString("master"))),
+		)
+
+		adapter := NewAdapter(clusterClient)
+		err := adapter.ForEachMaster(ctx, func(ctx context.Context, client Cmdable) error {
+			if client == nil {
+				t.Error("expected non-nil client")
+			}
+			if client.Client() != masterNode {
+				t.Error("expected client to wrap the master node")
+			}
+			return nil
+		})
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
 		}
 	})
 }
