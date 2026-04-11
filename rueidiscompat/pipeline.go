@@ -50,7 +50,7 @@ import (
 // To avoid this: it is a good idea to use reasonable bigger read/write timeouts
 // depends on your batch size and/or use TxPipeline.
 type Pipeliner interface {
-	CoreCmdable
+	Cmdable
 
 	// Len is to obtain the number of commands in the pipeline that have not yet been executed.
 	Len() int
@@ -67,6 +67,7 @@ type Pipeliner interface {
 }
 
 var _ Pipeliner = (*Pipeline)(nil)
+var _ Cmdable = (*Pipeline)(nil)
 
 type proxyresult struct {
 	err error
@@ -3161,6 +3162,30 @@ func (c *Pipeline) ModuleLoadex(ctx context.Context, conf *ModuleLoadexConfig) *
 	ret := c.comp.ModuleLoadex(ctx, conf)
 	c.rets = append(c.rets, ret)
 	return ret
+}
+
+func (c *Pipeline) Cache(_ time.Duration) CacheCompat {
+	panic("not implemented")
+}
+
+func (c *Pipeline) Subscribe(_ context.Context, _ ...string) PubSub {
+	panic("not implemented")
+}
+
+func (c *Pipeline) PSubscribe(_ context.Context, _ ...string) PubSub {
+	panic("not implemented")
+}
+
+func (c *Pipeline) SSubscribe(_ context.Context, _ ...string) PubSub {
+	panic("not implemented")
+}
+
+func (c *Pipeline) Watch(_ context.Context, _ func(Tx) error, _ ...string) error {
+	panic("not implemented")
+}
+
+func (c *Pipeline) Client() rueidis.Client {
+	return c.comp.client.(*proxy).Client
 }
 
 // Len returns the number of queued commands.
