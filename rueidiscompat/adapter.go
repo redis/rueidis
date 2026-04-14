@@ -61,6 +61,8 @@ type Cmdable interface {
 
 	Watch(ctx context.Context, fn func(Tx) error, keys ...string) error
 
+	ForEachMaster(ctx context.Context, fn func(ctx context.Context, client Cmdable) error) error
+
 	Client() rueidis.Client
 }
 
@@ -3291,6 +3293,12 @@ func (c *Compat) ClusterAddSlotsRange(ctx context.Context, min, max int64) *Stat
 	cmd := c.client.B().ClusterAddslotsrange().StartSlotEndSlot().StartSlotEndSlot(min, max).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStatusCmd(resp)
+}
+
+func (c *Compat) ForEachMaster(ctx context.Context, fn func(ctx context.Context, client Cmdable) error) error {
+	return c.doPrimaries(ctx, func(client rueidis.Client) error {
+		return fn(ctx, NewAdapter(client))
+	})
 }
 
 func (c *Compat) GeoAdd(ctx context.Context, key string, geoLocation ...GeoLocation) *IntCmd {
