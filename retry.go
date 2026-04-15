@@ -72,14 +72,14 @@ func (r *retryer) WaitForRetry(ctx context.Context, duration time.Duration) {
 	}
 }
 
-func (r *retryer) WaitOrSkipRetry(
-	ctx context.Context, attempts int, cmd Completed, err error,
-) bool {
-	if delay := r.RetryDelay(attempts, cmd, err); delay == 0 {
+func (r *retryer) WaitOrSkipRetry(ctx context.Context, attempts int, cmd Completed, err error) bool {
+	delay := r.RetryDelay(attempts, cmd, err)
+	if delay == 0 {
 		runtime.Gosched()
 		return true
-	} else if delay > 0 {
-		if dl, ok := ctx.Deadline(); !ok || time.Until(dl) > delay {
+	}
+	if delay > 0 {
+		if dl, ok := ctx.Deadline(); !ok || time.Until(dl) > (delay+(100*time.Microsecond)) {
 			r.WaitForRetry(ctx, delay)
 			return true
 		}
