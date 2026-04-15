@@ -3184,6 +3184,10 @@ func (c *Pipeline) Watch(_ context.Context, _ func(Tx) error, _ ...string) error
 	panic("not implemented")
 }
 
+func (c *Pipeline) ForEachMaster(_ context.Context, _ func(ctx context.Context, client Cmdable) error) error {
+	panic("not implemented")
+}
+
 func (c *Pipeline) Client() rueidis.Client {
 	return c.comp.client.(*proxy).Client
 }

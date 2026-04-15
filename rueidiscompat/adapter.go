@@ -61,6 +61,10 @@ type Cmdable interface {
 
 	Watch(ctx context.Context, fn func(Tx) error, keys ...string) error
 
+	// ForEachMaster concurrently calls the fn on each master node in the cluster.
+	// It returns the first error if any.
+	ForEachMaster(ctx context.Context, fn func(ctx context.Context, client Cmdable) error) error
+
 	Client() rueidis.Client
 }
 
@@ -667,6 +671,14 @@ func NewAdapter(client rueidis.Client, options ...AdapterOption) Cmdable {
 
 func (c *Compat) Client() rueidis.Client {
 	return c.client
+}
+
+// ForEachMaster concurrently calls the fn on each master node in the cluster.
+// It returns the first error if any.
+func (c *Compat) ForEachMaster(ctx context.Context, fn func(ctx context.Context, client Cmdable) error) error {
+	return c.doPrimaries(ctx, func(client rueidis.Client) error {
+		return fn(ctx, NewAdapter(client))
+	})
 }
 
 func (c *Compat) Cache(ttl time.Duration) CacheCompat {
