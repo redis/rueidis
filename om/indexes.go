@@ -11,7 +11,8 @@ import (
 	"github.com/redis/rueidis/internal/cmds"
 )
 
-// createAndAliasIndex creates a new index, aliases it, and drops the old index if needed.
+// createAndAliasIndex creates a new versioned index, aliases it to idx, and then drops all
+// existing versioned indexes (idx_vN) that were previously associated with that alias.
 func createAndAliasIndex(ctx context.Context, idx string, client rueidis.Client, createCmd func(idx string) cmds.FtCreatePrefixPrefix, cmdFn func(schema FtCreateSchema) rueidis.Completed) error {
 	idxRE, err := regexp.Compile("^" + regexp.QuoteMeta(idx) + "_v(\\d+)$")
 	if err != nil {
