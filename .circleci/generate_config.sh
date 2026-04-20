@@ -17,7 +17,7 @@ jobs:
     steps:
       - checkout
       - go/install:
-          version: 1.24.9
+          version: 1.25.9
 EOF
 
 # Loop through each module and generate job configurations

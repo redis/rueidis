@@ -1,8 +1,6 @@
 module github.com/redis/rueidis/rueidislimiter
 
-go 1.24.9
-
-toolchain go1.24.11
+go 1.25.0
 
 replace github.com/redis/rueidis => ../
 
@@ -14,4 +12,4 @@ require (
 	go.uber.org/mock v0.6.0
 )
 
-require golang.org/x/sys v0.39.0 // indirect
+require golang.org/x/sys v0.43.0 // indirect
