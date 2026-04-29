@@ -7741,7 +7741,8 @@
         "enum": [
           "SUM",
           "MIN",
-          "MAX"
+          "MAX",
+          "COUNT"
         ],
         "optional": true
       },
@@ -7811,7 +7812,8 @@
         "enum": [
           "SUM",
           "MIN",
-          "MAX"
+          "MAX",
+          "COUNT"
         ],
         "optional": true
       }
@@ -8428,7 +8430,8 @@
         "enum": [
           "SUM",
           "MIN",
-          "MAX"
+          "MAX",
+          "COUNT"
         ],
         "optional": true
       },
@@ -8475,7 +8478,8 @@
         "enum": [
           "SUM",
           "MIN",
-          "MAX"
+          "MAX",
+          "COUNT"
         ],
         "optional": true
       }
