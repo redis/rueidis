@@ -99,15 +99,21 @@ func stream0(s Builder) {
 	s.XinfoStream().Key("1").Full().Build()
 	s.XinfoStream().Key("1").Build()
 	s.Xlen().Key("1").Build()
+	s.Xnack().Key("1").Group("1").Silent().Ids().Numids(1).Id("1").Id("1").Count(1).Force().Build()
+	s.Xnack().Key("1").Group("1").Silent().Ids().Numids(1).Id("1").Id("1").Count(1).Build()
+	s.Xnack().Key("1").Group("1").Silent().Ids().Numids(1).Id("1").Id("1").Force().Build()
+	s.Xnack().Key("1").Group("1").Silent().Ids().Numids(1).Id("1").Id("1").Build()
+	s.Xnack().Key("1").Group("1").Fail().Ids().Numids(1).Id("1").Id("1").Build()
+	s.Xnack().Key("1").Group("1").Fatal().Ids().Numids(1).Id("1").Id("1").Build()
+}
+
+func stream1(s Builder) {
 	s.Xpending().Key("1").Group("1").Idle(1).Start("1").End("1").Count(1).Consumer("1").Build()
 	s.Xpending().Key("1").Group("1").Idle(1).Start("1").End("1").Count(1).Build()
 	s.Xpending().Key("1").Group("1").Start("1").End("1").Count(1).Build()
 	s.Xpending().Key("1").Group("1").Build()
 	s.Xrange().Key("1").Start("1").End("1").Count(1).Build()
 	s.Xrange().Key("1").Start("1").End("1").Build()
-}
-
-func stream1(s Builder) {
 	s.Xread().Count(1).Block(1).Streams().Key("1").Key("1").Id("1").Id("1").Build()
 	s.Xread().Count(1).Streams().Key("1").Key("1").Id("1").Id("1").Build()
 	s.Xread().Block(1).Streams().Key("1").Key("1").Id("1").Id("1").Build()

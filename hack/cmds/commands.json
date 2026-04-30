@@ -7279,6 +7279,76 @@
     "since": "5.0.0",
     "group": "stream"
   },
+  "XNACK": {
+    "summary": "Releases claimed messages back to the group's PEL without acknowledging them, making them available for re-delivery.",
+    "complexity": "O(1) for each message ID processed.",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key",
+        "key_spec_index": 0
+      },
+      {
+        "name": "group",
+        "type": "string"
+      },
+      {
+        "name": "mode",
+        "type": "oneof",
+        "arguments": [
+          {
+            "name": "silent",
+            "type": "pure-token",
+            "token": "SILENT"
+          },
+          {
+            "name": "fail",
+            "type": "pure-token",
+            "token": "FAIL"
+          },
+          {
+            "name": "fatal",
+            "type": "pure-token",
+            "token": "FATAL"
+          }
+        ]
+      },
+      {
+        "name": "ids",
+        "type": "block",
+        "arguments": [
+          {
+            "name": "ids",
+            "type": "pure-token",
+            "token": "IDS"
+          },
+          {
+            "name": "numids",
+            "type": "integer"
+          },
+          {
+            "name": "id",
+            "type": "string",
+            "multiple": true
+          }
+        ]
+      },
+      {
+        "name": "count",
+        "type": "integer",
+        "token": "RETRYCOUNT",
+        "optional": true
+      },
+      {
+        "name": "force",
+        "type": "pure-token",
+        "token": "FORCE",
+        "optional": true
+      }
+    ],
+    "since": "8.8.0",
+    "group": "stream"
+  },
   "XPENDING": {
     "summary": "Return information and entries from a stream consumer group pending entries list, that are messages fetched but never acknowledged.",
     "complexity": "O(N) with N being the number of elements returned, so asking for a small fixed number of entries per call is O(1). O(M), where M is the total number of entries scanned when used with the IDLE filter. When the command returns just the summary and the list of consumers is small, it runs in O(1) time; otherwise, an additional O(N) time for iterating every consumer.",
