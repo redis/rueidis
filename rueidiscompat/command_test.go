@@ -1187,6 +1187,49 @@ func TestClientInfoParsing(t *testing.T) {
 	}
 }
 
+func TestStringCmdBool(t *testing.T) {
+	t.Parallel()
+
+	cmdErr := fmt.Errorf("injected")
+	cmd := &StringCmd{}
+	cmd.SetErr(cmdErr)
+	b, err := cmd.Bool()
+	if err != cmdErr || b != false {
+		t.Fatalf("Bool() with SetErr = (%v, %v), want (false, cmdErr)", b, err)
+	}
+
+	tests := []struct {
+		input string
+		want  bool
+		isErr bool
+	}{
+		{"0", false, false},
+		{"1", true, false},
+		{"false", false, false},
+		{"true", true, false},
+		{"", false, true},
+		{"garbage", false, true},
+	}
+	for _, tt := range tests {
+		c := &StringCmd{}
+		c.SetVal(tt.input)
+		got, err := c.Bool()
+		if tt.isErr {
+			if err == nil {
+				t.Errorf("input %q: got (%v, nil), want error", tt.input, got)
+			}
+			continue
+		}
+		if err != nil {
+			t.Errorf("input %q: unexpected error: %v", tt.input, err)
+			continue
+		}
+		if got != tt.want {
+			t.Errorf("input %q: got %v, want %v", tt.input, got, tt.want)
+		}
+	}
+}
+
 // TestCacheHitCmd tests the IsCacheHit and setIsCacheHit functionality for Cmd
 func TestCacheHitCmd(t *testing.T) {
 	cmd := &Cmd{}

@@ -379,7 +379,10 @@ func (cmd *StringCmd) Bytes() ([]byte, error) {
 }
 
 func (cmd *StringCmd) Bool() (bool, error) {
-	return cmd.val != "", cmd.err
+	if cmd.err != nil {
+		return false, cmd.err
+	}
+	return strconv.ParseBool(cmd.Val())
 }
 
 func (cmd *StringCmd) Int() (int, error) {
