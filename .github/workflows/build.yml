@@ -18,7 +18,7 @@ jobs:
   validate-modules:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Validate Required Modules
         run: |
           # Find all module directories: rueidis* (except rueidislock), om, and mock
@@ -39,7 +39,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - id: set-matrix
         run: |
           echo "matrix=$(find . -maxdepth 2 -type f -name 'go.mod' | xargs -n 1 dirname | sort -u | { echo "e2e"; cat; } | jq -R -s -c 'split("\n")[:-1]')" >> $GITHUB_OUTPUT
@@ -54,10 +54,10 @@ jobs:
         go-version: ['1.25.0', '1.26.0']
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with:
           go-version: ${{ matrix.go-version }}
 
@@ -89,7 +89,7 @@ jobs:
             done
           fi
 
-      - uses: codecov/codecov-action@v5.4.2
+      - uses: codecov/codecov-action@ad3126e916f78f00edff4ed0317cf185271ccc2d # v5.4.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
