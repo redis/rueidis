@@ -706,7 +706,7 @@ func TestCreateAndAliasIndex_JSON(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(fmt.Sprintf("CreateAndAliasIndex: %s", tc.name), func(t *testing.T) {
-			client := setup(t)
+			client := setup(t, tc.clientOpts...)
 			client.Do(ctx, client.B().Flushall().Build())
 			defer client.Close()
 
