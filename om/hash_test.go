@@ -697,32 +697,46 @@ func TestNewHashRepositoryTTL(t *testing.T) {
 func TestCreateAndAliasIndex(t *testing.T) {
 	ctx := context.Background()
 
-	client := setup(t)
-	client.Do(ctx, client.B().Flushall().Build())
-	defer client.Close()
+	testCases := []struct {
+		name       string
+		clientOpts []option
+	}{
+		{
+			name: "RediSearch 2.8.4",
+		},
+		{
+			name:       "Redis 8.6.0",
+			clientOpts: []option{withRedis86},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("CreateAndAliasIndex: %s", tc.name), func(t *testing.T) {
+			client := setup(t, tc.clientOpts...)
+			client.Do(ctx, client.B().Flushall().Build())
+			defer client.Close()
 
-	repo := NewHashRepository("hashalias", HashTestStruct{}, client)
+			repo := NewHashRepository("hashalias", HashTestStruct{}, client)
 
-	t.Run("CreateAndAliasIndex", func(t *testing.T) {
-		err := repo.CreateAndAliasIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
-			return schema.FieldName("Val").Text().Build()
+			err := repo.CreateAndAliasIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
+				return schema.FieldName("Val").Text().Build()
+			})
+			if err != nil {
+				t.Fatalf("failed to create and alias index: %v", err)
+			}
+
+			verifyAliasTarget(t, ctx, client, repo.IndexName(), repo.IndexName()+"_v1")
+
+			// Step 3: Create new index version and update alias
+			err = repo.CreateAndAliasIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
+				return schema.FieldName("Val").Text().Build()
+			})
+			if err != nil {
+				t.Fatalf("failed to create and alias new index version: %v", err)
+			}
+
+			verifyAliasTarget(t, ctx, client, repo.IndexName(), repo.IndexName()+"_v2")
 		})
-		if err != nil {
-			t.Fatalf("failed to create and alias index: %v", err)
-		}
-
-		verifyAliasTarget(t, ctx, client, repo.IndexName(), repo.IndexName()+"_v1")
-
-		// Step 3: Create new index version and update alias
-		err = repo.CreateAndAliasIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
-			return schema.FieldName("Val").Text().Build()
-		})
-		if err != nil {
-			t.Fatalf("failed to create and alias new index version: %v", err)
-		}
-
-		verifyAliasTarget(t, ctx, client, repo.IndexName(), repo.IndexName()+"_v2")
-	})
+	}
 }
 
 // Helper to verify that alias points to the expected index name
