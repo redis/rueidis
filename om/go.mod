@@ -6,7 +6,7 @@ replace github.com/redis/rueidis => ../
 
 require (
 	github.com/oklog/ulid/v2 v2.1.1
-	github.com/redis/rueidis v1.0.74
+	github.com/redis/rueidis v1.0.75
 )
 
 require golang.org/x/sys v0.43.0 // indirect
