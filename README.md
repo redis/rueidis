@@ -533,7 +533,7 @@ client, err := rueidis.NewClient(rueidis.ClientOption{
   InitAddress:         []string{"address.example.com:6379"},
   EnableReplicaAZInfo: true,
   SendToReplicas: func(cmd rueidis.Completed) bool {
-    return cmd.IsReadOnly()
+    return cmd.IsReadOnly() && !cmd.NoReply()
   },
   ReadNodeSelector: rueidis.AZAffinityNodeSelector("us-east-1a"),
 })
@@ -544,7 +544,7 @@ client, err := rueidis.NewClient(rueidis.ClientOption{
   InitAddress:         []string{"address.example.com:6379"},
   EnableReplicaAZInfo: true,
   SendToReplicas: func(cmd rueidis.Completed) bool {
-    return cmd.IsReadOnly()
+    return cmd.IsReadOnly() && !cmd.NoReply()
   },
   ReadNodeSelector: func(slot uint16, nodes []rueidis.NodeInfo) int {
     for i, node := range nodes {
