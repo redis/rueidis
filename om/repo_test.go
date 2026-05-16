@@ -6,8 +6,18 @@ import (
 	"github.com/redis/rueidis"
 )
 
-func setup(t *testing.T) rueidis.Client {
-	client, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6377"}})
+type option func(*rueidis.ClientOption)
+
+func withRedis86(c *rueidis.ClientOption) {
+	c.InitAddress = []string{"127.0.0.1:6382"}
+}
+
+func setup(t *testing.T, opts ...option) rueidis.Client {
+	clientOption := &rueidis.ClientOption{InitAddress: []string{"127.0.0.1:6377"}}
+	for _, opt := range opts {
+		opt(clientOption)
+	}
+	client, err := rueidis.NewClient(*clientOption)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -692,31 +692,45 @@ func TestNewJSONTTLRepository(t *testing.T) {
 func TestCreateAndAliasIndex_JSON(t *testing.T) {
 	ctx := context.Background()
 
-	client := setup(t)
-	client.Do(ctx, client.B().Flushall().Build())
-	defer client.Close()
+	testCases := []struct {
+		name       string
+		clientOpts []option
+	}{
+		{
+			name: "RediSearch 2.8.4",
+		},
+		{
+			name:       "Redis 8.6.0",
+			clientOpts: []option{withRedis86},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(fmt.Sprintf("CreateAndAliasIndex: %s", tc.name), func(t *testing.T) {
+			client := setup(t, tc.clientOpts...)
+			client.Do(ctx, client.B().Flushall().Build())
+			defer client.Close()
 
-	repo := NewJSONRepository("jsonalias", JSONTestStruct{}, client)
+			repo := NewJSONRepository("jsonalias", JSONTestStruct{}, client)
 
-	t.Run("CreateAndAliasIndex_JSON", func(t *testing.T) {
-		err := repo.CreateAndAliasIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
-			return schema.FieldName("$.val").As("val").Text().Build()
+			err := repo.CreateAndAliasIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
+				return schema.FieldName("$.val").As("val").Text().Build()
+			})
+			if err != nil {
+				t.Fatalf("failed to create and alias JSON index: %v", err)
+			}
+
+			verifyAliasTarget(t, ctx, client, repo.IndexName(), repo.IndexName()+"_v1")
+
+			err = repo.CreateAndAliasIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
+				return schema.FieldName("$.val").As("val").Text().Build()
+			})
+			if err != nil {
+				t.Fatalf("failed to create and alias new JSON index version: %v", err)
+			}
+
+			verifyAliasTarget(t, ctx, client, repo.IndexName(), repo.IndexName()+"_v2")
 		})
-		if err != nil {
-			t.Fatalf("failed to create and alias JSON index: %v", err)
-		}
-
-		verifyAliasTarget(t, ctx, client, repo.IndexName(), repo.IndexName()+"_v1")
-
-		err = repo.CreateAndAliasIndex(ctx, func(schema FtCreateSchema) rueidis.Completed {
-			return schema.FieldName("$.val").As("val").Text().Build()
-		})
-		if err != nil {
-			t.Fatalf("failed to create and alias new JSON index version: %v", err)
-		}
-
-		verifyAliasTarget(t, ctx, client, repo.IndexName(), repo.IndexName()+"_v2")
-	})
+	}
 }
 
 type JSONTestVerlessTTLStruct struct {
