@@ -49,7 +49,7 @@ func (s *structMap) get(t reflect.Type) *structSpec {
 		return v.(*structSpec)
 	}
 
-	spec := newStructSpec(t, "redis")
+	spec := newStructSpec(t, "valkey")
 	s.m.Store(t, spec)
 	return spec
 }
@@ -75,6 +75,9 @@ func newStructSpec(t reflect.Type, fieldTag string) *structSpec {
 		f := t.Field(i)
 
 		tag := f.Tag.Get(fieldTag)
+		if tag == "" {
+			tag = f.Tag.Get("redis")
+		}
 		if tag == "" || tag == "-" {
 			continue
 		}

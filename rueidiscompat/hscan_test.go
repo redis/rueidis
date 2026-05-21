@@ -28,6 +28,7 @@ package rueidiscompat
 
 import (
 	"math"
+	"reflect"
 	"strconv"
 	"time"
 
@@ -236,6 +237,25 @@ var _ = Describe("Scan", func() {
 		Expect(d).To(Equal(data{
 			String: "str!",
 		}))
+	})
+
+	It("falls back to redis tag when valkey tag is missing", func() {
+		type goRedis struct {
+			Name string `redis:"name"`
+			Age  int    `redis:"age"`
+		}
+		var g goRedis
+		Expect(Scan(&g, []string{"name", "age"}, i{"alice", "30"})).NotTo(HaveOccurred())
+		Expect(g).To(Equal(goRedis{Name: "alice", Age: 30}))
+		Expect(appendStructField(reflect.ValueOf(goRedis{Name: "alice", Age: 30}))).To(Equal([]string{"name", "alice", "age", "30"}))
+
+		type both struct {
+			Name string `redis:"redis_name" valkey:"valkey_name"`
+		}
+		var b both
+		Expect(Scan(&b, []string{"valkey_name", "redis_name"}, i{"v", "r"})).NotTo(HaveOccurred())
+		Expect(b.Name).To(Equal("v"))
+		Expect(appendStructField(reflect.ValueOf(both{Name: "v"}))).To(Equal([]string{"valkey_name", "v"}))
 	})
 
 	It("catches bad values", func() {

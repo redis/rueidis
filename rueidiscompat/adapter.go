@@ -6654,7 +6654,10 @@ func appendStructField(v reflect.Value) []string {
 	typ := v.Type()
 	dst := make([]string, 0, typ.NumField())
 	for i := 0; i < typ.NumField(); i++ {
-		tag := typ.Field(i).Tag.Get("redis")
+		tag := typ.Field(i).Tag.Get("valkey")
+		if tag == "" {
+			tag = typ.Field(i).Tag.Get("redis")
+		}
 		if tag == "" || tag == "-" {
 			continue
 		}
