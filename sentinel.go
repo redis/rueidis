@@ -306,7 +306,7 @@ func (c *sentinelClient) Nodes() map[string]Client {
 	case c.replica:
 		cc := c.rConn.Load().(conn)
 		return map[string]Client{cc.Addr(): newSingleClientWithConn(cc, c.cmd, c.retry, disableCache, c.retryHandler, false)}
-	case c.mOpt.SendToReplicas != nil:
+	case c.mOpt != nil && c.mOpt.SendToReplicas != nil:
 		master := c.mConn.Load().(conn)
 		replica := c.rConn.Load().(conn)
 		return map[string]Client{
