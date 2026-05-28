@@ -430,6 +430,22 @@ type DedicatedClient interface {
 
 // CoreClient is the minimum interface shared by the Client and the DedicatedClient.
 type CoreClient interface {
+	CommandClient
+
+	// Receive accepts SUBSCRIBE, SSUBSCRIBE, PSUBSCRIBE command and a message handler.
+	// Receive will block and then return value only when the following cases:
+	//   1. return nil when received any unsubscribe/punsubscribe message related to the provided `subscribe` command.
+	//   2. return ErrClosing when the client is closed manually.
+	//   3. return ctx.Err() when the `ctx` is done.
+	//   4. return non-nil err when the provided `subscribe` command failed.
+	Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) error
+	// Close will make further calls to the client be rejected with ErrClosing,
+	// and Close will wait until all pending calls finished.
+	Close()
+}
+
+// CommandClient is a public interface that only exposes the B(), Do(), and DoMulti() methods of a client.
+type CommandClient interface {
 	// B is the getter function to the command builder for the client
 	// If the client is a cluster client, the command builder also prohibits cross-key slots in one command.
 	B() Builder
@@ -442,16 +458,6 @@ type CoreClient interface {
 	// DoMulti takes multiple redis commands and sends them together, reducing RTT from the user code.
 	// The multi parameters are recycled after passing into DoMulti() and should not be reused.
 	DoMulti(ctx context.Context, multi ...Completed) (resp []RedisResult)
-	// Receive accepts SUBSCRIBE, SSUBSCRIBE, PSUBSCRIBE command and a message handler.
-	// Receive will block and then return value only when the following cases:
-	//   1. return nil when received any unsubscribe/punsubscribe message related to the provided `subscribe` command.
-	//   2. return ErrClosing when the client is closed manually.
-	//   3. return ctx.Err() when the `ctx` is done.
-	//   4. return non-nil err when the provided `subscribe` command failed.
-	Receive(ctx context.Context, subscribe Completed, fn func(msg PubSubMessage)) error
-	// Close will make further calls to the client be rejected with ErrClosing,
-	// and Close will wait until all pending calls finished.
-	Close()
 }
 
 // CT is a shorthand constructor for CacheableTTL

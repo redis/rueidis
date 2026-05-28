@@ -330,6 +330,27 @@ err := client.Receive(ctx, client.B().Subscribe().Channel("news").Build(), func(
 })
 ```
 
+#### Cleanup on Receive return
+
+Note that `client.Receive()` doesn't unsubscribe channels automatically when it is about to return. Use `rueidis.WithOnReceiveReturnHook` if you need to execute cleanup commands (e.g., `UNSUBSCRIBE`) on the underlying connection.
+
+```go
+ctx, cancel := context.WithCancel(context.Background())
+
+ctx = rueidis.WithOnReceiveReturnHook(context.Background(), func(err error, client rueidis.CommandClient) error {
+  if errors.Is(err, context.Canceled) {
+    // Send UNSUBSCRIBE command to the connection
+    return client.Do(context.Background(), client.B().Unsubscribe().Channel("news").Build()).Error()
+  }
+  return err
+})
+
+err := client.Receive(ctx, client.B().Subscribe().Channel("news").Build(), func(m rueidis.PubSubMessage) {
+  // Handle message
+  cancel() // trigger context cancellation to return from Receive
+})
+```
+
 ### Alternative PubSub Hooks
 
 The `client.Receive()` requires users to provide a subscription command in advance.

@@ -839,7 +839,10 @@ func (p *pipe) handlePush(values []RedisMessage) (reply bool, unsubscribe bool) 
 
 type recvCtxKey int
 
-const hookKey recvCtxKey = 0
+const (
+	hookKey recvCtxKey = iota
+	receiveReturnHookKey
+)
 
 // WithOnSubscriptionHook attaches a subscription confirmation hook to the provided
 // context and returns a new context for the Receive method.
@@ -856,7 +859,16 @@ func WithOnSubscriptionHook(ctx context.Context, hook func(PubSubSubscription)) 
 	return context.WithValue(ctx, hookKey, hook)
 }
 
-func (p *pipe) Receive(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
+// WithOnReceiveReturnHook attaches a receive return hook to the provided
+// context and returns a new context for the Receive method.
+//
+// The hook is invoked when Receive is about to return.
+// The hook can be used to execute commands (e.g., UNSUBSCRIBE) on the connection.
+func WithOnReceiveReturnHook(ctx context.Context, hook func(err error, client CommandClient) error) context.Context {
+	return context.WithValue(ctx, receiveReturnHookKey, hook)
+}
+
+func (p *pipe) Receive(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) (err error) {
 	if p.nsubs == nil || p.psubs == nil || p.ssubs == nil {
 		return p.Error()
 	}
@@ -885,29 +897,38 @@ func (p *pipe) Receive(ctx context.Context, subscribe Completed, fn func(message
 	if v := ctx.Value(hookKey); v != nil {
 		hook = v.(func(PubSubSubscription))
 	}
+	var returnHook func(error, CommandClient) error
+	if v := ctx.Value(receiveReturnHookKey); v != nil {
+		returnHook = v.(func(error, CommandClient) error)
+	}
 	if ch, cancel := sb.Subscribe(args, hook); ch != nil {
 		defer cancel()
-		if err := p.Do(ctx, subscribe).Error(); err != nil {
-			return err
-		}
-		if ctxCh := ctx.Done(); ctxCh == nil {
-			for msg := range ch {
-				fn(msg)
-			}
-		} else {
-		next:
-			select {
-			case msg, ok := <-ch:
-				if ok {
+		if err = p.Do(ctx, subscribe).Error(); err == nil {
+			if ctxCh := ctx.Done(); ctxCh == nil {
+				for msg := range ch {
 					fn(msg)
-					goto next
 				}
-			case <-ctx.Done():
-				return ctx.Err()
+			} else {
+			next:
+				select {
+				case msg, ok := <-ch:
+					if ok {
+						fn(msg)
+						goto next
+					}
+				case <-ctx.Done():
+					err = ctx.Err()
+				}
 			}
 		}
 	}
-	return p.Error()
+	if err == nil {
+		err = p.Error()
+	}
+	if returnHook != nil {
+		err = returnHook(err, &dedicatedSingleClient{wire: p, cmd: cmds.NewBuilder(cmds.NoSlot)})
+	}
+	return err
 }
 
 func (p *pipe) CleanSubscriptions() {

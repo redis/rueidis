@@ -3538,6 +3538,58 @@ func TestPubSub(t *testing.T) {
 		cancel()
 	})
 
+	t.Run("PubSub Subscribe return hook", func(t *testing.T) {
+		ctx, ctxCancel := context.WithCancel(context.Background())
+		p, mock, cancel, _ := setup(t, ClientOption{})
+
+		activate := builder.Subscribe().Channel("1").Build()
+		deactivate := builder.Unsubscribe().Channel("1").Build()
+		go func() {
+			mock.Expect(activate.Commands()...).Reply(
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "subscribe"),
+					strmsg('+', "1"),
+					{typ: ':', intlen: 1},
+				}),
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "message"),
+					strmsg('+', "1"),
+					strmsg('+', "2"),
+				}),
+			)
+			mock.Expect(deactivate.Commands()...).Expect(cmds.PingCmd.Commands()...).Reply(
+				slicemsg('>', []RedisMessage{
+					strmsg('+', "unsubscribe"),
+					strmsg('+', "1"),
+					{typ: ':', intlen: 0},
+				}),
+			).Reply(strmsg('+', "PONG"))
+		}()
+
+		hookCalled := false
+		ctx = WithOnReceiveReturnHook(ctx, func(err error, client CommandClient) error {
+			if errors.Is(err, context.Canceled) {
+				hookCalled = true
+				return client.Do(context.Background(), deactivate).Error()
+			}
+			return err
+		})
+
+		if err := p.Receive(ctx, activate, func(msg PubSubMessage) {
+			if msg.Channel == "1" && msg.Message == "2" {
+				ctxCancel()
+			}
+		}); err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		if !hookCalled {
+			t.Fatal("expected return hook to be called")
+		}
+
+		cancel()
+	})
+
 	t.Run("PubSub Subscribe Redis Error", func(t *testing.T) {
 		ctx := context.Background()
 		p, mock, cancel, _ := setup(t, ClientOption{})
