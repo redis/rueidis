@@ -617,6 +617,28 @@ func TestOverrideCacheTTLNegativeCachingLL(t *testing.T) {
 	}
 }
 
+func TestGetSkipsContextWithTimeoutWhenParentDeadlineIsTighter(t *testing.T) {
+	client := makeClient(t, addr).(*Client)
+	defer client.Close()
+
+	key := strconv.Itoa(rand.Int())
+	parent, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+	parentDone := parent.Done()
+
+	var innerDone <-chan struct{}
+	val, err := client.Get(parent, time.Hour, key, func(ctx context.Context, key string) (val string, err error) {
+		innerDone = ctx.Done()
+		return "v", nil
+	})
+	if err != nil || val != "v" {
+		t.Fatalf("Get returned %q, %v", val, err)
+	}
+	if innerDone != parentDone {
+		t.Fatal("expected ctx.Done() inside fn to equal parent.Done()")
+	}
+}
+
 func BenchmarkGet(b *testing.B) {
 	client, err := NewClient(ClientOption{
 		ClientOption: rueidis.ClientOption{InitAddress: addr, PipelineMultiplex: -1, SelectDB: 5},
