@@ -616,3 +616,55 @@ func TestOverrideCacheTTLNegativeCachingLL(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func BenchmarkGet(b *testing.B) {
+	client, err := NewClient(ClientOption{
+		ClientOption: rueidis.ClientOption{InitAddress: addr, PipelineMultiplex: -1, SelectDB: 5},
+		ClientTTL:    time.Second,
+	})
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer client.Close()
+
+	// Populate the key and warm the rueidis client-side cache so subsequent
+	// Get calls hit the cache and exercise the rueidisaside fast path only.
+	key := "bench-" + strconv.Itoa(rand.Int())
+	if _, err := client.Get(context.Background(), time.Minute, key, func(context.Context, string) (string, error) {
+		return "v", nil
+	}); err != nil {
+		b.Fatal(err)
+	}
+	if _, err := client.Get(context.Background(), time.Minute, key, nil); err != nil {
+		b.Fatal(err)
+	}
+
+	b.Run("context.Background", func(b *testing.B) {
+		ctx := context.Background()
+
+		b.ReportAllocs()
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				if _, err := client.Get(ctx, time.Minute, key, nil); err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+	})
+
+	b.Run("parent.TTL", func(b *testing.B) {
+		parent, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		b.ReportAllocs()
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				if _, err := client.Get(parent, time.Minute, key, nil); err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+	})
+}
