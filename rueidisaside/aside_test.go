@@ -616,3 +616,77 @@ func TestOverrideCacheTTLNegativeCachingLL(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestGetSkipsContextWithTimeoutWhenParentDeadlineIsTighter(t *testing.T) {
+	client := makeClient(t, addr).(*Client)
+	defer client.Close()
+
+	key := strconv.Itoa(rand.Int())
+	parent, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+	parentDone := parent.Done()
+
+	var innerDone <-chan struct{}
+	val, err := client.Get(parent, time.Hour, key, func(ctx context.Context, key string) (val string, err error) {
+		innerDone = ctx.Done()
+		return "v", nil
+	})
+	if err != nil || val != "v" {
+		t.Fatalf("Get returned %q, %v", val, err)
+	}
+	if innerDone != parentDone {
+		t.Fatal("expected ctx.Done() inside fn to equal parent.Done()")
+	}
+}
+
+func BenchmarkGet(b *testing.B) {
+	client, err := NewClient(ClientOption{
+		ClientOption: rueidis.ClientOption{InitAddress: addr, PipelineMultiplex: -1, SelectDB: 5},
+		ClientTTL:    time.Second,
+	})
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer client.Close()
+
+	// Populate the key and warm the rueidis client-side cache so subsequent
+	// Get calls hit the cache and exercise the rueidisaside fast path only.
+	key := "bench-" + strconv.Itoa(rand.Int())
+	if _, err := client.Get(context.Background(), time.Minute, key, func(context.Context, string) (string, error) {
+		return "v", nil
+	}); err != nil {
+		b.Fatal(err)
+	}
+	if _, err := client.Get(context.Background(), time.Minute, key, nil); err != nil {
+		b.Fatal(err)
+	}
+
+	b.Run("context.Background", func(b *testing.B) {
+		ctx := context.Background()
+
+		b.ReportAllocs()
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				if _, err := client.Get(ctx, time.Minute, key, nil); err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+	})
+
+	b.Run("parent.TTL", func(b *testing.B) {
+		parent, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		b.ReportAllocs()
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				if _, err := client.Get(parent, time.Minute, key, nil); err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+	})
+}

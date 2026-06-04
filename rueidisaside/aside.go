@@ -145,8 +145,11 @@ func randStr() string {
 }
 
 func (c *Client) Get(ctx context.Context, ttl time.Duration, key string, fn func(ctx context.Context, key string) (val string, err error)) (string, error) {
-	ctx, cancel := context.WithTimeout(ctx, ttl)
-	defer cancel()
+	if d, ok := ctx.Deadline(); !ok || time.Until(d) > ttl {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, ttl)
+		defer cancel()
+	}
 
 retry:
 	wait := c.register(key)
