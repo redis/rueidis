@@ -218,8 +218,11 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 		timeout = DefaultDialTimeout
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
+	if d, ok := ctx.Deadline(); !ok || time.Until(d) > timeout {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, timeout)
+		defer cancel()
+	}
 
 	r2 := option.AlwaysRESP2
 	if !r2 && !r2ps {

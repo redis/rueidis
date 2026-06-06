@@ -449,6 +449,23 @@ var _ = Describe("PubSub", func() {
 		}
 	})
 
+	It("should use parent deadline when tighter than timeout", func() {
+		pubsub := client.Subscribe(ctx, "mychannel")
+		defer pubsub.Close()
+
+		msgi, err := pubsub.ReceiveTimeout(ctx, time.Second)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(msgi.(*Subscription).Kind).To(Equal("subscribe"))
+
+		parent, cancel := context.WithTimeout(ctx, 200*time.Millisecond)
+		defer cancel()
+
+		start := time.Now()
+		_, err = pubsub.ReceiveTimeout(parent, time.Hour)
+		Expect(err).To(MatchError(context.DeadlineExceeded))
+		Expect(time.Since(start)).To(BeNumerically("<", time.Second))
+	})
+
 	It("should ChannelMessage", func() {
 		pubsub := client.Subscribe(ctx, "mychannel")
 		defer pubsub.Close()

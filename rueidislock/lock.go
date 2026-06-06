@@ -152,7 +152,11 @@ func keyname(prefix, name string, i int32) string {
 }
 
 func (m *locker) acquire(ctx context.Context, key, val string, duration time.Duration, deadline time.Time, force bool) (err error) {
-	ctx, cancel := context.WithTimeout(ctx, m.timeout)
+	if d, ok := ctx.Deadline(); !ok || time.Until(d) > m.timeout {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, m.timeout)
+		defer cancel()
+	}
 	var resp rueidis.RedisResult
 	if force {
 		if m.setpx {
@@ -167,7 +171,6 @@ func (m *locker) acquire(ctx context.Context, key, val string, duration time.Dur
 			resp = acqat.Exec(ctx, m.client, []string{key}, []string{val, strconv.FormatInt(deadline.UnixMilli(), 10)})
 		}
 	}
-	cancel()
 	if err = resp.Error(); rueidis.IsRedisNil(err) {
 		return fmt.Errorf("%w: key %s is held by others", ErrNotLocked, key)
 	}
@@ -175,9 +178,12 @@ func (m *locker) acquire(ctx context.Context, key, val string, duration time.Dur
 }
 
 func (m *locker) script(ctx context.Context, script *rueidis.Lua, key, val string, deadline time.Time) error {
-	ctx, cancel := context.WithDeadline(ctx, deadline)
+	if d, ok := ctx.Deadline(); !ok || d.After(deadline) {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithDeadline(ctx, deadline)
+		defer cancel()
+	}
 	resp := script.Exec(ctx, m.client, []string{key}, []string{val, strconv.FormatInt(deadline.UnixMilli(), 10)})
-	cancel()
 	if v, err := resp.AsInt64(); err != nil || v == 1 {
 		return err
 	}

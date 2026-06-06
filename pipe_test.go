@@ -746,6 +746,39 @@ availability_zone:us-west-1a
 	})
 }
 
+func TestNewPipeSkipsContextWithTimeoutWhenParentDeadlineIsTighter(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	n1, n2 := net.Pipe()
+	mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+	go func() {
+		mock.Expect("HELLO", "3").
+			Reply(slicemsg(
+				'%',
+				[]RedisMessage{
+					strmsg('+', "proto"),
+					{typ: ':', intlen: 3},
+				},
+			))
+		mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
+			ReplyString("OK")
+		mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+			ReplyString("OK")
+		mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+			ReplyString("OK")
+	}()
+	parent, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+	defer cancel()
+	p, err := newPipe(parent, func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{})
+	if err != nil {
+		t.Fatalf("pipe setup failed: %v", err)
+	}
+	go func() { mock.Expect("PING").ReplyString("OK") }()
+	p.Close()
+	mock.Close()
+	n1.Close()
+	n2.Close()
+}
+
 func TestNewRESP2Pipe(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 	t.Run("Without DisableCache", func(t *testing.T) {
