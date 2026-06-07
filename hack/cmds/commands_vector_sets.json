@@ -175,6 +175,22 @@
       }
     ]
   },
+  "VISMEMBER": {
+    "summary": "Check if an element exists in a vector set",
+    "since": "8.2.0",
+    "group": "vector_set",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "element",
+        "type": "string"
+      }
+    ]
+  },
   "VLINKS": {
     "summary": "Return the neighbors of a specified element in a vector set. The command shows the connections for each layer of the HNSW graph.",
     "since": "Redis CE 8.0.0",

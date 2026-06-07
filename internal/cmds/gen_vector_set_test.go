@@ -40,6 +40,7 @@ func vector_set0(s Builder) {
 	s.Vemb().Key("1").Element("1").Build()
 	s.Vgetattr().Key("1").Element("1").Build()
 	s.Vinfo().Key("1").Build()
+	s.Vismember().Key("1").Element("1").Build()
 	s.Vlinks().Key("1").Element("1").Withscores().Build()
 	s.Vlinks().Key("1").Element("1").Build()
 	s.Vrandmember().Key("1").Count(1).Build()
@@ -104,10 +105,10 @@ func vector_set0(s Builder) {
 	s.Vsim().Key("1").Fp32().Vector("1").Build()
 	s.Vsim().Key("1").Values(1).Vector(1).Vector(1).Withscores().Build()
 	s.Vsim().Key("1").Values(1).Vector(1).Vector(1).Withattribs().Build()
-	s.Vsim().Key("1").Values(1).Vector(1).Vector(1).Count(1).Build()
 }
 
 func vector_set1(s Builder) {
+	s.Vsim().Key("1").Values(1).Vector(1).Vector(1).Count(1).Build()
 	s.Vsim().Key("1").Values(1).Vector(1).Vector(1).Epsilon(1).Build()
 	s.Vsim().Key("1").Values(1).Vector(1).Vector(1).Ef(1).Build()
 	s.Vsim().Key("1").Values(1).Vector(1).Vector(1).Filter("1").Build()
