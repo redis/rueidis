@@ -340,8 +340,11 @@ retry:
 }
 
 func (p *pubsub) ReceiveTimeout(ctx context.Context, timeout time.Duration) (any, error) {
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
+	if d, ok := ctx.Deadline(); !ok || time.Until(d) > timeout {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, timeout)
+		defer cancel()
+	}
 
 	select {
 	case m := <-p.ChannelWithSubscriptions():
