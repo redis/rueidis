@@ -375,21 +375,33 @@ func parseEndpoint(fallback, endpoint string, port int64) string {
 func parseSlots(slots RedisMessage, defaultAddr string) map[string]group {
 	groups := make(map[string]group, len(slots.values()))
 	for _, v := range slots.values() {
-		master := parseEndpoint(defaultAddr, v.values()[2].values()[0].string(), v.values()[2].values()[1].intlen)
+		values := v.values()
+		if len(values) < 3 {
+			continue
+		}
+		masterValues := values[2].values()
+		if len(masterValues) < 2 {
+			continue
+		}
+		master := parseEndpoint(defaultAddr, masterValues[0].string(), masterValues[1].intlen)
 		if master == "" {
 			continue
 		}
 		g, ok := groups[master]
 		if !ok {
 			g.slots = make([][2]int64, 0)
-			g.nodes = make(nodes, 0, len(v.values())-2)
-			for i := 2; i < len(v.values()); i++ {
-				if dst := parseEndpoint(defaultAddr, v.values()[i].values()[0].string(), v.values()[i].values()[1].intlen); dst != "" {
+			g.nodes = make(nodes, 0, len(values)-2)
+			for i := 2; i < len(values); i++ {
+				nodeValues := values[i].values()
+				if len(nodeValues) < 2 {
+					continue
+				}
+				if dst := parseEndpoint(defaultAddr, nodeValues[0].string(), nodeValues[1].intlen); dst != "" {
 					g.nodes = append(g.nodes, NodeInfo{Addr: dst})
 				}
 			}
 		}
-		g.slots = append(g.slots, [2]int64{v.values()[0].intlen, v.values()[1].intlen})
+		g.slots = append(g.slots, [2]int64{values[0].intlen, values[1].intlen})
 		groups[master] = g
 	}
 	return groups
@@ -419,11 +431,21 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 			if dictHealth := dict["health"]; dictHealth.string() != "online" {
 				continue
 			}
-			port := dict["port"].intlen
-			if tls && dict["tls-port"].intlen > 0 {
-				port = dict["tls-port"].intlen
+			dictEndpoint, ok := dict["endpoint"]
+			if !ok {
+				continue
 			}
-			dictEndpoint := dict["endpoint"]
+			portMsg, portOK := dict["port"]
+			port := portMsg.intlen
+			_, tlsPortOK := dict["tls-port"]
+			if !portOK && !tlsPortOK {
+				continue
+			}
+			if tls {
+				if tlsPort, tlsPortOK := dict["tls-port"]; tlsPortOK && tlsPort.intlen > 0 {
+					port = tlsPort.intlen
+				}
+			}
 			if dst := parseEndpoint(defaultAddr, dictEndpoint.string(), port); dst != "" {
 				if dictRole := dict["role"]; dictRole.string() == "master" {
 					m = len(g.nodes)
@@ -431,7 +453,7 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 				g.nodes = append(g.nodes, NodeInfo{Addr: dst})
 			}
 		}
-		if m >= 0 {
+		if m >= 0 && len(g.nodes) > 0 {
 			g.nodes[0], g.nodes[m] = g.nodes[m], g.nodes[0]
 			groups[g.nodes[0].Addr] = g
 		}

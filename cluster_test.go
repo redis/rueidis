@@ -6014,6 +6014,123 @@ func TestClusterClientReplicaOnly_PickMasterIfNoReplica(t *testing.T) {
 	})
 }
 
+func TestClusterSlotsParsing(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	t.Run("existing fixtures", func(t *testing.T) {
+		for _, test := range []struct {
+			name     string
+			resp     RedisMessage
+			expected map[string]group
+		}{
+			{
+				name: "single shard",
+				resp: slotsResp.val,
+				expected: map[string]group{
+					"127.0.0.1:0": {
+						nodes: nodes{{Addr: "127.0.0.1:0"}, {Addr: "127.0.1.1:1"}},
+						slots: [][2]int64{{0, 16383}},
+					},
+				},
+			},
+			{
+				name: "multi shard",
+				resp: slotsMultiResp.val,
+				expected: map[string]group{
+					"127.0.0.1:0": {
+						nodes: nodes{{Addr: "127.0.0.1:0"}, {Addr: "127.0.1.1:1"}},
+						slots: [][2]int64{{0, 8192}},
+					},
+					"127.0.2.1:0": {
+						nodes: nodes{{Addr: "127.0.2.1:0"}, {Addr: "127.0.3.1:1"}},
+						slots: [][2]int64{{8193, 16383}},
+					},
+				},
+			},
+			{
+				name: "without replicas",
+				resp: slotsMultiRespWithoutReplicas.val,
+				expected: map[string]group{
+					"127.0.0.1:0": {
+						nodes: nodes{{Addr: "127.0.0.1:0"}},
+						slots: [][2]int64{{0, 8192}},
+					},
+					"127.0.1.1:0": {
+						nodes: nodes{{Addr: "127.0.1.1:0"}},
+						slots: [][2]int64{{8193, 16383}},
+					},
+				},
+			},
+		} {
+			t.Run(test.name, func(t *testing.T) {
+				result := parseSlots(test.resp, "127.0.0.1:5")
+				if !reflect.DeepEqual(result, test.expected) {
+					t.Fatalf("unexpected result %#v", result)
+				}
+			})
+		}
+	})
+
+	t.Run("skips malformed entries", func(t *testing.T) {
+		resp := slicemsg('*', []RedisMessage{
+			slicemsg('*', []RedisMessage{}),
+			slicemsg('*', []RedisMessage{
+				{typ: ':', intlen: 0},
+				{typ: ':', intlen: 1},
+				slicemsg('*', []RedisMessage{
+					strmsg('+', "127.0.9.1"),
+				}),
+			}),
+			slicemsg('*', []RedisMessage{
+				{typ: ':', intlen: 2},
+				{typ: ':', intlen: 3},
+				slicemsg('*', []RedisMessage{
+					strmsg('+', "127.0.0.1"),
+					{typ: ':', intlen: 0},
+					strmsg('+', ""),
+				}),
+				slicemsg('*', []RedisMessage{
+					strmsg('+', "127.0.1.1"),
+				}),
+				slicemsg('*', []RedisMessage{
+					strmsg('+', "127.0.1.2"),
+					{typ: ':', intlen: 2},
+					strmsg('+', ""),
+				}),
+			}),
+		})
+		expected := map[string]group{
+			"127.0.0.1:0": {
+				nodes: nodes{{Addr: "127.0.0.1:0"}, {Addr: "127.0.1.2:2"}},
+				slots: [][2]int64{{2, 3}},
+			},
+		}
+
+		result := parseSlots(resp, "127.0.0.1:5")
+		if !reflect.DeepEqual(result, expected) {
+			t.Fatalf("unexpected result %#v", result)
+		}
+	})
+
+	t.Run("malformed reply returns no groups", func(t *testing.T) {
+		resp := slicemsg('*', []RedisMessage{
+			slicemsg('*', []RedisMessage{}),
+			slicemsg('*', []RedisMessage{
+				{typ: ':', intlen: 0},
+			}),
+			slicemsg('*', []RedisMessage{
+				{typ: ':', intlen: 0},
+				{typ: ':', intlen: 1},
+				slicemsg('*', []RedisMessage{}),
+			}),
+		})
+
+		result := parseSlots(resp, "127.0.0.1:5")
+		if len(result) != 0 {
+			t.Fatalf("unexpected result %#v", result)
+		}
+	})
+}
+
 func TestClusterShardsParsing(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 	t.Run("master selection", func(t *testing.T) {
@@ -6071,6 +6188,42 @@ func TestClusterShardsParsing(t *testing.T) {
 			if len(group.nodes) == 0 || group.nodes[0].Addr != master {
 				t.Fatalf("unexpected first node %v", group)
 			}
+		}
+	})
+
+	t.Run("skips nodes missing endpoint or port", func(t *testing.T) {
+		resp := slicemsg(typeArray, []RedisMessage{
+			slicemsg(typeMap, []RedisMessage{
+				strmsg(typeBlobString, "slots"),
+				slicemsg(typeArray, []RedisMessage{
+					strmsg(typeBlobString, "0"),
+					strmsg(typeBlobString, "16383"),
+				}),
+				strmsg(typeBlobString, "nodes"),
+				slicemsg(typeArray, []RedisMessage{
+					slicemsg(typeMap, []RedisMessage{
+						strmsg(typeBlobString, "endpoint"),
+						strmsg(typeBlobString, "127.0.0.1"),
+						strmsg(typeBlobString, "role"),
+						strmsg(typeBlobString, "master"),
+						strmsg(typeBlobString, "health"),
+						strmsg(typeBlobString, "online"),
+					}),
+					slicemsg(typeMap, []RedisMessage{
+						strmsg(typeBlobString, "port"),
+						{typ: typeInteger, intlen: 0},
+						strmsg(typeBlobString, "role"),
+						strmsg(typeBlobString, "master"),
+						strmsg(typeBlobString, "health"),
+						strmsg(typeBlobString, "online"),
+					}),
+				}),
+			}),
+		})
+
+		result := parseShards(resp, "127.0.0.1:5", false)
+		if len(result) != 0 {
+			t.Fatalf("unexpected result %#v", result)
 		}
 	})
 }
