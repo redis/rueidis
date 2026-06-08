@@ -579,6 +579,383 @@ func (c IncrbyfloatKey) Increment(increment float64) IncrbyfloatIncrement {
 	return (IncrbyfloatIncrement)(c)
 }
 
+type Increx Incomplete
+
+func (b Builder) Increx() (c Increx) {
+	c = Increx{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "INCREX")
+	return c
+}
+
+func (c Increx) Key(key string) IncrexKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (IncrexKey)(c)
+}
+
+type IncrexByByfloat Incomplete
+
+func (c IncrexByByfloat) Lbound(lbound float64) IncrexLbound {
+	c.cs.s = append(c.cs.s, "LBOUND", strconv.FormatFloat(lbound, 'f', -1, 64))
+	return (IncrexLbound)(c)
+}
+
+func (c IncrexByByfloat) Ubound(ubound float64) IncrexUbound {
+	c.cs.s = append(c.cs.s, "UBOUND", strconv.FormatFloat(ubound, 'f', -1, 64))
+	return (IncrexUbound)(c)
+}
+
+func (c IncrexByByfloat) Saturate() IncrexSaturate {
+	c.cs.s = append(c.cs.s, "SATURATE")
+	return (IncrexSaturate)(c)
+}
+
+func (c IncrexByByfloat) ExSeconds(seconds int64) IncrexExpirationExSeconds {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(seconds, 10))
+	return (IncrexExpirationExSeconds)(c)
+}
+
+func (c IncrexByByfloat) PxMilliseconds(milliseconds int64) IncrexExpirationPxMilliseconds {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(milliseconds, 10))
+	return (IncrexExpirationPxMilliseconds)(c)
+}
+
+func (c IncrexByByfloat) ExatTimestamp(timestamp int64) IncrexExpirationExatTimestamp {
+	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(timestamp, 10))
+	return (IncrexExpirationExatTimestamp)(c)
+}
+
+func (c IncrexByByfloat) PxatMillisecondsTimestamp(millisecondsTimestamp int64) IncrexExpirationPxatMillisecondsTimestamp {
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(millisecondsTimestamp, 10))
+	return (IncrexExpirationPxatMillisecondsTimestamp)(c)
+}
+
+func (c IncrexByByfloat) Persist() IncrexExpirationPersist {
+	c.cs.s = append(c.cs.s, "PERSIST")
+	return (IncrexExpirationPersist)(c)
+}
+
+func (c IncrexByByfloat) Enx() IncrexEnx {
+	c.cs.s = append(c.cs.s, "ENX")
+	return (IncrexEnx)(c)
+}
+
+func (c IncrexByByfloat) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type IncrexByByint Incomplete
+
+func (c IncrexByByint) Lbound(lbound float64) IncrexLbound {
+	c.cs.s = append(c.cs.s, "LBOUND", strconv.FormatFloat(lbound, 'f', -1, 64))
+	return (IncrexLbound)(c)
+}
+
+func (c IncrexByByint) Ubound(ubound float64) IncrexUbound {
+	c.cs.s = append(c.cs.s, "UBOUND", strconv.FormatFloat(ubound, 'f', -1, 64))
+	return (IncrexUbound)(c)
+}
+
+func (c IncrexByByint) Saturate() IncrexSaturate {
+	c.cs.s = append(c.cs.s, "SATURATE")
+	return (IncrexSaturate)(c)
+}
+
+func (c IncrexByByint) ExSeconds(seconds int64) IncrexExpirationExSeconds {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(seconds, 10))
+	return (IncrexExpirationExSeconds)(c)
+}
+
+func (c IncrexByByint) PxMilliseconds(milliseconds int64) IncrexExpirationPxMilliseconds {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(milliseconds, 10))
+	return (IncrexExpirationPxMilliseconds)(c)
+}
+
+func (c IncrexByByint) ExatTimestamp(timestamp int64) IncrexExpirationExatTimestamp {
+	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(timestamp, 10))
+	return (IncrexExpirationExatTimestamp)(c)
+}
+
+func (c IncrexByByint) PxatMillisecondsTimestamp(millisecondsTimestamp int64) IncrexExpirationPxatMillisecondsTimestamp {
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(millisecondsTimestamp, 10))
+	return (IncrexExpirationPxatMillisecondsTimestamp)(c)
+}
+
+func (c IncrexByByint) Persist() IncrexExpirationPersist {
+	c.cs.s = append(c.cs.s, "PERSIST")
+	return (IncrexExpirationPersist)(c)
+}
+
+func (c IncrexByByint) Enx() IncrexEnx {
+	c.cs.s = append(c.cs.s, "ENX")
+	return (IncrexEnx)(c)
+}
+
+func (c IncrexByByint) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type IncrexEnx Incomplete
+
+func (c IncrexEnx) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type IncrexExpirationExSeconds Incomplete
+
+func (c IncrexExpirationExSeconds) Enx() IncrexEnx {
+	c.cs.s = append(c.cs.s, "ENX")
+	return (IncrexEnx)(c)
+}
+
+func (c IncrexExpirationExSeconds) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type IncrexExpirationExatTimestamp Incomplete
+
+func (c IncrexExpirationExatTimestamp) Enx() IncrexEnx {
+	c.cs.s = append(c.cs.s, "ENX")
+	return (IncrexEnx)(c)
+}
+
+func (c IncrexExpirationExatTimestamp) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type IncrexExpirationPersist Incomplete
+
+func (c IncrexExpirationPersist) Enx() IncrexEnx {
+	c.cs.s = append(c.cs.s, "ENX")
+	return (IncrexEnx)(c)
+}
+
+func (c IncrexExpirationPersist) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type IncrexExpirationPxMilliseconds Incomplete
+
+func (c IncrexExpirationPxMilliseconds) Enx() IncrexEnx {
+	c.cs.s = append(c.cs.s, "ENX")
+	return (IncrexEnx)(c)
+}
+
+func (c IncrexExpirationPxMilliseconds) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type IncrexExpirationPxatMillisecondsTimestamp Incomplete
+
+func (c IncrexExpirationPxatMillisecondsTimestamp) Enx() IncrexEnx {
+	c.cs.s = append(c.cs.s, "ENX")
+	return (IncrexEnx)(c)
+}
+
+func (c IncrexExpirationPxatMillisecondsTimestamp) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type IncrexKey Incomplete
+
+func (c IncrexKey) Byfloat(byfloat float64) IncrexByByfloat {
+	c.cs.s = append(c.cs.s, "BYFLOAT", strconv.FormatFloat(byfloat, 'f', -1, 64))
+	return (IncrexByByfloat)(c)
+}
+
+func (c IncrexKey) Byint(byint int64) IncrexByByint {
+	c.cs.s = append(c.cs.s, "BYINT", strconv.FormatInt(byint, 10))
+	return (IncrexByByint)(c)
+}
+
+func (c IncrexKey) Lbound(lbound float64) IncrexLbound {
+	c.cs.s = append(c.cs.s, "LBOUND", strconv.FormatFloat(lbound, 'f', -1, 64))
+	return (IncrexLbound)(c)
+}
+
+func (c IncrexKey) Ubound(ubound float64) IncrexUbound {
+	c.cs.s = append(c.cs.s, "UBOUND", strconv.FormatFloat(ubound, 'f', -1, 64))
+	return (IncrexUbound)(c)
+}
+
+func (c IncrexKey) Saturate() IncrexSaturate {
+	c.cs.s = append(c.cs.s, "SATURATE")
+	return (IncrexSaturate)(c)
+}
+
+func (c IncrexKey) ExSeconds(seconds int64) IncrexExpirationExSeconds {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(seconds, 10))
+	return (IncrexExpirationExSeconds)(c)
+}
+
+func (c IncrexKey) PxMilliseconds(milliseconds int64) IncrexExpirationPxMilliseconds {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(milliseconds, 10))
+	return (IncrexExpirationPxMilliseconds)(c)
+}
+
+func (c IncrexKey) ExatTimestamp(timestamp int64) IncrexExpirationExatTimestamp {
+	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(timestamp, 10))
+	return (IncrexExpirationExatTimestamp)(c)
+}
+
+func (c IncrexKey) PxatMillisecondsTimestamp(millisecondsTimestamp int64) IncrexExpirationPxatMillisecondsTimestamp {
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(millisecondsTimestamp, 10))
+	return (IncrexExpirationPxatMillisecondsTimestamp)(c)
+}
+
+func (c IncrexKey) Persist() IncrexExpirationPersist {
+	c.cs.s = append(c.cs.s, "PERSIST")
+	return (IncrexExpirationPersist)(c)
+}
+
+func (c IncrexKey) Enx() IncrexEnx {
+	c.cs.s = append(c.cs.s, "ENX")
+	return (IncrexEnx)(c)
+}
+
+func (c IncrexKey) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type IncrexLbound Incomplete
+
+func (c IncrexLbound) Ubound(ubound float64) IncrexUbound {
+	c.cs.s = append(c.cs.s, "UBOUND", strconv.FormatFloat(ubound, 'f', -1, 64))
+	return (IncrexUbound)(c)
+}
+
+func (c IncrexLbound) Saturate() IncrexSaturate {
+	c.cs.s = append(c.cs.s, "SATURATE")
+	return (IncrexSaturate)(c)
+}
+
+func (c IncrexLbound) ExSeconds(seconds int64) IncrexExpirationExSeconds {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(seconds, 10))
+	return (IncrexExpirationExSeconds)(c)
+}
+
+func (c IncrexLbound) PxMilliseconds(milliseconds int64) IncrexExpirationPxMilliseconds {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(milliseconds, 10))
+	return (IncrexExpirationPxMilliseconds)(c)
+}
+
+func (c IncrexLbound) ExatTimestamp(timestamp int64) IncrexExpirationExatTimestamp {
+	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(timestamp, 10))
+	return (IncrexExpirationExatTimestamp)(c)
+}
+
+func (c IncrexLbound) PxatMillisecondsTimestamp(millisecondsTimestamp int64) IncrexExpirationPxatMillisecondsTimestamp {
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(millisecondsTimestamp, 10))
+	return (IncrexExpirationPxatMillisecondsTimestamp)(c)
+}
+
+func (c IncrexLbound) Persist() IncrexExpirationPersist {
+	c.cs.s = append(c.cs.s, "PERSIST")
+	return (IncrexExpirationPersist)(c)
+}
+
+func (c IncrexLbound) Enx() IncrexEnx {
+	c.cs.s = append(c.cs.s, "ENX")
+	return (IncrexEnx)(c)
+}
+
+func (c IncrexLbound) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type IncrexSaturate Incomplete
+
+func (c IncrexSaturate) ExSeconds(seconds int64) IncrexExpirationExSeconds {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(seconds, 10))
+	return (IncrexExpirationExSeconds)(c)
+}
+
+func (c IncrexSaturate) PxMilliseconds(milliseconds int64) IncrexExpirationPxMilliseconds {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(milliseconds, 10))
+	return (IncrexExpirationPxMilliseconds)(c)
+}
+
+func (c IncrexSaturate) ExatTimestamp(timestamp int64) IncrexExpirationExatTimestamp {
+	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(timestamp, 10))
+	return (IncrexExpirationExatTimestamp)(c)
+}
+
+func (c IncrexSaturate) PxatMillisecondsTimestamp(millisecondsTimestamp int64) IncrexExpirationPxatMillisecondsTimestamp {
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(millisecondsTimestamp, 10))
+	return (IncrexExpirationPxatMillisecondsTimestamp)(c)
+}
+
+func (c IncrexSaturate) Persist() IncrexExpirationPersist {
+	c.cs.s = append(c.cs.s, "PERSIST")
+	return (IncrexExpirationPersist)(c)
+}
+
+func (c IncrexSaturate) Enx() IncrexEnx {
+	c.cs.s = append(c.cs.s, "ENX")
+	return (IncrexEnx)(c)
+}
+
+func (c IncrexSaturate) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type IncrexUbound Incomplete
+
+func (c IncrexUbound) Saturate() IncrexSaturate {
+	c.cs.s = append(c.cs.s, "SATURATE")
+	return (IncrexSaturate)(c)
+}
+
+func (c IncrexUbound) ExSeconds(seconds int64) IncrexExpirationExSeconds {
+	c.cs.s = append(c.cs.s, "EX", strconv.FormatInt(seconds, 10))
+	return (IncrexExpirationExSeconds)(c)
+}
+
+func (c IncrexUbound) PxMilliseconds(milliseconds int64) IncrexExpirationPxMilliseconds {
+	c.cs.s = append(c.cs.s, "PX", strconv.FormatInt(milliseconds, 10))
+	return (IncrexExpirationPxMilliseconds)(c)
+}
+
+func (c IncrexUbound) ExatTimestamp(timestamp int64) IncrexExpirationExatTimestamp {
+	c.cs.s = append(c.cs.s, "EXAT", strconv.FormatInt(timestamp, 10))
+	return (IncrexExpirationExatTimestamp)(c)
+}
+
+func (c IncrexUbound) PxatMillisecondsTimestamp(millisecondsTimestamp int64) IncrexExpirationPxatMillisecondsTimestamp {
+	c.cs.s = append(c.cs.s, "PXAT", strconv.FormatInt(millisecondsTimestamp, 10))
+	return (IncrexExpirationPxatMillisecondsTimestamp)(c)
+}
+
+func (c IncrexUbound) Persist() IncrexExpirationPersist {
+	c.cs.s = append(c.cs.s, "PERSIST")
+	return (IncrexExpirationPersist)(c)
+}
+
+func (c IncrexUbound) Enx() IncrexEnx {
+	c.cs.s = append(c.cs.s, "ENX")
+	return (IncrexEnx)(c)
+}
+
+func (c IncrexUbound) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
 type Lcs Incomplete
 
 func (b Builder) Lcs() (c Lcs) {
