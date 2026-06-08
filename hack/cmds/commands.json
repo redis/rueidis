@@ -8556,5 +8556,74 @@
     ],
     "since": "2.0.0",
     "group": "sorted_set"
+  },
+   "INCREX": {
+    "summary": "Increments or decrements the numeric value stored at key by the specified amount, with optional upper/lower bounds and expiration control, in a single atomic operation",
+    "complexity": "O(1)",
+    "arguments": [
+      {
+        "name": "key",
+        "type": "key"
+      },
+      {
+        "name": "by",
+        "type": "oneof",
+        "optional": true,
+        "arguments": [
+          {
+            "name": "byfloat",
+            "type": "double",
+            "token": "BYFLOAT"
+          },
+          {
+            "name": "byint",
+            "type": "integer",
+            "token": "BYINT"
+          }
+        ]
+      },
+      {
+        "name": "lbound",
+        "type": "double",
+        "token": "LBOUND",
+        "optional": true
+      },
+      {
+        "name": "ubound",
+        "type": "double",
+        "token": "UBOUND",
+        "optional": true
+      },
+      {
+        "name": "saturate",
+        "type": "enum",
+        "enum": [
+          "SATURATE"
+        ],
+        "optional": true
+      },
+      {
+        "name": "expiration",
+        "type": "enum",
+        "enum": [
+          "EX seconds",
+          "PX milliseconds",
+          "EXAT timestamp",
+          "PXAT milliseconds-timestamp",
+          "PERSIST"
+        ],
+        "optional": true
+      },
+      {
+        "name": "enx",
+        "type": "enum",
+        "enum": [
+          "ENX"
+        ],
+        "optional": true
+      }
+    ],
+    "since": "8.8.0",
+    "group": "string"
   }
 }
