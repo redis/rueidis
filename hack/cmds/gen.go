@@ -1158,6 +1158,17 @@ var cacheableCMDs = map[string]bool{
 }
 
 var readOnlyCMDs = map[string]bool{
+	"arcount":             false,
+	"arget":               false,
+	"argetrange":          false,
+	"argrep":              false,
+	"arinfo":              false,
+	"arlastitems":         false,
+	"arlen":               false,
+	"armget":              false,
+	"arnext":              false,
+	"arop":                false,
+	"arscan":              false,
 	"bitcount":            false,
 	"bitfieldro":          false,
 	"bitpos":              false,
