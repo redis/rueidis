@@ -109,14 +109,8 @@ func (n *node) GoStructs() (out []goStruct) {
 		if n.Arg.Type != "oneof" {
 			panic("GoStructs should not be called on Block node")
 		}
-		for child := makeChildNodes(n, n.Arg.Block); child != nil; child = child.Next {
-			if child.Child != nil {
-				for _, b := range blockEntries(child) {
-					out = append(out, b.GoStructs()...)
-				}
-			} else {
-				out = append(out, child.GoStructs()...)
-			}
+		for _, child := range oneOfEntries(n, false) {
+			out = append(out, child.GoStructs()...)
 		}
 	} else if len(n.Arg.Enum) > 0 {
 		for _, e := range n.Arg.Enum {
@@ -325,12 +319,73 @@ func (n *node) NextNodes() (nodes []*node) {
 
 		parent = parent.Parent
 		// block variadic
-		if parent != nil && parent.Variadic() {
-			nodes = append(nodes, blockEntries(parent)...)
+		if parent != nil && parent.Variadic() && !n.suppressesVariadicParent(parent) {
+			nodes = append(nodes, variadicEntries(parent)...)
 		}
 		if parent != nil && parent.Root {
 			break // don't climb to root
 		}
+	}
+	nodes = append(nodes, n.connectorNextNodes()...)
+	return nodes
+}
+
+func (n *node) suppressesVariadicParent(parent *node) bool {
+	return n.isArgrepBooleanConnector() && parent.Arg.Name == "options"
+}
+
+func (n *node) connectorNextNodes() []*node {
+	if !n.isArgrepBooleanConnector() {
+		return nil
+	}
+	root := n.FindRoot()
+	for child := root.Next; child != nil; child = child.Next {
+		if child.Arg.Name == "predicate" && child.Arg.Type == "oneof" && child.Variadic() {
+			return requiredOneOfEntries(child)
+		}
+	}
+	return nil
+}
+
+func (n *node) isArgrepBooleanConnector() bool {
+	token := n.Arg.Token
+	if token == "" && len(n.Arg.Enum) == 1 {
+		token = n.Arg.Enum[0]
+	}
+	if token != "AND" && token != "OR" {
+		return false
+	}
+	root := n.FindRoot()
+	return root != nil && root.Arg.Command == "ARGREP"
+}
+
+func variadicEntries(n *node) []*node {
+	if n.Arg.Type == "oneof" {
+		return oneOfEntries(n, true)
+	}
+	return blockEntries(n)
+}
+
+func oneOfEntries(n *node, optional bool) (nodes []*node) {
+	for child := makeChildNodes(n, n.Arg.Block); child != nil; child = child.Next {
+		if child.Child != nil {
+			nodes = append(nodes, blockEntries(child)...)
+		} else {
+			nodes = append(nodes, child)
+		}
+	}
+	if optional {
+		for _, child := range nodes {
+			optionalRepeatNodes[child] = true
+		}
+	}
+	return nodes
+}
+
+func requiredOneOfEntries(n *node) (nodes []*node) {
+	nodes = oneOfEntries(n, false)
+	for _, child := range nodes {
+		requiredConnectorNodes[child] = true
 	}
 	return nodes
 }
@@ -525,6 +580,8 @@ func tests(f io.Writer, structs map[string]goStruct, prefix string) {
 
 var pathmark = map[string]bool{}
 var blockmark = map[*node]bool{}
+var optionalRepeatNodes = map[*node]bool{}
+var requiredConnectorNodes = map[*node]bool{}
 
 func makePath(s goStruct, path []goStruct, paths [][]goStruct) [][]goStruct {
 	path = append(path, s)
@@ -541,6 +598,9 @@ func makePath(s goStruct, path []goStruct, paths [][]goStruct) [][]goStruct {
 				}
 				continue
 			}
+			if optionalRepeatNodes[n] {
+				continue
+			}
 			if n.Parent != nil && n.Parent.Child == n {
 				if blockmark[n] {
 					continue
@@ -553,6 +613,9 @@ func makePath(s goStruct, path []goStruct, paths [][]goStruct) [][]goStruct {
 			}
 			for _, nn := range nodes {
 				for _, ss := range nn.GoStructs() {
+					if nn.FindRoot().Arg.Command == "ARGREP" && pathContains(path, ss.FullName) {
+						continue
+					}
 					clone := make([]goStruct, len(path))
 					copy(clone, path)
 					paths = makePath(ss, clone, paths)
@@ -568,6 +631,15 @@ func makePath(s goStruct, path []goStruct, paths [][]goStruct) [][]goStruct {
 		paths = append(paths, path)
 	}
 	return paths
+}
+
+func pathContains(path []goStruct, name string) bool {
+	for _, s := range path {
+		if s.FullName == name {
+			return true
+		}
+	}
+	return false
 }
 
 func testParams(defs []parameter) string {
@@ -663,7 +735,13 @@ func checkAllUsed(name string, tags map[string]bool) {
 
 func allOptional(s *node, nodes []*node) bool {
 	for _, n := range nodes {
+		if requiredConnectorNodes[n] {
+			return false
+		}
 		if s == n {
+			continue
+		}
+		if optionalRepeatNodes[n] {
 			continue
 		}
 		if n.Parent != nil && n.Parent.Child == n {

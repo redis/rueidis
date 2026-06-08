@@ -234,12 +234,52 @@ func (c ArgrepKey) Start(start string) ArgrepStart {
 
 type ArgrepOptionsAnd Incomplete
 
-func (c ArgrepOptionsAnd) Build() Completed {
-	c.cs.Build()
-	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+func (c ArgrepOptionsAnd) Exact() ArgrepPredicateExactExact {
+	c.cs.s = append(c.cs.s, "EXACT")
+	return (ArgrepPredicateExactExact)(c)
+}
+
+func (c ArgrepOptionsAnd) Match() ArgrepPredicateMatchMatch {
+	c.cs.s = append(c.cs.s, "MATCH")
+	return (ArgrepPredicateMatchMatch)(c)
+}
+
+func (c ArgrepOptionsAnd) Glob() ArgrepPredicateGlobGlob {
+	c.cs.s = append(c.cs.s, "GLOB")
+	return (ArgrepPredicateGlobGlob)(c)
+}
+
+func (c ArgrepOptionsAnd) Re() ArgrepPredicateReRe {
+	c.cs.s = append(c.cs.s, "RE")
+	return (ArgrepPredicateReRe)(c)
 }
 
 type ArgrepOptionsLimit Incomplete
+
+func (c ArgrepOptionsLimit) And() ArgrepOptionsAnd {
+	c.cs.s = append(c.cs.s, "AND")
+	return (ArgrepOptionsAnd)(c)
+}
+
+func (c ArgrepOptionsLimit) Or() ArgrepOptionsOr {
+	c.cs.s = append(c.cs.s, "OR")
+	return (ArgrepOptionsOr)(c)
+}
+
+func (c ArgrepOptionsLimit) Limit(limit int64) ArgrepOptionsLimit {
+	c.cs.s = append(c.cs.s, "LIMIT", strconv.FormatInt(limit, 10))
+	return c
+}
+
+func (c ArgrepOptionsLimit) Withvalues() ArgrepOptionsWithvalues {
+	c.cs.s = append(c.cs.s, "WITHVALUES")
+	return (ArgrepOptionsWithvalues)(c)
+}
+
+func (c ArgrepOptionsLimit) Nocase() ArgrepOptionsNocase {
+	c.cs.s = append(c.cs.s, "NOCASE")
+	return (ArgrepOptionsNocase)(c)
+}
 
 func (c ArgrepOptionsLimit) Build() Completed {
 	c.cs.Build()
@@ -248,6 +288,31 @@ func (c ArgrepOptionsLimit) Build() Completed {
 
 type ArgrepOptionsNocase Incomplete
 
+func (c ArgrepOptionsNocase) And() ArgrepOptionsAnd {
+	c.cs.s = append(c.cs.s, "AND")
+	return (ArgrepOptionsAnd)(c)
+}
+
+func (c ArgrepOptionsNocase) Or() ArgrepOptionsOr {
+	c.cs.s = append(c.cs.s, "OR")
+	return (ArgrepOptionsOr)(c)
+}
+
+func (c ArgrepOptionsNocase) Limit(limit int64) ArgrepOptionsLimit {
+	c.cs.s = append(c.cs.s, "LIMIT", strconv.FormatInt(limit, 10))
+	return (ArgrepOptionsLimit)(c)
+}
+
+func (c ArgrepOptionsNocase) Withvalues() ArgrepOptionsWithvalues {
+	c.cs.s = append(c.cs.s, "WITHVALUES")
+	return (ArgrepOptionsWithvalues)(c)
+}
+
+func (c ArgrepOptionsNocase) Nocase() ArgrepOptionsNocase {
+	c.cs.s = append(c.cs.s, "NOCASE")
+	return c
+}
+
 func (c ArgrepOptionsNocase) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
@@ -255,12 +320,52 @@ func (c ArgrepOptionsNocase) Build() Completed {
 
 type ArgrepOptionsOr Incomplete
 
-func (c ArgrepOptionsOr) Build() Completed {
-	c.cs.Build()
-	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+func (c ArgrepOptionsOr) Exact() ArgrepPredicateExactExact {
+	c.cs.s = append(c.cs.s, "EXACT")
+	return (ArgrepPredicateExactExact)(c)
+}
+
+func (c ArgrepOptionsOr) Match() ArgrepPredicateMatchMatch {
+	c.cs.s = append(c.cs.s, "MATCH")
+	return (ArgrepPredicateMatchMatch)(c)
+}
+
+func (c ArgrepOptionsOr) Glob() ArgrepPredicateGlobGlob {
+	c.cs.s = append(c.cs.s, "GLOB")
+	return (ArgrepPredicateGlobGlob)(c)
+}
+
+func (c ArgrepOptionsOr) Re() ArgrepPredicateReRe {
+	c.cs.s = append(c.cs.s, "RE")
+	return (ArgrepPredicateReRe)(c)
 }
 
 type ArgrepOptionsWithvalues Incomplete
+
+func (c ArgrepOptionsWithvalues) And() ArgrepOptionsAnd {
+	c.cs.s = append(c.cs.s, "AND")
+	return (ArgrepOptionsAnd)(c)
+}
+
+func (c ArgrepOptionsWithvalues) Or() ArgrepOptionsOr {
+	c.cs.s = append(c.cs.s, "OR")
+	return (ArgrepOptionsOr)(c)
+}
+
+func (c ArgrepOptionsWithvalues) Limit(limit int64) ArgrepOptionsLimit {
+	c.cs.s = append(c.cs.s, "LIMIT", strconv.FormatInt(limit, 10))
+	return (ArgrepOptionsLimit)(c)
+}
+
+func (c ArgrepOptionsWithvalues) Withvalues() ArgrepOptionsWithvalues {
+	c.cs.s = append(c.cs.s, "WITHVALUES")
+	return c
+}
+
+func (c ArgrepOptionsWithvalues) Nocase() ArgrepOptionsNocase {
+	c.cs.s = append(c.cs.s, "NOCASE")
+	return (ArgrepOptionsNocase)(c)
+}
 
 func (c ArgrepOptionsWithvalues) Build() Completed {
 	c.cs.Build()
@@ -275,6 +380,26 @@ func (c ArgrepPredicateExactExact) String(string string) ArgrepPredicateExactStr
 }
 
 type ArgrepPredicateExactString Incomplete
+
+func (c ArgrepPredicateExactString) Exact() ArgrepPredicateExactExact {
+	c.cs.s = append(c.cs.s, "EXACT")
+	return (ArgrepPredicateExactExact)(c)
+}
+
+func (c ArgrepPredicateExactString) Match() ArgrepPredicateMatchMatch {
+	c.cs.s = append(c.cs.s, "MATCH")
+	return (ArgrepPredicateMatchMatch)(c)
+}
+
+func (c ArgrepPredicateExactString) Glob() ArgrepPredicateGlobGlob {
+	c.cs.s = append(c.cs.s, "GLOB")
+	return (ArgrepPredicateGlobGlob)(c)
+}
+
+func (c ArgrepPredicateExactString) Re() ArgrepPredicateReRe {
+	c.cs.s = append(c.cs.s, "RE")
+	return (ArgrepPredicateReRe)(c)
+}
 
 func (c ArgrepPredicateExactString) And() ArgrepOptionsAnd {
 	c.cs.s = append(c.cs.s, "AND")
@@ -315,6 +440,26 @@ func (c ArgrepPredicateGlobGlob) Pattern(pattern string) ArgrepPredicateGlobPatt
 
 type ArgrepPredicateGlobPattern Incomplete
 
+func (c ArgrepPredicateGlobPattern) Exact() ArgrepPredicateExactExact {
+	c.cs.s = append(c.cs.s, "EXACT")
+	return (ArgrepPredicateExactExact)(c)
+}
+
+func (c ArgrepPredicateGlobPattern) Match() ArgrepPredicateMatchMatch {
+	c.cs.s = append(c.cs.s, "MATCH")
+	return (ArgrepPredicateMatchMatch)(c)
+}
+
+func (c ArgrepPredicateGlobPattern) Glob() ArgrepPredicateGlobGlob {
+	c.cs.s = append(c.cs.s, "GLOB")
+	return (ArgrepPredicateGlobGlob)(c)
+}
+
+func (c ArgrepPredicateGlobPattern) Re() ArgrepPredicateReRe {
+	c.cs.s = append(c.cs.s, "RE")
+	return (ArgrepPredicateReRe)(c)
+}
+
 func (c ArgrepPredicateGlobPattern) And() ArgrepOptionsAnd {
 	c.cs.s = append(c.cs.s, "AND")
 	return (ArgrepOptionsAnd)(c)
@@ -354,6 +499,26 @@ func (c ArgrepPredicateMatchMatch) String(string string) ArgrepPredicateMatchStr
 
 type ArgrepPredicateMatchString Incomplete
 
+func (c ArgrepPredicateMatchString) Exact() ArgrepPredicateExactExact {
+	c.cs.s = append(c.cs.s, "EXACT")
+	return (ArgrepPredicateExactExact)(c)
+}
+
+func (c ArgrepPredicateMatchString) Match() ArgrepPredicateMatchMatch {
+	c.cs.s = append(c.cs.s, "MATCH")
+	return (ArgrepPredicateMatchMatch)(c)
+}
+
+func (c ArgrepPredicateMatchString) Glob() ArgrepPredicateGlobGlob {
+	c.cs.s = append(c.cs.s, "GLOB")
+	return (ArgrepPredicateGlobGlob)(c)
+}
+
+func (c ArgrepPredicateMatchString) Re() ArgrepPredicateReRe {
+	c.cs.s = append(c.cs.s, "RE")
+	return (ArgrepPredicateReRe)(c)
+}
+
 func (c ArgrepPredicateMatchString) And() ArgrepOptionsAnd {
 	c.cs.s = append(c.cs.s, "AND")
 	return (ArgrepOptionsAnd)(c)
@@ -385,6 +550,26 @@ func (c ArgrepPredicateMatchString) Build() Completed {
 }
 
 type ArgrepPredicateRePattern Incomplete
+
+func (c ArgrepPredicateRePattern) Exact() ArgrepPredicateExactExact {
+	c.cs.s = append(c.cs.s, "EXACT")
+	return (ArgrepPredicateExactExact)(c)
+}
+
+func (c ArgrepPredicateRePattern) Match() ArgrepPredicateMatchMatch {
+	c.cs.s = append(c.cs.s, "MATCH")
+	return (ArgrepPredicateMatchMatch)(c)
+}
+
+func (c ArgrepPredicateRePattern) Glob() ArgrepPredicateGlobGlob {
+	c.cs.s = append(c.cs.s, "GLOB")
+	return (ArgrepPredicateGlobGlob)(c)
+}
+
+func (c ArgrepPredicateRePattern) Re() ArgrepPredicateReRe {
+	c.cs.s = append(c.cs.s, "RE")
+	return (ArgrepPredicateReRe)(c)
+}
 
 func (c ArgrepPredicateRePattern) And() ArgrepOptionsAnd {
 	c.cs.s = append(c.cs.s, "AND")
