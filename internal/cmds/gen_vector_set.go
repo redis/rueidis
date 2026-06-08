@@ -420,6 +420,38 @@ func (c VinfoKey) Build() Completed {
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
+type Vismember Incomplete
+
+func (b Builder) Vismember() (c Vismember) {
+	c = Vismember{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "VISMEMBER")
+	return c
+}
+
+func (c Vismember) Key(key string) VismemberKey {
+	if c.ks&NoSlot == NoSlot {
+		c.ks = NoSlot | slot(key)
+	} else {
+		c.ks = check(c.ks, slot(key))
+	}
+	c.cs.s = append(c.cs.s, key)
+	return (VismemberKey)(c)
+}
+
+type VismemberElement Incomplete
+
+func (c VismemberElement) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type VismemberKey Incomplete
+
+func (c VismemberKey) Element(element string) VismemberElement {
+	c.cs.s = append(c.cs.s, element)
+	return (VismemberElement)(c)
+}
+
 type Vlinks Incomplete
 
 func (b Builder) Vlinks() (c Vlinks) {
