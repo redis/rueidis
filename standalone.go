@@ -274,6 +274,40 @@ func (s *standalone) DoStream(ctx context.Context, cmd Completed) RedisResultStr
 	return stream
 }
 
+func (s *standalone) DoWithReader(ctx context.Context, cmd Completed, fn ReaderFunc) (err error) {
+	attempts := 1
+
+	if s.enableRedirect {
+		cmd = cmd.Pin()
+	}
+
+retry:
+	if s.toReplicas != nil && s.toReplicas(cmd) {
+		err = s.pick(cmd.Slot()).DoWithReader(ctx, cmd, fn)
+	} else {
+		err = s.primary.Load().DoWithReader(ctx, cmd, fn)
+	}
+
+	if s.enableRedirect {
+		// handleRedirect returns (redirectError, wasRedirect)
+		// redirectError is error from redirect operation itself
+		// wasRedirect indicates if this was a REDIRECT error
+		if redirectErr, ok := s.handleRedirect(ctx, err); ok {
+			// If redirect succeeded (redirectErr == nil), retry
+			// OR if retry handler says to retry
+			if redirectErr == nil || s.retryer.WaitOrSkipRetry(ctx, attempts, cmd, err) {
+				attempts++
+				goto retry
+			}
+		}
+		if err == nil || err == Nil {
+			cmds.PutCompletedForce(cmd)
+		}
+	}
+
+	return err
+}
+
 func (s *standalone) DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisResultStream {
 	var stream MultiRedisResultStream
 	toReplica := s.toReplicas != nil

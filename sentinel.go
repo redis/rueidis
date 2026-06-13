@@ -260,6 +260,28 @@ func (c *sentinelClient) DoStream(ctx context.Context, cmd Completed) RedisResul
 	return resp
 }
 
+func (c *sentinelClient) DoWithReader(ctx context.Context, cmd Completed, fn ReaderFunc) (err error) {
+	attempts := 1
+retry:
+	cc := c.pick(cmd)
+	err = cc.DoWithReader(ctx, cmd, fn)
+	if err != nil {
+		if err == errConnExpired {
+			goto retry
+		}
+		if c.retry && cmd.IsRetryable() && c.isRetryable(err, ctx) {
+			if c.retryHandler.WaitOrSkipRetry(ctx, attempts, cmd, err) {
+				attempts++
+				goto retry
+			}
+		}
+	}
+	if err == nil || err == Nil {
+		cmds.PutCompleted(cmd)
+	}
+	return err
+}
+
 func (c *sentinelClient) DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisResultStream {
 	if len(multi) == 0 {
 		return RedisResultStream{e: io.EOF}
