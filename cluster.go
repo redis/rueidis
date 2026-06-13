@@ -375,21 +375,33 @@ func parseEndpoint(fallback, endpoint string, port int64) string {
 func parseSlots(slots RedisMessage, defaultAddr string) map[string]group {
 	groups := make(map[string]group, len(slots.values()))
 	for _, v := range slots.values() {
-		master := parseEndpoint(defaultAddr, v.values()[2].values()[0].string(), v.values()[2].values()[1].intlen)
+		values := v.values()
+		if len(values) < 3 {
+			continue
+		}
+		masterValues := values[2].values()
+		if len(masterValues) < 2 {
+			continue
+		}
+		master := parseEndpoint(defaultAddr, masterValues[0].string(), masterValues[1].intlen)
 		if master == "" {
 			continue
 		}
 		g, ok := groups[master]
 		if !ok {
 			g.slots = make([][2]int64, 0)
-			g.nodes = make(nodes, 0, len(v.values())-2)
-			for i := 2; i < len(v.values()); i++ {
-				if dst := parseEndpoint(defaultAddr, v.values()[i].values()[0].string(), v.values()[i].values()[1].intlen); dst != "" {
+			g.nodes = make(nodes, 0, len(values)-2)
+			for i := 2; i < len(values); i++ {
+				nodeValues := values[i].values()
+				if len(nodeValues) < 2 {
+					continue
+				}
+				if dst := parseEndpoint(defaultAddr, nodeValues[0].string(), nodeValues[1].intlen); dst != "" {
 					g.nodes = append(g.nodes, NodeInfo{Addr: dst})
 				}
 			}
 		}
-		g.slots = append(g.slots, [2]int64{v.values()[0].intlen, v.values()[1].intlen})
+		g.slots = append(g.slots, [2]int64{values[0].intlen, values[1].intlen})
 		groups[master] = g
 	}
 	return groups
