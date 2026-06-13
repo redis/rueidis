@@ -10,33 +10,6 @@
       "READONLY",
       "FAST"
     ],
-    "acl_categories": [
-      "ARRAY"
-    ],
-    "key_specs": [
-      {
-        "flags": [
-          "RO",
-          "ACCESS"
-        ],
-        "begin_search": {
-          "index": {
-            "pos": 1
-          }
-        },
-        "find_keys": {
-          "range": {
-            "lastkey": 0,
-            "step": 1,
-            "limit": 0
-          }
-        }
-      }
-    ],
-    "reply_schema": {
-      "description": "The number of non-empty elements, or 0 if key does not exist.",
-      "type": "integer"
-    },
     "arguments": [
       {
         "name": "key",
@@ -56,33 +29,6 @@
       "WRITE",
       "FAST"
     ],
-    "acl_categories": [
-      "ARRAY"
-    ],
-    "key_specs": [
-      {
-        "flags": [
-          "RW",
-          "DELETE"
-        ],
-        "begin_search": {
-          "index": {
-            "pos": 1
-          }
-        },
-        "find_keys": {
-          "range": {
-            "lastkey": 0,
-            "step": 1,
-            "limit": 0
-          }
-        }
-      }
-    ],
-    "reply_schema": {
-      "description": "Number of elements deleted.",
-      "type": "integer"
-    },
     "arguments": [
       {
         "name": "key",
@@ -106,33 +52,6 @@
     "command_flags": [
       "WRITE"
     ],
-    "acl_categories": [
-      "ARRAY"
-    ],
-    "key_specs": [
-      {
-        "flags": [
-          "RW",
-          "DELETE"
-        ],
-        "begin_search": {
-          "index": {
-            "pos": 1
-          }
-        },
-        "find_keys": {
-          "range": {
-            "lastkey": 0,
-            "step": 1,
-            "limit": 0
-          }
-        }
-      }
-    ],
-    "reply_schema": {
-      "description": "Number of elements deleted.",
-      "type": "integer"
-    },
     "arguments": [
       {
         "name": "key",
@@ -167,41 +86,6 @@
       "READONLY",
       "FAST"
     ],
-    "acl_categories": [
-      "ARRAY"
-    ],
-    "key_specs": [
-      {
-        "flags": [
-          "RO",
-          "ACCESS"
-        ],
-        "begin_search": {
-          "index": {
-            "pos": 1
-          }
-        },
-        "find_keys": {
-          "range": {
-            "lastkey": 0,
-            "step": 1,
-            "limit": 0
-          }
-        }
-      }
-    ],
-    "reply_schema": {
-      "oneOf": [
-        {
-          "description": "The value at the given index.",
-          "type": "string"
-        },
-        {
-          "description": "Null reply if key or index does not exist.",
-          "type": "null"
-        }
-      ]
-    },
     "arguments": [
       {
         "name": "key",
@@ -224,42 +108,6 @@
     "command_flags": [
       "READONLY"
     ],
-    "acl_categories": [
-      "ARRAY"
-    ],
-    "key_specs": [
-      {
-        "flags": [
-          "RO",
-          "ACCESS"
-        ],
-        "begin_search": {
-          "index": {
-            "pos": 1
-          }
-        },
-        "find_keys": {
-          "range": {
-            "lastkey": 0,
-            "step": 1,
-            "limit": 0
-          }
-        }
-      }
-    ],
-    "reply_schema": {
-      "type": "array",
-      "items": {
-        "oneOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "null"
-          }
-        ]
-      }
-    },
     "arguments": [
       {
         "name": "key",
@@ -286,60 +134,6 @@
     "command_flags": [
       "READONLY"
     ],
-    "acl_categories": [
-      "ARRAY"
-    ],
-    "key_specs": [
-      {
-        "flags": [
-          "RO",
-          "ACCESS"
-        ],
-        "begin_search": {
-          "index": {
-            "pos": 1
-          }
-        },
-        "find_keys": {
-          "range": {
-            "lastkey": 0,
-            "step": 1,
-            "limit": 0
-          }
-        }
-      }
-    ],
-    "reply_schema": {
-      "anyOf": [
-        {
-          "description": "Array of matching indexes.",
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "description": "Index of a matching element"
-          }
-        },
-        {
-          "description": "Array of [index, value] pairs. Returned in case `WITHVALUES` was used.",
-          "type": "array",
-          "items": {
-            "type": "array",
-            "minItems": 2,
-            "maxItems": 2,
-            "items": [
-              {
-                "type": "integer",
-                "description": "Index of a matching element"
-              },
-              {
-                "type": "string",
-                "description": "Value at that index"
-              }
-            ]
-          }
-        }
-      ]
-    },
     "arguments": [
       {
         "name": "key",
@@ -466,83 +260,6 @@
     "command_flags": [
       "READONLY"
     ],
-    "acl_categories": [
-      "ARRAY"
-    ],
-    "key_specs": [
-      {
-        "flags": [
-          "RO",
-          "ACCESS"
-        ],
-        "begin_search": {
-          "index": {
-            "pos": 1
-          }
-        },
-        "find_keys": {
-          "range": {
-            "lastkey": 0,
-            "step": 1,
-            "limit": 0
-          }
-        }
-      }
-    ],
-    "reply_schema": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "count": {
-          "type": "integer",
-          "description": "Total number of non-empty elements."
-        },
-        "len": {
-          "type": "integer",
-          "description": "Logical length (highest index + 1)."
-        },
-        "next-insert-index": {
-          "type": "integer",
-          "description": "Index the next ARINSERT would use, or 0 if unset/exhausted."
-        },
-        "slices": {
-          "type": "integer",
-          "description": "Number of allocated slices."
-        },
-        "directory-size": {
-          "type": "integer",
-          "description": "Directory allocation capacity (flat dir_alloc or superdir sdir_cap)."
-        },
-        "super-dir-entries": {
-          "type": "integer",
-          "description": "Number of super-directory entries (0 if not in superdir mode)."
-        },
-        "slice-size": {
-          "type": "integer",
-          "description": "Configured slice size."
-        },
-        "dense-slices": {
-          "type": "integer",
-          "description": "Number of dense slices (FULL only)."
-        },
-        "sparse-slices": {
-          "type": "integer",
-          "description": "Number of sparse slices (FULL only)."
-        },
-        "avg-dense-size": {
-          "type": "number",
-          "description": "Average allocation size of dense slices (FULL only)."
-        },
-        "avg-dense-fill": {
-          "type": "number",
-          "description": "Average fill rate of dense slices (FULL only)."
-        },
-        "avg-sparse-size": {
-          "type": "number",
-          "description": "Average capacity of sparse slices (FULL only)."
-        }
-      }
-    },
     "arguments": [
       {
         "name": "key",
@@ -569,33 +286,6 @@
       "DENYOOM",
       "FAST"
     ],
-    "acl_categories": [
-      "ARRAY"
-    ],
-    "key_specs": [
-      {
-        "flags": [
-          "RW",
-          "UPDATE"
-        ],
-        "begin_search": {
-          "index": {
-            "pos": 1
-          }
-        },
-        "find_keys": {
-          "range": {
-            "lastkey": 0,
-            "step": 1,
-            "limit": 0
-          }
-        }
-      }
-    ],
-    "reply_schema": {
-      "description": "The last index where a value was inserted.",
-      "type": "integer"
-    },
     "arguments": [
       {
         "name": "key",
@@ -619,42 +309,6 @@
     "command_flags": [
       "READONLY"
     ],
-    "acl_categories": [
-      "ARRAY"
-    ],
-    "key_specs": [
-      {
-        "flags": [
-          "RO",
-          "ACCESS"
-        ],
-        "begin_search": {
-          "index": {
-            "pos": 1
-          }
-        },
-        "find_keys": {
-          "range": {
-            "lastkey": 0,
-            "step": 1,
-            "limit": 0
-          }
-        }
-      }
-    ],
-    "reply_schema": {
-      "type": "array",
-      "items": {
-        "oneOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "null"
-          }
-        ]
-      }
-    },
     "arguments": [
       {
         "name": "key",
@@ -684,33 +338,6 @@
       "READONLY",
       "FAST"
     ],
-    "acl_categories": [
-      "ARRAY"
-    ],
-    "key_specs": [
-      {
-        "flags": [
-          "RO",
-          "ACCESS"
-        ],
-        "begin_search": {
-          "index": {
-            "pos": 1
-          }
-        },
-        "find_keys": {
-          "range": {
-            "lastkey": 0,
-            "step": 1,
-            "limit": 0
-          }
-        }
-      }
-    ],
-    "reply_schema": {
-      "description": "The length of the array (max index + 1), or 0 if key does not exist.",
-      "type": "integer"
-    },
     "arguments": [
       {
         "name": "key",
@@ -730,42 +357,6 @@
       "READONLY",
       "FAST"
     ],
-    "acl_categories": [
-      "ARRAY"
-    ],
-    "key_specs": [
-      {
-        "flags": [
-          "RO",
-          "ACCESS"
-        ],
-        "begin_search": {
-          "index": {
-            "pos": 1
-          }
-        },
-        "find_keys": {
-          "range": {
-            "lastkey": 0,
-            "step": 1,
-            "limit": 0
-          }
-        }
-      }
-    ],
-    "reply_schema": {
-      "type": "array",
-      "items": {
-        "oneOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "null"
-          }
-        ]
-      }
-    },
     "arguments": [
       {
         "name": "key",
@@ -791,33 +382,6 @@
       "DENYOOM",
       "FAST"
     ],
-    "acl_categories": [
-      "ARRAY"
-    ],
-    "key_specs": [
-      {
-        "flags": [
-          "RW",
-          "UPDATE"
-        ],
-        "begin_search": {
-          "index": {
-            "pos": 1
-          }
-        },
-        "find_keys": {
-          "range": {
-            "lastkey": 0,
-            "step": 1,
-            "limit": 0
-          }
-        }
-      }
-    ],
-    "reply_schema": {
-      "description": "Number of new slots that were set (previously empty).",
-      "type": "integer"
-    },
     "arguments": [
       {
         "name": "key",
@@ -852,41 +416,6 @@
       "READONLY",
       "FAST"
     ],
-    "acl_categories": [
-      "ARRAY"
-    ],
-    "key_specs": [
-      {
-        "flags": [
-          "RO",
-          "ACCESS"
-        ],
-        "begin_search": {
-          "index": {
-            "pos": 1
-          }
-        },
-        "find_keys": {
-          "range": {
-            "lastkey": 0,
-            "step": 1,
-            "limit": 0
-          }
-        }
-      }
-    ],
-    "reply_schema": {
-      "oneOf": [
-        {
-          "description": "The next index ARINSERT would use. Returns 0 for missing keys or when no insert happened yet.",
-          "type": "integer"
-        },
-        {
-          "description": "Null when the insertion cursor is exhausted (next insert would overflow).",
-          "type": "null"
-        }
-      ]
-    },
     "arguments": [
       {
         "name": "key",
@@ -905,45 +434,6 @@
     "command_flags": [
       "READONLY"
     ],
-    "acl_categories": [
-      "ARRAY"
-    ],
-    "key_specs": [
-      {
-        "flags": [
-          "RO",
-          "ACCESS"
-        ],
-        "begin_search": {
-          "index": {
-            "pos": 1
-          }
-        },
-        "find_keys": {
-          "range": {
-            "lastkey": 0,
-            "step": 1,
-            "limit": 0
-          }
-        }
-      }
-    ],
-    "reply_schema": {
-      "oneOf": [
-        {
-          "description": "Result of the operation.",
-          "type": "string"
-        },
-        {
-          "description": "Integer result for MATCH, USED, AND, OR, XOR.",
-          "type": "integer"
-        },
-        {
-          "description": "Null if no elements match the operation.",
-          "type": "null"
-        }
-      ]
-    },
     "arguments": [
       {
         "name": "key",
@@ -1027,33 +517,6 @@
       "WRITE",
       "DENYOOM"
     ],
-    "acl_categories": [
-      "ARRAY"
-    ],
-    "key_specs": [
-      {
-        "flags": [
-          "RW",
-          "UPDATE"
-        ],
-        "begin_search": {
-          "index": {
-            "pos": 1
-          }
-        },
-        "find_keys": {
-          "range": {
-            "lastkey": 0,
-            "step": 1,
-            "limit": 0
-          }
-        }
-      }
-    ],
-    "reply_schema": {
-      "description": "The last index where a value was inserted.",
-      "type": "integer"
-    },
     "arguments": [
       {
         "name": "key",
@@ -1081,48 +544,6 @@
     "command_flags": [
       "READONLY"
     ],
-    "acl_categories": [
-      "ARRAY"
-    ],
-    "key_specs": [
-      {
-        "flags": [
-          "RO",
-          "ACCESS"
-        ],
-        "begin_search": {
-          "index": {
-            "pos": 1
-          }
-        },
-        "find_keys": {
-          "range": {
-            "lastkey": 0,
-            "step": 1,
-            "limit": 0
-          }
-        }
-      }
-    ],
-    "reply_schema": {
-      "description": "Array of [index, value] pairs.",
-      "type": "array",
-      "items": {
-        "type": "array",
-        "minItems": 2,
-        "maxItems": 2,
-        "items": [
-          {
-            "type": "integer",
-            "description": "Index of existing element"
-          },
-          {
-            "type": "string",
-            "description": "Value at that index"
-          }
-        ]
-      }
-    },
     "arguments": [
       {
         "name": "key",
@@ -1156,33 +577,6 @@
       "WRITE",
       "FAST"
     ],
-    "acl_categories": [
-      "ARRAY"
-    ],
-    "key_specs": [
-      {
-        "flags": [
-          "RW",
-          "UPDATE"
-        ],
-        "begin_search": {
-          "index": {
-            "pos": 1
-          }
-        },
-        "find_keys": {
-          "range": {
-            "lastkey": 0,
-            "step": 1,
-            "limit": 0
-          }
-        }
-      }
-    ],
-    "reply_schema": {
-      "description": "1 if the cursor was set, 0 if the key does not exist.",
-      "type": "integer"
-    },
     "arguments": [
       {
         "name": "key",
@@ -1207,33 +601,6 @@
       "DENYOOM",
       "FAST"
     ],
-    "acl_categories": [
-      "ARRAY"
-    ],
-    "key_specs": [
-      {
-        "flags": [
-          "RW",
-          "UPDATE"
-        ],
-        "begin_search": {
-          "index": {
-            "pos": 1
-          }
-        },
-        "find_keys": {
-          "range": {
-            "lastkey": 0,
-            "step": 1,
-            "limit": 0
-          }
-        }
-      }
-    ],
-    "reply_schema": {
-      "description": "Number of new slots that were set (previously empty).",
-      "type": "integer"
-    },
     "arguments": [
       {
         "name": "key",
