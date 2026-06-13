@@ -431,21 +431,11 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 			if dictHealth := dict["health"]; dictHealth.string() != "online" {
 				continue
 			}
-			dictEndpoint, ok := dict["endpoint"]
-			if !ok {
-				continue
+			port := dict["port"].intlen
+			if tls && dict["tls-port"].intlen > 0 {
+				port = dict["tls-port"].intlen
 			}
-			portMsg, portOK := dict["port"]
-			port := portMsg.intlen
-			_, tlsPortOK := dict["tls-port"]
-			if !portOK && !tlsPortOK {
-				continue
-			}
-			if tls {
-				if tlsPort, tlsPortOK := dict["tls-port"]; tlsPortOK && tlsPort.intlen > 0 {
-					port = tlsPort.intlen
-				}
-			}
+			dictEndpoint := dict["endpoint"]
 			if dst := parseEndpoint(defaultAddr, dictEndpoint.string(), port); dst != "" {
 				if dictRole := dict["role"]; dictRole.string() == "master" {
 					m = len(g.nodes)
@@ -453,7 +443,7 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 				g.nodes = append(g.nodes, NodeInfo{Addr: dst})
 			}
 		}
-		if m >= 0 && len(g.nodes) > 0 {
+		if m >= 0 {
 			g.nodes[0], g.nodes[m] = g.nodes[m], g.nodes[0]
 			groups[g.nodes[0].Addr] = g
 		}

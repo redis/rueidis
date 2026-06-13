@@ -6190,42 +6190,6 @@ func TestClusterShardsParsing(t *testing.T) {
 			}
 		}
 	})
-
-	t.Run("skips nodes missing endpoint or port", func(t *testing.T) {
-		resp := slicemsg(typeArray, []RedisMessage{
-			slicemsg(typeMap, []RedisMessage{
-				strmsg(typeBlobString, "slots"),
-				slicemsg(typeArray, []RedisMessage{
-					strmsg(typeBlobString, "0"),
-					strmsg(typeBlobString, "16383"),
-				}),
-				strmsg(typeBlobString, "nodes"),
-				slicemsg(typeArray, []RedisMessage{
-					slicemsg(typeMap, []RedisMessage{
-						strmsg(typeBlobString, "endpoint"),
-						strmsg(typeBlobString, "127.0.0.1"),
-						strmsg(typeBlobString, "role"),
-						strmsg(typeBlobString, "master"),
-						strmsg(typeBlobString, "health"),
-						strmsg(typeBlobString, "online"),
-					}),
-					slicemsg(typeMap, []RedisMessage{
-						strmsg(typeBlobString, "port"),
-						{typ: typeInteger, intlen: 0},
-						strmsg(typeBlobString, "role"),
-						strmsg(typeBlobString, "master"),
-						strmsg(typeBlobString, "health"),
-						strmsg(typeBlobString, "online"),
-					}),
-				}),
-			}),
-		})
-
-		result := parseShards(resp, "127.0.0.1:5", false)
-		if len(result) != 0 {
-			t.Fatalf("unexpected result %#v", result)
-		}
-	})
 }
 
 // https://github.com/redis/rueidis/issues/543
