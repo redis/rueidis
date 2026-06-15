@@ -56,7 +56,7 @@ func TestGetAddr(t *testing.T) {
 
 func TestToInteger(t *testing.T) {
 	tests := []struct {
-		input interface{}
+		input any
 		exp   int
 	}{{123, 123}, {int64(123), 123}, {"123", 123}, {"abc", 0}, {nil, 0}, {float64(123), 0}}
 	for _, test := range tests {
@@ -69,7 +69,7 @@ func TestToInteger(t *testing.T) {
 
 func TestToFloat(t *testing.T) {
 	tests := []struct {
-		input interface{}
+		input any
 		exp   float64
 	}{
 		{123.45, 123.45},
@@ -90,9 +90,9 @@ func TestToFloat(t *testing.T) {
 
 func TestToStringSlice(t *testing.T) {
 	tests := []struct {
-		input interface{}
+		input any
 		exp   []string
-	}{{[]interface{}{"abc", "def"}, []string{"abc", "def"}}, {[]interface{}{1, "abc", 2}, []string{"", "abc", ""}}, {[]interface{}{nil, "abc"}, []string{"", "abc"}}, {[]interface{}{1.2, true, 3.5}, []string{"", "", ""}}, {"abc", nil}}
+	}{{[]any{"abc", "def"}, []string{"abc", "def"}}, {[]any{1, "abc", 2}, []string{"", "abc", ""}}, {[]any{nil, "abc"}, []string{"", "abc"}}, {[]any{1.2, true, 3.5}, []string{"", "", ""}}, {"abc", nil}}
 	for _, test := range tests {
 		res := ToStringSlice(test.input)
 		if fmt.Sprintf("%v", res) != fmt.Sprintf("%v", test.exp) {

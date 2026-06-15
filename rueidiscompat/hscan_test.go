@@ -85,7 +85,7 @@ type TimeData struct {
 	Time *TimeRFC3339Nano `redis:"login"`
 }
 
-type i []interface{}
+type i []any
 
 var _ = Describe("Scan", func() {
 	It("catches bad args", func() {
@@ -98,7 +98,7 @@ var _ = Describe("Scan", func() {
 		Expect(Scan(&d, []string{"key"}, i{"1", "2"})).To(HaveOccurred())
 		Expect(Scan(nil, []string{"key", "1"}, i{})).To(HaveOccurred())
 
-		var m map[string]interface{}
+		var m map[string]any
 		Expect(Scan(&m, []string{"key"}, i{"1"})).To(HaveOccurred())
 		Expect(Scan(data{}, []string{"key"}, i{"1"})).To(HaveOccurred())
 		Expect(Scan(data{}, []string{"key", "string"}, i{nil, nil})).To(HaveOccurred())

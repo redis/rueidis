@@ -57,7 +57,7 @@ type Pipeliner interface {
 
 	// Do is an API for executing any command.
 	// If a certain Redis command is not yet supported, you can use Do to execute it.
-	Do(ctx context.Context, args ...interface{}) *Cmd
+	Do(ctx context.Context, args ...any) *Cmd
 
 	// Discard is to discard all commands in the cache that have not yet been executed.
 	Discard()
@@ -2258,7 +2258,7 @@ func (c *Pipeline) TFCallASYNCArgs(ctx context.Context, libName string, funcName
 	return ret
 }
 
-func (c *Pipeline) BFAdd(ctx context.Context, key string, element interface{}) *BoolCmd {
+func (c *Pipeline) BFAdd(ctx context.Context, key string, element any) *BoolCmd {
 	ret := c.comp.BFAdd(ctx, key, element)
 	c.rets = append(c.rets, ret)
 	return ret
@@ -2270,7 +2270,7 @@ func (c *Pipeline) BFCard(ctx context.Context, key string) *IntCmd {
 	return ret
 }
 
-func (c *Pipeline) BFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
+func (c *Pipeline) BFExists(ctx context.Context, key string, element any) *BoolCmd {
 	ret := c.comp.BFExists(ctx, key, element)
 	c.rets = append(c.rets, ret)
 	return ret
@@ -2318,19 +2318,19 @@ func (c *Pipeline) BFInfoExpansion(ctx context.Context, key string) *BFInfoCmd {
 	return ret
 }
 
-func (c *Pipeline) BFInsert(ctx context.Context, key string, options *BFInsertOptions, elements ...interface{}) *BoolSliceCmd {
+func (c *Pipeline) BFInsert(ctx context.Context, key string, options *BFInsertOptions, elements ...any) *BoolSliceCmd {
 	ret := c.comp.BFInsert(ctx, key, options, elements...)
 	c.rets = append(c.rets, ret)
 	return ret
 }
 
-func (c *Pipeline) BFMAdd(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
+func (c *Pipeline) BFMAdd(ctx context.Context, key string, elements ...any) *BoolSliceCmd {
 	ret := c.comp.BFMAdd(ctx, key, elements...)
 	c.rets = append(c.rets, ret)
 	return ret
 }
 
-func (c *Pipeline) BFMExists(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
+func (c *Pipeline) BFMExists(ctx context.Context, key string, elements ...any) *BoolSliceCmd {
 	ret := c.comp.BFMExists(ctx, key, elements...)
 	c.rets = append(c.rets, ret)
 	return ret
@@ -2366,37 +2366,37 @@ func (c *Pipeline) BFScanDump(ctx context.Context, key string, iterator int64) *
 	return ret
 }
 
-func (c *Pipeline) BFLoadChunk(ctx context.Context, key string, iterator int64, data interface{}) *StatusCmd {
+func (c *Pipeline) BFLoadChunk(ctx context.Context, key string, iterator int64, data any) *StatusCmd {
 	ret := c.comp.BFLoadChunk(ctx, key, iterator, data)
 	c.rets = append(c.rets, ret)
 	return ret
 }
 
-func (c *Pipeline) CFAdd(ctx context.Context, key string, element interface{}) *BoolCmd {
+func (c *Pipeline) CFAdd(ctx context.Context, key string, element any) *BoolCmd {
 	ret := c.comp.CFAdd(ctx, key, element)
 	c.rets = append(c.rets, ret)
 	return ret
 }
 
-func (c *Pipeline) CFAddNX(ctx context.Context, key string, element interface{}) *BoolCmd {
+func (c *Pipeline) CFAddNX(ctx context.Context, key string, element any) *BoolCmd {
 	ret := c.comp.CFAddNX(ctx, key, element)
 	c.rets = append(c.rets, ret)
 	return ret
 }
 
-func (c *Pipeline) CFCount(ctx context.Context, key string, element interface{}) *IntCmd {
+func (c *Pipeline) CFCount(ctx context.Context, key string, element any) *IntCmd {
 	ret := c.comp.CFCount(ctx, key, element)
 	c.rets = append(c.rets, ret)
 	return ret
 }
 
-func (c *Pipeline) CFDel(ctx context.Context, key string, element interface{}) *BoolCmd {
+func (c *Pipeline) CFDel(ctx context.Context, key string, element any) *BoolCmd {
 	ret := c.comp.CFDel(ctx, key, element)
 	c.rets = append(c.rets, ret)
 	return ret
 }
 
-func (c *Pipeline) CFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
+func (c *Pipeline) CFExists(ctx context.Context, key string, element any) *BoolCmd {
 	ret := c.comp.CFExists(ctx, key, element)
 	c.rets = append(c.rets, ret)
 	return ret
@@ -2408,19 +2408,19 @@ func (c *Pipeline) CFInfo(ctx context.Context, key string) *CFInfoCmd {
 	return ret
 }
 
-func (c *Pipeline) CFInsert(ctx context.Context, key string, options *CFInsertOptions, elements ...interface{}) *BoolSliceCmd {
+func (c *Pipeline) CFInsert(ctx context.Context, key string, options *CFInsertOptions, elements ...any) *BoolSliceCmd {
 	ret := c.comp.CFInsert(ctx, key, options, elements...)
 	c.rets = append(c.rets, ret)
 	return ret
 }
 
-func (c *Pipeline) CFInsertNX(ctx context.Context, key string, options *CFInsertOptions, elements ...interface{}) *IntSliceCmd {
+func (c *Pipeline) CFInsertNX(ctx context.Context, key string, options *CFInsertOptions, elements ...any) *IntSliceCmd {
 	ret := c.comp.CFInsertNX(ctx, key, options, elements...)
 	c.rets = append(c.rets, ret)
 	return ret
 }
 
-func (c *Pipeline) CFMExists(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
+func (c *Pipeline) CFMExists(ctx context.Context, key string, elements ...any) *BoolSliceCmd {
 	ret := c.comp.CFMExists(ctx, key, elements...)
 	c.rets = append(c.rets, ret)
 	return ret
@@ -2462,13 +2462,13 @@ func (c *Pipeline) CFScanDump(ctx context.Context, key string, iterator int64) *
 	return ret
 }
 
-func (c *Pipeline) CFLoadChunk(ctx context.Context, key string, iterator int64, data interface{}) *StatusCmd {
+func (c *Pipeline) CFLoadChunk(ctx context.Context, key string, iterator int64, data any) *StatusCmd {
 	ret := c.comp.CFLoadChunk(ctx, key, iterator, data)
 	c.rets = append(c.rets, ret)
 	return ret
 }
 
-func (c *Pipeline) CMSIncrBy(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
+func (c *Pipeline) CMSIncrBy(ctx context.Context, key string, elements ...any) *IntSliceCmd {
 	ret := c.comp.CMSIncrBy(ctx, key, elements...)
 	c.rets = append(c.rets, ret)
 	return ret
@@ -2504,25 +2504,25 @@ func (c *Pipeline) CMSMergeWithWeight(ctx context.Context, destKey string, sourc
 	return ret
 }
 
-func (c *Pipeline) CMSQuery(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
+func (c *Pipeline) CMSQuery(ctx context.Context, key string, elements ...any) *IntSliceCmd {
 	ret := c.comp.CMSQuery(ctx, key, elements...)
 	c.rets = append(c.rets, ret)
 	return ret
 }
 
-func (c *Pipeline) TopKAdd(ctx context.Context, key string, elements ...interface{}) *StringSliceCmd {
+func (c *Pipeline) TopKAdd(ctx context.Context, key string, elements ...any) *StringSliceCmd {
 	ret := c.comp.TopKAdd(ctx, key, elements...)
 	c.rets = append(c.rets, ret)
 	return ret
 }
 
-func (c *Pipeline) TopKCount(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
+func (c *Pipeline) TopKCount(ctx context.Context, key string, elements ...any) *IntSliceCmd {
 	ret := c.comp.TopKCount(ctx, key, elements...)
 	c.rets = append(c.rets, ret)
 	return ret
 }
 
-func (c *Pipeline) TopKIncrBy(ctx context.Context, key string, elements ...interface{}) *StringSliceCmd {
+func (c *Pipeline) TopKIncrBy(ctx context.Context, key string, elements ...any) *StringSliceCmd {
 	ret := c.comp.TopKIncrBy(ctx, key, elements...)
 	c.rets = append(c.rets, ret)
 	return ret
@@ -2546,7 +2546,7 @@ func (c *Pipeline) TopKListWithCount(ctx context.Context, key string) *MapString
 	return ret
 }
 
-func (c *Pipeline) TopKQuery(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
+func (c *Pipeline) TopKQuery(ctx context.Context, key string, elements ...any) *BoolSliceCmd {
 	ret := c.comp.TopKQuery(ctx, key, elements...)
 	c.rets = append(c.rets, ret)
 	return ret
@@ -2654,13 +2654,13 @@ func (c *Pipeline) TDigestTrimmedMean(ctx context.Context, key string, lowCutQua
 	return ret
 }
 
-func (c *Pipeline) TSAdd(ctx context.Context, key string, timestamp interface{}, value float64) *IntCmd {
+func (c *Pipeline) TSAdd(ctx context.Context, key string, timestamp any, value float64) *IntCmd {
 	ret := c.comp.TSAdd(ctx, key, timestamp, value)
 	c.rets = append(c.rets, ret)
 	return ret
 }
 
-func (c *Pipeline) TSAddWithArgs(ctx context.Context, key string, timestamp interface{}, value float64, options *TSOptions) *IntCmd {
+func (c *Pipeline) TSAddWithArgs(ctx context.Context, key string, timestamp any, value float64, options *TSOptions) *IntCmd {
 	ret := c.comp.TSAddWithArgs(ctx, key, timestamp, value, options)
 	c.rets = append(c.rets, ret)
 	return ret
@@ -2756,7 +2756,7 @@ func (c *Pipeline) TSInfoWithArgs(ctx context.Context, key string, options *TSIn
 	return ret
 }
 
-func (c *Pipeline) TSMAdd(ctx context.Context, ktvSlices [][]interface{}) *IntSliceCmd {
+func (c *Pipeline) TSMAdd(ctx context.Context, ktvSlices [][]any) *IntSliceCmd {
 	ret := c.comp.TSMAdd(ctx, ktvSlices)
 	c.rets = append(c.rets, ret)
 	return ret
@@ -2828,25 +2828,25 @@ func (c *Pipeline) TSMGetWithArgs(ctx context.Context, filters []string, options
 	return ret
 }
 
-func (c *Pipeline) JSONArrAppend(ctx context.Context, key, path string, values ...interface{}) *IntSliceCmd {
+func (c *Pipeline) JSONArrAppend(ctx context.Context, key, path string, values ...any) *IntSliceCmd {
 	ret := c.comp.JSONArrAppend(ctx, key, path, values...)
 	c.rets = append(c.rets, ret)
 	return ret
 }
 
-func (c *Pipeline) JSONArrIndex(ctx context.Context, key, path string, value ...interface{}) *IntSliceCmd {
+func (c *Pipeline) JSONArrIndex(ctx context.Context, key, path string, value ...any) *IntSliceCmd {
 	ret := c.comp.JSONArrIndex(ctx, key, path, value...)
 	c.rets = append(c.rets, ret)
 	return ret
 }
 
-func (c *Pipeline) JSONArrIndexWithArgs(ctx context.Context, key, path string, options *JSONArrIndexArgs, value ...interface{}) *IntSliceCmd {
+func (c *Pipeline) JSONArrIndexWithArgs(ctx context.Context, key, path string, options *JSONArrIndexArgs, value ...any) *IntSliceCmd {
 	ret := c.comp.JSONArrIndexWithArgs(ctx, key, path, options, value...)
 	c.rets = append(c.rets, ret)
 	return ret
 }
 
-func (c *Pipeline) JSONArrInsert(ctx context.Context, key, path string, index int64, values ...interface{}) *IntSliceCmd {
+func (c *Pipeline) JSONArrInsert(ctx context.Context, key, path string, index int64, values ...any) *IntSliceCmd {
 	ret := c.comp.JSONArrInsert(ctx, key, path, index, values...)
 	c.rets = append(c.rets, ret)
 	return ret
@@ -2924,7 +2924,7 @@ func (c *Pipeline) JSONMSetArgs(ctx context.Context, docs []JSONSetArgs) *Status
 	return ret
 }
 
-func (c *Pipeline) JSONMSet(ctx context.Context, params ...interface{}) *StatusCmd {
+func (c *Pipeline) JSONMSet(ctx context.Context, params ...any) *StatusCmd {
 	ret := c.comp.JSONMSet(ctx, params...)
 	c.rets = append(c.rets, ret)
 	return ret
@@ -2954,13 +2954,13 @@ func (c *Pipeline) JSONObjLen(ctx context.Context, key, path string) *IntPointer
 	return ret
 }
 
-func (c *Pipeline) JSONSet(ctx context.Context, key, path string, value interface{}) *StatusCmd {
+func (c *Pipeline) JSONSet(ctx context.Context, key, path string, value any) *StatusCmd {
 	ret := c.comp.JSONSet(ctx, key, path, value)
 	c.rets = append(c.rets, ret)
 	return ret
 }
 
-func (c *Pipeline) JSONSetMode(ctx context.Context, key, path string, value interface{}, mode string) *StatusCmd {
+func (c *Pipeline) JSONSetMode(ctx context.Context, key, path string, value any, mode string) *StatusCmd {
 	ret := c.comp.JSONSetMode(ctx, key, path, value, mode)
 	c.rets = append(c.rets, ret)
 	return ret
@@ -3026,7 +3026,7 @@ func (c *Pipeline) FTAliasUpdate(ctx context.Context, index string, alias string
 	return ret
 }
 
-func (c *Pipeline) FTAlter(ctx context.Context, index string, skipInitialScan bool, definition []interface{}) *StatusCmd {
+func (c *Pipeline) FTAlter(ctx context.Context, index string, skipInitialScan bool, definition []any) *StatusCmd {
 	ret := c.comp.FTAlter(ctx, index, skipInitialScan, definition)
 	c.rets = append(c.rets, ret)
 	return ret
@@ -3038,7 +3038,7 @@ func (c *Pipeline) FTConfigGet(ctx context.Context, option string) *MapMapString
 	return ret
 }
 
-func (c *Pipeline) FTConfigSet(ctx context.Context, option string, value interface{}) *StatusCmd {
+func (c *Pipeline) FTConfigSet(ctx context.Context, option string, value any) *StatusCmd {
 	ret := c.comp.FTConfigSet(ctx, option, value)
 	c.rets = append(c.rets, ret)
 	return ret
@@ -3062,13 +3062,13 @@ func (c *Pipeline) FTCursorRead(ctx context.Context, index string, cursorId int,
 	return ret
 }
 
-func (c *Pipeline) FTDictAdd(ctx context.Context, dict string, term ...interface{}) *IntCmd {
+func (c *Pipeline) FTDictAdd(ctx context.Context, dict string, term ...any) *IntCmd {
 	ret := c.comp.FTDictAdd(ctx, dict, term...)
 	c.rets = append(c.rets, ret)
 	return ret
 }
 
-func (c *Pipeline) FTDictDel(ctx context.Context, dict string, term ...interface{}) *IntCmd {
+func (c *Pipeline) FTDictDel(ctx context.Context, dict string, term ...any) *IntCmd {
 	ret := c.comp.FTDictDel(ctx, dict, term...)
 	c.rets = append(c.rets, ret)
 	return ret
@@ -3140,13 +3140,13 @@ func (c *Pipeline) FTSynDump(ctx context.Context, index string) *FTSynDumpCmd {
 	return ret
 }
 
-func (c *Pipeline) FTSynUpdate(ctx context.Context, index string, synGroupId interface{}, terms []interface{}) *StatusCmd {
+func (c *Pipeline) FTSynUpdate(ctx context.Context, index string, synGroupId any, terms []any) *StatusCmd {
 	ret := c.comp.FTSynUpdate(ctx, index, synGroupId, terms)
 	c.rets = append(c.rets, ret)
 	return ret
 }
 
-func (c *Pipeline) FTSynUpdateWithArgs(ctx context.Context, index string, synGroupId interface{}, options *FTSynUpdateOptions, terms []interface{}) *StatusCmd {
+func (c *Pipeline) FTSynUpdateWithArgs(ctx context.Context, index string, synGroupId any, options *FTSynUpdateOptions, terms []any) *StatusCmd {
 	ret := c.comp.FTSynUpdateWithArgs(ctx, index, synGroupId, options, terms)
 	c.rets = append(c.rets, ret)
 	return ret
@@ -3198,7 +3198,7 @@ func (c *Pipeline) Len() int {
 }
 
 // Do queues the custom command for later execution.
-func (c *Pipeline) Do(_ context.Context, args ...interface{}) *Cmd {
+func (c *Pipeline) Do(_ context.Context, args ...any) *Cmd {
 	ret := &Cmd{}
 	if len(args) == 0 {
 		ret.SetErr(errors.New("redis: please enter the command to be executed"))

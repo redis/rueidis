@@ -1598,29 +1598,29 @@ func testAdapter(resp3 bool) {
 
 			mGet := adapter.MGet(ctx, "key1", "key2", "_")
 			Expect(mGet.Err()).NotTo(HaveOccurred())
-			Expect(mGet.Val()).To(Equal([]interface{}{"hello1", "hello2", nil}))
+			Expect(mGet.Val()).To(Equal([]any{"hello1", "hello2", nil}))
 
 			// MSet struct
 			type set struct {
 				Set1 string                 `redis:"set1"`
 				Set2 int16                  `redis:"set2"`
 				Set3 time.Duration          `redis:"set3"`
-				Set4 interface{}            `redis:"set4"`
-				Set5 map[string]interface{} `redis:"-"`
+				Set4 any            `redis:"set4"`
+				Set5 map[string]any `redis:"-"`
 			}
 			mSet = adapter.MSet(ctx, &set{
 				Set1: "val1",
 				Set2: 1024,
 				Set3: 2 * time.Millisecond,
 				Set4: nil,
-				Set5: map[string]interface{}{"k1": 1},
+				Set5: map[string]any{"k1": 1},
 			})
 			Expect(mSet.Err()).NotTo(HaveOccurred())
 			Expect(mSet.Val()).To(Equal("OK"))
 
 			mGet = adapter.MGet(ctx, "set1", "set2", "set3", "set4")
 			Expect(mGet.Err()).NotTo(HaveOccurred())
-			Expect(mGet.Val()).To(Equal([]interface{}{
+			Expect(mGet.Val()).To(Equal([]any{
 				"val1",
 				"1024",
 				strconv.Itoa(int(2 * time.Millisecond.Nanoseconds())),
@@ -1668,15 +1668,15 @@ func testAdapter(resp3 bool) {
 				Set1 string                 `redis:"set1"`
 				Set2 int16                  `redis:"set2"`
 				Set3 time.Duration          `redis:"set3"`
-				Set4 interface{}            `redis:"set4"`
-				Set5 map[string]interface{} `redis:"-"`
+				Set4 any            `redis:"set4"`
+				Set5 map[string]any `redis:"-"`
 			}
 			mSetNX = adapter.MSetNX(ctx, &set{
 				Set1: "val1",
 				Set2: 1024,
 				Set3: 2 * time.Millisecond,
 				Set4: nil,
-				Set5: map[string]interface{}{"k1": 1},
+				Set5: map[string]any{"k1": 1},
 			})
 			Expect(mSetNX.Err()).NotTo(HaveOccurred())
 			Expect(mSetNX.Val()).To(Equal(true))
@@ -2441,7 +2441,7 @@ func testAdapter(resp3 bool) {
 		})
 
 		It("should HSet", func() {
-			ok, err := adapter.HSet(ctx, "hash", map[string]interface{}{
+			ok, err := adapter.HSet(ctx, "hash", map[string]any{
 				"key1": "hello1",
 				"key2": "hello2",
 			}).Result()
@@ -2476,8 +2476,8 @@ func testAdapter(resp3 bool) {
 				Set1 string                 `redis:"set1"`
 				Set2 int16                  `redis:"set2"`
 				Set3 time.Duration          `redis:"set3"`
-				Set4 interface{}            `redis:"set4"`
-				Set5 map[string]interface{} `redis:"-"`
+				Set4 any            `redis:"set4"`
+				Set5 map[string]any `redis:"-"`
 				Set6 string                 `redis:"set6,omitempty"`
 				Set7 *string                `redis:"set7"`
 				Set8 *string                `redis:"set8"`
@@ -2488,7 +2488,7 @@ func testAdapter(resp3 bool) {
 				Set2: 1024,
 				Set3: 2 * time.Millisecond,
 				Set4: nil,
-				Set5: map[string]interface{}{"k1": 1},
+				Set5: map[string]any{"k1": 1},
 				Set7: &str,
 				Set8: nil,
 			})
@@ -2497,7 +2497,7 @@ func testAdapter(resp3 bool) {
 
 			hMGet := adapter.HMGet(ctx, "hash", "set1", "set2", "set3", "set4", "set5", "set6", "set7", "set8")
 			Expect(hMGet.Err()).NotTo(HaveOccurred())
-			Expect(hMGet.Val()).To(Equal([]interface{}{
+			Expect(hMGet.Val()).To(Equal([]any{
 				"val1",
 				"1024",
 				strconv.Itoa(int(2 * time.Millisecond.Nanoseconds())),
@@ -2517,7 +2517,7 @@ func testAdapter(resp3 bool) {
 
 			hMGet = adapter.HMGet(ctx, "hash2", "set1", "set6")
 			Expect(hMGet.Err()).NotTo(HaveOccurred())
-			Expect(hMGet.Val()).To(Equal([]interface{}{
+			Expect(hMGet.Val()).To(Equal([]any{
 				"val2",
 				"val",
 			}))
@@ -9591,7 +9591,7 @@ func testAdapterCache(resp3 bool) {
 		})
 
 		It("should TFCall", Label("gears", "tfcall"), func() {
-			var resultAdd interface{}
+			var resultAdd any
 			resultAdd, err := adapter.TFunctionLoad(ctx, libCode("lib1")).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resultAdd).To(BeEquivalentTo("OK"))
@@ -9601,7 +9601,7 @@ func testAdapterCache(resp3 bool) {
 		})
 
 		It("should TFCallArgs", Label("gears", "tfcallargs"), func() {
-			var resultAdd interface{}
+			var resultAdd any
 			resultAdd, err := adapter.TFunctionLoad(ctx, libCode("lib1")).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resultAdd).To(BeEquivalentTo("OK"))
@@ -9612,7 +9612,7 @@ func testAdapterCache(resp3 bool) {
 		})
 
 		It("should TFCallASYNC", Label("gears", "TFCallASYNC"), func() {
-			var resultAdd interface{}
+			var resultAdd any
 			resultAdd, err := adapter.TFunctionLoad(ctx, libCode("lib1")).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resultAdd).To(BeEquivalentTo("OK"))
@@ -9622,7 +9622,7 @@ func testAdapterCache(resp3 bool) {
 		})
 
 		It("should TFCallASYNCArgs", Label("gears", "TFCallASYNCargs"), func() {
-			var resultAdd interface{}
+			var resultAdd any
 			resultAdd, err := adapter.TFunctionLoad(ctx, libCode("lib1")).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resultAdd).To(BeEquivalentTo("OK"))
@@ -10445,7 +10445,7 @@ func testAdapterCache(resp3 bool) {
 			Expect(result).To(BeEquivalentTo("OK"))
 			resultInfo, err := adapter.TSInfo(ctx, "4").Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["labels"].(map[string]interface{})["Time"]).To(BeEquivalentTo("Series"))
+			Expect(resultInfo["labels"].(map[string]any)["Time"]).To(BeEquivalentTo("Series"))
 			// Test chunk size
 			opt = &TSOptions{ChunkSize: 128}
 			result, err = adapter.TSCreateWithArgs(ctx, "ts-cs-1", opt).Result()
@@ -10487,7 +10487,7 @@ func testAdapterCache(resp3 bool) {
 			Expect(result).To(BeEquivalentTo(4))
 			resultInfo, err := adapter.TSInfo(ctx, "4").Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["labels"].(map[string]interface{})["Time"]).To(BeEquivalentTo("Series"))
+			Expect(resultInfo["labels"].(map[string]any)["Time"]).To(BeEquivalentTo("Series"))
 			// Test chunk size
 			opt = &TSOptions{ChunkSize: 128}
 			result, err = adapter.TSAddWithArgs(ctx, "ts-cs-1", 1, 10, opt).Result()
@@ -10562,7 +10562,7 @@ func testAdapterCache(resp3 bool) {
 
 			resultInfo, err = adapter.TSInfo(ctx, "1").Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["labels"]).To(BeEquivalentTo(map[string]interface{}{}))
+			Expect(resultInfo["labels"]).To(BeEquivalentTo(map[string]any{}))
 
 			opt = &TSAlterOptions{Labels: map[string]string{"Time": "Series"}}
 			resultAlter, err = adapter.TSAlter(ctx, "1", opt).Result()
@@ -10571,7 +10571,7 @@ func testAdapterCache(resp3 bool) {
 
 			resultInfo, err = adapter.TSInfo(ctx, "1").Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["labels"].(map[string]interface{})["Time"]).To(BeEquivalentTo("Series"))
+			Expect(resultInfo["labels"].(map[string]any)["Time"]).To(BeEquivalentTo("Series"))
 			Expect(resultInfo["retentionTime"]).To(BeEquivalentTo(10))
 			Expect(resultInfo["duplicatePolicy"]).To(BeNil())
 			opt = &TSAlterOptions{DuplicatePolicy: "min"}
@@ -10616,7 +10616,7 @@ func testAdapterCache(resp3 bool) {
 			Expect(resultDeleteRule).To(BeEquivalentTo("OK"))
 			resultInfo, err := adapter.TSInfo(ctx, "1").Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(resultInfo["rules"]).To(BeEquivalentTo(map[string]interface{}{}))
+			Expect(resultInfo["rules"]).To(BeEquivalentTo(map[string]any{}))
 		})
 
 		It("should TSIncrBy, TSIncrByWithArgs, TSDecrBy and TSDecrByWithArgs", Label("timeseries", "tsincrby", "tsdecrby", "tsincrbyWithArgs", "tsdecrbyWithArgs"), func() {
@@ -10734,9 +10734,9 @@ func testAdapterCache(resp3 bool) {
 			resultGet, err := adapter.TSCreate(ctx, "a").Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resultGet).To(BeEquivalentTo("OK"))
-			ktvSlices := make([][]interface{}, 3)
+			ktvSlices := make([][]any, 3)
 			for i := 0; i < 3; i++ {
-				ktvSlices[i] = make([]interface{}, 3)
+				ktvSlices[i] = make([]any, 3)
 				ktvSlices[i][0] = "a"
 				for j := 1; j < 3; j++ {
 					ktvSlices[i][j] = (i + j) * j
@@ -10763,12 +10763,12 @@ func testAdapterCache(resp3 bool) {
 
 			result, err := adapter.TSMGet(ctx, []string{"Test=This"}).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][1].([]interface{})[1]).To(BeEquivalentTo(15))
-			Expect(result["b"][1].([]interface{})[1]).To(BeEquivalentTo(25))
+			Expect(result["a"][1].([]any)[1]).To(BeEquivalentTo(15))
+			Expect(result["b"][1].([]any)[1]).To(BeEquivalentTo(25))
 			mgetOpt := &TSMGetOptions{WithLabels: true}
 			result, err = adapter.TSMGetWithArgs(ctx, []string{"Test=This"}, mgetOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["b"][0]).To(BeEquivalentTo(map[string]interface{}{"Test": "This", "Taste": "That"}))
+			Expect(result["b"][0]).To(BeEquivalentTo(map[string]any{"Test": "This", "Taste": "That"}))
 
 			resultCreate, err = adapter.TSCreate(ctx, "c").Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -10790,11 +10790,11 @@ func testAdapterCache(resp3 bool) {
 			Expect(err).NotTo(HaveOccurred())
 			result, err = adapter.TSMGet(ctx, []string{"is_compaction=true"}).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["d"][1]).To(BeEquivalentTo([]interface{}{int64(0), 4.0}))
+			Expect(result["d"][1]).To(BeEquivalentTo([]any{int64(0), 4.0}))
 			mgetOpt = &TSMGetOptions{Latest: true}
 			result, err = adapter.TSMGetWithArgs(ctx, []string{"is_compaction=true"}, mgetOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["d"][1]).To(BeEquivalentTo([]interface{}{int64(10), 8.0}))
+			Expect(result["d"][1]).To(BeEquivalentTo([]any{int64(10), 8.0}))
 		})
 
 		It("should TSQueryIndex", Label("timeseries", "tsqueryindex"), func() {
@@ -11092,12 +11092,12 @@ func testAdapterCache(resp3 bool) {
 			result, err := adapter.TSMRange(ctx, 0, 200, []string{"Test=This"}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(result)).To(BeEquivalentTo(2))
-			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(100))
+			Expect(len(result["a"][2].([]any))).To(BeEquivalentTo(100))
 			// Test Count
 			mrangeOpt := &TSMRangeOptions{Count: 10}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(10))
+			Expect(len(result["a"][2].([]any))).To(BeEquivalentTo(10))
 			// Test Aggregation and BucketDuration
 			for i := 0; i < 100; i++ {
 				_, err := adapter.TSAdd(ctx, "a", i+200, float64(i%7)).Result()
@@ -11107,19 +11107,19 @@ func testAdapterCache(resp3 bool) {
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 500, []string{"Test=This"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(result)).To(BeEquivalentTo(2))
-			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(20))
+			Expect(len(result["a"][2].([]any))).To(BeEquivalentTo(20))
 			// Test WithLabels
-			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{}))
+			Expect(result["a"][0]).To(BeEquivalentTo(map[string]any{}))
 			mrangeOpt = &TSMRangeOptions{WithLabels: true}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{"Test": "This", "team": "ny"}))
+			Expect(result["a"][0]).To(BeEquivalentTo(map[string]any{"Test": "This", "team": "ny"}))
 			// Test SelectedLabels
-			mrangeOpt = &TSMRangeOptions{SelectedLabels: []interface{}{"team"}}
+			mrangeOpt = &TSMRangeOptions{SelectedLabels: []any{"team"}}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{"team": "ny"}))
-			Expect(result["b"][0]).To(BeEquivalentTo(map[string]interface{}{"team": "sf"}))
+			Expect(result["a"][0]).To(BeEquivalentTo(map[string]any{"team": "ny"}))
+			Expect(result["b"][0]).To(BeEquivalentTo(map[string]any{"team": "sf"}))
 			// Test FilterBy
 			fts := make([]int, 0)
 			for i := 10; i < 20; i++ {
@@ -11128,34 +11128,34 @@ func testAdapterCache(resp3 bool) {
 			mrangeOpt = &TSMRangeOptions{FilterByTS: fts, FilterByValue: []int{1, 2}}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(15), 1.0}, []interface{}{int64(16), 2.0}}))
+			Expect(result["a"][2]).To(BeEquivalentTo([]any{[]any{int64(15), 1.0}, []any{int64(16), 2.0}}))
 			// Test GroupBy
 			mrangeOpt = &TSMRangeOptions{GroupByLabel: "Test", Reducer: "sum"}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 3, []string{"Test=This"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["Test=This"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 0.0}, []interface{}{int64(1), 2.0}, []interface{}{int64(2), 4.0}, []interface{}{int64(3), 6.0}}))
+			Expect(result["Test=This"][3]).To(BeEquivalentTo([]any{[]any{int64(0), 0.0}, []any{int64(1), 2.0}, []any{int64(2), 4.0}, []any{int64(3), 6.0}}))
 
 			mrangeOpt = &TSMRangeOptions{GroupByLabel: "Test", Reducer: "max"}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 3, []string{"Test=This"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["Test=This"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 0.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(3), 3.0}}))
+			Expect(result["Test=This"][3]).To(BeEquivalentTo([]any{[]any{int64(0), 0.0}, []any{int64(1), 1.0}, []any{int64(2), 2.0}, []any{int64(3), 3.0}}))
 
 			mrangeOpt = &TSMRangeOptions{GroupByLabel: "team", Reducer: "min"}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 3, []string{"Test=This"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(result)).To(BeEquivalentTo(2))
-			Expect(result["team=ny"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 0.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(3), 3.0}}))
-			Expect(result["team=sf"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 0.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(3), 3.0}}))
+			Expect(result["team=ny"][3]).To(BeEquivalentTo([]any{[]any{int64(0), 0.0}, []any{int64(1), 1.0}, []any{int64(2), 2.0}, []any{int64(3), 3.0}}))
+			Expect(result["team=sf"][3]).To(BeEquivalentTo([]any{[]any{int64(0), 0.0}, []any{int64(1), 1.0}, []any{int64(2), 2.0}, []any{int64(3), 3.0}}))
 			// Test Align
 			mrangeOpt = &TSMRangeOptions{Aggregator: Count, BucketDuration: 10, Align: "-"}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 10, []string{"team=ny"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 10.0}, []interface{}{int64(10), 1.0}}))
+			Expect(result["a"][2]).To(BeEquivalentTo([]any{[]any{int64(0), 10.0}, []any{int64(10), 1.0}}))
 
 			mrangeOpt = &TSMRangeOptions{Aggregator: Count, BucketDuration: 10, Align: 5}
 			result, err = adapter.TSMRangeWithArgs(ctx, 0, 10, []string{"team=ny"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 5.0}, []interface{}{int64(5), 6.0}}))
+			Expect(result["a"][2]).To(BeEquivalentTo([]any{[]any{int64(0), 5.0}, []any{int64(5), 6.0}}))
 		})
 
 		It("should TSMRangeWithArgs Latest", Label("timeseries", "tsmrangeWithArgs", "tsmrangelatest"), func() {
@@ -11202,8 +11202,8 @@ func testAdapterCache(resp3 bool) {
 			mrangeOpt := &TSMRangeOptions{Latest: true}
 			result, err := adapter.TSMRangeWithArgs(ctx, 0, 10, []string{"is_compaction=true"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["b"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 4.0}, []interface{}{int64(10), 8.0}}))
-			Expect(result["d"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(0), 4.0}, []interface{}{int64(10), 8.0}}))
+			Expect(result["b"][2]).To(BeEquivalentTo([]any{[]any{int64(0), 4.0}, []any{int64(10), 8.0}}))
+			Expect(result["d"][2]).To(BeEquivalentTo([]any{[]any{int64(0), 4.0}, []any{int64(10), 8.0}}))
 		})
 		It("should TSMRevRange and TSMRevRangeWithArgs", Label("timeseries", "tsmrevrange", "tsmrevrangeWithArgs"), func() {
 			createOpt := &TSOptions{Labels: map[string]string{"Test": "This", "team": "ny"}}
@@ -11224,12 +11224,12 @@ func testAdapterCache(resp3 bool) {
 			result, err := adapter.TSMRevRange(ctx, 0, 200, []string{"Test=This"}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(result)).To(BeEquivalentTo(2))
-			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(100))
+			Expect(len(result["a"][2].([]any))).To(BeEquivalentTo(100))
 			// Test Count
 			mrangeOpt := &TSMRevRangeOptions{Count: 10}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(10))
+			Expect(len(result["a"][2].([]any))).To(BeEquivalentTo(10))
 			// Test Aggregation and BucketDuration
 			for i := 0; i < 100; i++ {
 				_, err := adapter.TSAdd(ctx, "a", i+200, float64(i%7)).Result()
@@ -11239,20 +11239,20 @@ func testAdapterCache(resp3 bool) {
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 500, []string{"Test=This"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(result)).To(BeEquivalentTo(2))
-			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(20))
-			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{}))
+			Expect(len(result["a"][2].([]any))).To(BeEquivalentTo(20))
+			Expect(result["a"][0]).To(BeEquivalentTo(map[string]any{}))
 			// Test WithLabels
-			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{}))
+			Expect(result["a"][0]).To(BeEquivalentTo(map[string]any{}))
 			mrangeOpt = &TSMRevRangeOptions{WithLabels: true}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{"Test": "This", "team": "ny"}))
+			Expect(result["a"][0]).To(BeEquivalentTo(map[string]any{"Test": "This", "team": "ny"}))
 			// Test SelectedLabels
-			mrangeOpt = &TSMRevRangeOptions{SelectedLabels: []interface{}{"team"}}
+			mrangeOpt = &TSMRevRangeOptions{SelectedLabels: []any{"team"}}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][0]).To(BeEquivalentTo(map[string]interface{}{"team": "ny"}))
-			Expect(result["b"][0]).To(BeEquivalentTo(map[string]interface{}{"team": "sf"}))
+			Expect(result["a"][0]).To(BeEquivalentTo(map[string]any{"team": "ny"}))
+			Expect(result["b"][0]).To(BeEquivalentTo(map[string]any{"team": "sf"}))
 			// Test FilterBy
 			fts := make([]int, 0)
 			for i := 10; i < 20; i++ {
@@ -11261,34 +11261,34 @@ func testAdapterCache(resp3 bool) {
 			mrangeOpt = &TSMRevRangeOptions{FilterByTS: fts, FilterByValue: []int{1, 2}}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(16), 2.0}, []interface{}{int64(15), 1.0}}))
+			Expect(result["a"][2]).To(BeEquivalentTo([]any{[]any{int64(16), 2.0}, []any{int64(15), 1.0}}))
 			// Test GroupBy
 			mrangeOpt = &TSMRevRangeOptions{GroupByLabel: "Test", Reducer: "sum"}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 3, []string{"Test=This"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["Test=This"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(3), 6.0}, []interface{}{int64(2), 4.0}, []interface{}{int64(1), 2.0}, []interface{}{int64(0), 0.0}}))
+			Expect(result["Test=This"][3]).To(BeEquivalentTo([]any{[]any{int64(3), 6.0}, []any{int64(2), 4.0}, []any{int64(1), 2.0}, []any{int64(0), 0.0}}))
 
 			mrangeOpt = &TSMRevRangeOptions{GroupByLabel: "Test", Reducer: "max"}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 3, []string{"Test=This"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["Test=This"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(3), 3.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(0), 0.0}}))
+			Expect(result["Test=This"][3]).To(BeEquivalentTo([]any{[]any{int64(3), 3.0}, []any{int64(2), 2.0}, []any{int64(1), 1.0}, []any{int64(0), 0.0}}))
 
 			mrangeOpt = &TSMRevRangeOptions{GroupByLabel: "team", Reducer: "min"}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 3, []string{"Test=This"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(result)).To(BeEquivalentTo(2))
-			Expect(result["team=ny"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(3), 3.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(0), 0.0}}))
-			Expect(result["team=sf"][3]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(3), 3.0}, []interface{}{int64(2), 2.0}, []interface{}{int64(1), 1.0}, []interface{}{int64(0), 0.0}}))
+			Expect(result["team=ny"][3]).To(BeEquivalentTo([]any{[]any{int64(3), 3.0}, []any{int64(2), 2.0}, []any{int64(1), 1.0}, []any{int64(0), 0.0}}))
+			Expect(result["team=sf"][3]).To(BeEquivalentTo([]any{[]any{int64(3), 3.0}, []any{int64(2), 2.0}, []any{int64(1), 1.0}, []any{int64(0), 0.0}}))
 			// Test Align
 			mrangeOpt = &TSMRevRangeOptions{Aggregator: Count, BucketDuration: 10, Align: "-"}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 10, []string{"team=ny"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(10), 1.0}, []interface{}{int64(0), 10.0}}))
+			Expect(result["a"][2]).To(BeEquivalentTo([]any{[]any{int64(10), 1.0}, []any{int64(0), 10.0}}))
 
 			mrangeOpt = &TSMRevRangeOptions{Aggregator: Count, BucketDuration: 10, Align: 1}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 10, []string{"team=ny"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["a"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(1), 10.0}, []interface{}{int64(0), 1.0}}))
+			Expect(result["a"][2]).To(BeEquivalentTo([]any{[]any{int64(1), 10.0}, []any{int64(0), 1.0}}))
 		})
 
 		It("should TSMRevRangeWithArgs Latest", Label("timeseries", "tsmrevrangeWithArgs", "tsmrevrangelatest"), func() {
@@ -11335,8 +11335,8 @@ func testAdapterCache(resp3 bool) {
 			mrangeOpt := &TSMRevRangeOptions{Latest: true}
 			result, err := adapter.TSMRevRangeWithArgs(ctx, 0, 10, []string{"is_compaction=true"}, mrangeOpt).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(result["b"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(10), 8.0}, []interface{}{int64(0), 4.0}}))
-			Expect(result["d"][2]).To(BeEquivalentTo([]interface{}{[]interface{}{int64(10), 8.0}, []interface{}{int64(0), 4.0}}))
+			Expect(result["b"][2]).To(BeEquivalentTo([]any{[]any{int64(10), 8.0}, []any{int64(0), 4.0}}))
+			Expect(result["d"][2]).To(BeEquivalentTo([]any{[]any{int64(10), 8.0}, []any{int64(0), 4.0}}))
 		})
 	})
 	Describe("JSON Commands", Label("json"), func() {
@@ -11611,11 +11611,11 @@ func testAdapterCache(resp3 bool) {
 
 				res, err := adapter.JSONMGet(ctx, "$", "mset1").Result()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal([]interface{}{`[{"a":1}]`}))
+				Expect(res).To(Equal([]any{`[{"a":1}]`}))
 
 				res, err = adapter.JSONMGet(ctx, "$", "mset1", "mset2").Result()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(res).To(Equal([]interface{}{`[{"a":1}]`, "[2]"}))
+				Expect(res).To(Equal([]any{`[{"a":1}]`, "[2]"}))
 
 				mSetResult, err = adapter.JSONMSet(ctx, "mset1", "$.a", 2, "mset3", "$", `[1]`).Result()
 				Expect(err).NotTo(HaveOccurred())
@@ -11647,15 +11647,15 @@ func testAdapterCache(resp3 bool) {
 
 				iRes, err := adapter.JSONMGet(ctx, "$..a", "doc1").Result()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(iRes).To(Equal([]interface{}{`[1,3,""]`}))
+				Expect(iRes).To(Equal([]any{`[1,3,""]`}))
 
 				iRes, err = adapter.JSONMGet(ctx, "$..a", "doc1", "doc2").Result()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(iRes).To(Equal([]interface{}{`[1,3,""]`, `[4,6,[""]]`}))
+				Expect(iRes).To(Equal([]any{`[1,3,""]`, `[4,6,[""]]`}))
 
 				iRes, err = adapter.JSONMGet(ctx, "$..a", "non_existing_doc", "non_existing_doc1").Result()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(iRes).To(Equal([]interface{}{nil, nil}))
+				Expect(iRes).To(Equal([]any{nil, nil}))
 			})
 		})
 
@@ -11890,7 +11890,7 @@ func testAdapterCache(resp3 bool) {
 				cmd2 := adapter.JSONObjKeys(ctx, "objkeys1", "$..*")
 				Expect(cmd2.Err()).NotTo(HaveOccurred())
 				Expect(cmd2.Val()).To(HaveLen(7))
-				Expect(cmd2.Val()).To(Equal([]interface{}{nil, []interface{}{"a"}, nil, nil, nil, nil, nil}))
+				Expect(cmd2.Val()).To(Equal([]any{nil, []any{"a"}, nil, nil, nil, nil, nil}))
 			})
 
 			It("should JSONObjKeys with $", Label("json.objkeys", "json"), func() {
@@ -11905,15 +11905,15 @@ func testAdapterCache(resp3 bool) {
 
 				cmd2, err := adapter.JSONObjKeys(ctx, "objkeys1", "$.nested1.a").Result()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd2).To(Equal([]interface{}{[]interface{}{"foo", "bar"}}))
+				Expect(cmd2).To(Equal([]any{[]any{"foo", "bar"}}))
 
 				cmd2, err = adapter.JSONObjKeys(ctx, "objkeys1", ".*.a").Result()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd2).To(Equal([]interface{}{"foo", "bar"}))
+				Expect(cmd2).To(Equal([]any{"foo", "bar"}))
 
 				cmd2, err = adapter.JSONObjKeys(ctx, "objkeys1", ".nested2.a").Result()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(cmd2).To(Equal([]interface{}{"baz"}))
+				Expect(cmd2).To(Equal([]any{"baz"}))
 
 				_, err = adapter.JSONObjKeys(ctx, "non_existing_doc", "..a").Result()
 				Expect(err).To(HaveOccurred())
@@ -11999,7 +11999,7 @@ func testAdapterCache(resp3 bool) {
 				Expect(cmd2.Err()).NotTo(HaveOccurred())
 				Expect(cmd2.Val()).To(HaveLen(1))
 				// RESP2 v RESP3
-				Expect(cmd2.Val()[0]).To(Or(Equal([]interface{}{"boolean"}), Equal("boolean")))
+				Expect(cmd2.Val()[0]).To(Or(Equal([]any{"boolean"}), Equal("boolean")))
 			})
 		})
 	})
@@ -12204,18 +12204,18 @@ func testAdapterSearchRESP3() {
 
 			options := &FTAggregateOptions{Apply: []FTAggregateApply{{Field: "@CreatedDateTimeUTC * 10", As: "CreatedDateTimeUTC"}}}
 			res, err := adapter.FTAggregateWithArgs(ctx, "idx1", "*", options).RawResult()
-			// results := res.(map[interface{}]interface{})["results"].([]interface{})
-			results := res.(map[string]interface{})["results"].([]interface{})
-			// Expect(results[0].(map[interface{}]interface{})["extra_attributes"].(map[interface{}]interface{})["CreatedDateTimeUTC"]).
-			Expect(results[0].(map[string]interface{})["extra_attributes"].(map[string]interface{})["CreatedDateTimeUTC"]).
+			// results := res.(map[any]any)["results"].([]any)
+			results := res.(map[string]any)["results"].([]any)
+			// Expect(results[0].(map[any]any)["extra_attributes"].(map[any]any)["CreatedDateTimeUTC"]).
+			Expect(results[0].(map[string]any)["extra_attributes"].(map[string]any)["CreatedDateTimeUTC"]).
 				To(Or(BeEquivalentTo("6373878785249699840"), BeEquivalentTo("6373878758592700416")))
-			// Expect(results[1].(map[interface{}]interface{})["extra_attributes"].(map[interface{}]interface{})["CreatedDateTimeUTC"]).
-			Expect(results[1].(map[string]interface{})["extra_attributes"].(map[string]interface{})["CreatedDateTimeUTC"]).
+			// Expect(results[1].(map[any]any)["extra_attributes"].(map[any]any)["CreatedDateTimeUTC"]).
+			Expect(results[1].(map[string]any)["extra_attributes"].(map[string]any)["CreatedDateTimeUTC"]).
 				To(Or(BeEquivalentTo("6373878785249699840"), BeEquivalentTo("6373878758592700416")))
 
 			rawVal := adapter.FTAggregateWithArgs(ctx, "idx1", "*", options).RawVal()
-			// rawValResults := rawVal.(map[interface{}]interface{})["results"].([]interface{})
-			rawValResults := rawVal.(map[string]interface{})["results"].([]interface{})
+			// rawValResults := rawVal.(map[any]any)["results"].([]any)
+			rawValResults := rawVal.(map[string]any)["results"].([]any)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(rawValResults[0]).To(Or(BeEquivalentTo(results[0]), BeEquivalentTo(results[1])))
 			Expect(rawValResults[1]).To(Or(BeEquivalentTo(results[0]), BeEquivalentTo(results[1])))
@@ -12239,18 +12239,18 @@ func testAdapterSearchRESP3() {
 
 			resInfo, err := adapter.FTInfo(ctx, "idx1").RawResult()
 			Expect(err).NotTo(HaveOccurred())
-			// attributes := resInfo.(map[interface{}]interface{})["attributes"].([]interface{})
-			attributes := resInfo.(map[string]interface{})["attributes"].([]interface{})
-			// flags := attributes[0].(map[interface{}]interface{})["flags"].([]interface{})
-			flags := attributes[0].(map[string]interface{})["flags"].([]interface{})
+			// attributes := resInfo.(map[any]any)["attributes"].([]any)
+			attributes := resInfo.(map[string]any)["attributes"].([]any)
+			// flags := attributes[0].(map[any]any)["flags"].([]any)
+			flags := attributes[0].(map[string]any)["flags"].([]any)
 			Expect(flags).To(ConsistOf("SORTABLE", "NOSTEM"))
 
 			valInfo, err := adapter.FTInfo(ctx, "idx1").RawResult()
 			Expect(err).NotTo(HaveOccurred())
-			// attributes = valInfo.(map[interface{}]interface{})["attributes"].([]interface{})
-			attributes = valInfo.(map[string]interface{})["attributes"].([]interface{})
-			// flags = attributes[0].(map[interface{}]interface{})["flags"].([]interface{})
-			flags = attributes[0].(map[string]interface{})["flags"].([]interface{})
+			// attributes = valInfo.(map[any]any)["attributes"].([]any)
+			attributes = valInfo.(map[string]any)["attributes"].([]any)
+			// flags = attributes[0].(map[any]any)["flags"].([]any)
+			flags = attributes[0].(map[string]any)["flags"].([]any)
 			Expect(flags).To(ConsistOf("SORTABLE", "NOSTEM"))
 
 			// NOTE: rueidis can't support this behavior because we cannot know whether UnstableResp3 is enabled or not
@@ -12278,10 +12278,10 @@ func testAdapterSearchRESP3() {
 			valSpellCheck := adapter.FTSpellCheck(ctx, "idx1", "impornant").RawVal()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(valSpellCheck).To(BeEquivalentTo(resSpellCheck))
-			// results := resSpellCheck.(map[interface{}]interface{})["results"].(map[interface{}]interface{})
-			results := resSpellCheck.(map[string]interface{})["results"].(map[string]interface{})
-			// Expect(results["impornant"].([]interface{})[0].(map[interface{}]interface{})["important"]).To(BeEquivalentTo(0.5))
-			Expect(results["impornant"].([]interface{})[0].(map[string]interface{})["important"]).To(BeEquivalentTo(0.5))
+			// results := resSpellCheck.(map[any]any)["results"].(map[any]any)
+			results := resSpellCheck.(map[string]any)["results"].(map[string]any)
+			// Expect(results["impornant"].([]any)[0].(map[any]any)["important"]).To(BeEquivalentTo(0.5))
+			Expect(results["impornant"].([]any)[0].(map[string]any)["important"]).To(BeEquivalentTo(0.5))
 
 			// NOTE: rueidis can't support this behavior because we cannot know whether UnstableResp3 is enabled or not
 			// Test with UnstableResp3 false
@@ -12294,7 +12294,7 @@ func testAdapterSearchRESP3() {
 		})
 
 		It("should handle FTSearch with Unstable RESP3 Search Module and without stability", Label("search", "ftcreate", "ftsearch"), func() {
-			val, err := adapter.FTCreate(ctx, "txt", &FTCreateOptions{StopWords: []interface{}{"foo", "bar", "baz"}}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText}).Result()
+			val, err := adapter.FTCreate(ctx, "txt", &FTCreateOptions{StopWords: []any{"foo", "bar", "baz"}}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
 			WaitForIndexing(client, "txt", 3)
@@ -12304,13 +12304,13 @@ func testAdapterSearchRESP3() {
 			val1 := adapter.FTSearchWithArgs(ctx, "txt", "foo bar", &FTSearchOptions{NoContent: true}).RawVal()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val1).To(BeEquivalentTo(res1))
-			totalResults := res1.(map[string]interface{})["total_results"]
-			// totalResults := res1.(map[interface{}]interface{})["total_results"]
+			totalResults := res1.(map[string]any)["total_results"]
+			// totalResults := res1.(map[any]any)["total_results"]
 			Expect(totalResults).To(BeEquivalentTo(int64(0)))
 			res2, err := adapter.FTSearchWithArgs(ctx, "txt", "foo bar hello world", &FTSearchOptions{NoContent: true}).RawResult()
 			Expect(err).NotTo(HaveOccurred())
-			totalResults2 := res2.(map[string]interface{})["total_results"]
-			// totalResults2 := res2.(map[interface{}]interface{})["total_results"]
+			totalResults2 := res2.(map[string]any)["total_results"]
+			// totalResults2 := res2.(map[any]any)["total_results"]
 			Expect(totalResults2).To(BeEquivalentTo(int64(1)))
 
 			// NOTE: rueidis can't support this behavior because we cannot know whether UnstableResp3 is enabled or not
@@ -12330,15 +12330,15 @@ func testAdapterSearchRESP3() {
 			Expect(val).To(BeEquivalentTo("OK"))
 			WaitForIndexing(client, "idx1", 3)
 
-			resSynUpdate, err := adapter.FTSynUpdate(ctx, "idx1", "id1", []interface{}{"boy", "child", "offspring"}).Result()
+			resSynUpdate, err := adapter.FTSynUpdate(ctx, "idx1", "id1", []any{"boy", "child", "offspring"}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resSynUpdate).To(BeEquivalentTo("OK"))
 
-			resSynUpdate, err = adapter.FTSynUpdate(ctx, "idx1", "id1", []interface{}{"baby", "child"}).Result()
+			resSynUpdate, err = adapter.FTSynUpdate(ctx, "idx1", "id1", []any{"baby", "child"}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resSynUpdate).To(BeEquivalentTo("OK"))
 
-			resSynUpdate, err = adapter.FTSynUpdate(ctx, "idx1", "id1", []interface{}{"tree", "wood"}).Result()
+			resSynUpdate, err = adapter.FTSynUpdate(ctx, "idx1", "id1", []any{"tree", "wood"}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resSynUpdate).To(BeEquivalentTo("OK"))
 
@@ -12346,8 +12346,8 @@ func testAdapterSearchRESP3() {
 			valSynDump := adapter.FTSynDump(ctx, "idx1").RawVal()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(valSynDump).To(BeEquivalentTo(resSynDump))
-			// Expect(resSynDump.(map[interface{}]interface{})["baby"]).To(BeEquivalentTo([]interface{}{"id1"}))
-			Expect(resSynDump.(map[string]interface{})["baby"]).To(BeEquivalentTo([]interface{}{"id1"}))
+			// Expect(resSynDump.(map[any]any)["baby"]).To(BeEquivalentTo([]any{"id1"}))
+			Expect(resSynDump.(map[string]any)["baby"]).To(BeEquivalentTo([]any{"id1"}))
 
 			// NOTE: rueidis can't support this behavior because we cannot know whether UnstableResp3 is enabled or not
 			// Test with UnstableResp3 false
@@ -12420,7 +12420,7 @@ func testAdapterSearchRESP2() {
 		})
 
 		It("should FTCreate and FTSearch stopwords", Label("search", "ftcreate", "ftsearch"), func() {
-			val, err := adapter.FTCreate(ctx, "txt", &FTCreateOptions{StopWords: []interface{}{"foo", "bar", "baz"}}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText}).Result()
+			val, err := adapter.FTCreate(ctx, "txt", &FTCreateOptions{StopWords: []any{"foo", "bar", "baz"}}, &FieldSchema{FieldName: "txt", FieldType: SearchFieldTypeText}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
 			WaitForIndexing(client, "txt", 2)
@@ -12459,7 +12459,7 @@ func testAdapterSearchRESP2() {
 			res4, err := adapter.FTSearchWithArgs(ctx, "txt", "foo", &FTSearchOptions{GeoFilter: []FTSearchGeoFilter{geoFilter2}, NoContent: true}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res4.Total).To(BeEquivalentTo(int64(2)))
-			docs := []interface{}{res4.Docs[0].ID, res4.Docs[1].ID}
+			docs := []any{res4.Docs[0].ID, res4.Docs[1].ID}
 			Expect(docs).To(ContainElement("doc1"))
 			Expect(docs).To(ContainElement("doc2"))
 
@@ -12559,11 +12559,11 @@ func testAdapterSearchRESP2() {
 		It("should FTAlias", Label("search", "ftexplain"), func() {
 			text1 := &FieldSchema{FieldName: "name", FieldType: SearchFieldTypeText}
 			text2 := &FieldSchema{FieldName: "name", FieldType: SearchFieldTypeText}
-			val1, err := adapter.FTCreate(ctx, "testAlias", &FTCreateOptions{Prefix: []interface{}{"index1:"}}, text1).Result()
+			val1, err := adapter.FTCreate(ctx, "testAlias", &FTCreateOptions{Prefix: []any{"index1:"}}, text1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val1).To(BeEquivalentTo("OK"))
 			WaitForIndexing(client, "testAlias", 2)
-			val2, err := adapter.FTCreate(ctx, "testAlias2", &FTCreateOptions{Prefix: []interface{}{"index2:"}}, text2).Result()
+			val2, err := adapter.FTCreate(ctx, "testAlias2", &FTCreateOptions{Prefix: []any{"index2:"}}, text2).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val2).To(BeEquivalentTo("OK"))
 			WaitForIndexing(client, "testAlias2", 2)
@@ -12616,7 +12616,7 @@ func testAdapterSearchRESP2() {
 			Expect(val).To(BeEquivalentTo("OK"))
 			WaitForIndexing(client, "idx1", 2)
 
-			resAlter, err := adapter.FTAlter(ctx, "idx1", false, []interface{}{"body", SearchFieldTypeText.String()}).Result()
+			resAlter, err := adapter.FTAlter(ctx, "idx1", false, []any{"body", SearchFieldTypeText.String()}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resAlter).To(BeEquivalentTo("OK"))
 
@@ -12727,7 +12727,7 @@ func testAdapterSearchRESP2() {
 			res2, err := adapter.FTSearch(ctx, "idx1", "Jon").Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res2.Total).To(BeEquivalentTo(int64(2)))
-			names := []interface{}{res2.Docs[0].Fields["name"], res2.Docs[1].Fields["name"]}
+			names := []any{res2.Docs[0].Fields["name"], res2.Docs[1].Fields["name"]}
 			Expect(names).To(ContainElement("Jon"))
 			Expect(names).To(ContainElement("John"))
 		})
@@ -12782,7 +12782,7 @@ func testAdapterSearchRESP2() {
 
 			res, err = adapter.FTConfigGet(ctx, "TIMEOUT").Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(res).To(BeEquivalentTo(map[string]interface{}{"TIMEOUT": "100"}))
+			Expect(res).To(BeEquivalentTo(map[string]any{"TIMEOUT": "100"}))
 
 		})
 
@@ -12810,77 +12810,77 @@ func testAdapterSearchRESP2() {
 				"random_num", 8)
 
 			reducer := FTAggregateReducer{Reducer: SearchCount}
-			options := &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []interface{}{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
+			options := &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []any{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
 			res, err := adapter.FTAggregateWithArgs(ctx, "idx1", "redis", options).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.Rows[0].Fields["parent"]).To(BeEquivalentTo("redis"))
 			Expect(res.Rows[0].Fields["__generated_aliascount"]).To(BeEquivalentTo("3"))
 
-			reducer = FTAggregateReducer{Reducer: SearchCountDistinct, Args: []interface{}{"@title"}}
-			options = &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []interface{}{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
+			reducer = FTAggregateReducer{Reducer: SearchCountDistinct, Args: []any{"@title"}}
+			options = &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []any{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
 			res, err = adapter.FTAggregateWithArgs(ctx, "idx1", "redis", options).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.Rows[0].Fields["parent"]).To(BeEquivalentTo("redis"))
 			Expect(res.Rows[0].Fields["__generated_aliascount_distincttitle"]).To(BeEquivalentTo("3"))
 
-			reducer = FTAggregateReducer{Reducer: SearchSum, Args: []interface{}{"@random_num"}}
-			options = &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []interface{}{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
+			reducer = FTAggregateReducer{Reducer: SearchSum, Args: []any{"@random_num"}}
+			options = &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []any{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
 			res, err = adapter.FTAggregateWithArgs(ctx, "idx1", "redis", options).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.Rows[0].Fields["parent"]).To(BeEquivalentTo("redis"))
 			Expect(res.Rows[0].Fields["__generated_aliassumrandom_num"]).To(BeEquivalentTo("21"))
 
-			reducer = FTAggregateReducer{Reducer: SearchMin, Args: []interface{}{"@random_num"}}
-			options = &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []interface{}{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
+			reducer = FTAggregateReducer{Reducer: SearchMin, Args: []any{"@random_num"}}
+			options = &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []any{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
 			res, err = adapter.FTAggregateWithArgs(ctx, "idx1", "redis", options).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.Rows[0].Fields["parent"]).To(BeEquivalentTo("redis"))
 			Expect(res.Rows[0].Fields["__generated_aliasminrandom_num"]).To(BeEquivalentTo("3"))
 
-			reducer = FTAggregateReducer{Reducer: SearchMax, Args: []interface{}{"@random_num"}}
-			options = &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []interface{}{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
+			reducer = FTAggregateReducer{Reducer: SearchMax, Args: []any{"@random_num"}}
+			options = &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []any{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
 			res, err = adapter.FTAggregateWithArgs(ctx, "idx1", "redis", options).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.Rows[0].Fields["parent"]).To(BeEquivalentTo("redis"))
 			Expect(res.Rows[0].Fields["__generated_aliasmaxrandom_num"]).To(BeEquivalentTo("10"))
 
-			reducer = FTAggregateReducer{Reducer: SearchAvg, Args: []interface{}{"@random_num"}}
-			options = &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []interface{}{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
+			reducer = FTAggregateReducer{Reducer: SearchAvg, Args: []any{"@random_num"}}
+			options = &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []any{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
 			res, err = adapter.FTAggregateWithArgs(ctx, "idx1", "redis", options).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.Rows[0].Fields["parent"]).To(BeEquivalentTo("redis"))
 			Expect(res.Rows[0].Fields["__generated_aliasavgrandom_num"]).To(BeEquivalentTo("7"))
 
-			reducer = FTAggregateReducer{Reducer: SearchStdDev, Args: []interface{}{"@random_num"}}
-			options = &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []interface{}{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
+			reducer = FTAggregateReducer{Reducer: SearchStdDev, Args: []any{"@random_num"}}
+			options = &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []any{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
 			res, err = adapter.FTAggregateWithArgs(ctx, "idx1", "redis", options).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.Rows[0].Fields["parent"]).To(BeEquivalentTo("redis"))
 			Expect(res.Rows[0].Fields["__generated_aliasstddevrandom_num"]).To(BeEquivalentTo("3.60555127546"))
 
-			reducer = FTAggregateReducer{Reducer: SearchQuantile, Args: []interface{}{"@random_num", 0.5}}
-			options = &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []interface{}{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
+			reducer = FTAggregateReducer{Reducer: SearchQuantile, Args: []any{"@random_num", 0.5}}
+			options = &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []any{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
 			res, err = adapter.FTAggregateWithArgs(ctx, "idx1", "redis", options).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.Rows[0].Fields["parent"]).To(BeEquivalentTo("redis"))
 			Expect(res.Rows[0].Fields["__generated_aliasquantilerandom_num,0.5"]).To(BeEquivalentTo("8"))
 
-			reducer = FTAggregateReducer{Reducer: SearchToList, Args: []interface{}{"@title"}}
-			options = &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []interface{}{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
+			reducer = FTAggregateReducer{Reducer: SearchToList, Args: []any{"@title"}}
+			options = &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []any{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
 			res, err = adapter.FTAggregateWithArgs(ctx, "idx1", "redis", options).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.Rows[0].Fields["parent"]).To(BeEquivalentTo("redis"))
 			Expect(res.Rows[0].Fields["__generated_aliastolisttitle"]).To(ContainElements("RediSearch", "RedisAI", "RedisJson"))
 
-			reducer = FTAggregateReducer{Reducer: SearchFirstValue, Args: []interface{}{"@title"}, As: "first"}
-			options = &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []interface{}{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
+			reducer = FTAggregateReducer{Reducer: SearchFirstValue, Args: []any{"@title"}, As: "first"}
+			options = &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []any{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
 			res, err = adapter.FTAggregateWithArgs(ctx, "idx1", "redis", options).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.Rows[0].Fields["parent"]).To(BeEquivalentTo("redis"))
 			Expect(res.Rows[0].Fields["first"]).To(Or(BeEquivalentTo("RediSearch"), BeEquivalentTo("RedisAI"), BeEquivalentTo("RedisJson")))
 
-			reducer = FTAggregateReducer{Reducer: SearchRandomSample, Args: []interface{}{"@title", 2}, As: "random"}
-			options = &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []interface{}{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
+			reducer = FTAggregateReducer{Reducer: SearchRandomSample, Args: []any{"@title", 2}, As: "random"}
+			options = &FTAggregateOptions{GroupBy: []FTAggregateGroupBy{{Fields: []any{"@parent"}, Reduce: []FTAggregateReducer{reducer}}}}
 			res, err = adapter.FTAggregateWithArgs(ctx, "idx1", "redis", options).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.Rows[0].Fields["parent"]).To(BeEquivalentTo("redis"))
@@ -13025,7 +13025,7 @@ func testAdapterSearchRESP2() {
 		It("should FTCreate json", Label("search", "ftcreate"), func() {
 
 			text1 := &FieldSchema{FieldName: "$.name", FieldType: SearchFieldTypeText}
-			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{OnJSON: true, Prefix: []interface{}{"king:"}}, text1).Result()
+			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{OnJSON: true, Prefix: []any{"king:"}}, text1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
 			WaitForIndexing(client, "idx1", 2)
@@ -13127,12 +13127,12 @@ func testAdapterSearchRESP2() {
 			Expect(val).To(BeEquivalentTo("OK"))
 			WaitForIndexing(client, "idx1", 2)
 
-			resSynUpdate, err := adapter.FTSynUpdateWithArgs(ctx, "idx1", "id1", &FTSynUpdateOptions{SkipInitialScan: true}, []interface{}{"boy", "child", "offspring"}).Result()
+			resSynUpdate, err := adapter.FTSynUpdateWithArgs(ctx, "idx1", "id1", &FTSynUpdateOptions{SkipInitialScan: true}, []any{"boy", "child", "offspring"}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resSynUpdate).To(BeEquivalentTo("OK"))
 			adapter.HSet(ctx, "doc1", "title", "he is a baby", "body", "this is a test")
 
-			resSynUpdate, err = adapter.FTSynUpdateWithArgs(ctx, "idx1", "id1", &FTSynUpdateOptions{SkipInitialScan: true}, []interface{}{"baby"}).Result()
+			resSynUpdate, err = adapter.FTSynUpdateWithArgs(ctx, "idx1", "id1", &FTSynUpdateOptions{SkipInitialScan: true}, []any{"baby"}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resSynUpdate).To(BeEquivalentTo("OK"))
 			adapter.HSet(ctx, "doc2", "title", "he is another baby", "body", "another test")
@@ -13152,15 +13152,15 @@ func testAdapterSearchRESP2() {
 			Expect(val).To(BeEquivalentTo("OK"))
 			WaitForIndexing(client, "idx1", 2)
 
-			resSynUpdate, err := adapter.FTSynUpdate(ctx, "idx1", "id1", []interface{}{"boy", "child", "offspring"}).Result()
+			resSynUpdate, err := adapter.FTSynUpdate(ctx, "idx1", "id1", []any{"boy", "child", "offspring"}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resSynUpdate).To(BeEquivalentTo("OK"))
 
-			resSynUpdate, err = adapter.FTSynUpdate(ctx, "idx1", "id1", []interface{}{"baby", "child"}).Result()
+			resSynUpdate, err = adapter.FTSynUpdate(ctx, "idx1", "id1", []any{"baby", "child"}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resSynUpdate).To(BeEquivalentTo("OK"))
 
-			resSynUpdate, err = adapter.FTSynUpdate(ctx, "idx1", "id1", []interface{}{"tree", "wood"}).Result()
+			resSynUpdate, err = adapter.FTSynUpdate(ctx, "idx1", "id1", []any{"tree", "wood"}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(resSynUpdate).To(BeEquivalentTo("OK"))
 
@@ -13185,7 +13185,7 @@ func testAdapterSearchRESP2() {
 
 			text1 := &FieldSchema{FieldName: "$.name", FieldType: SearchFieldTypeText, As: "name"}
 			num1 := &FieldSchema{FieldName: "$.num", FieldType: SearchFieldTypeNumeric, As: "num"}
-			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{OnJSON: true, Prefix: []interface{}{"king:"}}, text1, num1).Result()
+			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{OnJSON: true, Prefix: []any{"king:"}}, text1, num1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
 			WaitForIndexing(client, "idx1", 2)
@@ -13209,7 +13209,7 @@ func testAdapterSearchRESP2() {
 		It("should FTCreate json with multipath", Label("search", "ftcreate"), func() {
 
 			tag1 := &FieldSchema{FieldName: "$..name", FieldType: SearchFieldTypeTag, As: "name"}
-			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{OnJSON: true, Prefix: []interface{}{"king:"}}, tag1).Result()
+			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{OnJSON: true, Prefix: []any{"king:"}}, tag1).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
 			WaitForIndexing(client, "idx1", 2)
@@ -13269,7 +13269,7 @@ func testAdapterSearchRESP2() {
 				Return:         []FTSearchReturn{{FieldName: "__v_score"}},
 				SortBy:         []FTSearchSortBy{{FieldName: "__v_score", Asc: true}},
 				DialectVersion: 2,
-				Params:         map[string]interface{}{"vec": "aaaaaaaa"},
+				Params:         map[string]any{"vec": "aaaaaaaa"},
 			}
 			res, err := adapter.FTSearchWithArgs(ctx, "idx1", "*=>[KNN 2 @v $vec]", searchOptions).Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -13287,7 +13287,7 @@ func testAdapterSearchRESP2() {
 			adapter.HSet(ctx, "doc2", "name", "Bob")
 			adapter.HSet(ctx, "doc3", "name", "Carol")
 
-			res1, err := adapter.FTSearchWithArgs(ctx, "idx1", "@name:($name1 | $name2 )", &FTSearchOptions{Params: map[string]interface{}{"name1": "Alice", "name2": "Bob"}, DialectVersion: 2}).Result()
+			res1, err := adapter.FTSearchWithArgs(ctx, "idx1", "@name:($name1 | $name2 )", &FTSearchOptions{Params: map[string]any{"name1": "Alice", "name2": "Bob"}, DialectVersion: 2}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res1.Total).To(BeEquivalentTo(int64(2)))
 			Expect(res1.Docs[0].ID).To(BeEquivalentTo("doc1"))
@@ -13305,7 +13305,7 @@ func testAdapterSearchRESP2() {
 			adapter.HSet(ctx, "doc2", "numval", 102)
 			adapter.HSet(ctx, "doc3", "numval", 103)
 
-			res1, err := adapter.FTSearchWithArgs(ctx, "idx1", "@numval:[$min $max]", &FTSearchOptions{Params: map[string]interface{}{"min": 101, "max": 102}, DialectVersion: 2}).Result()
+			res1, err := adapter.FTSearchWithArgs(ctx, "idx1", "@numval:[$min $max]", &FTSearchOptions{Params: map[string]any{"min": 101, "max": 102}, DialectVersion: 2}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res1.Total).To(BeEquivalentTo(int64(2)))
 			Expect(res1.Docs[0].ID).To(BeEquivalentTo("doc1"))
@@ -13323,7 +13323,7 @@ func testAdapterSearchRESP2() {
 			adapter.HSet(ctx, "doc2", "g", "29.69350, 34.94737")
 			adapter.HSet(ctx, "doc3", "g", "29.68746, 34.94882")
 
-			res1, err := adapter.FTSearchWithArgs(ctx, "idx1", "@g:[$lon $lat $radius $units]", &FTSearchOptions{Params: map[string]interface{}{"lat": "34.95126", "lon": "29.69465", "radius": 1000, "units": "km"}, DialectVersion: 2}).Result()
+			res1, err := adapter.FTSearchWithArgs(ctx, "idx1", "@g:[$lon $lat $radius $units]", &FTSearchOptions{Params: map[string]any{"lat": "34.95126", "lon": "29.69465", "radius": 1000, "units": "km"}, DialectVersion: 2}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res1.Total).To(BeEquivalentTo(int64(3)))
 			Expect(res1.Docs[0].ID).To(BeEquivalentTo("doc1"))
@@ -13339,7 +13339,7 @@ func testAdapterSearchRESP2() {
 
 			defDialect, err := adapter.FTConfigGet(ctx, "DEFAULT_DIALECT").Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(defDialect).To(BeEquivalentTo(map[string]interface{}{"DEFAULT_DIALECT": "1"}))
+			Expect(defDialect).To(BeEquivalentTo(map[string]any{"DEFAULT_DIALECT": "1"}))
 
 			res, err = adapter.FTConfigSet(ctx, "DEFAULT_DIALECT", "2").Result()
 			Expect(err).NotTo(HaveOccurred())
@@ -13347,7 +13347,7 @@ func testAdapterSearchRESP2() {
 
 			defDialect, err = adapter.FTConfigGet(ctx, "DEFAULT_DIALECT").Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(defDialect).To(BeEquivalentTo(map[string]interface{}{"DEFAULT_DIALECT": "2"}))
+			Expect(defDialect).To(BeEquivalentTo(map[string]any{"DEFAULT_DIALECT": "2"}))
 		})
 
 		It("should FTCreate WithSuffixtrie", Label("search", "ftcreate", "ftinfo"), func() {
@@ -13391,7 +13391,7 @@ func testAdapterSearchRESP2() {
 
 		It("should test dialect 4", Label("search", "ftcreate", "ftsearch", "NonRedisEnterprise"), func() {
 			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{
-				Prefix: []interface{}{"resource:"},
+				Prefix: []any{"resource:"},
 			}, &FieldSchema{
 				FieldName: "uuid",
 				FieldType: SearchFieldTypeTag,
@@ -13408,13 +13408,13 @@ func testAdapterSearchRESP2() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(val).To(BeEquivalentTo("OK"))
 
-			adapter.HSet(ctx, "resource:1", map[string]interface{}{
+			adapter.HSet(ctx, "resource:1", map[string]any{
 				"uuid":        "123e4567-e89b-12d3-a456-426614174000",
 				"tags":        "finance|crypto|$btc|blockchain",
 				"description": "Analysis of blockchain technologies & Bitcoin's potential.",
 				"rating":      5,
 			})
-			adapter.HSet(ctx, "resource:2", map[string]interface{}{
+			adapter.HSet(ctx, "resource:2", map[string]any{
 				"uuid":        "987e6543-e21c-12d3-a456-426614174999",
 				"tags":        "health|well-being|fitness|new-year's-resolutions",
 				"description": "Health trends for the new year, including fitness regimes.",
@@ -13424,7 +13424,7 @@ func testAdapterSearchRESP2() {
 			res, err := adapter.FTSearchWithArgs(ctx, "idx1", "@uuid:{$uuid}",
 				&FTSearchOptions{
 					DialectVersion: 2,
-					Params:         map[string]interface{}{"uuid": "123e4567-e89b-12d3-a456-426614174000"},
+					Params:         map[string]any{"uuid": "123e4567-e89b-12d3-a456-426614174000"},
 				}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.Total).To(BeEquivalentTo(int64(1)))
@@ -13433,13 +13433,13 @@ func testAdapterSearchRESP2() {
 			res, err = adapter.FTSearchWithArgs(ctx, "idx1", "@uuid:{$uuid}",
 				&FTSearchOptions{
 					DialectVersion: 4,
-					Params:         map[string]interface{}{"uuid": "123e4567-e89b-12d3-a456-426614174000"},
+					Params:         map[string]any{"uuid": "123e4567-e89b-12d3-a456-426614174000"},
 				}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.Total).To(BeEquivalentTo(int64(1)))
 			Expect(res.Docs[0].ID).To(BeEquivalentTo("resource:1"))
 
-			adapter.HSet(ctx, "test:1", map[string]interface{}{
+			adapter.HSet(ctx, "test:1", map[string]any{
 				"uuid":  "3d3586fe-0416-4572-8ce",
 				"email": "adriano@acme.com.ie",
 				"num":   5,
@@ -13447,7 +13447,7 @@ func testAdapterSearchRESP2() {
 
 			// Create the index
 			ftCreateOptions := &FTCreateOptions{
-				Prefix: []interface{}{"test:"},
+				Prefix: []any{"test:"},
 			}
 			schema := []*FieldSchema{
 				{
@@ -13470,7 +13470,7 @@ func testAdapterSearchRESP2() {
 
 			ftSearchOptions := &FTSearchOptions{
 				DialectVersion: 4,
-				Params: map[string]interface{}{
+				Params: map[string]any{
 					"uuid":  "3d3586fe-0416-4572-8ce",
 					"email": "adriano@acme.com.ie",
 				},
@@ -13486,7 +13486,7 @@ func testAdapterSearchRESP2() {
 			Expect(res.Docs[0].ID).To(BeEquivalentTo("test:1"))
 			Expect(res.Docs[0].Fields["email"]).To(BeEquivalentTo("adriano@acme.com.ie"))
 
-			ftSearchOptions.Params = map[string]interface{}{"num": 5}
+			ftSearchOptions.Params = map[string]any{"num": 5}
 			res, err = adapter.FTSearchWithArgs(ctx, "idx_hash", "@num:[5]", ftSearchOptions).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res.Docs[0].ID).To(BeEquivalentTo("test:1"))
@@ -13505,7 +13505,7 @@ func testAdapterSearchRESP2() {
 			res1, err := adapter.FTSearchWithArgs(ctx, "idx1", "@geom:[WITHIN $poly]",
 				&FTSearchOptions{
 					DialectVersion: 3,
-					Params:         map[string]interface{}{"poly": "POLYGON((0 0, 0 150, 150 150, 150 0, 0 0))"},
+					Params:         map[string]any{"poly": "POLYGON((0 0, 0 150, 150 150, 150 0, 0 0))"},
 				}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res1.Total).To(BeEquivalentTo(int64(1)))
@@ -13514,7 +13514,7 @@ func testAdapterSearchRESP2() {
 			res2, err := adapter.FTSearchWithArgs(ctx, "idx1", "@geom:[CONTAINS $poly]",
 				&FTSearchOptions{
 					DialectVersion: 3,
-					Params:         map[string]interface{}{"poly": "POLYGON((2 2, 2 50, 50 50, 50 2, 2 2))"},
+					Params:         map[string]any{"poly": "POLYGON((2 2, 2 50, 50 50, 50 2, 2 2))"},
 				}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res2.Total).To(BeEquivalentTo(int64(2)))
@@ -13546,7 +13546,7 @@ func testAdapterSearchRESP2() {
 			intersection, err := adapter.FTSearchWithArgs(ctx, "idx1", "@g:[intersects $shape]",
 				&FTSearchOptions{
 					DialectVersion: 3,
-					Params:         map[string]interface{}{"shape": "POLYGON((15 15, 75 15, 50 70, 20 40, 15 15))"},
+					Params:         map[string]any{"shape": "POLYGON((15 15, 75 15, 50 70, 20 40, 15 15))"},
 				}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			_assert_geosearch_result(&intersection, []string{"doc_point2", "doc_polygon1"})
@@ -13554,7 +13554,7 @@ func testAdapterSearchRESP2() {
 			disjunction, err := adapter.FTSearchWithArgs(ctx, "idx1", "@g:[disjoint $shape]",
 				&FTSearchOptions{
 					DialectVersion: 3,
-					Params:         map[string]interface{}{"shape": "POLYGON((15 15, 75 15, 50 70, 20 40, 15 15))"},
+					Params:         map[string]any{"shape": "POLYGON((15 15, 75 15, 50 70, 20 40, 15 15))"},
 				}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			_assert_geosearch_result(&disjunction, []string{"doc_point1", "doc_polygon2"})
@@ -13576,7 +13576,7 @@ func testAdapterSearchRESP2() {
 			containsA, err := adapter.FTSearchWithArgs(ctx, "idx2", "@g:[contains $shape]",
 				&FTSearchOptions{
 					DialectVersion: 3,
-					Params:         map[string]interface{}{"shape": "POINT(25 25)"},
+					Params:         map[string]any{"shape": "POINT(25 25)"},
 				}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			_assert_geosearch_result(&containsA, []string{"doc_polygon1"})
@@ -13584,7 +13584,7 @@ func testAdapterSearchRESP2() {
 			containsB, err := adapter.FTSearchWithArgs(ctx, "idx2", "@g:[contains $shape]",
 				&FTSearchOptions{
 					DialectVersion: 3,
-					Params:         map[string]interface{}{"shape": "POLYGON((24 24, 24 26, 25 25, 24 24))"},
+					Params:         map[string]any{"shape": "POLYGON((24 24, 24 26, 25 25, 24 24))"},
 				}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			_assert_geosearch_result(&containsB, []string{"doc_polygon1"})
@@ -13592,14 +13592,14 @@ func testAdapterSearchRESP2() {
 			within, err := adapter.FTSearchWithArgs(ctx, "idx2", "@g:[within $shape]",
 				&FTSearchOptions{
 					DialectVersion: 3,
-					Params:         map[string]interface{}{"shape": "POLYGON((15 15, 75 15, 50 70, 20 40, 15 15))"},
+					Params:         map[string]any{"shape": "POLYGON((15 15, 75 15, 50 70, 20 40, 15 15))"},
 				}).Result()
 			Expect(err).NotTo(HaveOccurred())
 			_assert_geosearch_result(&within, []string{"doc_point2", "doc_polygon1"})
 		})
 
 		It("should search missing fields", Label("search", "ftcreate", "ftsearch", "NonRedisEnterprise"), func() {
-			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{Prefix: []interface{}{"property:"}},
+			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{Prefix: []any{"property:"}},
 				&FieldSchema{FieldName: "title", FieldType: SearchFieldTypeText, Sortable: true},
 				&FieldSchema{FieldName: "features", FieldType: SearchFieldTypeTag, IndexMissing: true},
 				&FieldSchema{FieldName: "description", FieldType: SearchFieldTypeText, IndexMissing: true}).Result()
@@ -13607,18 +13607,18 @@ func testAdapterSearchRESP2() {
 			Expect(val).To(BeEquivalentTo("OK"))
 			WaitForIndexing(client, "idx1", 2)
 
-			adapter.HSet(ctx, "property:1", map[string]interface{}{
+			adapter.HSet(ctx, "property:1", map[string]any{
 				"title":       "Luxury Villa in Malibu",
 				"features":    "pool,sea view,modern",
 				"description": "A stunning modern villa overlooking the Pacific Ocean.",
 			})
 
-			adapter.HSet(ctx, "property:2", map[string]interface{}{
+			adapter.HSet(ctx, "property:2", map[string]any{
 				"title":       "Downtown Flat",
 				"description": "Modern flat in central Paris with easy access to metro.",
 			})
 
-			adapter.HSet(ctx, "property:3", map[string]interface{}{
+			adapter.HSet(ctx, "property:3", map[string]any{
 				"title":    "Beachfront Bungalow",
 				"features": "beachfront,sun deck",
 			})
@@ -13643,7 +13643,7 @@ func testAdapterSearchRESP2() {
 		})
 
 		It("should search empty fields", Label("search", "ftcreate", "ftsearch", "NonRedisEnterprise"), func() {
-			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{Prefix: []interface{}{"property:"}},
+			val, err := adapter.FTCreate(ctx, "idx1", &FTCreateOptions{Prefix: []any{"property:"}},
 				&FieldSchema{FieldName: "title", FieldType: SearchFieldTypeText, Sortable: true},
 				&FieldSchema{FieldName: "features", FieldType: SearchFieldTypeTag, IndexEmpty: true},
 				&FieldSchema{FieldName: "description", FieldType: SearchFieldTypeText, IndexEmpty: true}).Result()
@@ -13651,19 +13651,19 @@ func testAdapterSearchRESP2() {
 			Expect(val).To(BeEquivalentTo("OK"))
 			WaitForIndexing(client, "idx1", 2)
 
-			adapter.HSet(ctx, "property:1", map[string]interface{}{
+			adapter.HSet(ctx, "property:1", map[string]any{
 				"title":       "Luxury Villa in Malibu",
 				"features":    "pool,sea view,modern",
 				"description": "A stunning modern villa overlooking the Pacific Ocean.",
 			})
 
-			adapter.HSet(ctx, "property:2", map[string]interface{}{
+			adapter.HSet(ctx, "property:2", map[string]any{
 				"title":       "Downtown Flat",
 				"features":    "",
 				"description": "Modern flat in central Paris with easy access to metro.",
 			})
 
-			adapter.HSet(ctx, "property:3", map[string]interface{}{
+			adapter.HSet(ctx, "property:3", map[string]any{
 				"title":       "Beachfront Bungalow",
 				"features":    "beachfront,sun deck",
 				"description": "",

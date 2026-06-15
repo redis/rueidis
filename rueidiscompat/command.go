@@ -924,7 +924,7 @@ func newStringStringMapCmd(res rueidis.RedisResult) *StringStringMapCmd {
 
 // Scan scans the results from the map into a destination struct. The map keys
 // are matched in the Redis struct fields by the `redis:"field"` tag.
-func (cmd *StringStringMapCmd) Scan(dest interface{}) error {
+func (cmd *StringStringMapCmd) Scan(dest any) error {
 	if cmd.Err() != nil {
 		return cmd.Err()
 	}
@@ -3264,8 +3264,8 @@ func newMapStringSliceInterfaceCmd(res rueidis.RedisResult) *MapStringSliceInter
 }
 
 type TSRangeOptions struct {
-	Align           interface{}
-	BucketTimestamp interface{}
+	Align           any
+	BucketTimestamp any
 	FilterByTS      []int
 	FilterByValue   []int
 	Count           int
@@ -3276,8 +3276,8 @@ type TSRangeOptions struct {
 }
 
 type TSRevRangeOptions struct {
-	Align           interface{}
-	BucketTimestamp interface{}
+	Align           any
+	BucketTimestamp any
 	FilterByTS      []int
 	FilterByValue   []int
 	Count           int
@@ -3288,13 +3288,13 @@ type TSRevRangeOptions struct {
 }
 
 type TSMRangeOptions struct {
-	Align           interface{}
-	BucketTimestamp interface{}
-	GroupByLabel    interface{}
-	Reducer         interface{}
+	Align           any
+	BucketTimestamp any
+	GroupByLabel    any
+	Reducer         any
 	FilterByTS      []int
 	FilterByValue   []int
-	SelectedLabels  []interface{}
+	SelectedLabels  []any
 	Count           int
 	Aggregator      Aggregator
 	BucketDuration  int
@@ -3304,13 +3304,13 @@ type TSMRangeOptions struct {
 }
 
 type TSMRevRangeOptions struct {
-	Align           interface{}
-	BucketTimestamp interface{}
-	GroupByLabel    interface{}
-	Reducer         interface{}
+	Align           any
+	BucketTimestamp any
+	GroupByLabel    any
+	Reducer         any
 	FilterByTS      []int
 	FilterByValue   []int
-	SelectedLabels  []interface{}
+	SelectedLabels  []any
 	Count           int
 	Aggregator      Aggregator
 	BucketDuration  int
@@ -3320,13 +3320,13 @@ type TSMRevRangeOptions struct {
 }
 
 type TSMGetOptions struct {
-	SelectedLabels []interface{}
+	SelectedLabels []any
 	Latest         bool
 	WithLabels     bool
 }
 
 type JSONSetArgs struct {
-	Value interface{}
+	Value any
 	Key   string
 	Path  string
 }
@@ -3559,12 +3559,12 @@ type AggregateRow struct {
 // Please follow https://redis.io/docs/interact/search-and-query/search/aggregations/#supported-groupby-reducers for more information.
 type FTAggregateReducer struct {
 	As      string
-	Args    []interface{}
+	Args    []any
 	Reducer SearchAggregator
 }
 
 type FTAggregateGroupBy struct {
-	Fields []interface{}
+	Fields []any
 	Reduce []FTAggregateReducer
 }
 
@@ -3591,7 +3591,7 @@ type FTAggregateWithCursor struct {
 
 type FTAggregateOptions struct {
 	WithCursorOptions *FTAggregateWithCursor
-	Params            map[string]interface{}
+	Params            map[string]any
 	Filter            string
 	Scorer            string
 	Load              []FTAggregateLoad
@@ -3673,7 +3673,7 @@ func (cmd *AggregateCmd) from(res rueidis.RedisResult) {
 }
 
 // Ref: https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L584
-func processAggregateResult(data []interface{}) (*FTAggregateResult, error) {
+func processAggregateResult(data []any) (*FTAggregateResult, error) {
 	if len(data) == 0 {
 		return nil, fmt.Errorf("no data returned")
 	}
@@ -3685,12 +3685,12 @@ func processAggregateResult(data []interface{}) (*FTAggregateResult, error) {
 
 	rows := make([]AggregateRow, 0, len(data)-1)
 	for _, row := range data[1:] {
-		fields, ok := row.([]interface{})
+		fields, ok := row.([]any)
 		if !ok {
 			return nil, fmt.Errorf("invalid row format")
 		}
 
-		rowMap := make(map[string]interface{})
+		rowMap := make(map[string]any)
 		for i := 0; i < len(fields); i += 2 {
 			key, ok := fields[i].(string)
 			if !ok {
@@ -3992,10 +3992,10 @@ type FTInfoCmd struct {
 }
 
 // Ref: https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1143
-func parseFTInfo(data map[string]interface{}) (FTInfoResult, error) {
+func parseFTInfo(data map[string]any) (FTInfoResult, error) {
 	var ftInfo FTInfoResult
 	// Manually parse each field from the map
-	if indexErrors, ok := data["Index Errors"].([]interface{}); ok {
+	if indexErrors, ok := data["Index Errors"].([]any); ok {
 		ftInfo.IndexErrors = IndexErrors{
 			IndexingFailures:     ToInteger(indexErrors[1]),
 			LastIndexingError:    ToString(indexErrors[3]),
@@ -4003,9 +4003,9 @@ func parseFTInfo(data map[string]interface{}) (FTInfoResult, error) {
 		}
 	}
 
-	if attributes, ok := data["attributes"].([]interface{}); ok {
+	if attributes, ok := data["attributes"].([]any); ok {
 		for _, attr := range attributes {
-			if attrMap, ok := attr.([]interface{}); ok {
+			if attrMap, ok := attr.([]any); ok {
 				att := FTAttribute{}
 				for i := 0; i < len(attrMap); i++ {
 					if ToLower(ToString(attrMap[i])) == "attribute" {
@@ -4062,7 +4062,7 @@ func parseFTInfo(data map[string]interface{}) (FTInfoResult, error) {
 	ftInfo.BytesPerRecordAvg = ToString(data["bytes_per_record_avg"])
 	ftInfo.Cleaning = ToInteger(data["cleaning"])
 
-	if cursorStats, ok := data["cursor_stats"].([]interface{}); ok {
+	if cursorStats, ok := data["cursor_stats"].([]any); ok {
 		ftInfo.CursorStats = CursorStats{
 			GlobalIdle:    ToInteger(cursorStats[1]),
 			GlobalTotal:   ToInteger(cursorStats[3]),
@@ -4071,7 +4071,7 @@ func parseFTInfo(data map[string]interface{}) (FTInfoResult, error) {
 		}
 	}
 
-	if dialectStats, ok := data["dialect_stats"].([]interface{}); ok {
+	if dialectStats, ok := data["dialect_stats"].([]any); ok {
 		ftInfo.DialectStats = make(map[string]int)
 		for i := 0; i < len(dialectStats); i += 2 {
 			ftInfo.DialectStats[ToString(dialectStats[i])] = ToInteger(dialectStats[i+1])
@@ -4080,23 +4080,23 @@ func parseFTInfo(data map[string]interface{}) (FTInfoResult, error) {
 
 	ftInfo.DocTableSizeMB = ToFloat(data["doc_table_size_mb"])
 
-	if fieldStats, ok := data["field statistics"].([]interface{}); ok {
+	if fieldStats, ok := data["field statistics"].([]any); ok {
 		for _, stat := range fieldStats {
-			if statMap, ok := stat.([]interface{}); ok {
+			if statMap, ok := stat.([]any); ok {
 				ftInfo.FieldStatistics = append(ftInfo.FieldStatistics, FieldStatistic{
 					Identifier: ToString(statMap[1]),
 					Attribute:  ToString(statMap[3]),
 					IndexErrors: IndexErrors{
-						IndexingFailures:     ToInteger(statMap[5].([]interface{})[1]),
-						LastIndexingError:    ToString(statMap[5].([]interface{})[3]),
-						LastIndexingErrorKey: ToString(statMap[5].([]interface{})[5]),
+						IndexingFailures:     ToInteger(statMap[5].([]any)[1]),
+						LastIndexingError:    ToString(statMap[5].([]any)[3]),
+						LastIndexingErrorKey: ToString(statMap[5].([]any)[5]),
 					},
 				})
 			}
 		}
 	}
 
-	if gcStats, ok := data["gc_stats"].([]interface{}); ok {
+	if gcStats, ok := data["gc_stats"].([]any); ok {
 		ftInfo.GCStats = GCStats{}
 		for i := 0; i < len(gcStats); i += 2 {
 			if ToLower(ToString(gcStats[i])) == "bytes_collected" {
@@ -4133,7 +4133,7 @@ func parseFTInfo(data map[string]interface{}) (FTInfoResult, error) {
 	ftInfo.GeoshapesSzMB = ToFloat(data["geoshapes_sz_mb"])
 	ftInfo.HashIndexingFailures = ToInteger(data["hash_indexing_failures"])
 
-	if indexDef, ok := data["index_definition"].([]interface{}); ok {
+	if indexDef, ok := data["index_definition"].([]any); ok {
 		ftInfo.IndexDefinition = IndexDefinition{
 			KeyType:      ToString(indexDef[1]),
 			Prefixes:     ToStringSlice(indexDef[3]),
@@ -4142,7 +4142,7 @@ func parseFTInfo(data map[string]interface{}) (FTInfoResult, error) {
 	}
 
 	ftInfo.IndexName = ToString(data["index_name"])
-	ftInfo.IndexOptions = ToStringSlice(data["index_options"].([]interface{}))
+	ftInfo.IndexOptions = ToStringSlice(data["index_options"].([]any))
 	ftInfo.Indexing = ToInteger(data["indexing"])
 	ftInfo.InvertedSzMB = ToFloat(data["inverted_sz_mb"])
 	ftInfo.KeyTableSizeMB = ToFloat(data["key_table_size_mb"])
@@ -4214,7 +4214,7 @@ type FTSpellCheckOptions struct {
 type FTSpellCheckTerms struct {
 	Inclusion  string // Either "INCLUDE" or "EXCLUDE"
 	Dictionary string
-	Terms      []interface{}
+	Terms      []any
 }
 
 type SpellCheckResult struct {
@@ -4334,11 +4334,11 @@ func newFTSpellCheckCmd(res rueidis.RedisResult) *FTSpellCheckCmd {
 	return cmd
 }
 
-func parseFTSpellCheck(data []interface{}) ([]SpellCheckResult, error) {
+func parseFTSpellCheck(data []any) ([]SpellCheckResult, error) {
 	results := make([]SpellCheckResult, 0, len(data))
 
 	for _, termData := range data {
-		termInfo, ok := termData.([]interface{})
+		termInfo, ok := termData.([]any)
 		if !ok || len(termInfo) != 3 {
 			return nil, fmt.Errorf("invalid term format")
 		}
@@ -4348,14 +4348,14 @@ func parseFTSpellCheck(data []interface{}) ([]SpellCheckResult, error) {
 			return nil, fmt.Errorf("invalid term format")
 		}
 
-		suggestionsData, ok := termInfo[2].([]interface{})
+		suggestionsData, ok := termInfo[2].([]any)
 		if !ok {
 			return nil, fmt.Errorf("invalid suggestions format")
 		}
 
 		suggestions := make([]SpellCheckSuggestion, 0, len(suggestionsData))
 		for _, suggestionData := range suggestionsData {
-			suggestionInfo, ok := suggestionData.([]interface{})
+			suggestionInfo, ok := suggestionData.([]any)
 			if !ok || len(suggestionInfo) != 2 {
 				return nil, fmt.Errorf("invalid suggestion format")
 			}
@@ -4403,15 +4403,15 @@ type FTSearchResult struct {
 }
 
 type FTSearchOptions struct {
-	Params          map[string]interface{}
+	Params          map[string]any
 	Language        string
 	Expander        string
 	Scorer          string
 	Payload         string
 	Filters         []FTSearchFilter
 	GeoFilter       []FTSearchGeoFilter
-	InKeys          []interface{}
-	InFields        []interface{}
+	InKeys          []any
+	InFields        []any
 	Return          []FTSearchReturn
 	SortBy          []FTSearchSortBy
 	Slop            int
@@ -5073,8 +5073,8 @@ func newACLLogCmd(res rueidis.RedisResult) *ACLLogCmd {
 // `MODULE LOADEX path [CONFIG name value [CONFIG name value ...]] [ARGS args [args ...]]`
 type ModuleLoadexConfig struct {
 	Path string
-	Conf map[string]interface{}
-	Args []interface{}
+	Conf map[string]any
+	Args []any
 }
 
 type ClusterLink struct {

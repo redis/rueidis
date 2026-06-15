@@ -583,7 +583,7 @@ func TestPipeliner(t *testing.T) {
 		p.TSGetWithArgs(ctx, "1", &TSGetOptions{Latest: true})
 		p.TSInfo(ctx, "1")
 		p.TSInfoWithArgs(ctx, "1", &TSInfoOptions{Debug: true})
-		p.TSMAdd(ctx, [][]interface{}{{1, 2, 3}, {1, 2, 3}})
+		p.TSMAdd(ctx, [][]any{{1, 2, 3}, {1, 2, 3}})
 		p.TSQueryIndex(ctx, []string{"1"})
 		p.TSRevRange(ctx, "1", 1, 1)
 		p.TSRevRangeWithArgs(ctx, "1", 1, 1, &TSRevRangeOptions{Count: 10})

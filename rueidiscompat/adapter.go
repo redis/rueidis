@@ -452,14 +452,14 @@ type SearchCmdable interface {
 	FTAliasAdd(ctx context.Context, index string, alias string) *StatusCmd
 	FTAliasDel(ctx context.Context, alias string) *StatusCmd
 	FTAliasUpdate(ctx context.Context, index string, alias string) *StatusCmd
-	FTAlter(ctx context.Context, index string, skipInitialScan bool, definition []interface{}) *StatusCmd
+	FTAlter(ctx context.Context, index string, skipInitialScan bool, definition []any) *StatusCmd
 	FTConfigGet(ctx context.Context, option string) *MapMapStringInterfaceCmd
-	FTConfigSet(ctx context.Context, option string, value interface{}) *StatusCmd
+	FTConfigSet(ctx context.Context, option string, value any) *StatusCmd
 	FTCreate(ctx context.Context, index string, options *FTCreateOptions, schema ...*FieldSchema) *StatusCmd
 	FTCursorDel(ctx context.Context, index string, cursorId int) *StatusCmd
 	FTCursorRead(ctx context.Context, index string, cursorId int, count int) *MapStringInterfaceCmd
-	FTDictAdd(ctx context.Context, dict string, term ...interface{}) *IntCmd
-	FTDictDel(ctx context.Context, dict string, term ...interface{}) *IntCmd
+	FTDictAdd(ctx context.Context, dict string, term ...any) *IntCmd
+	FTDictDel(ctx context.Context, dict string, term ...any) *IntCmd
 	FTDictDump(ctx context.Context, dict string) *StringSliceCmd
 	FTDropIndex(ctx context.Context, index string) *StatusCmd
 	FTDropIndexWithArgs(ctx context.Context, index string, options *FTDropIndexOptions) *StatusCmd
@@ -471,16 +471,16 @@ type SearchCmdable interface {
 	FTSearch(ctx context.Context, index string, query string) *FTSearchCmd
 	FTSearchWithArgs(ctx context.Context, index string, query string, options *FTSearchOptions) *FTSearchCmd
 	FTSynDump(ctx context.Context, index string) *FTSynDumpCmd
-	FTSynUpdate(ctx context.Context, index string, synGroupId interface{}, terms []interface{}) *StatusCmd
-	FTSynUpdateWithArgs(ctx context.Context, index string, synGroupId interface{}, options *FTSynUpdateOptions, terms []interface{}) *StatusCmd
+	FTSynUpdate(ctx context.Context, index string, synGroupId any, terms []any) *StatusCmd
+	FTSynUpdateWithArgs(ctx context.Context, index string, synGroupId any, options *FTSynUpdateOptions, terms []any) *StatusCmd
 	FTTagVals(ctx context.Context, index string, field string) *StringSliceCmd
 }
 
 // https://github.com/redis/go-redis/blob/af4872cbd0de349855ce3f0978929c2f56eb995f/probabilistic.go#L10
 type ProbabilisticCmdable interface {
-	BFAdd(ctx context.Context, key string, element interface{}) *BoolCmd
+	BFAdd(ctx context.Context, key string, element any) *BoolCmd
 	BFCard(ctx context.Context, key string) *IntCmd
-	BFExists(ctx context.Context, key string, element interface{}) *BoolCmd
+	BFExists(ctx context.Context, key string, element any) *BoolCmd
 	BFInfo(ctx context.Context, key string) *BFInfoCmd
 	BFInfoArg(ctx context.Context, key, option string) *BFInfoCmd
 	BFInfoCapacity(ctx context.Context, key string) *BFInfoCmd
@@ -488,48 +488,48 @@ type ProbabilisticCmdable interface {
 	BFInfoFilters(ctx context.Context, key string) *BFInfoCmd
 	BFInfoItems(ctx context.Context, key string) *BFInfoCmd
 	BFInfoExpansion(ctx context.Context, key string) *BFInfoCmd
-	BFInsert(ctx context.Context, key string, options *BFInsertOptions, elements ...interface{}) *BoolSliceCmd
-	BFMAdd(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd
-	BFMExists(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd
+	BFInsert(ctx context.Context, key string, options *BFInsertOptions, elements ...any) *BoolSliceCmd
+	BFMAdd(ctx context.Context, key string, elements ...any) *BoolSliceCmd
+	BFMExists(ctx context.Context, key string, elements ...any) *BoolSliceCmd
 	BFReserve(ctx context.Context, key string, errorRate float64, capacity int64) *StatusCmd
 	BFReserveExpansion(ctx context.Context, key string, errorRate float64, capacity, expansion int64) *StatusCmd
 	BFReserveNonScaling(ctx context.Context, key string, errorRate float64, capacity int64) *StatusCmd
 	BFReserveWithArgs(ctx context.Context, key string, options *BFReserveOptions) *StatusCmd
 	BFScanDump(ctx context.Context, key string, iterator int64) *ScanDumpCmd
-	BFLoadChunk(ctx context.Context, key string, iterator int64, data interface{}) *StatusCmd
+	BFLoadChunk(ctx context.Context, key string, iterator int64, data any) *StatusCmd
 
-	CFAdd(ctx context.Context, key string, element interface{}) *BoolCmd
-	CFAddNX(ctx context.Context, key string, element interface{}) *BoolCmd
-	CFCount(ctx context.Context, key string, element interface{}) *IntCmd
-	CFDel(ctx context.Context, key string, element interface{}) *BoolCmd
-	CFExists(ctx context.Context, key string, element interface{}) *BoolCmd
+	CFAdd(ctx context.Context, key string, element any) *BoolCmd
+	CFAddNX(ctx context.Context, key string, element any) *BoolCmd
+	CFCount(ctx context.Context, key string, element any) *IntCmd
+	CFDel(ctx context.Context, key string, element any) *BoolCmd
+	CFExists(ctx context.Context, key string, element any) *BoolCmd
 	CFInfo(ctx context.Context, key string) *CFInfoCmd
-	CFInsert(ctx context.Context, key string, options *CFInsertOptions, elements ...interface{}) *BoolSliceCmd
-	CFInsertNX(ctx context.Context, key string, options *CFInsertOptions, elements ...interface{}) *IntSliceCmd
-	CFMExists(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd
+	CFInsert(ctx context.Context, key string, options *CFInsertOptions, elements ...any) *BoolSliceCmd
+	CFInsertNX(ctx context.Context, key string, options *CFInsertOptions, elements ...any) *IntSliceCmd
+	CFMExists(ctx context.Context, key string, elements ...any) *BoolSliceCmd
 	CFReserve(ctx context.Context, key string, capacity int64) *StatusCmd
 	CFReserveWithArgs(ctx context.Context, key string, options *CFReserveOptions) *StatusCmd
 	CFReserveExpansion(ctx context.Context, key string, capacity int64, expansion int64) *StatusCmd
 	CFReserveBucketSize(ctx context.Context, key string, capacity int64, bucketsize int64) *StatusCmd
 	CFReserveMaxIterations(ctx context.Context, key string, capacity int64, maxiterations int64) *StatusCmd
 	CFScanDump(ctx context.Context, key string, iterator int64) *ScanDumpCmd
-	CFLoadChunk(ctx context.Context, key string, iterator int64, data interface{}) *StatusCmd
+	CFLoadChunk(ctx context.Context, key string, iterator int64, data any) *StatusCmd
 
-	CMSIncrBy(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd
+	CMSIncrBy(ctx context.Context, key string, elements ...any) *IntSliceCmd
 	CMSInfo(ctx context.Context, key string) *CMSInfoCmd
 	CMSInitByDim(ctx context.Context, key string, width, height int64) *StatusCmd
 	CMSInitByProb(ctx context.Context, key string, errorRate, probability float64) *StatusCmd
 	CMSMerge(ctx context.Context, destKey string, sourceKeys ...string) *StatusCmd
 	CMSMergeWithWeight(ctx context.Context, destKey string, sourceKeys map[string]int64) *StatusCmd
-	CMSQuery(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd
+	CMSQuery(ctx context.Context, key string, elements ...any) *IntSliceCmd
 
-	TopKAdd(ctx context.Context, key string, elements ...interface{}) *StringSliceCmd
-	TopKCount(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd
-	TopKIncrBy(ctx context.Context, key string, elements ...interface{}) *StringSliceCmd
+	TopKAdd(ctx context.Context, key string, elements ...any) *StringSliceCmd
+	TopKCount(ctx context.Context, key string, elements ...any) *IntSliceCmd
+	TopKIncrBy(ctx context.Context, key string, elements ...any) *StringSliceCmd
 	TopKInfo(ctx context.Context, key string) *TopKInfoCmd
 	TopKList(ctx context.Context, key string) *StringSliceCmd
 	TopKListWithCount(ctx context.Context, key string) *MapStringIntCmd
-	TopKQuery(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd
+	TopKQuery(ctx context.Context, key string, elements ...any) *BoolSliceCmd
 	TopKReserve(ctx context.Context, key string, k int64) *StatusCmd
 	TopKReserveWithOptions(ctx context.Context, key string, k int64, width, depth int64, decay float64) *StatusCmd
 
@@ -571,8 +571,8 @@ type GearsCmdable interface {
 }
 
 type TimeseriesCmdable interface {
-	TSAdd(ctx context.Context, key string, timestamp interface{}, value float64) *IntCmd
-	TSAddWithArgs(ctx context.Context, key string, timestamp interface{}, value float64, options *TSOptions) *IntCmd
+	TSAdd(ctx context.Context, key string, timestamp any, value float64) *IntCmd
+	TSAddWithArgs(ctx context.Context, key string, timestamp any, value float64, options *TSOptions) *IntCmd
 	TSCreate(ctx context.Context, key string) *StatusCmd
 	TSCreateWithArgs(ctx context.Context, key string, options *TSOptions) *StatusCmd
 	TSAlter(ctx context.Context, key string, options *TSAlterOptions) *StatusCmd
@@ -588,7 +588,7 @@ type TimeseriesCmdable interface {
 	TSGetWithArgs(ctx context.Context, key string, options *TSGetOptions) *TSTimestampValueCmd
 	TSInfo(ctx context.Context, key string) *MapStringInterfaceCmd
 	TSInfoWithArgs(ctx context.Context, key string, options *TSInfoOptions) *MapStringInterfaceCmd
-	TSMAdd(ctx context.Context, ktvSlices [][]interface{}) *IntSliceCmd
+	TSMAdd(ctx context.Context, ktvSlices [][]any) *IntSliceCmd
 	TSQueryIndex(ctx context.Context, filterExpr []string) *StringSliceCmd
 	TSRevRange(ctx context.Context, key string, fromTimestamp int, toTimestamp int) *TSTimestampValueSliceCmd
 	TSRevRangeWithArgs(ctx context.Context, key string, fromTimestamp int, toTimestamp int, options *TSRevRangeOptions) *TSTimestampValueSliceCmd
@@ -603,10 +603,10 @@ type TimeseriesCmdable interface {
 }
 
 type JSONCmdable interface {
-	JSONArrAppend(ctx context.Context, key, path string, values ...interface{}) *IntSliceCmd
-	JSONArrIndex(ctx context.Context, key, path string, value ...interface{}) *IntSliceCmd
-	JSONArrIndexWithArgs(ctx context.Context, key, path string, options *JSONArrIndexArgs, value ...interface{}) *IntSliceCmd
-	JSONArrInsert(ctx context.Context, key, path string, index int64, values ...interface{}) *IntSliceCmd
+	JSONArrAppend(ctx context.Context, key, path string, values ...any) *IntSliceCmd
+	JSONArrIndex(ctx context.Context, key, path string, value ...any) *IntSliceCmd
+	JSONArrIndexWithArgs(ctx context.Context, key, path string, options *JSONArrIndexArgs, value ...any) *IntSliceCmd
+	JSONArrInsert(ctx context.Context, key, path string, index int64, values ...any) *IntSliceCmd
 	JSONArrLen(ctx context.Context, key, path string) *IntSliceCmd
 	JSONArrPop(ctx context.Context, key, path string, index int) *StringSliceCmd
 	JSONArrTrim(ctx context.Context, key, path string) *IntSliceCmd
@@ -619,13 +619,13 @@ type JSONCmdable interface {
 	JSONGetWithArgs(ctx context.Context, key string, options *JSONGetArgs, paths ...string) *JSONCmd
 	JSONMerge(ctx context.Context, key, path string, value string) *StatusCmd
 	JSONMSetArgs(ctx context.Context, docs []JSONSetArgs) *StatusCmd
-	JSONMSet(ctx context.Context, params ...interface{}) *StatusCmd
+	JSONMSet(ctx context.Context, params ...any) *StatusCmd
 	JSONMGet(ctx context.Context, path string, keys ...string) *JSONSliceCmd
 	JSONNumIncrBy(ctx context.Context, key, path string, value float64) *JSONCmd
 	JSONObjKeys(ctx context.Context, key, path string) *SliceCmd
 	JSONObjLen(ctx context.Context, key, path string) *IntPointerSliceCmd
-	JSONSet(ctx context.Context, key, path string, value interface{}) *StatusCmd
-	JSONSetMode(ctx context.Context, key, path string, value interface{}, mode string) *StatusCmd
+	JSONSet(ctx context.Context, key, path string, value any) *StatusCmd
+	JSONSetMode(ctx context.Context, key, path string, value any, mode string) *StatusCmd
 	JSONStrAppend(ctx context.Context, key, path, value string) *IntPointerSliceCmd
 	JSONStrLen(ctx context.Context, key, path string) *IntPointerSliceCmd
 	JSONToggle(ctx context.Context, key, path string) *IntPointerSliceCmd
@@ -3617,7 +3617,7 @@ func (c *Compat) TFCallASYNCArgs(ctx context.Context, libName string, funcName s
 	return newCmd(resp)
 }
 
-func (c *Compat) BFAdd(ctx context.Context, key string, element interface{}) *BoolCmd {
+func (c *Compat) BFAdd(ctx context.Context, key string, element any) *BoolCmd {
 	cmd := c.client.B().BfAdd().Key(key).Item(str(element)).Build()
 	return newBoolCmd(c.client.Do(ctx, cmd))
 }
@@ -3627,7 +3627,7 @@ func (c *Compat) BFCard(ctx context.Context, key string) *IntCmd {
 	return newIntCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) BFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
+func (c *Compat) BFExists(ctx context.Context, key string, element any) *BoolCmd {
 	cmd := c.client.B().BfExists().Key(key).Item(str(element)).Build()
 	return newBoolCmd(c.client.Do(ctx, cmd))
 }
@@ -3679,7 +3679,7 @@ func (c *Compat) BFInfoExpansion(ctx context.Context, key string) *BFInfoCmd {
 	return newBFInfoCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) BFInsert(ctx context.Context, key string, options *BFInsertOptions, elements ...interface{}) *BoolSliceCmd {
+func (c *Compat) BFInsert(ctx context.Context, key string, options *BFInsertOptions, elements ...any) *BoolSliceCmd {
 	_cmd := c.client.B().
 		BfInsert().
 		Key(key).
@@ -3700,7 +3700,7 @@ func (c *Compat) BFInsert(ctx context.Context, key string, options *BFInsertOpti
 	return newBoolSliceCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) BFMAdd(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
+func (c *Compat) BFMAdd(ctx context.Context, key string, elements ...any) *BoolSliceCmd {
 	cmd := c.client.B().BfMadd().Key(key)
 	var last cmds.BfMaddItem
 	for _, e := range elements {
@@ -3709,7 +3709,7 @@ func (c *Compat) BFMAdd(ctx context.Context, key string, elements ...interface{}
 	return newBoolSliceCmd(c.client.Do(ctx, last.Build()))
 }
 
-func (c *Compat) BFMExists(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
+func (c *Compat) BFMExists(ctx context.Context, key string, elements ...any) *BoolSliceCmd {
 	cmd := c.client.B().BfMexists().Key(key)
 	var last cmds.BfMexistsItem
 	for _, e := range elements {
@@ -3746,32 +3746,32 @@ func (c *Compat) BFScanDump(ctx context.Context, key string, iterator int64) *Sc
 	return newScanDumpCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) BFLoadChunk(ctx context.Context, key string, iterator int64, data interface{}) *StatusCmd {
+func (c *Compat) BFLoadChunk(ctx context.Context, key string, iterator int64, data any) *StatusCmd {
 	cmd := c.client.B().BfLoadchunk().Key(key).Iterator(iterator).Data(str(data)).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) CFAdd(ctx context.Context, key string, element interface{}) *BoolCmd {
+func (c *Compat) CFAdd(ctx context.Context, key string, element any) *BoolCmd {
 	cmd := c.client.B().CfAdd().Key(key).Item(str(element)).Build()
 	return newBoolCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) CFAddNX(ctx context.Context, key string, element interface{}) *BoolCmd {
+func (c *Compat) CFAddNX(ctx context.Context, key string, element any) *BoolCmd {
 	cmd := c.client.B().CfAddnx().Key(key).Item(str(element)).Build()
 	return newBoolCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) CFCount(ctx context.Context, key string, element interface{}) *IntCmd {
+func (c *Compat) CFCount(ctx context.Context, key string, element any) *IntCmd {
 	cmd := c.client.B().CfCount().Key(key).Item(str(element)).Build()
 	return newIntCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) CFDel(ctx context.Context, key string, element interface{}) *BoolCmd {
+func (c *Compat) CFDel(ctx context.Context, key string, element any) *BoolCmd {
 	cmd := c.client.B().CfDel().Key(key).Item(str(element)).Build()
 	return newBoolCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) CFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
+func (c *Compat) CFExists(ctx context.Context, key string, element any) *BoolCmd {
 	cmd := c.client.B().CfExists().Key(key).Item(str(element)).Build()
 	return newBoolCmd(c.client.Do(ctx, cmd))
 }
@@ -3781,7 +3781,7 @@ func (c *Compat) CFInfo(ctx context.Context, key string) *CFInfoCmd {
 	return newCFInfoCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) CFInsert(ctx context.Context, key string, options *CFInsertOptions, elements ...interface{}) *BoolSliceCmd {
+func (c *Compat) CFInsert(ctx context.Context, key string, options *CFInsertOptions, elements ...any) *BoolSliceCmd {
 	_cmd := c.client.B().CfInsert().Key(key)
 	if options != nil {
 		_cmd.Capacity(options.Capacity)
@@ -3797,7 +3797,7 @@ func (c *Compat) CFInsert(ctx context.Context, key string, options *CFInsertOpti
 	return newBoolSliceCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) CFInsertNX(ctx context.Context, key string, options *CFInsertOptions, elements ...interface{}) *IntSliceCmd {
+func (c *Compat) CFInsertNX(ctx context.Context, key string, options *CFInsertOptions, elements ...any) *IntSliceCmd {
 	_cmd := c.client.B().CfInsertnx().Key(key).Capacity(options.Capacity)
 	if options.NoCreate {
 		_cmd.Nocreate()
@@ -3810,7 +3810,7 @@ func (c *Compat) CFInsertNX(ctx context.Context, key string, options *CFInsertOp
 	return newIntSliceCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) CFMExists(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
+func (c *Compat) CFMExists(ctx context.Context, key string, elements ...any) *BoolSliceCmd {
 	_cmd := c.client.B().CfMexists().Key(key)
 	for _, e := range elements {
 		_cmd.Item(str(e))
@@ -3871,12 +3871,12 @@ func (c *Compat) CFScanDump(ctx context.Context, key string, iterator int64) *Sc
 	return newScanDumpCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) CFLoadChunk(ctx context.Context, key string, iterator int64, data interface{}) *StatusCmd {
+func (c *Compat) CFLoadChunk(ctx context.Context, key string, iterator int64, data any) *StatusCmd {
 	cmd := c.client.B().CfLoadchunk().Key(key).Iterator(iterator).Data(str(data)).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) CMSIncrBy(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
+func (c *Compat) CMSIncrBy(ctx context.Context, key string, elements ...any) *IntSliceCmd {
 	_cmd := c.client.B().CmsIncrby().Key(key)
 	for i := 0; i < len(elements); i += 2 {
 		_cmd.Item(str(elements[i])).Increment((int64)(elements[i+1].(int)))
@@ -3924,7 +3924,7 @@ func (c *Compat) CMSMergeWithWeight(ctx context.Context, destKey string, sourceK
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) CMSQuery(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
+func (c *Compat) CMSQuery(ctx context.Context, key string, elements ...any) *IntSliceCmd {
 	_cmd := c.client.B().CmsQuery().Key(key)
 	for _, e := range elements {
 		_cmd.Item(str(e))
@@ -3933,7 +3933,7 @@ func (c *Compat) CMSQuery(ctx context.Context, key string, elements ...interface
 	return newIntSliceCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) TopKAdd(ctx context.Context, key string, elements ...interface{}) *StringSliceCmd {
+func (c *Compat) TopKAdd(ctx context.Context, key string, elements ...any) *StringSliceCmd {
 	_cmd := c.client.B().TopkAdd().Key(key)
 	for _, e := range elements {
 		_cmd.Items(str(e))
@@ -3942,7 +3942,7 @@ func (c *Compat) TopKAdd(ctx context.Context, key string, elements ...interface{
 	return newStringSliceCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) TopKCount(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
+func (c *Compat) TopKCount(ctx context.Context, key string, elements ...any) *IntSliceCmd {
 	_cmd := c.client.B().TopkCount().Key(key)
 	for _, e := range elements {
 		_cmd.Item(str(e))
@@ -3951,7 +3951,7 @@ func (c *Compat) TopKCount(ctx context.Context, key string, elements ...interfac
 	return newIntSliceCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) TopKIncrBy(ctx context.Context, key string, elements ...interface{}) *StringSliceCmd {
+func (c *Compat) TopKIncrBy(ctx context.Context, key string, elements ...any) *StringSliceCmd {
 	_cmd := c.client.B().TopkIncrby().Key(key)
 	for _, e := range elements {
 		_cmd.Item(str(e))
@@ -3975,7 +3975,7 @@ func (c *Compat) TopKListWithCount(ctx context.Context, key string) *MapStringIn
 	return newMapStringIntCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) TopKQuery(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
+func (c *Compat) TopKQuery(ctx context.Context, key string, elements ...any) *BoolSliceCmd {
 	_cmd := c.client.B().TopkQuery().Key(key)
 	for _, e := range elements {
 		_cmd.Item(str(e))
@@ -4087,7 +4087,7 @@ func (c *Compat) TDigestTrimmedMean(ctx context.Context, key string, lowCutQuant
 
 // TSAdd - Adds one or more observations to a t-digest sketch.
 // For more information - https://redis.io/commands/ts.add/
-func (c *Compat) TSAdd(ctx context.Context, key string, timestamp interface{}, value float64) *IntCmd {
+func (c *Compat) TSAdd(ctx context.Context, key string, timestamp any, value float64) *IntCmd {
 	cmd := c.client.B().TsAdd().Key(key).Timestamp(str(timestamp)).Value(value).Build()
 	return newIntCmd(c.client.Do(ctx, cmd))
 }
@@ -4096,7 +4096,7 @@ func (c *Compat) TSAdd(ctx context.Context, key string, timestamp interface{}, v
 // This function also allows for specifying additional options such as
 // Retention, ChunkSize, Encoding, DuplicatePolicy and Labels.
 // For more information - https://redis.io/commands/ts.add/
-func (c *Compat) TSAddWithArgs(ctx context.Context, key string, timestamp interface{}, value float64, options *TSOptions) *IntCmd {
+func (c *Compat) TSAddWithArgs(ctx context.Context, key string, timestamp any, value float64, options *TSOptions) *IntCmd {
 	_cmd := c.client.B().
 		TsAdd().
 		Key(key).
@@ -4451,7 +4451,7 @@ func (c *Compat) TSInfoWithArgs(ctx context.Context, key string, options *TSInfo
 
 // TSMAdd - Adds multiple samples to multiple time-series keys.
 // For more information - https://redis.io/commands/ts.madd/
-func (c *Compat) TSMAdd(ctx context.Context, ktvSlices [][]interface{}) *IntSliceCmd {
+func (c *Compat) TSMAdd(ctx context.Context, ktvSlices [][]any) *IntSliceCmd {
 	_cmd := c.client.B().TsMadd().KeyTimestampValue()
 	for _, ktv := range ktvSlices {
 		tstmp, err := toInt64(int64(ktv[1].(int)))
@@ -4873,7 +4873,7 @@ func (c *Compat) TSMGetWithArgs(ctx context.Context, filters []string, options *
 
 // JSONArrAppend adds the provided JSON values to the end of the array at the given path.
 // For more information, see https://redis.io/commands/json.arrappend
-func (c *Compat) JSONArrAppend(ctx context.Context, key, path string, values ...interface{}) *IntSliceCmd {
+func (c *Compat) JSONArrAppend(ctx context.Context, key, path string, values ...any) *IntSliceCmd {
 	cmd := c.client.B().JsonArrappend().Key(key).Path(path).Value(argToSlice(values)...).Build()
 	return newIntSliceCmd(c.client.Do(ctx, cmd))
 }
@@ -4881,7 +4881,7 @@ func (c *Compat) JSONArrAppend(ctx context.Context, key, path string, values ...
 // JSONArrIndex searches for the first occurrence of the provided JSON value in the array at the given path.
 // For more information, see https://redis.io/commands/json.arrindex
 // NOTE: value should have the format value start [stop]
-func (c *Compat) JSONArrIndex(ctx context.Context, key, path string, value ...interface{}) *IntSliceCmd {
+func (c *Compat) JSONArrIndex(ctx context.Context, key, path string, value ...any) *IntSliceCmd {
 	_cmd := c.client.B().JsonArrindex().Key(key).Path(path)
 	switch len(value) {
 	case 1:
@@ -4902,7 +4902,7 @@ func (c *Compat) JSONArrIndex(ctx context.Context, key, path string, value ...in
 
 // JSONArrIndex searches for the first occurrence of the provided JSON value in the array at the given path.
 // For more information, see https://redis.io/commands/json.arrindex
-func (c *Compat) JSONArrIndexWithArgs(ctx context.Context, key, path string, options *JSONArrIndexArgs, value ...interface{}) *IntSliceCmd {
+func (c *Compat) JSONArrIndexWithArgs(ctx context.Context, key, path string, options *JSONArrIndexArgs, value ...any) *IntSliceCmd {
 	// FIXME: why value has 1..N ?
 	_cmd := c.client.B().JsonArrindex().Key(key).Path(path).Value(str(value[0]))
 	if options != nil {
@@ -4919,7 +4919,7 @@ func (c *Compat) JSONArrIndexWithArgs(ctx context.Context, key, path string, opt
 	return newIntSliceCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) JSONArrInsert(ctx context.Context, key, path string, index int64, values ...interface{}) *IntSliceCmd {
+func (c *Compat) JSONArrInsert(ctx context.Context, key, path string, index int64, values ...any) *IntSliceCmd {
 	valStrs := make([]string, 0, len(values))
 	for _, val := range values {
 		valStrs = append(valStrs, str(val))
@@ -5020,7 +5020,7 @@ func (c *Compat) JSONMSetArgs(ctx context.Context, docs []JSONSetArgs) *StatusCm
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) JSONMSet(ctx context.Context, params ...interface{}) *StatusCmd {
+func (c *Compat) JSONMSet(ctx context.Context, params ...any) *StatusCmd {
 	_cmd := c.client.B().JsonMset()
 	for i := 0; i < len(params); i += 3 {
 		_cmd.Key(str(params[i])).Path(str(params[i+1])).Value(str(params[i+2]))
@@ -5049,7 +5049,7 @@ func (c *Compat) JSONObjLen(ctx context.Context, key, path string) *IntPointerSl
 	return newIntPointerSliceCmd(c.client.Do(ctx, cmd))
 }
 
-func (c *Compat) JSONSet(ctx context.Context, key, path string, value interface{}) *StatusCmd {
+func (c *Compat) JSONSet(ctx context.Context, key, path string, value any) *StatusCmd {
 	cmd := c.client.B().JsonSet().Key(key).Path(path).Value(str(value)).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
@@ -5058,7 +5058,7 @@ func (c *Compat) JSONSet(ctx context.Context, key, path string, value interface{
 // (the mode value must be "XX" or "NX"). The value must be something that can be marshaled to JSON (using encoding/JSON) unless
 // the argument is a string or []byte when we assume that it can be passed directly as JSON.
 // For more information, see https://redis.io/commands/json.set
-func (c *Compat) JSONSetMode(ctx context.Context, key, path string, value interface{}, mode string) *StatusCmd {
+func (c *Compat) JSONSetMode(ctx context.Context, key, path string, value any, mode string) *StatusCmd {
 	_cmd := c.client.B().JsonSet().Key(key).Path(path).Value(str(value))
 	switch mode {
 	case "XX":
@@ -5325,7 +5325,7 @@ func (c *Compat) FTAliasUpdate(ctx context.Context, index string, alias string) 
 // For more information, please refer to the Redis documentation:
 // [FT.ALTER]: (https://redis.io/commands/ft.alter/)
 // see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L815
-func (c *Compat) FTAlter(ctx context.Context, index string, skipInitialScan bool, definition []interface{}) *StatusCmd {
+func (c *Compat) FTAlter(ctx context.Context, index string, skipInitialScan bool, definition []any) *StatusCmd {
 	_cmd := cmds.Incomplete(c.client.B().FtAlter().Index(index))
 	if skipInitialScan {
 		_cmd = cmds.Incomplete(cmds.FtAlterIndex(_cmd).Skipinitialscan())
@@ -5352,7 +5352,7 @@ func (c *Compat) FTConfigGet(ctx context.Context, option string) *MapMapStringIn
 // For more information, please refer to the Redis documentation:
 // [FT.CONFIG SET]: (https://redis.io/commands/ft.config-set/)
 // see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L841
-func (c *Compat) FTConfigSet(ctx context.Context, option string, value interface{}) *StatusCmd {
+func (c *Compat) FTConfigSet(ctx context.Context, option string, value any) *StatusCmd {
 	cmd := c.client.B().FtConfigSet().Option(option).Value(str(value)).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
@@ -5472,7 +5472,7 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 				if sc.VectorArgs.FlatOptions.Type == "" || sc.VectorArgs.FlatOptions.Dim == 0 || sc.VectorArgs.FlatOptions.DistanceMetric == "" {
 					panic("FT.CREATE: Type, Dim and DistanceMetric are required for VECTOR FLAT")
 				}
-				flatArgs := []interface{}{
+				flatArgs := []any{
 					"TYPE", sc.VectorArgs.FlatOptions.Type,
 					"DIM", sc.VectorArgs.FlatOptions.Dim,
 					"DISTANCE_METRIC", sc.VectorArgs.FlatOptions.DistanceMetric,
@@ -5490,7 +5490,7 @@ func (c *Compat) FTCreate(ctx context.Context, index string, options *FTCreateOp
 				if sc.VectorArgs.HNSWOptions.Type == "" || sc.VectorArgs.HNSWOptions.Dim == 0 || sc.VectorArgs.HNSWOptions.DistanceMetric == "" {
 					panic("FT.CREATE: Type, Dim and DistanceMetric are required for VECTOR HNSW")
 				}
-				hnswArgs := []interface{}{
+				hnswArgs := []any{
 					"TYPE", sc.VectorArgs.HNSWOptions.Type,
 					"DIM", sc.VectorArgs.HNSWOptions.Dim,
 					"DISTANCE_METRIC", sc.VectorArgs.HNSWOptions.DistanceMetric,
@@ -5586,7 +5586,7 @@ func (c *Compat) FTCursorRead(ctx context.Context, index string, cursorId int, c
 // For more information, please refer to the Redis documentation:
 // [FT.DICTADD]: (https://redis.io/commands/ft.dictadd/)
 // see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1056
-func (c *Compat) FTDictAdd(ctx context.Context, dict string, term ...interface{}) *IntCmd {
+func (c *Compat) FTDictAdd(ctx context.Context, dict string, term ...any) *IntCmd {
 	cmd := c.client.B().FtDictadd().Dict(dict).Term(argsToSlice(term)...).Build()
 	return newIntCmd(c.client.Do(ctx, cmd))
 }
@@ -5596,7 +5596,7 @@ func (c *Compat) FTDictAdd(ctx context.Context, dict string, term ...interface{}
 // For more information, please refer to the Redis documentation:
 // [FT.DICTDEL]: (https://redis.io/commands/ft.dictdel/)
 // see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1068
-func (c *Compat) FTDictDel(ctx context.Context, dict string, term ...interface{}) *IntCmd {
+func (c *Compat) FTDictDel(ctx context.Context, dict string, term ...any) *IntCmd {
 	cmd := c.client.B().FtDictdel().Dict(dict).Term(argsToSlice(term)...).Build()
 	return newIntCmd(c.client.Do(ctx, cmd))
 }
@@ -5898,7 +5898,7 @@ func (c *Compat) FTSynDump(ctx context.Context, index string) *FTSynDumpCmd {
 // For more information, please refer to the Redis documentation:
 // [FT.SYNUPDATE]: (https://redis.io/commands/ft.synupdate/)
 // see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L1997
-func (c *Compat) FTSynUpdate(ctx context.Context, index string, synGroupId interface{}, terms []interface{}) *StatusCmd {
+func (c *Compat) FTSynUpdate(ctx context.Context, index string, synGroupId any, terms []any) *StatusCmd {
 	cmd := c.client.B().FtSynupdate().Index(index).SynonymGroupId(str(synGroupId)).Term(argToSlice(terms)...).Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
@@ -5908,7 +5908,7 @@ func (c *Compat) FTSynUpdate(ctx context.Context, index string, synGroupId inter
 // For more information, please refer to the Redis documentation:
 // [FT.SYNUPDATE]: (https://redis.io/commands/ft.synupdate/)
 // see go-redis v9.7.0 https://github.com/redis/go-redis/blob/v9.7.0/search_commands.go#L2009
-func (c *Compat) FTSynUpdateWithArgs(ctx context.Context, index string, synGroupId interface{}, options *FTSynUpdateOptions, terms []interface{}) *StatusCmd {
+func (c *Compat) FTSynUpdateWithArgs(ctx context.Context, index string, synGroupId any, options *FTSynUpdateOptions, terms []any) *StatusCmd {
 	_cmd := cmds.Incomplete(c.client.B().FtSynupdate().Index(index).SynonymGroupId(str(synGroupId)))
 	if options != nil {
 		if options.SkipInitialScan {
@@ -6414,7 +6414,7 @@ func (c CacheCompat) ZScore(ctx context.Context, key, member string) *FloatCmd {
 	return newFloatCmd(resp)
 }
 
-func (c CacheCompat) BFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
+func (c CacheCompat) BFExists(ctx context.Context, key string, element any) *BoolCmd {
 	cmd := c.client.B().BfExists().Key(key).Item(str(element)).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newBoolCmd(resp)
@@ -6473,12 +6473,12 @@ func (c CacheCompat) BFInfoExpansion(ctx context.Context, key string) *BFInfoCmd
 	return newBFInfoCmd(resp)
 }
 
-func (c CacheCompat) CFCount(ctx context.Context, key string, element interface{}) *IntCmd {
+func (c CacheCompat) CFCount(ctx context.Context, key string, element any) *IntCmd {
 	cmd := c.client.B().CfCount().Key(key).Item(str(element)).Cache()
 	return newIntCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) CFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
+func (c CacheCompat) CFExists(ctx context.Context, key string, element any) *BoolCmd {
 	cmd := c.client.B().CfExists().Key(key).Item(str(element)).Cache()
 	return newBoolCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
@@ -6493,7 +6493,7 @@ func (c CacheCompat) CMSInfo(ctx context.Context, key string) *CMSInfoCmd {
 	return newCMSInfoCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) CMSQuery(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
+func (c CacheCompat) CMSQuery(ctx context.Context, key string, elements ...any) *IntSliceCmd {
 	_cmd := c.client.B().CmsQuery().Key(key)
 	for _, e := range elements {
 		_cmd.Item(str(e))
@@ -6512,7 +6512,7 @@ func (c CacheCompat) TopKList(ctx context.Context, key string) *StringSliceCmd {
 	return newStringSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) TopKQuery(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
+func (c CacheCompat) TopKQuery(ctx context.Context, key string, elements ...any) *BoolSliceCmd {
 	_cmd := c.client.B().TopkQuery().Key(key)
 	for _, e := range elements {
 		_cmd.Item(str(e))
@@ -6521,7 +6521,7 @@ func (c CacheCompat) TopKQuery(ctx context.Context, key string, elements ...inte
 	return newBoolSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) JSONArrIndex(ctx context.Context, key, path string, value ...interface{}) *IntSliceCmd {
+func (c CacheCompat) JSONArrIndex(ctx context.Context, key, path string, value ...any) *IntSliceCmd {
 	_cmd := c.client.B().JsonArrindex().Key(key).Path(path)
 	switch len(value) {
 	case 1:
