@@ -621,6 +621,23 @@ func (p *pipe) _backgroundRead() (err error) {
 			if multi == nil {
 				multi = ones
 			}
+		} else if ff > 0 && cmds.IsStaticTTL(multi[ff]) {
+			// ToStaticTTL path: msg is the cacheable reply directly (no
+			// EXEC unwrap). Must be checked before the standard CSC
+			// gate below — an array reply of length >= 2 on that gate's
+			// offset would otherwise match incidentally. The ff > 0
+			// guard skips the always-untagged OPT_IN reply at index 0.
+			// Typed wire errors cancel the client-side cache slot
+			// rather than caching them with cacheMark.
+			cacheable := Cacheable(multi[ff])
+			ck, cc := cmds.CacheKey(cacheable)
+			if err := msg.Error(); err != nil && err != Nil {
+				p.cache.Cancel(ck, cc, err)
+			} else {
+				cp := msg
+				cp.attrs = cacheMark
+				msg.setExpireAt(p.cache.Update(ck, cc, cp))
+			}
 		} else if ff >= 4 && len(msg.values()) >= 2 && multi[0].IsOptIn() { // if unfulfilled multi commands are lead by opt-in and get a success response
 			now := time.Now()
 			if cacheable := Cacheable(multi[ff-1]); cacheable.IsMGet() {
@@ -1476,6 +1493,18 @@ func (p *pipe) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) Re
 	} else if entry != nil {
 		return newResult(entry.Wait(ctx))
 	}
+	if cmds.IsStaticTTL(Completed(cmd)) {
+		// Wire: [OPT_IN, cmd]. The read goroutine resolves the Flight
+		// slot via the IsStaticTTL gate.
+		resp := p.DoMulti(ctx, p.optInCmd(), Completed(cmd))
+		defer resultsp.Put(resp)
+		// Transport errors only — wire replies are handled by the read
+		// loop. Checking .err (not .Error()) avoids double-touching.
+		if resp.s[1].err != nil {
+			p.cache.Cancel(ck, cc, resp.s[1].err)
+		}
+		return resp.s[1]
+	}
 	resp := p.DoMulti(
 		ctx,
 		p.optInCmd(),
@@ -1628,12 +1657,27 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 			panic(panicmgetcsc)
 		}
 	}
+	// All-or-nothing: stride-2 only when every cmd is tagged; otherwise
+	// stride-5 with the tag stripped so the static-TTL gate cannot fire
+	// on "QUEUED" inside MULTI/EXEC.
+	skipMultiExec := true
+	for _, ct := range multi {
+		if !cmds.IsStaticTTL(Completed(ct.Cmd)) {
+			skipMultiExec = false
+			break
+		}
+	}
+	// stride-2 [OPT_IN, cmd] vs. stride-5 [OPT_IN, MULTI, PTTL, cmd, EXEC].
 	if cache, ok := p.cache.(*lru); ok {
 		missed := cache.Flights(now, multi, results.s, entries.e)
 		for _, i := range missed {
 			ct := multi[i]
-			ck, _ := cmds.CacheKey(ct.Cmd)
-			missing = append(missing, p.optInCmd(), cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(ct.Cmd), cmds.ExecCmd)
+			if skipMultiExec {
+				missing = append(missing, p.optInCmd(), Completed(ct.Cmd))
+			} else {
+				ck, _ := cmds.CacheKey(ct.Cmd)
+				missing = append(missing, p.optInCmd(), cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), cmds.ClearStaticTTL(Completed(ct.Cmd)), cmds.ExecCmd)
+			}
 		}
 	} else {
 		for i, ct := range multi {
@@ -1647,7 +1691,11 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 				entries.e[i] = entry // store entries for later entry.Wait() to avoid MGET deadlock each others.
 				continue
 			}
-			missing = append(missing, p.optInCmd(), cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(ct.Cmd), cmds.ExecCmd)
+			if skipMultiExec {
+				missing = append(missing, p.optInCmd(), Completed(ct.Cmd))
+			} else {
+				missing = append(missing, p.optInCmd(), cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), cmds.ClearStaticTTL(Completed(ct.Cmd)), cmds.ExecCmd)
+			}
 		}
 	}
 
@@ -1655,18 +1703,32 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 	if len(missing) > 0 {
 		resp = p.DoMulti(ctx, missing...)
 		defer resultsp.Put(resp)
-		for i := 4; i < len(resp.s); i += 5 {
-			if err := resp.s[i].Error(); err != nil {
-				if _, ok := err.(*RedisError); ok {
-					err = ErrDoCacheAborted
-					if preErr := resp.s[i-1].Error(); preErr != nil { // if {cmd} get a RedisError
-						if _, ok := preErr.(*RedisError); ok {
-							err = preErr
+		if !skipMultiExec {
+			// EXEC-level cancel on transaction abort; EXEC reply at offset 4 of each stride-5.
+			const stride, offset = 5, 4
+			for i := offset; i < len(resp.s); i += stride {
+				if err := resp.s[i].Error(); err != nil {
+					if _, ok := err.(*RedisError); ok {
+						err = ErrDoCacheAborted
+						if preErr := resp.s[i-1].Error(); preErr != nil { // if {cmd} get a RedisError
+							if _, ok := preErr.(*RedisError); ok {
+								err = preErr
+							}
 						}
 					}
+					ck, cc := cmds.CacheKey(Cacheable(missing[i-1]))
+					p.cache.Cancel(ck, cc, err)
 				}
-				ck, cc := cmds.CacheKey(Cacheable(missing[i-1]))
-				p.cache.Cancel(ck, cc, err)
+			}
+		} else {
+			// Static-TTL path: wire replies are resolved by the read
+			// loop, so only Cancel transport-error slots here.
+			const stride, offset = 2, 1
+			for i := offset; i < len(resp.s); i += stride {
+				if resp.s[i].err != nil {
+					ck, cc := cmds.CacheKey(Cacheable(missing[i]))
+					p.cache.Cancel(ck, cc, resp.s[i].err)
+				}
 			}
 		}
 	}
@@ -1676,6 +1738,22 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 	}
 
 	if len(missing) == 0 {
+		return results
+	}
+
+	if skipMultiExec {
+		// Stride-2 result walk: cmd reply at offset 1. The struct copy
+		// detaches resp.s[i] from its pooled backing slice.
+		const stride, offset = 2, 1
+		j := 0
+		for i := offset; i < len(resp.s); i += stride {
+			for ; j < len(results.s); j++ {
+				if results.s[j].val.typ == 0 && results.s[j].err == nil {
+					results.s[j] = resp.s[i]
+					break
+				}
+			}
+		}
 		return results
 	}
 

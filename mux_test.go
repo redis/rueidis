@@ -1199,6 +1199,110 @@ func BenchmarkClientSideCaching(b *testing.B) {
 			}
 		})
 	})
+	b.Run("DoCacheStaticClientTTL", func(b *testing.B) {
+		m := setup(b)
+		cmd := Cacheable(cmds.NewCompleted([]string{"GET", "a"})).ToStaticTTL()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				m.DoCache(context.Background(), cmd, time.Second*5)
+			}
+		})
+	})
+}
+
+// BenchmarkClientSideCachingMiss forces every iteration to be a
+// client-side cache miss by reading a unique key, so each call
+// exercises the wire round-trip instead of the client-side cache
+// hot-path. This is what isolates the wire-shape cost difference
+// between the standard CSC [OPT_IN, MULTI, PTTL, cmd, EXEC] packet
+// and the Cacheable.ToStaticTTL [OPT_IN, cmd] packet.
+func BenchmarkClientSideCachingMiss(b *testing.B) {
+	setup := func(b *testing.B) *mux {
+		c := makeMux("127.0.0.1:6379", &ClientOption{CacheSizeEachConn: DefaultCacheBytes}, func(_ context.Context, dst string, opt *ClientOption) (conn net.Conn, err error) {
+			return net.Dial("tcp", dst)
+		})
+		if err := c.Dial(); err != nil {
+			panic(err)
+		}
+		b.SetParallelism(100)
+		b.ResetTimer()
+		return c
+	}
+	b.Run("DoCache", func(b *testing.B) {
+		m := setup(b)
+		var counter atomic.Uint64
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				key := strconv.FormatUint(counter.Add(1), 10)
+				m.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", key})), time.Minute)
+			}
+		})
+	})
+	b.Run("DoCacheStaticClientTTL", func(b *testing.B) {
+		m := setup(b)
+		var counter atomic.Uint64
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				key := strconv.FormatUint(counter.Add(1), 10)
+				m.DoCache(context.Background(), Cacheable(cmds.NewCompleted([]string{"GET", key})).ToStaticTTL(), time.Minute)
+			}
+		})
+	})
+	// DoMultiCache batches: each iteration builds a fresh 5-key batch with
+	// unique keys (counter) to force every key to miss the client-side cache.
+	//
+	//   Standard:     all 5 cmds untagged → wrapped stride-5 wire per key.
+	//   StaticTTL:    all 5 cmds tagged   → stride-2 direct wire per key.
+	//   Mixed:        every other cmd tagged → still wrapped stride-5 (the
+	//                 all-or-nothing rule downgrades) with the tag stripped
+	//                 on the wire-side Completed.
+	const batchSize = 5
+	b.Run("DoMultiCacheStandard", func(b *testing.B) {
+		m := setup(b)
+		var counter atomic.Uint64
+		b.RunParallel(func(pb *testing.PB) {
+			batch := make([]CacheableTTL, batchSize)
+			for pb.Next() {
+				for i := range batch {
+					key := strconv.FormatUint(counter.Add(1), 10)
+					batch[i] = CT(Cacheable(cmds.NewCompleted([]string{"GET", key})), time.Minute)
+				}
+				m.DoMultiCache(context.Background(), batch...)
+			}
+		})
+	})
+	b.Run("DoMultiCacheStaticClientTTL", func(b *testing.B) {
+		m := setup(b)
+		var counter atomic.Uint64
+		b.RunParallel(func(pb *testing.PB) {
+			batch := make([]CacheableTTL, batchSize)
+			for pb.Next() {
+				for i := range batch {
+					key := strconv.FormatUint(counter.Add(1), 10)
+					batch[i] = CT(Cacheable(cmds.NewCompleted([]string{"GET", key})).ToStaticTTL(), time.Minute)
+				}
+				m.DoMultiCache(context.Background(), batch...)
+			}
+		})
+	})
+	b.Run("DoMultiCacheMixed", func(b *testing.B) {
+		m := setup(b)
+		var counter atomic.Uint64
+		b.RunParallel(func(pb *testing.PB) {
+			batch := make([]CacheableTTL, batchSize)
+			for pb.Next() {
+				for i := range batch {
+					key := strconv.FormatUint(counter.Add(1), 10)
+					c := Cacheable(cmds.NewCompleted([]string{"GET", key}))
+					if i%2 == 0 {
+						c = c.ToStaticTTL()
+					}
+					batch[i] = CT(c, time.Minute)
+				}
+				m.DoMultiCache(context.Background(), batch...)
+			}
+		})
+	})
 }
 
 type mockWire struct {

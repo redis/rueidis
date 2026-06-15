@@ -14,6 +14,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/redis/rueidis/internal/cmds"
 )
 
 var slotsResp = newResult(slicemsg('*', []RedisMessage{
@@ -7481,6 +7483,170 @@ func TestClusterClientCacheASKRetry(t *testing.T) {
 			t.Fatalf("expected 2 attempts, got %v", attempts)
 		}
 	})
+
+	t.Run("DoCache Retry on ASK with StaticClientTTL", func(t *testing.T) {
+		client, m := setup()
+		askDone := false
+		m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
+			return newResult(strmsg('-', "ASK 0 :0"), nil)
+		}
+		m.DoMultiFn = func(multi ...Completed) *redisresults {
+			askDone = true
+			// askingMultiCache under .ToStaticTTL() must emit a stride-3
+			// packet per key: [OPT_IN, ASKING, cmd]. The full stride-6
+			// standard wire would be 6 cmds for one key.
+			if len(multi) != 3 {
+				t.Errorf("expected 3 cmds on ASK wire under .ToStaticTTL(), got %d", len(multi))
+			}
+			// Reply at offset 2 is the cmd reply directly (no EXEC unwrap).
+			return &redisresults{s: []RedisResult{{}, {}, newResult(strmsg('+', "OK"), nil)}}
+		}
+		resp := client.DoCache(context.Background(), client.B().Get().Key("a1").Cache().ToStaticTTL(), 10*time.Second)
+		if v, err := resp.ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if !askDone {
+			t.Fatalf("ASK redirect path never fired")
+		}
+	})
+
+	t.Run("DoMultiCache Retry on ASK with StaticClientTTL", func(t *testing.T) {
+		client, m := setup()
+		askDone := false
+		m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
+			return &redisresults{s: []RedisResult{newResult(strmsg('-', "ASK 0 :0"), nil)}}
+		}
+		m.DoMultiFn = func(multi ...Completed) *redisresults {
+			askDone = true
+			if len(multi) != 3 {
+				t.Errorf("expected 3 cmds on ASK wire under .ToStaticTTL() (1 key × stride 3), got %d", len(multi))
+			}
+			return &redisresults{s: []RedisResult{{}, {}, newResult(strmsg('+', "OK"), nil)}}
+		}
+		resps := client.DoMultiCache(context.Background(), CT(client.B().Get().Key("a1").Cache().ToStaticTTL(), 10*time.Second))
+		if v, err := resps[0].ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if !askDone {
+			t.Fatalf("ASK redirect path never fired")
+		}
+	})
+
+	t.Run("DoCache Retry on ASK with StaticClientTTL transport error", func(t *testing.T) {
+		client, m := setup()
+		askDone := false
+		errInjected := false
+		m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
+			return newResult(strmsg('-', "ASK 0 :0"), nil)
+		}
+		m.DoMultiFn = func(multi ...Completed) *redisresults {
+			askDone = true
+			if !errInjected {
+				// First askingMultiCache call: inject a transport error on the
+				// cmd offset (stride-3, offset 2) to exercise the .ToStaticTTL()
+				// ASK-redirect error-propagation branch.
+				errInjected = true
+				return &redisresults{s: []RedisResult{
+					{}, {},
+					newErrResult(errors.New("transport: connection closed")),
+				}}
+			}
+			// shouldRefreshRetry treats non-RedisError as RedirectRetry, so
+			// the cluster client loops back through pick → DoCache → ASK →
+			// askingMultiCache. On the second pass, succeed so the test
+			// terminates instead of retrying forever.
+			return &redisresults{s: []RedisResult{{}, {}, newResult(strmsg('+', "OK"), nil)}}
+		}
+		resp := client.DoCache(context.Background(), client.B().Get().Key("a1").Cache().ToStaticTTL(), 10*time.Second)
+		if v, err := resp.ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected final response %v %v", v, err)
+		}
+		if !askDone || !errInjected {
+			t.Fatalf("ASK redirect transport-error path never fired (askDone=%v errInjected=%v)", askDone, errInjected)
+		}
+	})
+
+	t.Run("DoCache Retry on MOVED with StaticClientTTL", func(t *testing.T) {
+		client, m := setup()
+		attempts := 0
+		var taggedOnRetry bool
+		m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
+			attempts++
+			if attempts == 1 {
+				return newResult(strmsg('-', "MOVED 0 127.0.0.1:0"), nil)
+			}
+			// Second call runs on the new owner (ncc.DoCache); cluster
+			// passes the original Cacheable, so the static-TTL tag must
+			// still be set on the retry.
+			taggedOnRetry = cmds.IsStaticTTL(Completed(cmd))
+			return newResult(strmsg('+', "OK"), nil)
+		}
+		resp := client.DoCache(context.Background(), client.B().Get().Key("a1").Cache().ToStaticTTL(), 10*time.Second)
+		if v, err := resp.ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response %v %v", v, err)
+		}
+		if attempts != 2 {
+			t.Fatalf("expected 2 DoCache attempts (initial + MOVED retry), got %d", attempts)
+		}
+		if !taggedOnRetry {
+			t.Fatalf("staticTTLTag should still be set on the cmd when the cluster retries via ncc.DoCache")
+		}
+	})
+
+	t.Run("DoMultiCache Retry on ASK with mixed StaticClientTTL strips tag", func(t *testing.T) {
+		// All-or-nothing: a mixed batch (one tagged, one untagged) must take
+		// the wrapped stride-6 ASK wire AND strip staticTTLTag from every
+		// wire-side cmd. If the tag survives, the read loop on the ASK-target
+		// would fire the static-TTL gate on the cmd's "QUEUED" reply inside
+		// MULTI/EXEC and pollute the cache. We assert here that the wire
+		// length matches stride-6 per key and the cmd at offset 4 has its
+		// staticTTLTag cleared.
+		client, m := setup()
+		var seenStride int
+		var taggedCmdsOnWire int
+		m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
+			// Force ASK on both keys so askingMultiCache runs with the mixed batch.
+			rs := make([]RedisResult, len(multi))
+			for i := range multi {
+				rs[i] = newResult(strmsg('-', "ASK 0 :0"), nil)
+			}
+			return &redisresults{s: rs}
+		}
+		m.DoMultiFn = func(multi ...Completed) *redisresults {
+			seenStride = len(multi) / 2 // 2 keys
+			for _, c := range multi {
+				if cmds.IsStaticTTL(c) {
+					taggedCmdsOnWire++
+				}
+			}
+			// Stride-6 EXEC reply per key: array of [PTTL, value]; cmd reply
+			// at offset 4 is "QUEUED" inside the transaction.
+			rs := make([]RedisResult, len(multi))
+			for i := range multi {
+				switch (i + 1) % 6 {
+				case 0: // EXEC reply
+					rs[i] = newResult(slicemsg('*', []RedisMessage{
+						{typ: ':', intlen: 10000},
+						strmsg('$', "v"),
+					}), nil)
+				default:
+					rs[i] = newResult(strmsg('+', "OK"), nil)
+				}
+			}
+			return &redisresults{s: rs}
+		}
+		_ = client.DoMultiCache(context.Background(),
+			CT(client.B().Get().Key("k1").Cache().ToStaticTTL(), 10*time.Second),
+			CT(client.B().Get().Key("k2").Cache(), 10*time.Second),
+		)
+		if seenStride != 6 {
+			t.Fatalf("expected stride-6 wrapped ASK wire for mixed batch, got stride %d", seenStride)
+		}
+		if taggedCmdsOnWire != 0 {
+			t.Fatalf("expected staticTTLTag to be stripped from every wire-side cmd in mixed ASK batch, found %d tagged", taggedCmdsOnWire)
+		}
+	})
+
 }
 
 //gocyclo:ignore

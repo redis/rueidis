@@ -31,9 +31,36 @@ func TestCacheable_Scripting(t *testing.T) {
 	CacheKey(Cacheable{cs: newCommandSlice([]string{"EVALSHA_RO", "sha1", "2", "OOO", "XXX"}), cf: scrRoTag})
 }
 
+func TestCacheable_Scripting_WithStaticTTLTag(t *testing.T) {
+	// Regression guard. CacheKey's script branch uses bitmask matching
+	// (`c.cf&scrRoTag == scrRoTag`); if anyone changes it to strict
+	// equality, this test fails. Cacheable.ToStaticTTL OR's staticTTLTag
+	// onto scripting cacheables — strict equality would skip the script
+	// branch, return s[1] (the script hash) as the cache key instead of
+	// s[3] (the data key), and silently deadlock EVALSHA_RO callers
+	// because the read loop's Update lands on the wrong key and never
+	// resolves the pending Flight slot.
+	tagged := Cacheable{
+		cs: newCommandSlice([]string{"EVALSHA_RO", "sha1", "1", "OOO", "XXX"}),
+		cf: scrRoTag,
+	}.ToStaticTTL()
+	key, cmd := CacheKey(tagged)
+	if key != "OOO" || cmd != "EVALSHA_ROsha11XXX" {
+		t.Fatalf("script-branch key extraction broke under staticTTLTag: got key=%v cmd=%v", key, cmd)
+	}
+}
+
 func TestCacheable_IsMGet(t *testing.T) {
 	if cmd := Cacheable(NewMGetCompleted([]string{"MGET", "K"})); !cmd.IsMGet() {
 		t.Fatalf("should be mget")
+	}
+}
+
+func TestCacheable_IsMGet_WithStaticTTLTag(t *testing.T) {
+	// IsMGet must use bitmask matching; extra tag bits must not flip it false.
+	tagged := Cacheable(NewMGetCompleted([]string{"MGET", "K"})).ToStaticTTL()
+	if !tagged.IsMGet() {
+		t.Fatalf("MGET cmd with staticTTLTag should still be IsMGet")
 	}
 }
 
@@ -92,6 +119,37 @@ func TestCompleted_IsOptIn(t *testing.T) {
 	}
 	if cmd := OptInNopCmd; !cmd.IsOptIn() {
 		t.Fatalf("should be opt-in command")
+	}
+}
+
+func TestIsStaticTTL(t *testing.T) {
+	if cmd := NewCompleted([]string{"GET", "k"}); IsStaticTTL(cmd) {
+		t.Fatalf("plain Completed must not carry staticTTLTag")
+	}
+	if cmd := Completed(Cacheable(NewCompleted([]string{"GET", "k"})).ToStaticTTL()); !IsStaticTTL(cmd) {
+		t.Fatalf("Cacheable.ToStaticTTL must set the tag")
+	}
+	// OR-not-overwrite: chained builders must preserve every prior bit.
+	base := Cacheable(NewCompleted([]string{"GET", "k"}))
+	base.cf |= retryableTag
+	cmd := Completed(base.ToStaticTTL())
+	if !IsStaticTTL(cmd) || !cmd.IsRetryable() {
+		t.Fatalf("Cacheable.ToStaticTTL must OR the tag in, preserving prior flags")
+	}
+	if IsStaticTTL(OptInCmd) || IsStaticTTL(OptInNopCmd) {
+		t.Fatalf("OPT_IN cmds must not carry staticTTLTag")
+	}
+	if IsStaticTTL(MultiCmd) || IsStaticTTL(ExecCmd) || IsStaticTTL(AskingCmd) {
+		t.Fatalf("transactional/ASKING cmds must not carry staticTTLTag")
+	}
+	// ClearStaticTTL strips the bit while preserving everything else.
+	tagged := Completed(base.ToStaticTTL())
+	cleared := ClearStaticTTL(tagged)
+	if IsStaticTTL(cleared) {
+		t.Fatalf("ClearStaticTTL must strip staticTTLTag")
+	}
+	if !cleared.IsRetryable() {
+		t.Fatalf("ClearStaticTTL must preserve other flags")
 	}
 }
 

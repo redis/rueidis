@@ -12,6 +12,10 @@ const (
 	unsubTag     = uint16(1<<9) | noRetTag
 	pipeTag      = uint16(1 << 8) // make blocking mode request can use auto pipelining
 	retryableTag = uint16(1 << 7) // make command retryable
+	// staticTTLTag marks a cacheable command whose reply the read
+	// goroutine commits directly to the client-side cache (no
+	// MULTI/EXEC unwrap). Set via Cacheable.ToStaticTTL().
+	staticTTLTag = uint16(1 << 6)
 	// InitSlot indicates that the command be sent to any redis node in cluster
 	InitSlot = uint16(1 << 14)
 	// NoSlot indicates that the command has no key slot specified
@@ -144,6 +148,22 @@ func (c *Completed) IsOptIn() bool {
 	return c.cf&optInTag == optInTag
 }
 
+// IsStaticTTL reports whether the cacheable command was tagged with
+// Cacheable.ToStaticTTL. When set, the connection's read goroutine
+// commits the reply directly to the client-side cache and skips the
+// MULTI/PTTL/EXEC wrapper.
+func IsStaticTTL(c Completed) bool {
+	return c.cf&staticTTLTag == staticTTLTag
+}
+
+// ClearStaticTTL returns a copy of c with staticTTLTag cleared. Used
+// at wrapped-wire (MULTI/EXEC) build sites so the read goroutine's
+// direct-commit gate cannot fire on the cmd's "QUEUED" reply.
+func ClearStaticTTL(c Completed) Completed {
+	c.cf &^= staticTTLTag
+	return c
+}
+
 // IsBlock checks if it is blocking command which needs to be process by dedicated connection.
 func (c *Completed) IsBlock() bool {
 	return c.cf&blockTag == blockTag
@@ -213,6 +233,34 @@ func (c Cacheable) Pin() Cacheable {
 	return c
 }
 
+// ToStaticTTL marks the cacheable command so DoCache / DoMultiCache
+// skip the MULTI/PTTL/EXEC wrapper and use the caller-provided ttl
+// as authoritative for the client-side cache entry's lifetime.
+// Intended for callers whose freshness is enforced by active CLIENT
+// TRACKING invalidations on the cluster — writes that explicitly
+// invalidate the affected cached keys, making the per-read PTTL
+// clamp redundant — or who are willing to accept the client-supplied
+// ttl as the sole staleness bound: the client-side cache entry
+// expires at populate_time + ttl regardless of the server-side key's
+// PTTL. CLIENT TRACKING invalidations and LRU eviction still purge
+// entries; nothing extends them.
+//
+// MGET / JSON.MGET commands fall back to the default client-side
+// cache wire shape, which closely follows the Redis-side key TTL
+// via the per-read PTTL clamp. DoCache dispatches them to a
+// dedicated multi-key path before this tag is consulted; DoMultiCache
+// rejects MGET outright.
+//
+// For DoMultiCache, the direct wire is taken only when every command
+// in the batch is tagged with ToStaticTTL. A batch containing any
+// untagged command falls back to the standard wire for all of them
+// (the all-or-nothing rule). For best results, prefer batches that
+// are either fully tagged or fully untagged.
+func (c Cacheable) ToStaticTTL() Cacheable {
+	c.cf |= staticTTLTag
+	return c
+}
+
 // Slot returns the command key slot
 func (c *Cacheable) Slot() uint16 {
 	return c.ks
@@ -227,7 +275,7 @@ func (c *Cacheable) Commands() []string {
 
 // IsMGet returns if the command is MGET
 func (c *Cacheable) IsMGet() bool {
-	return c.cf == mtGetTag
+	return c.cf&mtGetTag == mtGetTag
 }
 
 // MGetCacheCmd returns the cache command of the MGET singular command
@@ -251,7 +299,7 @@ func CacheKey(c Cacheable) (key, command string) {
 
 	kp := 1
 
-	if c.cf == scrRoTag {
+	if c.cf&scrRoTag == scrRoTag {
 		if c.cs.s[2] != "1" {
 			panic(multiKeyCacheErr)
 		}

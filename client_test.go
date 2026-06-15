@@ -1736,5 +1736,30 @@ func BenchmarkSingleClient_DoCache(b *testing.B) {
 		})
 		b.StopTimer()
 	})
+	b.Run("DoCacheGet", func(b *testing.B) {
+		// Single-key GET — MGET falls back to the default client-side
+		// cache path before .ToStaticTTL() is consulted, so a fair
+		// static-TTL comparison uses GET.
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				if err := client.DoCache(ctx, client.B().Get().Key("0").Cache(), time.Minute).Error(); err != nil {
+					b.Errorf("unexpected %v", err)
+				}
+			}
+		})
+		b.StopTimer()
+	})
+	b.Run("DoCacheGetStaticClientTTL", func(b *testing.B) {
+		b.ResetTimer()
+		b.RunParallel(func(pb *testing.PB) {
+			for pb.Next() {
+				if err := client.DoCache(ctx, client.B().Get().Key("0").Cache().ToStaticTTL(), time.Minute).Error(); err != nil {
+					b.Errorf("unexpected %v", err)
+				}
+			}
+		})
+		b.StopTimer()
+	})
 	client.Close()
 }

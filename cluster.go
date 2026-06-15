@@ -1043,10 +1043,39 @@ func (c *clusterClient) askingMulti(cc conn, ctx context.Context, multi []Comple
 }
 
 func (c *clusterClient) askingMultiCache(cc conn, ctx context.Context, multi []CacheableTTL) *redisresults {
-	commands := make([]Completed, 0, len(multi)*6)
-	for _, cmd := range multi {
-		ck, _ := cmds.CacheKey(cmd.Cmd)
-		commands = append(commands, cc.OptInCmd(), cmds.AskingCmd, cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(cmd.Cmd), cmds.ExecCmd)
+	// Runs on the ASK-target (cc); origin's Flight slot was cancelled
+	// on -ASK. ASK-target's read loop populates its own cache as a
+	// pre-warm. All-or-nothing: stride-3 only when every cmd is tagged.
+	skipMultiExec := true
+	for _, ct := range multi {
+		if !cmds.IsStaticTTL(Completed(ct.Cmd)) {
+			skipMultiExec = false
+			break
+		}
+	}
+	var (
+		commands []Completed
+		stride   int
+		offset   int
+	)
+	if skipMultiExec {
+		// [OPT_IN, ASKING, cmd]
+		stride = 3
+		offset = 2
+		commands = make([]Completed, 0, len(multi)*stride)
+		for _, cmd := range multi {
+			commands = append(commands, cc.OptInCmd(), cmds.AskingCmd, Completed(cmd.Cmd))
+		}
+	} else {
+		// [OPT_IN, ASKING, MULTI, PTTL, cmd, EXEC]; tag stripped so the
+		// static-TTL gate cannot fire on "QUEUED" inside MULTI/EXEC.
+		stride = 6
+		offset = 5
+		commands = make([]Completed, 0, len(multi)*stride)
+		for _, cmd := range multi {
+			ck, _ := cmds.CacheKey(cmd.Cmd)
+			commands = append(commands, cc.OptInCmd(), cmds.AskingCmd, cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), cmds.ClearStaticTTL(Completed(cmd.Cmd)), cmds.ExecCmd)
+		}
 	}
 	results := resultsp.Get(0, len(multi))
 	resps := cc.DoMulti(ctx, commands...)
@@ -1054,9 +1083,9 @@ func (c *clusterClient) askingMultiCache(cc conn, ctx context.Context, multi []C
 		var ml []Completed
 	recover:
 		ml = ml[:0]
-		for i := 5; i < len(resps.s); i += 6 { // check exec command error only
+		for i := offset; i < len(resps.s); i += stride {
 			if resps.s[i].NonRedisError() == errConnExpired {
-				ml = commands[i-5:]
+				ml = commands[i-offset:]
 				break
 			}
 		}
@@ -1066,14 +1095,21 @@ func (c *clusterClient) askingMultiCache(cc conn, ctx context.Context, multi []C
 			goto recover
 		}
 	}
-	for i := 5; i < len(resps.s); i += 6 {
-		if arr, err := resps.s[i].ToArray(); err != nil {
-			if preErr := resps.s[i-1].Error(); preErr != nil { // if {Cmd} get a RedisError
-				err = preErr
+	if skipMultiExec {
+		// Cmd reply is the user-visible result directly (no EXEC unwrap).
+		for i := offset; i < len(resps.s); i += stride {
+			results.s = append(results.s, resps.s[i])
+		}
+	} else {
+		for i := offset; i < len(resps.s); i += stride {
+			if arr, err := resps.s[i].ToArray(); err != nil {
+				if preErr := resps.s[i-1].Error(); preErr != nil { // if {Cmd} get a RedisError
+					err = preErr
+				}
+				results.s = append(results.s, newErrResult(err))
+			} else {
+				results.s = append(results.s, newResult(arr[len(arr)-1], nil))
 			}
-			results.s = append(results.s, newErrResult(err))
-		} else {
-			results.s = append(results.s, newResult(arr[len(arr)-1], nil))
 		}
 	}
 	resultsp.Put(resps)

@@ -6142,3 +6142,723 @@ func TestPipe_BackgroundPing_RapidConnectDisconnect(t *testing.T) {
 		_ = p
 	}
 }
+
+// =============================================================================
+// Cacheable.ToStaticTTL (no MULTI/PTTL/EXEC wrapper) — opt-in CSC tests.
+// =============================================================================
+
+func TestClientSideCachingStaticClientTTL(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{})
+	defer cancel()
+
+	expectWire := func(resp string) {
+		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("GET", "a").
+			ReplyString("OK").
+			ReplyString(resp)
+	}
+	invalidate := func(keys RedisMessage) {
+		mock.Expect().Reply(slicemsg(
+			'>',
+			[]RedisMessage{
+				strmsg('+', "invalidate"),
+				keys,
+			},
+		))
+	}
+
+	ctx := context.Background()
+
+	go func() { expectWire("1") }()
+
+	miss := uint64(0)
+	hits := uint64(0)
+	times := 500
+	wg := sync.WaitGroup{}
+	wg.Add(times)
+	for i := 0; i < times; i++ {
+		go func() {
+			defer wg.Done()
+			v, _ := p.DoCache(ctx, Cacheable(cmds.NewCompleted([]string{"GET", "a"})).ToStaticTTL(), 10*time.Second).ToMessage()
+			if v.string() != "1" {
+				t.Errorf("unexpected cached result, expected %v, got %v", "1", v.string())
+			}
+			if v.IsCacheHit() {
+				atomic.AddUint64(&hits, 1)
+			} else {
+				atomic.AddUint64(&miss, 1)
+			}
+		}()
+	}
+	wg.Wait()
+
+	if v := atomic.LoadUint64(&miss); v != 1 {
+		t.Fatalf("expected 1 cache miss, got %v", v)
+	}
+	if v := atomic.LoadUint64(&hits); v != uint64(times-1) {
+		t.Fatalf("expected %v cache hits, got %v", times-1, v)
+	}
+
+	invalidate(slicemsg('*', []RedisMessage{strmsg('+', "a")}))
+	go func() { expectWire("2") }()
+	for {
+		if v, _ := p.DoCache(ctx, Cacheable(cmds.NewCompleted([]string{"GET", "a"})).ToStaticTTL(), time.Second).ToMessage(); v.string() == "2" {
+			break
+		}
+		t.Logf("waiting for invalidation to apply")
+	}
+}
+
+func TestClientSideCachingStaticClientTTLDoMultiCache(t *testing.T) {
+	t.Run("Hit", func(t *testing.T) {
+		defer ShouldNotLeak(SetupLeakDetection())
+		p, mock, cancel, _ := setup(t, ClientOption{})
+		defer cancel()
+		ctx := context.Background()
+
+		go func() {
+			mock.Expect("CLIENT", "CACHING", "YES").
+				Expect("GET", "a").
+				Expect("CLIENT", "CACHING", "YES").
+				Expect("GET", "b").
+				ReplyString("OK").
+				ReplyString("av").
+				ReplyString("OK").
+				ReplyString("bv")
+		}()
+
+		results := p.DoMultiCache(ctx,
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a"})).ToStaticTTL(), 10*time.Second),
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "b"})).ToStaticTTL(), 10*time.Second),
+		)
+		for i, want := range []string{"av", "bv"} {
+			v, err := results.s[i].ToMessage()
+			if err != nil {
+				t.Fatalf("unexpected err at %d: %v", i, err)
+			}
+			if v.string() != want {
+				t.Fatalf("at %d: expected %q got %q", i, want, v.string())
+			}
+			if v.IsCacheHit() {
+				t.Fatalf("at %d: first call must be a miss", i)
+			}
+		}
+
+		results2 := p.DoMultiCache(ctx,
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a"})).ToStaticTTL(), 10*time.Second),
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "b"})).ToStaticTTL(), 10*time.Second),
+		)
+		for i, want := range []string{"av", "bv"} {
+			v, _ := results2.s[i].ToMessage()
+			if v.string() != want {
+				t.Fatalf("hit at %d: expected %q got %q", i, want, v.string())
+			}
+			if !v.IsCacheHit() {
+				t.Fatalf("at %d: second call must be a cache hit", i)
+			}
+		}
+	})
+
+	t.Run("PartialError", func(t *testing.T) {
+		defer ShouldNotLeak(SetupLeakDetection())
+		p, mock, cancel, _ := setup(t, ClientOption{})
+		defer cancel()
+		ctx := context.Background()
+
+		go func() {
+			mock.Expect("CLIENT", "CACHING", "YES").
+				Expect("GET", "a").
+				Expect("CLIENT", "CACHING", "YES").
+				Expect("GET", "b").
+				Expect("CLIENT", "CACHING", "YES").
+				Expect("GET", "c").
+				ReplyString("OK").
+				ReplyString("av").
+				ReplyString("OK").
+				ReplyError("WRONGTYPE Operation against a key holding the wrong kind of value").
+				ReplyString("OK").
+				ReplyString("cv")
+		}()
+
+		results := p.DoMultiCache(ctx,
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a"})).ToStaticTTL(), 10*time.Second),
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "b"})).ToStaticTTL(), 10*time.Second),
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "c"})).ToStaticTTL(), 10*time.Second),
+		)
+		if v, _ := results.s[0].ToMessage(); v.string() != "av" {
+			t.Fatalf("result[0]: expected av, got %q", v.string())
+		}
+		if err := results.s[1].Error(); err == nil {
+			t.Fatalf("result[1]: expected WRONGTYPE error, got nil")
+		}
+		if v, _ := results.s[2].ToMessage(); v.string() != "cv" {
+			t.Fatalf("result[2]: expected cv, got %q", v.string())
+		}
+
+		// Errored slot must have been cancelled (not left pending); a re-read must fire a fresh wire trip.
+		go func() {
+			mock.Expect("CLIENT", "CACHING", "YES").
+				Expect("GET", "b").
+				ReplyString("OK").
+				ReplyString("bv2")
+		}()
+		v, err := p.DoCache(ctx, Cacheable(cmds.NewCompleted([]string{"GET", "b"})).ToStaticTTL(), 10*time.Second).ToMessage()
+		if err != nil {
+			t.Fatalf("re-read after partial error: %v", err)
+		}
+		if v.string() != "bv2" {
+			t.Fatalf("expected bv2 on re-read, got %q", v.string())
+		}
+
+		results2 := p.DoMultiCache(ctx,
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a"})).ToStaticTTL(), 10*time.Second),
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "c"})).ToStaticTTL(), 10*time.Second),
+		)
+		for i, want := range []string{"av", "cv"} {
+			v, _ := results2.s[i].ToMessage()
+			if v.string() != want || !v.IsCacheHit() {
+				t.Fatalf("client-side cache hit[%d]: want %q hit=true, got %q hit=%v", i, want, v.string(), v.IsCacheHit())
+			}
+		}
+	})
+
+	t.Run("MixedHitMiss", func(t *testing.T) {
+		defer ShouldNotLeak(SetupLeakDetection())
+		p, mock, cancel, _ := setup(t, ClientOption{})
+		defer cancel()
+		ctx := context.Background()
+
+		go func() {
+			mock.Expect("CLIENT", "CACHING", "YES").
+				Expect("GET", "a").
+				Expect("CLIENT", "CACHING", "YES").
+				Expect("GET", "c").
+				ReplyString("OK").
+				ReplyString("av").
+				ReplyString("OK").
+				ReplyString("cv")
+		}()
+		_ = p.DoMultiCache(ctx,
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a"})).ToStaticTTL(), 10*time.Second),
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "c"})).ToStaticTTL(), 10*time.Second),
+		)
+
+		// Now [a, b, c] — a and c hit the client-side cache; only b on the wire.
+		go func() {
+			mock.Expect("CLIENT", "CACHING", "YES").
+				Expect("GET", "b").
+				ReplyString("OK").
+				ReplyString("bv")
+		}()
+		results := p.DoMultiCache(ctx,
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a"})).ToStaticTTL(), 10*time.Second),
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "b"})).ToStaticTTL(), 10*time.Second),
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "c"})).ToStaticTTL(), 10*time.Second),
+		)
+		for i, want := range []string{"av", "bv", "cv"} {
+			v, _ := results.s[i].ToMessage()
+			if v.string() != want {
+				t.Fatalf("result[%d]: expected %q got %q", i, want, v.string())
+			}
+		}
+		if v, _ := results.s[0].ToMessage(); !v.IsCacheHit() {
+			t.Fatalf("result[0] (a) must be a client-side cache hit")
+		}
+		if v, _ := results.s[1].ToMessage(); v.IsCacheHit() {
+			t.Fatalf("result[1] (b) must be initial miss")
+		}
+		if v, _ := results.s[2].ToMessage(); !v.IsCacheHit() {
+			t.Fatalf("result[2] (c) must be a client-side cache hit")
+		}
+	})
+}
+
+// TestClientSideCachingStaticClientTTLDoMultiCacheWireUnchanged is the
+// regression guard: without the ctx flag, DoMultiCache MUST still emit the
+// standard [OPT_IN, MULTI, PTTL, cmd, EXEC] x N wire.
+func TestClientSideCachingStaticClientTTLDoMultiCacheWireUnchanged(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{})
+	defer cancel()
+
+	go func() {
+		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("MULTI").
+			Expect("PTTL", "a").
+			Expect("GET", "a").
+			Expect("EXEC").
+			Expect("CLIENT", "CACHING", "YES").
+			Expect("MULTI").
+			Expect("PTTL", "b").
+			Expect("GET", "b").
+			Expect("EXEC").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("QUEUED").
+			ReplyString("QUEUED").
+			Reply(slicemsg('*', []RedisMessage{
+				{typ: ':', intlen: 1000},
+				strmsg('$', "av"),
+			})).
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("QUEUED").
+			ReplyString("QUEUED").
+			Reply(slicemsg('*', []RedisMessage{
+				{typ: ':', intlen: 1000},
+				strmsg('$', "bv"),
+			}))
+	}()
+
+	results := p.DoMultiCache(context.Background(),
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second),
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "b"})), 10*time.Second),
+	)
+	for i, want := range []string{"av", "bv"} {
+		v, _ := results.s[i].ToMessage()
+		if v.string() != want || v.IsCacheHit() {
+			t.Fatalf("result[%d]: want %q miss, got %q hit=%v", i, want, v.string(), v.IsCacheHit())
+		}
+	}
+
+	results2 := p.DoMultiCache(context.Background(),
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "a"})), 10*time.Second),
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "b"})), 10*time.Second),
+	)
+	for i, want := range []string{"av", "bv"} {
+		v, _ := results2.s[i].ToMessage()
+		if v.string() != want || !v.IsCacheHit() {
+			t.Fatalf("hit[%d]: want %q hit=true, got %q hit=%v", i, want, v.string(), v.IsCacheHit())
+		}
+	}
+}
+
+// TestClientSideCachingStaticClientTTLInvalidation proves the invalidation
+// race window is closed: a CLIENT TRACKING push that arrives right after a
+// reply must purge the just-committed client-side cache entry.
+func TestClientSideCachingStaticClientTTLInvalidation(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{})
+	defer cancel()
+
+	ctx := context.Background()
+
+	go func() {
+		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("GET", "k").
+			ReplyString("OK").
+			ReplyString("v1")
+		mock.Expect().Reply(slicemsg(
+			'>',
+			[]RedisMessage{
+				strmsg('+', "invalidate"),
+				slicemsg('*', []RedisMessage{strmsg('+', "k")}),
+			},
+		))
+	}()
+
+	v, err := p.DoCache(ctx, Cacheable(cmds.NewCompleted([]string{"GET", "k"})).ToStaticTTL(), 10*time.Second).ToMessage()
+	if err != nil || v.string() != "v1" {
+		t.Fatalf("first read: %q / %v", v.string(), err)
+	}
+
+	go func() {
+		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("GET", "k").
+			ReplyString("OK").
+			ReplyString("v2")
+	}()
+	deadline := time.After(2 * time.Second)
+	for {
+		v, _ := p.DoCache(ctx, Cacheable(cmds.NewCompleted([]string{"GET", "k"})).ToStaticTTL(), 10*time.Second).ToMessage()
+		if v.string() == "v2" {
+			break
+		}
+		select {
+		case <-deadline:
+			t.Fatalf("invalidation never applied; still reading %q", v.string())
+		default:
+			time.Sleep(5 * time.Millisecond)
+		}
+	}
+}
+
+// TestClientSideCachingStaticClientTTLNilReply verifies that a Redis nil
+// reply (absent key) caches and serves from the client-side cache,
+// identical to standard CSC.
+func TestClientSideCachingStaticClientTTLNilReply(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{})
+	defer cancel()
+
+	ctx := context.Background()
+
+	go func() {
+		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("GET", "absent").
+			ReplyString("OK").
+			Reply(RedisMessage{typ: typeNull})
+	}()
+	_ = p.DoCache(ctx, Cacheable(cmds.NewCompleted([]string{"GET", "absent"})).ToStaticTTL(), 10*time.Second)
+
+	ctx2, cancel2 := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel2()
+	r2 := p.DoCache(ctx2, Cacheable(cmds.NewCompleted([]string{"GET", "absent"})).ToStaticTTL(), 10*time.Second)
+	v2, err2 := r2.ToMessage()
+	if err2 != nil && err2 != Nil {
+		t.Fatalf("second DoCache: err=%v (likely deadlock — nil reply was not cached)", err2)
+	}
+	if !v2.IsCacheHit() {
+		t.Errorf("second DoCache: expected IsCacheHit=true on a cached nil")
+	}
+}
+
+// TestClientSideCachingStaticClientTTLArrayReplyAtGate is the gate-ordering
+// regression guard. In a multi-key DoMultiCache batch where a cacheable cmd
+// returns an array reply of length >= 2 (e.g. LRANGE), the IsStaticTTL gate
+// MUST be checked before the standard CSC gate; otherwise the standard gate
+// fires incidentally on the array reply, the client-side cache Flight slot
+// leaks, and the next call deadlocks.
+func TestClientSideCachingStaticClientTTLArrayReplyAtGate(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{})
+	defer cancel()
+
+	ctx := context.Background()
+
+	go func() {
+		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("LRANGE", "k1", "0", "-1").
+			Expect("CLIENT", "CACHING", "YES").
+			Expect("LRANGE", "k2", "0", "-1").
+			Expect("CLIENT", "CACHING", "YES").
+			Expect("LRANGE", "k3", "0", "-1").
+			ReplyString("OK").
+			Reply(slicemsg('*', []RedisMessage{
+				strmsg('$', "a1"),
+				strmsg('$', "a2"),
+			})).
+			ReplyString("OK").
+			Reply(slicemsg('*', []RedisMessage{
+				strmsg('$', "b1"),
+				strmsg('$', "b2"),
+				strmsg('$', "b3"),
+			})).
+			ReplyString("OK").
+			Reply(slicemsg('*', []RedisMessage{
+				strmsg('$', "c1"),
+				strmsg('$', "c2"),
+			}))
+	}()
+
+	results := p.DoMultiCache(ctx,
+		CT(Cacheable(cmds.NewCompleted([]string{"LRANGE", "k1", "0", "-1"})).ToStaticTTL(), 10*time.Second),
+		CT(Cacheable(cmds.NewCompleted([]string{"LRANGE", "k2", "0", "-1"})).ToStaticTTL(), 10*time.Second),
+		CT(Cacheable(cmds.NewCompleted([]string{"LRANGE", "k3", "0", "-1"})).ToStaticTTL(), 10*time.Second),
+	)
+	for i, want := range [][]string{{"a1", "a2"}, {"b1", "b2", "b3"}, {"c1", "c2"}} {
+		v, err := results.s[i].ToArray()
+		if err != nil {
+			t.Fatalf("result[%d]: %v", i, err)
+		}
+		if len(v) != len(want) {
+			t.Fatalf("result[%d]: expected len %d got %d", i, len(want), len(v))
+		}
+		for j, w := range want {
+			if v[j].string() != w {
+				t.Fatalf("result[%d][%d]: expected %q got %q", i, j, w, v[j].string())
+			}
+		}
+	}
+
+	ctx2, cancel2 := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel2()
+	done := make(chan struct{})
+	var results2 *redisresults
+	go func() {
+		results2 = p.DoMultiCache(ctx2,
+			CT(Cacheable(cmds.NewCompleted([]string{"LRANGE", "k1", "0", "-1"})).ToStaticTTL(), 10*time.Second),
+			CT(Cacheable(cmds.NewCompleted([]string{"LRANGE", "k2", "0", "-1"})).ToStaticTTL(), 10*time.Second),
+			CT(Cacheable(cmds.NewCompleted([]string{"LRANGE", "k3", "0", "-1"})).ToStaticTTL(), 10*time.Second),
+		)
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(3 * time.Second):
+		t.Fatalf("second DoMultiCache deadlocked: standard CSC gate mis-fired on a static-TTL array reply, leaking the Flight slot")
+	}
+	for i := range results2.s {
+		v, _ := results2.s[i].ToMessage()
+		if !v.IsCacheHit() {
+			t.Errorf("result2[%d]: expected client-side cache hit, got miss", i)
+		}
+	}
+}
+
+// TestClientSideCachingStaticClientTTLNoLeakOnPreCancel asserts both: the
+// ctx.Canceled error is surfaced AND no Flight slot is leaked (a fresh
+// follow-up DoCache must not deadlock).
+func TestClientSideCachingStaticClientTTLNoLeakOnPreCancel(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{})
+	defer cancel()
+
+	cancelledCtx, cancelCtx := context.WithCancel(context.Background())
+	cancelCtx()
+
+	results := p.DoMultiCache(cancelledCtx,
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "leak_k1"})).ToStaticTTL(), 10*time.Second),
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "leak_k2"})).ToStaticTTL(), 10*time.Second),
+	)
+	for i, r := range results.s {
+		if !errors.Is(r.err, context.Canceled) {
+			t.Errorf("result[%d]: expected context.Canceled, got %v", i, r.err)
+		}
+	}
+
+	// Follow-up DoCache with a fresh ctx must not deadlock on a leaked slot.
+	go func() {
+		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("GET", "leak_k1").
+			ReplyString("OK").
+			ReplyString("fresh-val")
+	}()
+
+	freshCtx, freshCancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer freshCancel()
+	v, err := p.DoCache(freshCtx, Cacheable(cmds.NewCompleted([]string{"GET", "leak_k1"})).ToStaticTTL(), 10*time.Second).ToMessage()
+	if err != nil {
+		t.Fatalf("fresh DoCache: %v (likely a leaked Flight slot)", err)
+	}
+	if v.string() != "fresh-val" {
+		t.Fatalf("fresh DoCache: expected %q got %q", "fresh-val", v.string())
+	}
+}
+
+// TestClientSideCachingStaticClientTTLCleanupNoRaceWithReadLoop pins the
+// caller-side leak guard to only react to transport errors (.err), never
+// wire-level results that the read loop is responsible for. Otherwise the
+// caller-side cleanup could race the read loop's Update/Cancel.
+func TestClientSideCachingStaticClientTTLCleanupNoRaceWithReadLoop(t *testing.T) {
+	t.Run("OnNilReply", func(t *testing.T) {
+		defer ShouldNotLeak(SetupLeakDetection())
+		p, mock, cancel, _ := setup(t, ClientOption{})
+		defer cancel()
+		ctx := context.Background()
+
+		go func() {
+			mock.Expect("CLIENT", "CACHING", "YES").
+				Expect("GET", "nil_no_race").
+				ReplyString("OK").
+				Reply(RedisMessage{typ: typeNull})
+		}()
+		r1 := p.DoCache(ctx, Cacheable(cmds.NewCompleted([]string{"GET", "nil_no_race"})).ToStaticTTL(), 10*time.Second)
+		if _, err := r1.ToMessage(); err != nil && !errors.Is(err, Nil) {
+			t.Fatalf("first read: %v", err)
+		}
+
+		ctx2, cancel2 := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel2()
+		v2, err2 := p.DoCache(ctx2, Cacheable(cmds.NewCompleted([]string{"GET", "nil_no_race"})).ToStaticTTL(), 10*time.Second).ToMessage()
+		if err2 != nil && !errors.Is(err2, Nil) {
+			t.Fatalf("second read: %v (caller-side Cancel may have raced the read-loop Update)", err2)
+		}
+		if !v2.IsCacheHit() {
+			t.Errorf("second read: expected IsCacheHit=true; nil reply must be cached, not cancelled by the caller side")
+		}
+	})
+
+	t.Run("OnWireError", func(t *testing.T) {
+		defer ShouldNotLeak(SetupLeakDetection())
+		p, mock, cancel, _ := setup(t, ClientOption{})
+		defer cancel()
+		ctx := context.Background()
+
+		go func() {
+			mock.Expect("CLIENT", "CACHING", "YES").
+				Expect("GET", "wrongtype_no_race").
+				ReplyString("OK").
+				ReplyError("WRONGTYPE Operation against a key holding the wrong kind of value")
+		}()
+		r1 := p.DoCache(ctx, Cacheable(cmds.NewCompleted([]string{"GET", "wrongtype_no_race"})).ToStaticTTL(), 10*time.Second)
+		if err := r1.Error(); err == nil {
+			t.Fatalf("first read: expected WRONGTYPE, got nil")
+		}
+
+		go func() {
+			mock.Expect("CLIENT", "CACHING", "YES").
+				Expect("GET", "wrongtype_no_race").
+				ReplyString("OK").
+				ReplyString("now-ok")
+		}()
+		ctx2, cancel2 := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel2()
+		v2, err2 := p.DoCache(ctx2, Cacheable(cmds.NewCompleted([]string{"GET", "wrongtype_no_race"})).ToStaticTTL(), 10*time.Second).ToMessage()
+		if err2 != nil {
+			t.Fatalf("second read: %v (Flight slot likely leaked)", err2)
+		}
+		if v2.string() != "now-ok" {
+			t.Fatalf("second read: expected %q got %q", "now-ok", v2.string())
+		}
+	})
+}
+
+// TestClientSideCachingStaticClientTTLDoCacheCancelOnTransportError exercises
+// the caller-side cleanup when DoMulti reports a transport error on the inner
+// cmd (resp.s[1].err non-nil — distinct from a wire-level RedisError). The
+// static-TTL DoCache path must Cancel() the Flight slot so a follow-up DoCache
+// on the same key takes a fresh wire trip rather than waiting on a stranded
+// slot.
+func TestClientSideCachingStaticClientTTLDoCacheCancelOnTransportError(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{})
+	defer cancel()
+
+	cancelledCtx, cancelCtx := context.WithCancel(context.Background())
+	cancelCtx()
+
+	r := p.DoCache(cancelledCtx, Cacheable(cmds.NewCompleted([]string{"GET", "txerr_k"})).ToStaticTTL(), 10*time.Second)
+	if !errors.Is(r.err, context.Canceled) {
+		t.Fatalf("expected context.Canceled on transport error, got %v", r.err)
+	}
+
+	// Follow-up with fresh ctx must take a fresh wire trip — the slot was cancelled.
+	go func() {
+		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("GET", "txerr_k").
+			ReplyString("OK").
+			ReplyString("fresh")
+	}()
+	freshCtx, freshCancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer freshCancel()
+	v, err := p.DoCache(freshCtx, Cacheable(cmds.NewCompleted([]string{"GET", "txerr_k"})).ToStaticTTL(), 10*time.Second).ToMessage()
+	if err != nil {
+		t.Fatalf("fresh DoCache: %v (likely a leaked Flight slot)", err)
+	}
+	if v.string() != "fresh" {
+		t.Fatalf("fresh DoCache: expected %q got %q", "fresh", v.string())
+	}
+}
+
+// TestClientSideCachingStaticClientTTLDoMultiCache_CustomCacheStore exercises
+// the non-LRU branch of DoMultiCache. When NewCacheStoreFn returns a custom
+// CacheStore (anything that isn't *lru, e.g. via NewSimpleCacheAdapter), the
+// missing-list build loop takes a separate per-key Flight() path instead of
+// the LRU's batch Flights() optimization; the skipMultiExec arm of that path
+// needs its own coverage.
+func TestClientSideCachingStaticClientTTLDoMultiCache_CustomCacheStore(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{
+		NewCacheStoreFn: func(option CacheStoreOption) CacheStore {
+			return NewSimpleCacheAdapter(&simple{store: map[string]RedisMessage{}})
+		},
+	})
+	defer cancel()
+
+	go func() {
+		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("GET", "ak").
+			Expect("CLIENT", "CACHING", "YES").
+			Expect("GET", "bk").
+			ReplyString("OK").
+			ReplyString("av").
+			ReplyString("OK").
+			ReplyString("bv")
+	}()
+
+	results := p.DoMultiCache(context.Background(),
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "ak"})).ToStaticTTL(), 10*time.Second),
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "bk"})).ToStaticTTL(), 10*time.Second),
+	)
+	for i, want := range []string{"av", "bv"} {
+		v, err := results.s[i].ToMessage()
+		if err != nil {
+			t.Fatalf("at %d: %v", i, err)
+		}
+		if v.string() != want {
+			t.Fatalf("at %d: expected %q got %q", i, want, v.string())
+		}
+	}
+}
+
+// TestClientSideCachingStaticClientTTLDoMultiCacheMixedNoPollution pins
+// the all-or-nothing enforcement for DoMultiCache: when the batch contains
+// at least one untagged cmd, every cmd's wire-side Completed must have
+// staticTTLTag cleared. Otherwise the read loop's static-TTL gate fires on
+// the cmd's "QUEUED" reply inside MULTI/EXEC and Update()s the cache (and
+// resolves the Flight slot) with "QUEUED" before the standard CSC gate can
+// fill in the real EXEC-unwrapped value — leaving the cache permanently
+// polluted for the tagged-but-mixed key.
+func TestClientSideCachingStaticClientTTLDoMultiCacheMixedNoPollution(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{})
+	defer cancel()
+
+	// Mixed batch: k1 tagged with .ToStaticTTL(), k2 untagged.
+	// Since not all are tagged, DoMultiCache picks the wrapped stride-5
+	// wire for the entire batch.
+	go func() {
+		mock.Expect("CLIENT", "CACHING", "YES").
+			Expect("MULTI").
+			Expect("PTTL", "k1").
+			Expect("GET", "k1").
+			Expect("EXEC").
+			Expect("CLIENT", "CACHING", "YES").
+			Expect("MULTI").
+			Expect("PTTL", "k2").
+			Expect("GET", "k2").
+			Expect("EXEC").
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("QUEUED").
+			ReplyString("QUEUED").
+			Reply(slicemsg('*', []RedisMessage{
+				{typ: ':', intlen: 10000},
+				strmsg('$', "v1"),
+			})).
+			ReplyString("OK").
+			ReplyString("OK").
+			ReplyString("QUEUED").
+			ReplyString("QUEUED").
+			Reply(slicemsg('*', []RedisMessage{
+				{typ: ':', intlen: 10000},
+				strmsg('$', "v2"),
+			}))
+	}()
+
+	results := p.DoMultiCache(context.Background(),
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "k1"})).ToStaticTTL(), 10*time.Second),
+		CT(Cacheable(cmds.NewCompleted([]string{"GET", "k2"})), 10*time.Second),
+	)
+
+	// First-pass results: both must be the real values.
+	for i, want := range []string{"v1", "v2"} {
+		v, err := results.s[i].ToMessage()
+		if err != nil {
+			t.Fatalf("first-pass result[%d]: err %v", i, err)
+		}
+		if v.string() != want {
+			t.Fatalf("first-pass result[%d]: got %q want %q", i, v.string(), want)
+		}
+	}
+
+	// Second pass — read each key. If the cache state for k1 is polluted
+	// with "QUEUED", we'd see it here. The mock has no more wire to serve,
+	// so a real cache hit returns instantly; a miss would deadlock the test.
+	r1 := p.DoCache(context.Background(),
+		Cacheable(cmds.NewCompleted([]string{"GET", "k1"})).ToStaticTTL(),
+		10*time.Second).val
+	if r1.string() != "v1" {
+		t.Fatalf("k1 cache state after mixed batch: got %q want %q (pollution)", r1.string(), "v1")
+	}
+
+	r2 := p.DoCache(context.Background(),
+		Cacheable(cmds.NewCompleted([]string{"GET", "k2"})),
+		10*time.Second).val
+	if r2.string() != "v2" {
+		t.Fatalf("k2 cache state: got %q want %q", r2.string(), "v2")
+	}
+}
