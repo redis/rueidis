@@ -800,6 +800,86 @@ func TestClusterClientInit(t *testing.T) {
 		}
 	})
 
+	t.Run("Refresh prefers InitAddress only", func(t *testing.T) {
+		var mu sync.Mutex
+		var calls []string
+		behavior := map[string]func() RedisResult{}
+		initAddrs := map[string]struct{}{
+			"127.0.0.1:0": {},
+		}
+		client, err := newClusterClient(
+			&ClientOption{
+				InitAddress: []string{"127.0.0.1:0"},
+				ClusterOption: ClusterOption{
+					PreferInitAddressRefresh: true,
+				},
+			},
+			func(dst string, opt *ClientOption) conn {
+				return &mockConn{
+					AddrFn: func() string { return dst },
+					DoFn: func(cmd Completed) RedisResult {
+						mu.Lock()
+						calls = append(calls, dst)
+						fn := behavior[dst]
+						mu.Unlock()
+						if fn != nil {
+							return fn()
+						}
+						return slotsMultiResp
+					},
+				}
+			},
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+
+		resetCalls := func() {
+			mu.Lock()
+			defer mu.Unlock()
+			calls = nil
+		}
+		snapshotCalls := func() []string {
+			mu.Lock()
+			defer mu.Unlock()
+			return append([]string(nil), calls...)
+		}
+		setBehavior := func(addr string, fn func() RedisResult) {
+			mu.Lock()
+			defer mu.Unlock()
+			behavior[addr] = fn
+		}
+		emptyResp := func() RedisResult {
+			return newResult(slicemsg('*', []RedisMessage{}), nil)
+		}
+
+		resetCalls()
+		if err := client.refresh(context.Background()); err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		for _, addr := range snapshotCalls() {
+			if _, ok := initAddrs[addr]; !ok {
+				t.Fatalf("unexpected fallback refresh call %v", addr)
+			}
+		}
+
+		setBehavior("127.0.0.1:0", emptyResp)
+		resetCalls()
+		if err := client.refresh(context.Background()); err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		var fallbackCalled bool
+		for _, addr := range snapshotCalls() {
+			if _, ok := initAddrs[addr]; !ok {
+				fallbackCalled = true
+			}
+		}
+		if fallbackCalled {
+			t.Fatalf("unexpected fallback refresh call")
+		}
+	})
+
 	t.Run("Refresh no slots cluster", func(t *testing.T) {
 		if _, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
@@ -11239,4 +11319,94 @@ func TestClusterClient_Refresh_MissingSlotsForReplicas_DoMultiCache(t *testing.T
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
 	}
+}
+
+func TestClusterRefreshAutoMaxDelay(t *testing.T) {
+	tests := []struct {
+		conns int
+		want  time.Duration
+	}{
+		{conns: 1, want: time.Second},
+		{conns: 99, want: time.Second},
+		{conns: 100, want: time.Second},
+		{conns: 550, want: 15500 * time.Millisecond},
+		{conns: 1000, want: 30 * time.Second},
+		{conns: 1200, want: 30 * time.Second},
+	}
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("%d", tt.conns), func(t *testing.T) {
+			if got := clusterRefreshAutoMaxDelay(tt.conns); got != tt.want {
+				t.Fatalf("got %s, want %s", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestClusterRefreshBatchDelayFromMaxDelay(t *testing.T) {
+	tests := []struct {
+		maxDelay time.Duration
+		want     time.Duration
+	}{
+		{maxDelay: time.Second, want: 0},
+		{maxDelay: 15500 * time.Millisecond, want: 50 * time.Millisecond},
+		{maxDelay: 30 * time.Second, want: 100 * time.Millisecond},
+		{maxDelay: 60 * time.Second, want: 100 * time.Millisecond},
+	}
+	for _, tt := range tests {
+		t.Run(tt.maxDelay.String(), func(t *testing.T) {
+			if got := clusterRefreshBatchDelayFromMaxDelay(tt.maxDelay); got != tt.want {
+				t.Fatalf("got %s, want %s", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestClusterRefreshStartDelayWithinBound(t *testing.T) {
+	maxDelay := 30 * time.Second
+	c := clusterClientWithConnCount(1000)
+	for i := 0; i < 1000; i++ {
+		d := c.clusterRefreshStartDelay()
+		if d < 0 || d >= maxDelay {
+			t.Fatalf("iteration %d: start delay %v out of [0, %v)", i, d, maxDelay)
+		}
+	}
+}
+
+func TestClusterRefreshStartDelayDistributesOverWindow(t *testing.T) {
+	maxDelay := 30 * time.Second
+	c := clusterClientWithConnCount(1000)
+	const N = 10000
+	var sum, min, max time.Duration
+	min = maxDelay
+	for i := 0; i < N; i++ {
+		d := c.clusterRefreshStartDelay()
+		sum += d
+		if d < min {
+			min = d
+		}
+		if d > max {
+			max = d
+		}
+	}
+	avg := sum / N
+	expectedAvg := maxDelay / 2
+	lo := time.Duration(float64(expectedAvg) * 0.9)
+	hi := time.Duration(float64(expectedAvg) * 1.1)
+	if avg < lo || avg > hi {
+		t.Fatalf("avg %v outside expected [%v, %v]", avg, lo, hi)
+	}
+	if min > maxDelay/100 {
+		t.Fatalf("min %v too high, expected near 0", min)
+	}
+	if max < maxDelay*9/10 {
+		t.Fatalf("max %v too low, expected near %v", max, maxDelay)
+	}
+}
+
+func clusterClientWithConnCount(n int) *clusterClient {
+	conns := make(map[string]connrole, n)
+	for i := 0; i < n; i++ {
+		conns[fmt.Sprintf("%d", i)] = connrole{}
+	}
+	return &clusterClient{conns: conns}
 }

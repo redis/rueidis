@@ -36,7 +36,8 @@ func (c *call) Do(ctx context.Context, fn func() error) error {
 	return c.do(ch, fn)
 }
 
-func (c *call) LazyDo(threshold time.Duration, fn func() error) {
+// DelayDo sleeps for delay then runs fn, deduping concurrent callers via singleflight.
+func (c *call) DelayDo(delay time.Duration, fn func() error) {
 	c.mu.Lock()
 	ch := c.ch
 	if ch != nil {
@@ -46,12 +47,11 @@ func (c *call) LazyDo(threshold time.Duration, fn func() error) {
 	ch = make(chan struct{})
 	c.ch = ch
 	c.cn++
-	ts := c.ts
 	c.mu.Unlock()
-	go func(ts time.Time, ch chan struct{}, fn func() error) {
-		time.Sleep(time.Until(ts))
+	go func(ch chan struct{}, fn func() error) {
+		time.Sleep(delay)
 		c.do(ch, fn)
-	}(ts.Add(threshold), ch, fn)
+	}(ch, fn)
 }
 
 func (c *call) do(ch chan struct{}, fn func() error) (err error) {

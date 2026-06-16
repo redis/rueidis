@@ -315,6 +315,9 @@ type ClusterOption struct {
 	// If set to a positive value, the client will return an error after that many MOVED|ASK redirects.
 	// This helps prevent infinite redirect loops in case of cluster misconfiguration.
 	MaxMovedRedirections int
+
+	// PreferInitAddressRefresh only uses ClientOption.InitAddress nodes during cluster topology refresh.
+	PreferInitAddressRefresh bool
 }
 
 // StandaloneOption is the options for the standalone client.

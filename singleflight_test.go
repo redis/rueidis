@@ -83,24 +83,45 @@ func TestSingleFlightWithContext(t *testing.T) {
 	}
 }
 
-func TestSingleFlightLazyDo(t *testing.T) {
+func TestSingleFlightDelayDoDedupesInFlight(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 	ch := make(chan struct{})
 	sg := call{}
-	sg.LazyDo(time.Second, func() error {
+	sg.DelayDo(0, func() error {
 		<-ch
 		return nil
 	})
 	cn := 0
-	sg.LazyDo(time.Second, func() error {
-		cn++ // this should not occur
+	sg.DelayDo(0, func() error {
+		cn++ // dedupe: should not run while first is in-flight
 		return nil
 	})
 	if cn != 0 {
-		t.Fatalf("unexpected cn %v", cn)
+		t.Fatalf("DelayDo did not dedupe, cn=%v", cn)
 	}
 	if sc := sg.suppressing(); sc != 1 {
 		t.Fatalf("unexpected suppressing %v", sc)
 	}
 	close(ch)
+}
+
+func TestSingleFlightDelayDoHonorsDelay(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	sg := call{}
+	delay := 75 * time.Millisecond
+	start := time.Now()
+	done := make(chan time.Time, 1)
+	sg.DelayDo(delay, func() error {
+		done <- time.Now()
+		return nil
+	})
+	select {
+	case ts := <-done:
+		got := ts.Sub(start)
+		if got < delay {
+			t.Fatalf("DelayDo ran too early: waited %v, expected >= %v", got, delay)
+		}
+	case <-time.After(time.Second):
+		t.Fatalf("DelayDo never ran")
+	}
 }
