@@ -156,12 +156,11 @@ func IsStaticTTL(c Completed) bool {
 	return c.cf&staticTTLTag == staticTTLTag
 }
 
-// ClearStaticTTL returns a copy of c with staticTTLTag cleared. Used
+// ClearStaticTTL clears the staticTTLTag from the command. Used
 // at wrapped-wire (MULTI/EXEC) build sites so the read goroutine's
 // direct-commit gate cannot fire on the cmd's "QUEUED" reply.
-func ClearStaticTTL(c Completed) Completed {
+func ClearStaticTTL(c *Cacheable) {
 	c.cf &^= staticTTLTag
-	return c
 }
 
 // IsBlock checks if it is blocking command which needs to be process by dedicated connection.

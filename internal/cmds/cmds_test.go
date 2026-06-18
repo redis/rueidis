@@ -143,12 +143,12 @@ func TestIsStaticTTL(t *testing.T) {
 		t.Fatalf("transactional/ASKING cmds must not carry staticTTLTag")
 	}
 	// ClearStaticTTL strips the bit while preserving everything else.
-	tagged := Completed(base.ToStaticTTL())
-	cleared := ClearStaticTTL(tagged)
-	if IsStaticTTL(cleared) {
+	tagged := base.ToStaticTTL()
+	ClearStaticTTL(&tagged)
+	if IsStaticTTL(Completed(tagged)) {
 		t.Fatalf("ClearStaticTTL must strip staticTTLTag")
 	}
-	if !cleared.IsRetryable() {
+	if c := Completed(tagged); !c.IsRetryable() {
 		t.Fatalf("ClearStaticTTL must preserve other flags")
 	}
 }

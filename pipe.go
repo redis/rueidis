@@ -1676,7 +1676,8 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 				missing = append(missing, p.optInCmd(), Completed(ct.Cmd))
 			} else {
 				ck, _ := cmds.CacheKey(ct.Cmd)
-				missing = append(missing, p.optInCmd(), cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), cmds.ClearStaticTTL(Completed(ct.Cmd)), cmds.ExecCmd)
+				cmds.ClearStaticTTL(&ct.Cmd)
+				missing = append(missing, p.optInCmd(), cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(ct.Cmd), cmds.ExecCmd)
 			}
 		}
 	} else {
@@ -1694,7 +1695,8 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 			if skipMultiExec {
 				missing = append(missing, p.optInCmd(), Completed(ct.Cmd))
 			} else {
-				missing = append(missing, p.optInCmd(), cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), cmds.ClearStaticTTL(Completed(ct.Cmd)), cmds.ExecCmd)
+				cmds.ClearStaticTTL(&ct.Cmd)
+				missing = append(missing, p.optInCmd(), cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(ct.Cmd), cmds.ExecCmd)
 			}
 		}
 	}
