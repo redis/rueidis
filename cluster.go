@@ -1137,7 +1137,8 @@ func (c *clusterClient) askingMultiCache(cc conn, ctx context.Context, multi []C
 		commands = make([]Completed, 0, len(multi)*stride)
 		for _, cmd := range multi {
 			ck, _ := cmds.CacheKey(cmd.Cmd)
-			commands = append(commands, cc.OptInCmd(), cmds.AskingCmd, cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), cmds.ClearStaticTTL(Completed(cmd.Cmd)), cmds.ExecCmd)
+			cmds.ClearStaticTTL(&cmd.Cmd)
+			commands = append(commands, cc.OptInCmd(), cmds.AskingCmd, cmds.MultiCmd, cmds.NewCompleted([]string{"PTTL", ck}), Completed(cmd.Cmd), cmds.ExecCmd)
 		}
 	}
 	results := resultsp.Get(0, len(multi))
