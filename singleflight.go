@@ -48,10 +48,10 @@ func (c *call) DelayDo(delay time.Duration, fn func() error) {
 	c.ch = ch
 	c.cn++
 	c.mu.Unlock()
-	go func(ch chan struct{}, fn func() error) {
+	go func(delay time.Duration, ch chan struct{}, fn func() error) {
 		time.Sleep(delay)
 		c.do(ch, fn)
-	}(ch, fn)
+	}(delay, ch, fn)
 }
 
 func (c *call) do(ch chan struct{}, fn func() error) (err error) {
