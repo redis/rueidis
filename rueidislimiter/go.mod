@@ -7,8 +7,8 @@ replace github.com/redis/rueidis => ../
 replace github.com/redis/rueidis/mock => ../mock
 
 require (
-	github.com/redis/rueidis v1.0.75
-	github.com/redis/rueidis/mock v1.0.75
+	github.com/redis/rueidis v1.0.76
+	github.com/redis/rueidis/mock v1.0.76
 	go.uber.org/mock v0.6.0
 )
 

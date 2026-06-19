@@ -5,7 +5,7 @@ go 1.25.0
 replace github.com/redis/rueidis => ../
 
 require (
-	github.com/redis/rueidis v1.0.75
+	github.com/redis/rueidis v1.0.76
 	go.opentelemetry.io/otel v1.43.0
 	go.opentelemetry.io/otel/metric v1.43.0
 	go.opentelemetry.io/otel/sdk v1.43.0
