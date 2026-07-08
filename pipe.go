@@ -81,6 +81,7 @@ type pipe struct {
 	psubs           *subs // pubsub pmessage subscriptions
 	r2p             *r2p
 	pingTimer       *time.Timer // timer for background ping
+	authTimer       *time.Timer // timer for refreshing dynamic auth credentials
 	lftmTimer       *time.Timer // lifetime timer
 	info            map[string]RedisMessage
 	timeout         time.Duration
@@ -95,6 +96,10 @@ type pipe struct {
 	r2ps            bool // identify this pipe is used for resp2 pubsub or not
 	noNoDelay       bool
 	optIn           bool
+
+	authMu      sync.Mutex
+	authFn      func(AuthCredentialsContext) (AuthCredentials, error)
+	authContext AuthCredentialsContext
 }
 
 type pipeFn func(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error)
@@ -149,11 +154,13 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 
 	username := option.Username
 	password := option.Password
+	var authCredentials AuthCredentials
+	var authCredentialsContext AuthCredentialsContext
 	if option.AuthCredentialsFn != nil {
-		authCredentialsContext := AuthCredentialsContext{
+		authCredentialsContext = AuthCredentialsContext{
 			Address: conn.RemoteAddr(),
 		}
-		authCredentials, err := option.AuthCredentialsFn(authCredentialsContext)
+		authCredentials, err = option.AuthCredentialsFn(authCredentialsContext)
 		if err != nil {
 			p.Close()
 			return nil, err
@@ -379,6 +386,11 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 	if option.ConnLifetime > 0 {
 		p.lftm = option.ConnLifetime
 		p.lftmTimer = time.AfterFunc(option.ConnLifetime, p.expired)
+	}
+	if !nobg && option.AuthCredentialsFn != nil && !authCredentials.RefreshBefore.IsZero() {
+		p.authFn = option.AuthCredentialsFn
+		p.authContext = authCredentialsContext
+		p.scheduleAuthRefresh(authCredentials.RefreshBefore)
 	}
 	return p, nil
 }
@@ -743,6 +755,66 @@ func (p *pipe) backgroundPing() {
 			p._exit(err)
 		}
 	})
+}
+
+func authRefreshCmd(auth AuthCredentials) (Completed, bool) {
+	if auth.Username == "" && auth.Password == "" {
+		return Completed{}, false
+	}
+	if auth.Password != "" && auth.Username == "" {
+		return cmds.NewCompleted([]string{"AUTH", auth.Password}), true
+	}
+	return cmds.NewCompleted([]string{"AUTH", auth.Username, auth.Password}), true
+}
+
+func (p *pipe) scheduleAuthRefresh(refreshBefore time.Time) {
+	if refreshBefore.IsZero() || p.Error() != nil {
+		return
+	}
+	delay := time.Until(refreshBefore)
+	if delay < 0 {
+		delay = 0
+	}
+	p.authMu.Lock()
+	defer p.authMu.Unlock()
+	if p.authTimer != nil {
+		p.authTimer.Stop()
+	}
+	p.authTimer = time.AfterFunc(delay, p.refreshAuth)
+}
+
+func (p *pipe) refreshAuth() {
+	if p.Error() != nil || p.authFn == nil {
+		return
+	}
+	auth, err := p.authFn(p.authContext)
+	if err != nil {
+		p._exit(err)
+		return
+	}
+	cmd, ok := authRefreshCmd(auth)
+	if ok {
+		ctx := context.Background()
+		var cancel context.CancelFunc
+		if p.timeout > 0 {
+			ctx, cancel = context.WithTimeout(ctx, p.timeout)
+			defer cancel()
+		}
+		if err := p.Do(ctx, cmd).Error(); err != nil {
+			p._exit(err)
+			return
+		}
+	}
+	p.scheduleAuthRefresh(auth.RefreshBefore)
+}
+
+func (p *pipe) stopAuthRefresh() {
+	p.authMu.Lock()
+	defer p.authMu.Unlock()
+	if p.authTimer != nil {
+		p.authTimer.Stop()
+		p.authTimer = nil
+	}
 }
 
 func (p *pipe) handlePush(values []RedisMessage) (reply bool, unsubscribe bool) {
@@ -1855,6 +1927,7 @@ func (p *pipe) Close() {
 	if p.pingTimer != nil {
 		p.pingTimer.Stop()
 	}
+	p.stopAuthRefresh()
 	if p.conn != nil {
 		p.conn.Close()
 	}
@@ -1864,10 +1937,10 @@ func (p *pipe) Close() {
 }
 
 func (p *pipe) StopTimer() bool {
-	if p.lftmTimer == nil {
-		return true
+	if p.lftmTimer != nil {
+		return p.lftmTimer.Stop()
 	}
-	return p.lftmTimer.Stop()
+	return true
 }
 
 func (p *pipe) ResetTimer() bool {
