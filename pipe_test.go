@@ -724,6 +724,51 @@ availability_zone:us-west-1a
 		n1.Close()
 		n2.Close()
 	})
+	t.Run("Auth Credentials Refresh RESP3 Default User", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+		refreshDone := make(chan struct{})
+		go func() {
+			mock.Expect("HELLO", "3", "AUTH", "default", "pa").
+				Reply(slicemsg(
+					'%',
+					[]RedisMessage{
+						strmsg('+', "proto"),
+						{typ: ':', intlen: 3},
+					},
+				))
+			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("AUTH", "default", "pa2").
+				ReplyString("OK")
+			close(refreshDone)
+		}()
+		var calls atomic.Int64
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
+			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
+				if calls.Add(1) == 1 {
+					return AuthCredentials{Password: "pa", RefreshBefore: time.Now().Add(10 * time.Millisecond)}, nil
+				}
+				return AuthCredentials{Password: "pa2"}, nil
+			},
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		select {
+		case <-refreshDone:
+		case <-time.After(time.Second):
+			t.Fatal("auth refresh did not run")
+		}
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
 	t.Run("Auth Credentials Refresh RESP2", func(t *testing.T) {
 		n1, n2 := net.Pipe()
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
@@ -770,6 +815,115 @@ availability_zone:us-west-1a
 		case <-refreshDone:
 		case <-time.After(time.Second):
 			t.Fatal("auth refresh did not run")
+		}
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
+	t.Run("Auth Credentials Refresh NoBg", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+		refreshDone := make(chan struct{})
+		go func() {
+			mock.Expect("HELLO", "3", "AUTH", "ua", "pa").
+				Reply(slicemsg(
+					'%',
+					[]RedisMessage{
+						strmsg('+', "proto"),
+						{typ: ':', intlen: 3},
+					},
+				))
+			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("AUTH", "ua", "pa2").
+				ReplyString("OK")
+			close(refreshDone)
+		}()
+		var calls atomic.Int64
+		p, err := newPipeNoBg(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
+			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
+				if calls.Add(1) == 1 {
+					return AuthCredentials{Username: "ua", Password: "pa", RefreshBefore: time.Now().Add(10 * time.Millisecond)}, nil
+				}
+				return AuthCredentials{Username: "ua", Password: "pa2"}, nil
+			},
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		select {
+		case <-refreshDone:
+		case <-time.After(time.Second):
+			t.Fatal("auth refresh did not run")
+		}
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
+	t.Run("Auth Credentials Refresh Closes Busy Pipe", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+		blockRead := make(chan struct{})
+		go func() {
+			mock.Expect("HELLO", "3", "AUTH", "ua", "pa").
+				Reply(slicemsg(
+					'%',
+					[]RedisMessage{
+						strmsg('+', "proto"),
+						{typ: ':', intlen: 3},
+					},
+				))
+			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("BLPOP", "k", "0")
+			close(blockRead)
+		}()
+		var calls atomic.Int64
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
+			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
+				if calls.Add(1) == 1 {
+					return AuthCredentials{Username: "ua", Password: "pa", RefreshBefore: time.Now().Add(10 * time.Millisecond)}, nil
+				}
+				return AuthCredentials{Username: "ua", Password: "pa2"}, nil
+			},
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		blockResult := make(chan RedisResult, 1)
+		go func() {
+			blockResult <- p.Do(context.Background(), cmds.NewCompleted([]string{"BLPOP", "k", "0"}))
+		}()
+		select {
+		case <-blockRead:
+		case <-time.After(time.Second):
+			t.Fatal("blocking command was not sent")
+		}
+		deadline := time.After(time.Second)
+		for p.Error() == nil {
+			select {
+			case <-deadline:
+				t.Fatal("auth refresh did not close busy pipe")
+			case <-time.After(10 * time.Millisecond):
+			}
+		}
+		select {
+		case <-blockResult:
+		case <-time.After(time.Second):
+			t.Fatal("blocking command did not return after pipe close")
+		}
+		if calls.Load() != 1 {
+			t.Fatalf("auth refresh should not fetch credentials while pipe is busy, got %d calls", calls.Load())
 		}
 		p.Close()
 		mock.Close()

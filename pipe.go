@@ -24,8 +24,9 @@ const LibName = "rueidis"
 const LibVer = "1.0.76"
 
 var (
-	noHello = regexp.MustCompile("unknown command .?(HELLO|hello).?")
-	infoAZ  = regexp.MustCompile(`availability_zone:([^\r\n]+)`)
+	noHello               = regexp.MustCompile("unknown command .?(HELLO|hello).?")
+	infoAZ                = regexp.MustCompile(`availability_zone:([^\r\n]+)`)
+	errAuthRefreshBlocked = errors.New("auth refresh blocked by pending command")
 )
 
 // See https://github.com/redis/rueidis/pull/691
@@ -100,6 +101,7 @@ type pipe struct {
 	authMu      sync.Mutex
 	authFn      func(AuthCredentialsContext) (AuthCredentials, error)
 	authContext AuthCredentialsContext
+	authDefault bool
 }
 
 type pipeFn func(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error)
@@ -387,9 +389,10 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 		p.lftm = option.ConnLifetime
 		p.lftmTimer = time.AfterFunc(option.ConnLifetime, p.expired)
 	}
-	if !nobg && option.AuthCredentialsFn != nil && !authCredentials.RefreshBefore.IsZero() {
+	if option.AuthCredentialsFn != nil && !authCredentials.RefreshBefore.IsZero() {
 		p.authFn = option.AuthCredentialsFn
 		p.authContext = authCredentialsContext
+		p.authDefault = !r2 && !r2ps && authCredentials.Username == "" && authCredentials.Password != ""
 		p.scheduleAuthRefresh(authCredentials.RefreshBefore)
 	}
 	return p, nil
@@ -757,11 +760,14 @@ func (p *pipe) backgroundPing() {
 	})
 }
 
-func authRefreshCmd(auth AuthCredentials) (Completed, bool) {
+func authRefreshCmd(auth AuthCredentials, defaultUser bool) (Completed, bool) {
 	if auth.Username == "" && auth.Password == "" {
 		return Completed{}, false
 	}
 	if auth.Password != "" && auth.Username == "" {
+		if defaultUser {
+			return cmds.NewCompleted([]string{"AUTH", "default", auth.Password}), true
+		}
 		return cmds.NewCompleted([]string{"AUTH", auth.Password}), true
 	}
 	return cmds.NewCompleted([]string{"AUTH", auth.Username, auth.Password}), true
@@ -787,12 +793,16 @@ func (p *pipe) refreshAuth() {
 	if p.Error() != nil || p.authFn == nil {
 		return
 	}
+	if atomic.LoadInt32(&p.blcksig) != 0 || (atomic.LoadInt32(&p.state) == 0 && p.loadWaits() != 0) {
+		p._exit(errAuthRefreshBlocked)
+		return
+	}
 	auth, err := p.authFn(p.authContext)
 	if err != nil {
 		p._exit(err)
 		return
 	}
-	cmd, ok := authRefreshCmd(auth)
+	cmd, ok := authRefreshCmd(auth, p.authDefault)
 	if ok {
 		ctx := context.Background()
 		var cancel context.CancelFunc
