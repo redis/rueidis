@@ -105,6 +105,12 @@ type pipe struct {
 
 type pipeFn func(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error)
 
+const (
+	txStateNone int32 = iota
+	txStateOpen
+	txStatePending
+)
+
 func newPipe(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error) {
 	return _newPipe(ctx, connFn, option, false, false)
 }
@@ -1153,6 +1159,7 @@ queue:
 		p.decrWaits()
 		return newErrResult(err)
 	}
+	p.markTransactionPending(cmd)
 
 	if ctxCh := ctx.Done(); ctxCh == nil {
 		resp = <-ch
@@ -1183,10 +1190,19 @@ func (p *pipe) trackTransaction(cmd Completed, resp RedisResult) {
 	switch strings.ToUpper(commands[0]) {
 	case "MULTI":
 		if resp.Error() == nil {
-			atomic.StoreInt32(&p.txState, 1)
+			atomic.StoreInt32(&p.txState, txStateOpen)
+		} else {
+			atomic.CompareAndSwapInt32(&p.txState, txStatePending, txStateNone)
 		}
 	case "EXEC", "DISCARD":
-		atomic.StoreInt32(&p.txState, 0)
+		atomic.StoreInt32(&p.txState, txStateNone)
+	}
+}
+
+func (p *pipe) markTransactionPending(cmd Completed) {
+	commands := cmd.Commands()
+	if len(commands) > 0 && strings.ToUpper(commands[0]) == "MULTI" {
+		atomic.CompareAndSwapInt32(&p.txState, txStateNone, txStatePending)
 	}
 }
 
@@ -1294,6 +1310,9 @@ queue:
 			resp.s[i] = errResult
 		}
 		return resp
+	}
+	for _, cmd := range multi {
+		p.markTransactionPending(cmd)
 	}
 
 	if ctxCh := ctx.Done(); ctxCh == nil {
