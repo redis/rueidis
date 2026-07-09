@@ -706,7 +706,7 @@ availability_zone:us-west-1a
 		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
 				if calls.Add(1) == 1 {
-					return AuthCredentials{Username: "ua", Password: "pa", RefreshBefore: time.Now().Add(10 * time.Millisecond)}, nil
+					return AuthCredentials{Username: "ua", Password: "pa", RefreshAfter: 10 * time.Millisecond}, nil
 				}
 				return AuthCredentials{Username: "ua", Password: "pa2"}, nil
 			},
@@ -751,7 +751,7 @@ availability_zone:us-west-1a
 		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
 				if calls.Add(1) == 1 {
-					return AuthCredentials{Password: "pa", RefreshBefore: time.Now().Add(10 * time.Millisecond)}, nil
+					return AuthCredentials{Password: "pa", RefreshAfter: 10 * time.Millisecond}, nil
 				}
 				return AuthCredentials{Password: "pa2"}, nil
 			},
@@ -803,7 +803,7 @@ availability_zone:us-west-1a
 			DisableCache: true,
 			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
 				if calls.Add(1) == 1 {
-					return AuthCredentials{Username: "ua", Password: "pa", RefreshBefore: time.Now().Add(10 * time.Millisecond)}, nil
+					return AuthCredentials{Username: "ua", Password: "pa", RefreshAfter: 10 * time.Millisecond}, nil
 				}
 				return AuthCredentials{Username: "ua", Password: "pa2"}, nil
 			},
@@ -848,7 +848,7 @@ availability_zone:us-west-1a
 		p, err := newPipeNoBg(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
 				if calls.Add(1) == 1 {
-					return AuthCredentials{Username: "ua", Password: "pa", RefreshBefore: time.Now().Add(10 * time.Millisecond)}, nil
+					return AuthCredentials{Username: "ua", Password: "pa", RefreshAfter: 10 * time.Millisecond}, nil
 				}
 				return AuthCredentials{Username: "ua", Password: "pa2"}, nil
 			},
@@ -892,7 +892,7 @@ availability_zone:us-west-1a
 		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
 				if calls.Add(1) == 1 {
-					return AuthCredentials{Username: "ua", Password: "pa", RefreshBefore: time.Now().Add(10 * time.Millisecond)}, nil
+					return AuthCredentials{Username: "ua", Password: "pa", RefreshAfter: 10 * time.Millisecond}, nil
 				}
 				return AuthCredentials{Username: "ua", Password: "pa2"}, nil
 			},
@@ -957,7 +957,7 @@ availability_zone:us-west-1a
 		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
 				if calls.Add(1) == 1 {
-					return AuthCredentials{Username: "ua", Password: "pa", RefreshBefore: time.Now().Add(10 * time.Millisecond)}, nil
+					return AuthCredentials{Username: "ua", Password: "pa", RefreshAfter: 10 * time.Millisecond}, nil
 				}
 				return AuthCredentials{Username: "ua", Password: "pa2"}, nil
 			},
@@ -1005,7 +1005,7 @@ availability_zone:us-west-1a
 			ConnWriteTimeout: 20 * time.Millisecond,
 			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
 				if calls.Add(1) == 1 {
-					return AuthCredentials{Username: "ua", Password: "pa", RefreshBefore: time.Now().Add(10 * time.Millisecond)}, nil
+					return AuthCredentials{Username: "ua", Password: "pa", RefreshAfter: 10 * time.Millisecond}, nil
 				}
 				return AuthCredentials{Username: "ua", Password: "pa2"}, nil
 			},

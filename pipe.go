@@ -98,7 +98,6 @@ type pipe struct {
 	noNoDelay       bool
 	optIn           bool
 
-	authMu      sync.Mutex
 	authFn      func(AuthCredentialsContext) (AuthCredentials, error)
 	authContext AuthCredentialsContext
 	authDefault bool
@@ -389,11 +388,11 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 		p.lftm = option.ConnLifetime
 		p.lftmTimer = time.AfterFunc(option.ConnLifetime, p.expired)
 	}
-	if option.AuthCredentialsFn != nil && !authCredentials.RefreshBefore.IsZero() {
+	if option.AuthCredentialsFn != nil && authCredentials.RefreshAfter > 0 {
 		p.authFn = option.AuthCredentialsFn
 		p.authContext = authCredentialsContext
 		p.authDefault = !r2 && !r2ps && authCredentials.Username == "" && authCredentials.Password != ""
-		p.scheduleAuthRefresh(authCredentials.RefreshBefore)
+		p.scheduleAuthRefresh(authCredentials.RefreshAfter)
 	}
 	return p, nil
 }
@@ -773,20 +772,17 @@ func authRefreshCmd(auth AuthCredentials, defaultUser bool) (Completed, bool) {
 	return cmds.NewCompleted([]string{"AUTH", auth.Username, auth.Password}), true
 }
 
-func (p *pipe) scheduleAuthRefresh(refreshBefore time.Time) {
-	if refreshBefore.IsZero() || p.Error() != nil {
+func (p *pipe) scheduleAuthRefresh(refreshAfter time.Duration) {
+	if refreshAfter <= 0 || p.Error() != nil {
 		return
 	}
-	delay := time.Until(refreshBefore)
-	if delay < 0 {
-		delay = 0
+	if p.authTimer == nil {
+		p.authTimer = time.AfterFunc(refreshAfter, func() {
+			go p.refreshAuth()
+		})
+		return
 	}
-	p.authMu.Lock()
-	defer p.authMu.Unlock()
-	if p.authTimer != nil {
-		p.authTimer.Stop()
-	}
-	p.authTimer = time.AfterFunc(delay, p.refreshAuth)
+	p.authTimer.Reset(refreshAfter)
 }
 
 func (p *pipe) refreshAuth() {
@@ -815,15 +811,12 @@ func (p *pipe) refreshAuth() {
 			return
 		}
 	}
-	p.scheduleAuthRefresh(auth.RefreshBefore)
+	p.scheduleAuthRefresh(auth.RefreshAfter)
 }
 
 func (p *pipe) stopAuthRefresh() {
-	p.authMu.Lock()
-	defer p.authMu.Unlock()
 	if p.authTimer != nil {
 		p.authTimer.Stop()
-		p.authTimer = nil
 	}
 }
 
