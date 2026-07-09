@@ -1168,7 +1168,8 @@ queue:
 	return resp
 abort:
 	go func(ch chan RedisResult) {
-		<-ch
+		resp := <-ch
+		p.trackTransaction(cmd, resp)
 		p.decrWaitsAndIncrRecvs()
 	}(ch)
 	return newErrResult(ctx.Err())
@@ -1310,6 +1311,7 @@ queue:
 abort:
 	go func(resp *redisresults, ch chan RedisResult) {
 		<-ch
+		p.trackTransactions(multi, resp.s)
 		resultsp.Put(resp)
 		p.decrWaitsAndIncrRecvs()
 	}(resp, ch)

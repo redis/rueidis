@@ -1048,6 +1048,171 @@ availability_zone:us-west-1a
 		n1.Close()
 		n2.Close()
 	})
+	t.Run("Auth Credentials Refresh Tracks Aborted Do Transaction", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+		multiRead := make(chan struct{})
+		replyMulti := make(chan struct{})
+		refreshDone := make(chan struct{})
+		go func() {
+			mock.Expect("HELLO", "3", "AUTH", "ua", "pa").
+				Reply(slicemsg(
+					'%',
+					[]RedisMessage{
+						strmsg('+', "proto"),
+						{typ: ':', intlen: 3},
+					},
+				))
+			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("MULTI")
+			close(multiRead)
+			<-replyMulti
+			mock.Expect().ReplyString("OK")
+			mock.Expect("EXEC").
+				Reply(slicemsg('*', nil))
+			mock.Expect("AUTH", "ua", "pa2").
+				ReplyString("OK")
+			close(refreshDone)
+		}()
+		var calls atomic.Int64
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
+			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
+				if calls.Add(1) == 1 {
+					return AuthCredentials{Username: "ua", Password: "pa", RefreshAfter: 10 * time.Millisecond}, nil
+				}
+				return AuthCredentials{Username: "ua", Password: "pa2"}, nil
+			},
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		p.background()
+		ctx, cancel := context.WithCancel(context.Background())
+		multiResult := make(chan RedisResult, 1)
+		go func() {
+			multiResult <- p.Do(ctx, cmds.NewCompleted([]string{"MULTI"}))
+		}()
+		select {
+		case <-multiRead:
+		case <-time.After(time.Second):
+			t.Fatal("MULTI was not sent")
+		}
+		cancel()
+		select {
+		case resp := <-multiResult:
+			if !errors.Is(resp.Error(), context.Canceled) {
+				t.Fatalf("unexpected MULTI result: %v", resp.Error())
+			}
+		case <-time.After(time.Second):
+			t.Fatal("MULTI did not return after context cancellation")
+		}
+		close(replyMulti)
+		time.Sleep(50 * time.Millisecond)
+		if calls.Load() != 1 {
+			t.Fatalf("auth refresh should not fetch credentials while aborted transaction is open, got %d calls", calls.Load())
+		}
+		if err := p.Do(context.Background(), cmds.NewCompleted([]string{"EXEC"})).Error(); err != nil {
+			t.Fatalf("EXEC failed: %v", err)
+		}
+		select {
+		case <-refreshDone:
+		case <-time.After(time.Second):
+			t.Fatal("auth refresh did not resume after aborted transaction closed")
+		}
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
+	t.Run("Auth Credentials Refresh Tracks Aborted DoMulti Transaction", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+		multiRead := make(chan struct{})
+		replyMulti := make(chan struct{})
+		refreshDone := make(chan struct{})
+		go func() {
+			mock.Expect("HELLO", "3", "AUTH", "ua", "pa").
+				Reply(slicemsg(
+					'%',
+					[]RedisMessage{
+						strmsg('+', "proto"),
+						{typ: ':', intlen: 3},
+					},
+				))
+			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("MULTI")
+			close(multiRead)
+			<-replyMulti
+			mock.Expect().ReplyString("OK")
+			mock.Expect("EXEC").
+				Reply(slicemsg('*', nil))
+			mock.Expect("AUTH", "ua", "pa2").
+				ReplyString("OK")
+			close(refreshDone)
+		}()
+		var calls atomic.Int64
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
+			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
+				if calls.Add(1) == 1 {
+					return AuthCredentials{Username: "ua", Password: "pa", RefreshAfter: 10 * time.Millisecond}, nil
+				}
+				return AuthCredentials{Username: "ua", Password: "pa2"}, nil
+			},
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		p.background()
+		ctx, cancel := context.WithCancel(context.Background())
+		multiResult := make(chan *redisresults, 1)
+		go func() {
+			multiResult <- p.DoMulti(ctx, cmds.NewCompleted([]string{"MULTI"}))
+		}()
+		select {
+		case <-multiRead:
+		case <-time.After(time.Second):
+			t.Fatal("MULTI was not sent")
+		}
+		cancel()
+		select {
+		case resp := <-multiResult:
+			if !errors.Is(resp.s[0].Error(), context.Canceled) {
+				t.Fatalf("unexpected MULTI result: %v", resp.s[0].Error())
+			}
+			resultsp.Put(resp)
+		case <-time.After(time.Second):
+			t.Fatal("MULTI did not return after context cancellation")
+		}
+		close(replyMulti)
+		time.Sleep(50 * time.Millisecond)
+		if calls.Load() != 1 {
+			t.Fatalf("auth refresh should not fetch credentials while aborted DoMulti transaction is open, got %d calls", calls.Load())
+		}
+		for _, resp := range p.DoMulti(context.Background(), cmds.NewCompleted([]string{"EXEC"})).s {
+			if err := resp.Error(); err != nil {
+				t.Fatalf("EXEC failed: %v", err)
+			}
+		}
+		select {
+		case <-refreshDone:
+		case <-time.After(time.Second):
+			t.Fatal("auth refresh did not resume after aborted DoMulti transaction closed")
+		}
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
 	t.Run("Auth Credentials Refresh After StopTimer", func(t *testing.T) {
 		n1, n2 := net.Pipe()
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
