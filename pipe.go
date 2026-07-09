@@ -795,17 +795,23 @@ func (p *pipe) refreshAuth() {
 	if p.Error() != nil || p.authFn == nil {
 		return
 	}
-	if atomic.LoadInt32(&p.txState) != 0 {
-		p.scheduleAuthRefresh(time.Duration(atomic.LoadInt64(&p.authRefreshAfter)))
+	if atomic.LoadInt32(&p.blcksig) != 0 {
+		p._exit(ErrClosing)
 		return
 	}
-	if atomic.LoadInt32(&p.blcksig) != 0 || (atomic.LoadInt32(&p.state) == 0 && p.loadWaits() != 0) {
-		p._exit(ErrClosing)
+	if p.deferAuthRefresh() {
 		return
 	}
 	auth, err := p.authFn(p.authContext)
 	if err != nil {
 		p._exit(err)
+		return
+	}
+	if atomic.LoadInt32(&p.blcksig) != 0 {
+		p._exit(ErrClosing)
+		return
+	}
+	if p.deferAuthRefresh() {
 		return
 	}
 	cmd, ok := authRefreshCmd(auth, !p.r2ps && p.r2p == nil)
@@ -822,6 +828,14 @@ func (p *pipe) refreshAuth() {
 		}
 	}
 	p.scheduleAuthRefresh(auth.RefreshAfter)
+}
+
+func (p *pipe) deferAuthRefresh() bool {
+	if atomic.LoadInt32(&p.txState) != txStateNone || (atomic.LoadInt32(&p.state) == 0 && p.loadWaits() != 0) {
+		p.scheduleAuthRefresh(time.Duration(atomic.LoadInt64(&p.authRefreshAfter)))
+		return true
+	}
+	return false
 }
 
 func (p *pipe) stopAuthRefresh() {
