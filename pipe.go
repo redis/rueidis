@@ -81,6 +81,7 @@ type pipe struct {
 	psubs           *subs // pubsub pmessage subscriptions
 	r2p             *r2p
 	pingTimer       *time.Timer // timer for background ping
+	authTimerMu     sync.Mutex
 	authTimer       *time.Timer // timer for refreshing dynamic auth credentials
 	lftmTimer       *time.Timer // lifetime timer
 	info            map[string]RedisMessage
@@ -782,6 +783,8 @@ func (p *pipe) scheduleAuthRefresh(refreshAfter time.Duration) {
 		return
 	}
 	atomic.StoreInt64(&p.authRefreshAfter, int64(refreshAfter))
+	p.authTimerMu.Lock()
+	defer p.authTimerMu.Unlock()
 	if p.authTimer == nil {
 		p.authTimer = time.AfterFunc(refreshAfter, func() {
 			go p.refreshAuth()
@@ -839,6 +842,8 @@ func (p *pipe) deferAuthRefresh() bool {
 }
 
 func (p *pipe) stopAuthRefresh() {
+	p.authTimerMu.Lock()
+	defer p.authTimerMu.Unlock()
 	if p.authTimer != nil {
 		p.authTimer.Stop()
 	}
@@ -1201,21 +1206,21 @@ func (p *pipe) trackTransaction(cmd Completed, resp RedisResult) {
 	if len(commands) == 0 {
 		return
 	}
-	switch strings.ToUpper(commands[0]) {
-	case "MULTI":
+	switch {
+	case strings.EqualFold(commands[0], "MULTI"):
 		if resp.Error() == nil {
 			atomic.StoreInt32(&p.txState, txStateOpen)
 		} else {
 			atomic.CompareAndSwapInt32(&p.txState, txStatePending, txStateNone)
 		}
-	case "EXEC", "DISCARD":
+	case strings.EqualFold(commands[0], "EXEC"), strings.EqualFold(commands[0], "DISCARD"):
 		atomic.StoreInt32(&p.txState, txStateNone)
 	}
 }
 
 func (p *pipe) markTransactionPending(cmd Completed) {
 	commands := cmd.Commands()
-	if len(commands) > 0 && strings.ToUpper(commands[0]) == "MULTI" {
+	if len(commands) > 0 && strings.EqualFold(commands[0], "MULTI") {
 		atomic.CompareAndSwapInt32(&p.txState, txStateNone, txStatePending)
 	}
 }
