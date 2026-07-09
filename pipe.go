@@ -1189,6 +1189,15 @@ func (p *pipe) trackTransaction(cmd Completed, resp RedisResult) {
 	}
 }
 
+func (p *pipe) trackTransactions(multi []Completed, resp []RedisResult) {
+	for i, cmd := range multi {
+		if i >= len(resp) {
+			return
+		}
+		p.trackTransaction(cmd, resp[i])
+	}
+}
+
 func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 	resp := resultsp.Get(len(multi), len(multi))
 	if err := ctx.Err(); err != nil {
@@ -1272,6 +1281,7 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 	if left := p.decrWaitsAndIncrRecvs(); state == 0 && left != 0 {
 		p.background()
 	}
+	p.trackTransactions(multi, resp.s)
 	return resp
 
 queue:
@@ -1295,6 +1305,7 @@ queue:
 		}
 	}
 	p.decrWaitsAndIncrRecvs()
+	p.trackTransactions(multi, resp.s)
 	return resp
 abort:
 	go func(resp *redisresults, ch chan RedisResult) {
