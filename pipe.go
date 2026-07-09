@@ -24,9 +24,8 @@ const LibName = "rueidis"
 const LibVer = "1.0.76"
 
 var (
-	noHello               = regexp.MustCompile("unknown command .?(HELLO|hello).?")
-	infoAZ                = regexp.MustCompile(`availability_zone:([^\r\n]+)`)
-	errAuthRefreshBlocked = errors.New("auth refresh blocked by pending command")
+	noHello = regexp.MustCompile("unknown command .?(HELLO|hello).?")
+	infoAZ  = regexp.MustCompile(`availability_zone:([^\r\n]+)`)
 )
 
 // See https://github.com/redis/rueidis/pull/691
@@ -100,7 +99,6 @@ type pipe struct {
 
 	authFn      func(AuthCredentialsContext) (AuthCredentials, error)
 	authContext AuthCredentialsContext
-	authDefault bool
 }
 
 type pipeFn func(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error)
@@ -391,7 +389,6 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 	if option.AuthCredentialsFn != nil && authCredentials.RefreshAfter > 0 {
 		p.authFn = option.AuthCredentialsFn
 		p.authContext = authCredentialsContext
-		p.authDefault = !r2 && !r2ps && authCredentials.Username == "" && authCredentials.Password != ""
 		p.scheduleAuthRefresh(authCredentials.RefreshAfter)
 	}
 	return p, nil
@@ -790,7 +787,7 @@ func (p *pipe) refreshAuth() {
 		return
 	}
 	if atomic.LoadInt32(&p.blcksig) != 0 || (atomic.LoadInt32(&p.state) == 0 && p.loadWaits() != 0) {
-		p._exit(errAuthRefreshBlocked)
+		p._exit(ErrClosing)
 		return
 	}
 	auth, err := p.authFn(p.authContext)
@@ -798,7 +795,7 @@ func (p *pipe) refreshAuth() {
 		p._exit(err)
 		return
 	}
-	cmd, ok := authRefreshCmd(auth, p.authDefault)
+	cmd, ok := authRefreshCmd(auth, !p.r2ps && p.r2p == nil)
 	if ok {
 		ctx := context.Background()
 		var cancel context.CancelFunc
