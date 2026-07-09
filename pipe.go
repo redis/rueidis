@@ -91,14 +91,16 @@ type pipe struct {
 	wrCounter       atomic.Uint64
 	version         int32
 	blcksig         int32
+	txState         int32
 	state           int32
 	bgState         int32
 	r2ps            bool // identify this pipe is used for resp2 pubsub or not
 	noNoDelay       bool
 	optIn           bool
 
-	authFn      func(AuthCredentialsContext) (AuthCredentials, error)
-	authContext AuthCredentialsContext
+	authFn           func(AuthCredentialsContext) (AuthCredentials, error)
+	authContext      AuthCredentialsContext
+	authRefreshAfter int64
 }
 
 type pipeFn func(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error)
@@ -773,6 +775,7 @@ func (p *pipe) scheduleAuthRefresh(refreshAfter time.Duration) {
 	if refreshAfter <= 0 || p.Error() != nil {
 		return
 	}
+	atomic.StoreInt64(&p.authRefreshAfter, int64(refreshAfter))
 	if p.authTimer == nil {
 		p.authTimer = time.AfterFunc(refreshAfter, func() {
 			go p.refreshAuth()
@@ -784,6 +787,10 @@ func (p *pipe) scheduleAuthRefresh(refreshAfter time.Duration) {
 
 func (p *pipe) refreshAuth() {
 	if p.Error() != nil || p.authFn == nil {
+		return
+	}
+	if atomic.LoadInt32(&p.txState) != 0 {
+		p.scheduleAuthRefresh(time.Duration(atomic.LoadInt64(&p.authRefreshAfter)))
 		return
 	}
 	if atomic.LoadInt32(&p.blcksig) != 0 || (atomic.LoadInt32(&p.state) == 0 && p.loadWaits() != 0) {
@@ -1137,6 +1144,7 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	if left := p.decrWaitsAndIncrRecvs(); state == 0 && left != 0 {
 		p.background()
 	}
+	p.trackTransaction(cmd, resp)
 	return resp
 
 queue:
@@ -1156,6 +1164,7 @@ queue:
 		}
 	}
 	p.decrWaitsAndIncrRecvs()
+	p.trackTransaction(cmd, resp)
 	return resp
 abort:
 	go func(ch chan RedisResult) {
@@ -1163,6 +1172,21 @@ abort:
 		p.decrWaitsAndIncrRecvs()
 	}(ch)
 	return newErrResult(ctx.Err())
+}
+
+func (p *pipe) trackTransaction(cmd Completed, resp RedisResult) {
+	commands := cmd.Commands()
+	if len(commands) == 0 {
+		return
+	}
+	switch strings.ToUpper(commands[0]) {
+	case "MULTI":
+		if resp.Error() == nil {
+			atomic.StoreInt32(&p.txState, 1)
+		}
+	case "EXEC", "DISCARD":
+		atomic.StoreInt32(&p.txState, 0)
+	}
 }
 
 func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
