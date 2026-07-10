@@ -108,7 +108,11 @@ type pipeFn func(ctx context.Context, connFn func(ctx context.Context) (net.Conn
 
 const (
 	txStateNone int32 = iota
+	// txStateOpen means a MULTI has been accepted by the server and the pipe
+	// must not send AUTH until EXEC or DISCARD closes the transaction.
 	txStateOpen
+	// txStatePending covers the interval after MULTI is queued but before its
+	// reply is processed, so auth refresh cannot race an in-flight MULTI.
 	txStatePending
 )
 
@@ -833,6 +837,8 @@ func (p *pipe) refreshAuth() {
 	p.scheduleAuthRefresh(auth.RefreshAfter)
 }
 
+// deferAuthRefresh reschedules instead of sending AUTH while the connection is
+// inside a MULTI/EXEC transaction or a synchronous command is using the socket.
 func (p *pipe) deferAuthRefresh() bool {
 	if atomic.LoadInt32(&p.txState) != txStateNone || (atomic.LoadInt32(&p.state) == 0 && p.loadWaits() != 0) {
 		p.scheduleAuthRefresh(time.Duration(atomic.LoadInt64(&p.authRefreshAfter)))
@@ -1201,6 +1207,9 @@ abort:
 	return newErrResult(ctx.Err())
 }
 
+// trackTransaction keeps auth refresh from racing MULTI/EXEC state. It is also
+// called after aborted requests finish so a canceled MULTI still opens the
+// transaction until the user sends EXEC or DISCARD.
 func (p *pipe) trackTransaction(cmd Completed, resp RedisResult) {
 	commands := cmd.Commands()
 	if len(commands) == 0 {
@@ -1218,6 +1227,8 @@ func (p *pipe) trackTransaction(cmd Completed, resp RedisResult) {
 	}
 }
 
+// markTransactionPending blocks auth refresh as soon as MULTI is queued, before
+// the server reply is available.
 func (p *pipe) markTransactionPending(cmd Completed) {
 	commands := cmd.Commands()
 	if len(commands) > 0 && strings.EqualFold(commands[0], "MULTI") {
