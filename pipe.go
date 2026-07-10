@@ -91,7 +91,6 @@ type pipe struct {
 	wrCounter       atomic.Uint64
 	version         int32
 	blcksig         int32
-	txState         int32
 	state           int32
 	bgState         int32
 	r2ps            bool // identify this pipe is used for resp2 pubsub or not
@@ -100,16 +99,6 @@ type pipe struct {
 }
 
 type pipeFn func(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error)
-
-const (
-	txStateNone int32 = iota
-	// txStateOpen means a MULTI has been accepted by the server and the pipe
-	// must not send AUTH until EXEC or DISCARD closes the transaction.
-	txStateOpen
-	// txStatePending covers the interval after MULTI is queued but before its
-	// reply is processed, so auth refresh cannot race an in-flight MULTI.
-	txStatePending
-)
 
 func newPipe(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error) {
 	return _newPipe(ctx, connFn, option, false, false)
@@ -823,19 +812,14 @@ func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials,
 	return auth.RefreshAfter
 }
 
-// deferAuthRefresh reschedules instead of sending AUTH in places where an
-// injected command would either be queued into a MULTI/EXEC transaction or race
-// a direct synchronous write on a no-background pipe.
+// deferAuthRefresh reschedules instead of racing a direct synchronous write on
+// a no-background pipe.
 func (p *pipe) deferAuthRefresh(refreshAfter time.Duration) bool {
-	if p.transactionActive() || p.syncCommandInFlight() {
+	if p.syncCommandInFlight() {
 		p.scheduleAuthRefresh(refreshAfter)
 		return true
 	}
 	return false
-}
-
-func (p *pipe) transactionActive() bool {
-	return atomic.LoadInt32(&p.txState) != txStateNone
 }
 
 func (p *pipe) syncCommandInFlight() bool {
@@ -1168,7 +1152,6 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	if left := p.decrWaitsAndIncrRecvs(); state == 0 && left != 0 {
 		p.background()
 	}
-	p.trackTransaction(cmd, resp)
 	return resp
 
 queue:
@@ -1177,7 +1160,6 @@ queue:
 		p.decrWaits()
 		return newErrResult(err)
 	}
-	p.markTransactionPending(cmd)
 
 	if ctxCh := ctx.Done(); ctxCh == nil {
 		resp = <-ch
@@ -1189,55 +1171,13 @@ queue:
 		}
 	}
 	p.decrWaitsAndIncrRecvs()
-	p.trackTransaction(cmd, resp)
 	return resp
 abort:
 	go func(ch chan RedisResult) {
-		resp := <-ch
-		p.trackTransaction(cmd, resp)
+		<-ch
 		p.decrWaitsAndIncrRecvs()
 	}(ch)
 	return newErrResult(ctx.Err())
-}
-
-// trackTransaction keeps auth refresh from being injected into a transaction.
-// Redis would queue AUTH after a successful MULTI, so refresh must wait until
-// EXEC or DISCARD closes the transaction. Aborted requests still update state
-// after the server replies because a canceled MULTI can still leave the
-// connection inside a transaction.
-func (p *pipe) trackTransaction(cmd Completed, resp RedisResult) {
-	commands := cmd.Commands()
-	if len(commands) == 0 {
-		return
-	}
-	switch {
-	case strings.EqualFold(commands[0], "MULTI"):
-		if resp.Error() == nil {
-			atomic.StoreInt32(&p.txState, txStateOpen)
-		} else {
-			atomic.CompareAndSwapInt32(&p.txState, txStatePending, txStateNone)
-		}
-	case strings.EqualFold(commands[0], "EXEC"), strings.EqualFold(commands[0], "DISCARD"):
-		atomic.StoreInt32(&p.txState, txStateNone)
-	}
-}
-
-// markTransactionPending blocks auth refresh as soon as MULTI is queued, before
-// the server reply is available.
-func (p *pipe) markTransactionPending(cmd Completed) {
-	commands := cmd.Commands()
-	if len(commands) > 0 && strings.EqualFold(commands[0], "MULTI") {
-		atomic.CompareAndSwapInt32(&p.txState, txStateNone, txStatePending)
-	}
-}
-
-func (p *pipe) trackTransactions(multi []Completed, resp []RedisResult) {
-	for i, cmd := range multi {
-		if i >= len(resp) {
-			return
-		}
-		p.trackTransaction(cmd, resp[i])
-	}
 }
 
 func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
@@ -1323,7 +1263,6 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 	if left := p.decrWaitsAndIncrRecvs(); state == 0 && left != 0 {
 		p.background()
 	}
-	p.trackTransactions(multi, resp.s)
 	return resp
 
 queue:
@@ -1336,9 +1275,6 @@ queue:
 		}
 		return resp
 	}
-	for _, cmd := range multi {
-		p.markTransactionPending(cmd)
-	}
 
 	if ctxCh := ctx.Done(); ctxCh == nil {
 		<-ch
@@ -1350,12 +1286,10 @@ queue:
 		}
 	}
 	p.decrWaitsAndIncrRecvs()
-	p.trackTransactions(multi, resp.s)
 	return resp
 abort:
 	go func(resp *redisresults, ch chan RedisResult) {
 		<-ch
-		p.trackTransactions(multi, resp.s)
 		resultsp.Put(resp)
 		p.decrWaitsAndIncrRecvs()
 	}(resp, ch)
