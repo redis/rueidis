@@ -768,19 +768,6 @@ func (p *pipe) backgroundPing() {
 	})
 }
 
-func authRefreshCmd(auth AuthCredentials, defaultUser bool) (Completed, bool) {
-	if auth.Username == "" && auth.Password == "" {
-		return Completed{}, false
-	}
-	if auth.Password != "" && auth.Username == "" {
-		if defaultUser {
-			return cmds.NewCompleted([]string{"AUTH", "default", auth.Password}), true
-		}
-		return cmds.NewCompleted([]string{"AUTH", auth.Password}), true
-	}
-	return cmds.NewCompleted([]string{"AUTH", auth.Username, auth.Password}), true
-}
-
 func (p *pipe) scheduleAuthRefresh(refreshAfter time.Duration) {
 	if refreshAfter <= 0 || p.Error() != nil || p.authTimer == nil {
 		return
@@ -811,15 +798,23 @@ func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials,
 	if p.deferAuthRefresh(refreshAfter) {
 		return refreshAfter
 	}
-	cmd, ok := authRefreshCmd(auth, !p.r2ps && p.r2p == nil)
-	if ok {
+	if auth.Username != "" || auth.Password != "" {
+		args := []string{"AUTH"}
+		if auth.Password != "" && auth.Username == "" {
+			if !p.r2ps && p.r2p == nil {
+				args = append(args, "default")
+			}
+			args = append(args, auth.Password)
+		} else {
+			args = append(args, auth.Username, auth.Password)
+		}
 		ctx := context.Background()
 		var cancel context.CancelFunc
 		if p.timeout > 0 {
 			ctx, cancel = context.WithTimeout(ctx, p.timeout)
 			defer cancel()
 		}
-		if err := p.Do(ctx, cmd).Error(); err != nil {
+		if err := p.Do(ctx, cmds.NewCompleted(args)).Error(); err != nil {
 			p._exit(err)
 			return refreshAfter
 		}
