@@ -81,7 +81,6 @@ type pipe struct {
 	psubs           *subs // pubsub pmessage subscriptions
 	r2p             *r2p
 	pingTimer       *time.Timer // timer for background ping
-	authTimerMu     sync.Mutex
 	authTimer       *time.Timer // timer for refreshing dynamic auth credentials
 	lftmTimer       *time.Timer // lifetime timer
 	info            map[string]RedisMessage
@@ -98,10 +97,6 @@ type pipe struct {
 	r2ps            bool // identify this pipe is used for resp2 pubsub or not
 	noNoDelay       bool
 	optIn           bool
-
-	authFn           func(AuthCredentialsContext) (AuthCredentials, error)
-	authContext      AuthCredentialsContext
-	authRefreshAfter int64
 }
 
 type pipeFn func(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error)
@@ -400,9 +395,13 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 		p.lftmTimer = time.AfterFunc(option.ConnLifetime, p.expired)
 	}
 	if option.AuthCredentialsFn != nil && authCredentials.RefreshAfter > 0 {
-		p.authFn = option.AuthCredentialsFn
-		p.authContext = authCredentialsContext
-		p.scheduleAuthRefresh(authCredentials.RefreshAfter)
+		authFn := option.AuthCredentialsFn
+		var refreshAfter atomic.Int64
+		refreshAfter.Store(int64(authCredentials.RefreshAfter))
+		p.authTimer = time.AfterFunc(authCredentials.RefreshAfter, func() {
+			nextRefreshAfter := p.refreshAuth(authFn, authCredentialsContext, time.Duration(refreshAfter.Load()))
+			refreshAfter.Store(int64(nextRefreshAfter))
+		})
 	}
 	return p, nil
 }
@@ -783,43 +782,34 @@ func authRefreshCmd(auth AuthCredentials, defaultUser bool) (Completed, bool) {
 }
 
 func (p *pipe) scheduleAuthRefresh(refreshAfter time.Duration) {
-	if refreshAfter <= 0 || p.Error() != nil {
-		return
-	}
-	atomic.StoreInt64(&p.authRefreshAfter, int64(refreshAfter))
-	p.authTimerMu.Lock()
-	defer p.authTimerMu.Unlock()
-	if p.authTimer == nil {
-		p.authTimer = time.AfterFunc(refreshAfter, func() {
-			go p.refreshAuth()
-		})
+	if refreshAfter <= 0 || p.Error() != nil || p.authTimer == nil {
 		return
 	}
 	p.authTimer.Reset(refreshAfter)
 }
 
-func (p *pipe) refreshAuth() {
-	if p.Error() != nil || p.authFn == nil {
-		return
+func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials, error), authContext AuthCredentialsContext, refreshAfter time.Duration) time.Duration {
+	if p.Error() != nil {
+		return refreshAfter
 	}
 	if atomic.LoadInt32(&p.blcksig) != 0 {
 		p._exit(ErrClosing)
-		return
+		return refreshAfter
 	}
-	if p.deferAuthRefresh() {
-		return
+	if p.deferAuthRefresh(refreshAfter) {
+		return refreshAfter
 	}
-	auth, err := p.authFn(p.authContext)
+	auth, err := authFn(authContext)
 	if err != nil {
 		p._exit(err)
-		return
+		return refreshAfter
 	}
 	if atomic.LoadInt32(&p.blcksig) != 0 {
 		p._exit(ErrClosing)
-		return
+		return refreshAfter
 	}
-	if p.deferAuthRefresh() {
-		return
+	if p.deferAuthRefresh(refreshAfter) {
+		return refreshAfter
 	}
 	cmd, ok := authRefreshCmd(auth, !p.r2ps && p.r2p == nil)
 	if ok {
@@ -831,25 +821,24 @@ func (p *pipe) refreshAuth() {
 		}
 		if err := p.Do(ctx, cmd).Error(); err != nil {
 			p._exit(err)
-			return
+			return refreshAfter
 		}
 	}
 	p.scheduleAuthRefresh(auth.RefreshAfter)
+	return auth.RefreshAfter
 }
 
 // deferAuthRefresh reschedules instead of sending AUTH while the connection is
 // inside a MULTI/EXEC transaction or a synchronous command is using the socket.
-func (p *pipe) deferAuthRefresh() bool {
+func (p *pipe) deferAuthRefresh(refreshAfter time.Duration) bool {
 	if atomic.LoadInt32(&p.txState) != txStateNone || (atomic.LoadInt32(&p.state) == 0 && p.loadWaits() != 0) {
-		p.scheduleAuthRefresh(time.Duration(atomic.LoadInt64(&p.authRefreshAfter)))
+		p.scheduleAuthRefresh(refreshAfter)
 		return true
 	}
 	return false
 }
 
 func (p *pipe) stopAuthRefresh() {
-	p.authTimerMu.Lock()
-	defer p.authTimerMu.Unlock()
 	if p.authTimer != nil {
 		p.authTimer.Stop()
 	}
