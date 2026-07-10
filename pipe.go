@@ -405,9 +405,20 @@ func (p *pipe) background() {
 }
 
 func (p *pipe) _exit(err error) {
+	p._exitWithAuthRefresh(err, true)
+}
+
+func (p *pipe) exitAuthRefresh(err error) {
+	p._exitWithAuthRefresh(err, false)
+}
+
+func (p *pipe) _exitWithAuthRefresh(err error, stopAuthRefresh bool) {
 	p.error.CompareAndSwap(nil, &errs{error: err})
 	atomic.CompareAndSwapInt32(&p.state, 1, 2) // stop accepting new requests
 	_ = p.conn.Close()                         // force both read & write goroutine to exit
+	if stopAuthRefresh {
+		p.stopAuthRefresh()
+	}
 	p.StopTimer()
 	p.clhks.Load().(func(error))(err)
 }
@@ -769,7 +780,7 @@ func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials,
 		return refreshAfter
 	}
 	if atomic.LoadInt32(&p.blcksig) != 0 {
-		p._exit(ErrClosing)
+		p.exitAuthRefresh(ErrClosing)
 		return refreshAfter
 	}
 	if p.deferAuthRefresh(refreshAfter) {
@@ -777,11 +788,11 @@ func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials,
 	}
 	auth, err := authFn(authContext)
 	if err != nil {
-		p._exit(err)
+		p.exitAuthRefresh(err)
 		return refreshAfter
 	}
 	if atomic.LoadInt32(&p.blcksig) != 0 {
-		p._exit(ErrClosing)
+		p.exitAuthRefresh(ErrClosing)
 		return refreshAfter
 	}
 	if p.deferAuthRefresh(refreshAfter) {
@@ -804,7 +815,7 @@ func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials,
 			defer cancel()
 		}
 		if err := p.Do(ctx, cmds.NewCompleted(args)).Error(); err != nil {
-			p._exit(err)
+			p.exitAuthRefresh(err)
 			return refreshAfter
 		}
 	}
