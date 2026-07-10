@@ -82,6 +82,7 @@ type pipe struct {
 	r2p             *r2p
 	pingTimer       *time.Timer // timer for background ping
 	authTimer       *time.Timer // timer for refreshing dynamic auth credentials
+	authTimerMu     sync.Mutex
 	lftmTimer       *time.Timer // lifetime timer
 	info            map[string]RedisMessage
 	timeout         time.Duration
@@ -387,10 +388,12 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 		authFn := option.AuthCredentialsFn
 		var refreshAfter atomic.Int64
 		refreshAfter.Store(int64(authCredentials.RefreshAfter))
+		p.authTimerMu.Lock()
 		p.authTimer = time.AfterFunc(authCredentials.RefreshAfter, func() {
 			nextRefreshAfter := p.refreshAuth(authFn, authCredentialsContext, time.Duration(refreshAfter.Load()))
 			refreshAfter.Store(int64(nextRefreshAfter))
 		})
+		p.authTimerMu.Unlock()
 	}
 	return p, nil
 }
@@ -769,7 +772,12 @@ func (p *pipe) backgroundPing() {
 }
 
 func (p *pipe) scheduleAuthRefresh(refreshAfter time.Duration) {
-	if refreshAfter <= 0 || p.Error() != nil || p.authTimer == nil {
+	if refreshAfter <= 0 || p.Error() != nil {
+		return
+	}
+	p.authTimerMu.Lock()
+	defer p.authTimerMu.Unlock()
+	if p.authTimer == nil || p.Error() != nil {
 		return
 	}
 	p.authTimer.Reset(refreshAfter)
@@ -838,6 +846,8 @@ func (p *pipe) syncCommandInFlight() bool {
 }
 
 func (p *pipe) stopAuthRefresh() {
+	p.authTimerMu.Lock()
+	defer p.authTimerMu.Unlock()
 	if p.authTimer != nil {
 		p.authTimer.Stop()
 	}
