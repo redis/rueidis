@@ -828,14 +828,23 @@ func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials,
 	return auth.RefreshAfter
 }
 
-// deferAuthRefresh reschedules instead of sending AUTH while the connection is
-// inside a MULTI/EXEC transaction or a synchronous command is using the socket.
+// deferAuthRefresh reschedules instead of sending AUTH in places where an
+// injected command would either be queued into a MULTI/EXEC transaction or race
+// a direct synchronous write on a no-background pipe.
 func (p *pipe) deferAuthRefresh(refreshAfter time.Duration) bool {
-	if atomic.LoadInt32(&p.txState) != txStateNone || (atomic.LoadInt32(&p.state) == 0 && p.loadWaits() != 0) {
+	if p.transactionActive() || p.syncCommandInFlight() {
 		p.scheduleAuthRefresh(refreshAfter)
 		return true
 	}
 	return false
+}
+
+func (p *pipe) transactionActive() bool {
+	return atomic.LoadInt32(&p.txState) != txStateNone
+}
+
+func (p *pipe) syncCommandInFlight() bool {
+	return atomic.LoadInt32(&p.state) == 0 && p.loadWaits() != 0
 }
 
 func (p *pipe) stopAuthRefresh() {
@@ -1196,9 +1205,11 @@ abort:
 	return newErrResult(ctx.Err())
 }
 
-// trackTransaction keeps auth refresh from racing MULTI/EXEC state. It is also
-// called after aborted requests finish so a canceled MULTI still opens the
-// transaction until the user sends EXEC or DISCARD.
+// trackTransaction keeps auth refresh from being injected into a transaction.
+// Redis would queue AUTH after a successful MULTI, so refresh must wait until
+// EXEC or DISCARD closes the transaction. Aborted requests still update state
+// after the server replies because a canceled MULTI can still leave the
+// connection inside a transaction.
 func (p *pipe) trackTransaction(cmd Completed, resp RedisResult) {
 	commands := cmd.Commands()
 	if len(commands) == 0 {
