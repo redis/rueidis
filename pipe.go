@@ -850,6 +850,7 @@ func (p *pipe) stopAuthRefresh() {
 	defer p.authTimerMu.Unlock()
 	if p.authTimer != nil {
 		p.authTimer.Stop()
+		p.authTimer = nil
 	}
 }
 
