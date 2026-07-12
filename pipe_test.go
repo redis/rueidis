@@ -916,8 +916,8 @@ availability_zone:us-west-1a
 		if p.Error() != nil {
 			t.Fatalf("auth refresh closed busy sync pipe: %v", p.Error())
 		}
-		if calls.Load() != 2 {
-			t.Fatalf("auth refresh should fetch credentials while waiting for direct I/O, got %d calls", calls.Load())
+		if calls.Load() != 1 {
+			t.Fatalf("auth refresh should wait for direct I/O before fetching credentials, got %d calls", calls.Load())
 		}
 		close(replyGet)
 		select {
@@ -932,6 +932,9 @@ availability_zone:us-west-1a
 		case <-refreshDone:
 		case <-time.After(time.Second):
 			t.Fatal("auth refresh did not run after direct I/O completed")
+		}
+		if calls.Load() != 2 {
+			t.Fatalf("auth refresh should fetch credentials after direct I/O, got %d calls", calls.Load())
 		}
 		p.Close()
 		mock.Close()
@@ -987,8 +990,8 @@ availability_zone:us-west-1a
 		if p.Error() != nil {
 			t.Fatalf("auth refresh closed active stream: %v", p.Error())
 		}
-		if calls.Load() != 2 {
-			t.Fatalf("auth refresh should fetch credentials while waiting for stream I/O, got %d calls", calls.Load())
+		if calls.Load() != 1 {
+			t.Fatalf("auth refresh should wait for stream I/O before fetching credentials, got %d calls", calls.Load())
 		}
 		close(replyGet)
 		var dst bytes.Buffer
@@ -999,6 +1002,9 @@ availability_zone:us-west-1a
 		case <-refreshDone:
 		case <-time.After(time.Second):
 			t.Fatal("auth refresh did not run after stream completed")
+		}
+		if calls.Load() != 2 {
+			t.Fatalf("auth refresh should fetch credentials after stream I/O, got %d calls", calls.Load())
 		}
 		streamPool.Close()
 		mock.Close()
@@ -1080,6 +1086,58 @@ availability_zone:us-west-1a
 		if calls.Load() != 1 {
 			t.Fatalf("auth refresh should stop after no-background pipe close, got %d calls", calls.Load())
 		}
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
+	t.Run("Auth Credentials Refresh Does Not Block On Abandoned NoBg Stream", func(t *testing.T) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+		go func() {
+			mock.Expect("HELLO", "3", "AUTH", "ua", "pa").
+				Reply(slicemsg(
+					'%',
+					[]RedisMessage{
+						strmsg('+', "proto"),
+						{typ: ':', intlen: 3},
+					},
+				))
+			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).ReplyError("UNKNOWN COMMAND")
+			mock.Expect("GET", "k")
+		}()
+		var calls atomic.Int64
+		p, err := newPipeNoBg(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
+			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
+				calls.Add(1)
+				return AuthCredentials{Username: "ua", Password: "pa", RefreshAfter: 10 * time.Millisecond}, nil
+			},
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		streamPool := newPool(1, deadFn(), 0, 0, func(context.Context) wire { return deadFn() })
+		streamPool.size = 1
+		_ = p.DoStream(context.Background(), streamPool, cmds.NewCompleted([]string{"GET", "k"}))
+		time.Sleep(50 * time.Millisecond)
+		if calls.Load() != 1 {
+			t.Fatalf("auth refresh should wait for active stream before fetching credentials, got %d calls", calls.Load())
+		}
+		p.Close()
+		done := make(chan RedisResult, 1)
+		go func() {
+			done <- p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "after-close"}))
+		}()
+		select {
+		case result := <-done:
+			if !errors.Is(result.Error(), ErrClosing) {
+				t.Fatalf("expected ErrClosing after close, got %v", result.Error())
+			}
+		case <-time.After(time.Second):
+			t.Fatal("Do blocked on mutex after closing abandoned stream")
+		}
+		streamPool.Close()
 		mock.Close()
 		n1.Close()
 		n2.Close()

@@ -98,6 +98,7 @@ type pipe struct {
 	noNoDelay       bool
 	optIn           bool
 	streamLocked    atomic.Bool
+	authPending     atomic.Bool
 }
 
 type pipeFn func(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error)
@@ -772,9 +773,45 @@ func (p *pipe) scheduleAuthRefresh(refreshAfter time.Duration) {
 	p.authTimer.Reset(refreshAfter)
 }
 
+func (p *pipe) unlockSync() {
+	p.syncMu.Unlock()
+	if p.authPending.Swap(false) && p.Error() == nil && p.authTimer != nil {
+		p.authTimer.Reset(0)
+	}
+}
+
+func (p *pipe) unlockStream() {
+	if p.streamLocked.CompareAndSwap(true, false) {
+		p.unlockSync()
+	}
+}
+
+func (p *pipe) tryLockAuthRefresh() bool {
+	if p.syncMu.TryLock() {
+		return true
+	}
+	p.authPending.Store(true)
+	if p.syncMu.TryLock() {
+		if p.authPending.CompareAndSwap(true, false) {
+			return true
+		}
+		p.syncMu.Unlock()
+	}
+	return false
+}
+
 func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials, error), authContext AuthCredentialsContext) {
 	if p.Error() != nil {
 		return
+	}
+	if p.queue == nil {
+		if !p.tryLockAuthRefresh() {
+			return
+		}
+		defer p.unlockSync()
+		if p.Error() != nil {
+			return
+		}
 	}
 	auth, err := authFn(authContext)
 	if err != nil {
@@ -797,7 +834,15 @@ func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials,
 			ctx, cancel = context.WithTimeout(ctx, p.timeout)
 			defer cancel()
 		}
-		if err := p.Do(ctx, cmds.NewCompleted(args)).Error(); err != nil {
+		cmd := cmds.NewCompleted(args)
+		var result RedisResult
+		if p.queue == nil {
+			dl, ok := ctx.Deadline()
+			result = p.syncDo(dl, ok, cmd)
+		} else {
+			result = p.Do(ctx, cmd)
+		}
+		if err := result.Error(); err != nil {
 			p._exit(err)
 			return
 		}
@@ -1083,7 +1128,7 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	}
 	if p.queue == nil && p.authTimer != nil {
 		p.syncMu.Lock()
-		defer p.syncMu.Unlock()
+		defer p.unlockSync()
 	}
 
 	cmds.CompletedCS(cmd).Verify()
@@ -1167,7 +1212,7 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 	}
 	if p.queue == nil && p.authTimer != nil {
 		p.syncMu.Lock()
-		defer p.syncMu.Unlock()
+		defer p.unlockSync()
 	}
 
 	cmds.CompletedCS(multi[0]).Verify()
@@ -1321,9 +1366,7 @@ func (s *RedisResultStream) WriteTo(w io.Writer) (n int64, err error) {
 				s.w.Close()
 			}
 			s.p.Store(s.w)
-			if s.w.authTimer != nil && s.w.streamLocked.CompareAndSwap(true, false) {
-				s.w.syncMu.Unlock()
-			}
+			s.w.unlockStream()
 		}
 	}
 	return n, err
@@ -1380,8 +1423,7 @@ func (p *pipe) DoStream(ctx context.Context, pool *pool, cmd Completed) RedisRes
 	p.decrWaits()
 	pool.Store(p)
 	if locked {
-		p.streamLocked.Store(false)
-		p.syncMu.Unlock()
+		p.unlockStream()
 	}
 	return RedisResultStream{e: p.Error()}
 }
@@ -1454,8 +1496,7 @@ func (p *pipe) DoMultiStream(ctx context.Context, pool *pool, multi ...Completed
 	p.decrWaits()
 	pool.Store(p)
 	if locked {
-		p.streamLocked.Store(false)
-		p.syncMu.Unlock()
+		p.unlockStream()
 	}
 	return RedisResultStream{e: p.Error()}
 }
@@ -1947,6 +1988,7 @@ func (p *pipe) Close() {
 	if p.authTimer != nil {
 		p.authTimer.Stop()
 	}
+	p.unlockStream()
 	if p.conn != nil {
 		p.conn.Close()
 	}
