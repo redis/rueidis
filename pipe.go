@@ -82,6 +82,7 @@ type pipe struct {
 	r2p             *r2p
 	pingTimer       *time.Timer // timer for background ping
 	authTimer       *time.Timer // timer for refreshing dynamic auth credentials
+	syncMu          sync.Mutex  // serialize direct I/O on no-background pipes
 	lftmTimer       *time.Timer // lifetime timer
 	info            map[string]RedisMessage
 	timeout         time.Duration
@@ -1079,6 +1080,10 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	if err := ctx.Err(); err != nil {
 		return newErrResult(err)
 	}
+	if p.queue == nil {
+		p.syncMu.Lock()
+		defer p.syncMu.Unlock()
+	}
 
 	cmds.CompletedCS(cmd).Verify()
 	if cmd.IsBlock() {
@@ -1158,6 +1163,10 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 			resp.s[i] = newErrResult(err)
 		}
 		return resp
+	}
+	if p.queue == nil {
+		p.syncMu.Lock()
+		defer p.syncMu.Unlock()
 	}
 
 	cmds.CompletedCS(multi[0]).Verify()
@@ -1279,6 +1288,7 @@ type RedisResultStream struct {
 	w *pipe
 	e error
 	n int
+	l bool
 }
 
 // HasNext can be used in a for loop condition to check if a further WriteTo call is needed.
@@ -1311,6 +1321,10 @@ func (s *RedisResultStream) WriteTo(w io.Writer) (n int64, err error) {
 				s.w.Close()
 			}
 			s.p.Store(s.w)
+			if s.l {
+				s.w.syncMu.Unlock()
+				s.l = false
+			}
 		}
 	}
 	return n, err
@@ -1321,6 +1335,10 @@ func (p *pipe) DoStream(ctx context.Context, pool *pool, cmd Completed) RedisRes
 
 	if err := ctx.Err(); err != nil {
 		return RedisResultStream{e: err}
+	}
+	locked := p.queue == nil
+	if locked {
+		p.syncMu.Lock()
 	}
 
 	state := atomic.LoadInt32(&p.state)
@@ -1355,12 +1373,15 @@ func (p *pipe) DoStream(ctx context.Context, pool *pool, cmd Completed) RedisRes
 			p.conn.Close()
 			p.background() // start the background worker to clean up goroutines
 		} else {
-			return RedisResultStream{p: pool, w: p, n: 1}
+			return RedisResultStream{p: pool, w: p, n: 1, l: locked}
 		}
 	}
 	atomic.AddInt32(&p.blcksig, -1)
 	p.decrWaits()
 	pool.Store(p)
+	if locked {
+		p.syncMu.Unlock()
+	}
 	return RedisResultStream{e: p.Error()}
 }
 
@@ -1371,6 +1392,10 @@ func (p *pipe) DoMultiStream(ctx context.Context, pool *pool, multi ...Completed
 
 	if err := ctx.Err(); err != nil {
 		return RedisResultStream{e: err}
+	}
+	locked := p.queue == nil
+	if locked {
+		p.syncMu.Lock()
 	}
 
 	state := atomic.LoadInt32(&p.state)
@@ -1420,12 +1445,15 @@ func (p *pipe) DoMultiStream(ctx context.Context, pool *pool, multi ...Completed
 			p.conn.Close()
 			p.background() // start the background worker to clean up goroutines
 		} else {
-			return RedisResultStream{p: pool, w: p, n: len(multi)}
+			return RedisResultStream{p: pool, w: p, n: len(multi), l: locked}
 		}
 	}
 	atomic.AddInt32(&p.blcksig, -1)
 	p.decrWaits()
 	pool.Store(p)
+	if locked {
+		p.syncMu.Unlock()
+	}
 	return RedisResultStream{e: p.Error()}
 }
 
