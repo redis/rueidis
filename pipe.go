@@ -82,7 +82,6 @@ type pipe struct {
 	r2p             *r2p
 	pingTimer       *time.Timer // timer for background ping
 	authTimer       *time.Timer // timer for refreshing dynamic auth credentials
-	authTimerMu     sync.Mutex
 	lftmTimer       *time.Timer // lifetime timer
 	info            map[string]RedisMessage
 	timeout         time.Duration
@@ -372,6 +371,15 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 			}
 		}
 	}
+	if option.AuthCredentialsFn != nil && authCredentials.RefreshAfter > 0 {
+		authFn := option.AuthCredentialsFn
+		ready := make(chan struct{})
+		p.authTimer = time.AfterFunc(authCredentials.RefreshAfter, func() {
+			<-ready
+			p.refreshAuth(authFn, authCredentialsContext)
+		})
+		close(ready)
+	}
 	if !nobg {
 		if p.timeout > 0 && p.pinggap > 0 {
 			p.backgroundPing()
@@ -383,17 +391,6 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 	if option.ConnLifetime > 0 {
 		p.lftm = option.ConnLifetime
 		p.lftmTimer = time.AfterFunc(option.ConnLifetime, p.expired)
-	}
-	if option.AuthCredentialsFn != nil && authCredentials.RefreshAfter > 0 {
-		authFn := option.AuthCredentialsFn
-		var refreshAfter atomic.Int64
-		refreshAfter.Store(int64(authCredentials.RefreshAfter))
-		p.authTimerMu.Lock()
-		p.authTimer = time.AfterFunc(authCredentials.RefreshAfter, func() {
-			nextRefreshAfter := p.refreshAuth(authFn, authCredentialsContext, time.Duration(refreshAfter.Load()))
-			refreshAfter.Store(int64(nextRefreshAfter))
-		})
-		p.authTimerMu.Unlock()
 	}
 	return p, nil
 }
@@ -408,19 +405,11 @@ func (p *pipe) background() {
 }
 
 func (p *pipe) _exit(err error) {
-	p._exitWithAuthRefresh(err, true)
-}
-
-func (p *pipe) exitAuthRefresh(err error) {
-	p._exitWithAuthRefresh(err, false)
-}
-
-func (p *pipe) _exitWithAuthRefresh(err error, stopAuthRefresh bool) {
 	p.error.CompareAndSwap(nil, &errs{error: err})
 	atomic.CompareAndSwapInt32(&p.state, 1, 2) // stop accepting new requests
 	_ = p.conn.Close()                         // force both read & write goroutine to exit
-	if stopAuthRefresh {
-		p.stopAuthRefresh()
+	if p.authTimer != nil {
+		p.authTimer.Stop()
 	}
 	p.StopTimer()
 	p.clhks.Load().(func(error))(err)
@@ -459,6 +448,9 @@ func (p *pipe) _background() {
 	}
 	if p.pingTimer != nil {
 		p.pingTimer.Stop()
+	}
+	if p.authTimer != nil {
+		p.authTimer.Stop()
 	}
 	err := p.Error()
 	p.nsubs.Close()
@@ -772,39 +764,20 @@ func (p *pipe) backgroundPing() {
 }
 
 func (p *pipe) scheduleAuthRefresh(refreshAfter time.Duration) {
-	if refreshAfter <= 0 || p.Error() != nil {
-		return
-	}
-	p.authTimerMu.Lock()
-	defer p.authTimerMu.Unlock()
-	if p.authTimer == nil || p.Error() != nil {
+	if refreshAfter <= 0 || p.Error() != nil || p.authTimer == nil {
 		return
 	}
 	p.authTimer.Reset(refreshAfter)
 }
 
-func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials, error), authContext AuthCredentialsContext, refreshAfter time.Duration) time.Duration {
+func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials, error), authContext AuthCredentialsContext) {
 	if p.Error() != nil {
-		return refreshAfter
-	}
-	if atomic.LoadInt32(&p.blcksig) != 0 {
-		p.exitAuthRefresh(ErrClosing)
-		return refreshAfter
-	}
-	if p.deferAuthRefresh(refreshAfter) {
-		return refreshAfter
+		return
 	}
 	auth, err := authFn(authContext)
 	if err != nil {
-		p.exitAuthRefresh(err)
-		return refreshAfter
-	}
-	if atomic.LoadInt32(&p.blcksig) != 0 {
-		p.exitAuthRefresh(ErrClosing)
-		return refreshAfter
-	}
-	if p.deferAuthRefresh(refreshAfter) {
-		return refreshAfter
+		p._exit(err)
+		return
 	}
 	if auth.Username != "" || auth.Password != "" {
 		args := []string{"AUTH"}
@@ -823,35 +796,11 @@ func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials,
 			defer cancel()
 		}
 		if err := p.Do(ctx, cmds.NewCompleted(args)).Error(); err != nil {
-			p.exitAuthRefresh(err)
-			return refreshAfter
+			p._exit(err)
+			return
 		}
 	}
 	p.scheduleAuthRefresh(auth.RefreshAfter)
-	return auth.RefreshAfter
-}
-
-// deferAuthRefresh reschedules instead of racing a direct synchronous write on
-// a no-background pipe.
-func (p *pipe) deferAuthRefresh(refreshAfter time.Duration) bool {
-	if p.syncCommandInFlight() {
-		p.scheduleAuthRefresh(refreshAfter)
-		return true
-	}
-	return false
-}
-
-func (p *pipe) syncCommandInFlight() bool {
-	return atomic.LoadInt32(&p.state) == 0 && p.loadWaits() != 0
-}
-
-func (p *pipe) stopAuthRefresh() {
-	p.authTimerMu.Lock()
-	defer p.authTimerMu.Unlock()
-	if p.authTimer != nil {
-		p.authTimer.Stop()
-		p.authTimer = nil
-	}
 }
 
 func (p *pipe) handlePush(values []RedisMessage) (reply bool, unsubscribe bool) {
@@ -1964,7 +1913,6 @@ func (p *pipe) Close() {
 	if p.pingTimer != nil {
 		p.pingTimer.Stop()
 	}
-	p.stopAuthRefresh()
 	if p.conn != nil {
 		p.conn.Close()
 	}
@@ -1974,10 +1922,10 @@ func (p *pipe) Close() {
 }
 
 func (p *pipe) StopTimer() bool {
-	if p.lftmTimer != nil {
-		return p.lftmTimer.Stop()
+	if p.lftmTimer == nil {
+		return true
 	}
-	return true
+	return p.lftmTimer.Stop()
 }
 
 func (p *pipe) ResetTimer() bool {
