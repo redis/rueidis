@@ -1944,6 +1944,9 @@ func (p *pipe) Close() {
 	if p.pingTimer != nil {
 		p.pingTimer.Stop()
 	}
+	if p.authTimer != nil {
+		p.authTimer.Stop()
+	}
 	if p.conn != nil {
 		p.conn.Close()
 	}
