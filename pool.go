@@ -81,7 +81,12 @@ retry:
 		// allowing others to make wires concurrently instead of waiting in line
 		p.cond.L.Unlock()
 		v = p.make(ctx)
-		v.StopTimer()
+		if !v.StopTimer() || v.Error() != nil {
+			p.cond.L.Lock()
+			p.size--
+			v.Close()
+			goto retry
+		}
 		return v
 	}
 

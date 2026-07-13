@@ -344,18 +344,23 @@ func TestPoolWithConnLifetime(t *testing.T) {
 
 	t.Run("Reuse without expired connections", func(t *testing.T) {
 		stopTimerCall := 0
+		staleClosed := false
 		wires := []wire{
 			&mockWire{},
 			&mockWire{
+				CloseFn: func() {
+					staleClosed = true
+				},
 				StopTimerFn: func() bool {
 					stopTimerCall++
 					return false
 				}, // connection lifetime timer is already fired
 			},
+			&mockWire{},
 		}
-		conn := make([]wire, 0, len(wires))
+		conn := make([]wire, 0, 2)
 		pool := setup(wires)
-		for range wires {
+		for range 2 {
 			conn = append(conn, pool.Acquire(context.Background()))
 		}
 		for i := 0; i < len(conn); i++ {
@@ -365,6 +370,9 @@ func TestPoolWithConnLifetime(t *testing.T) {
 		if stopTimerCall != 1 {
 			t.Errorf("StopTimer must be called when making wire")
 		}
+		if !staleClosed {
+			t.Error("pool must close a newly made wire whose timer already fired")
+		}
 
 		pool.cond.L.Lock()
 		if pool.size != 2 {
@@ -372,22 +380,6 @@ func TestPoolWithConnLifetime(t *testing.T) {
 		}
 		if len(pool.list) != 2 {
 			t.Errorf("list len must equal to 2, actual: %d", len(pool.list))
-		}
-		pool.cond.L.Unlock()
-
-		// stop timer failed, so drop the expired connection
-		pool.Store(pool.Acquire(context.Background()))
-
-		if stopTimerCall != 2 {
-			t.Errorf("StopTimer must be called when acquiring from pool")
-		}
-
-		pool.cond.L.Lock()
-		if pool.size != 1 {
-			t.Errorf("size must be equal to 1, actual: %d", pool.size)
-		}
-		if len(pool.list) != 1 {
-			t.Errorf("list len must equal to 1, actual: %d", len(pool.list))
 		}
 		pool.cond.L.Unlock()
 	})
