@@ -66,37 +66,37 @@ type wire interface {
 var _ wire = (*pipe)(nil)
 
 type pipe struct {
-	conn             net.Conn
-	clhks            atomic.Value // closed hook, invoked after the conn is closed
-	queue            queue
-	cache            CacheStore
-	pshks            atomic.Pointer[pshks] // pubsub hook, registered by the SetPubSubHooks
-	error            atomic.Pointer[errs]
-	r                *bufio.Reader
-	w                *bufio.Writer
-	close            chan struct{}
-	onInvalidations  func([]RedisMessage)
-	ssubs            *subs // pubsub smessage subscriptions
-	nsubs            *subs // pubsub  message subscriptions
-	psubs            *subs // pubsub pmessage subscriptions
-	r2p              *r2p
-	pingTimer        *time.Timer // timer for background ping
-	authTimer        *time.Timer // timer for refreshing dynamic auth credentials
-	lftmTimer        *time.Timer // lifetime timer
-	info             map[string]RedisMessage
-	timeout          time.Duration
-	pinggap          time.Duration
-	maxFlushDelay    time.Duration
-	lftm             time.Duration // lifetime
-	wrCounter        atomic.Uint64
-	version          int32
-	blcksig          int32
-	state            int32
-	bgState          int32
-	r2ps             bool // identify this pipe is used for resp2 pubsub or not
-	noNoDelay        bool
-	optIn            bool
-	authRefreshAfter time.Duration
+	conn            net.Conn
+	clhks           atomic.Value // closed hook, invoked after the conn is closed
+	queue           queue
+	cache           CacheStore
+	pshks           atomic.Pointer[pshks] // pubsub hook, registered by the SetPubSubHooks
+	error           atomic.Pointer[errs]
+	r               *bufio.Reader
+	w               *bufio.Writer
+	close           chan struct{}
+	onInvalidations func([]RedisMessage)
+	ssubs           *subs // pubsub smessage subscriptions
+	nsubs           *subs // pubsub  message subscriptions
+	psubs           *subs // pubsub pmessage subscriptions
+	r2p             *r2p
+	pingTimer       *time.Timer // timer for background ping
+	authTimer       *time.Timer // timer for refreshing dynamic auth credentials
+	lftmTimer       *time.Timer // lifetime timer
+	info            map[string]RedisMessage
+	authRefreshAt   time.Time
+	timeout         time.Duration
+	pinggap         time.Duration
+	maxFlushDelay   time.Duration
+	lftm            time.Duration // lifetime
+	wrCounter       atomic.Uint64
+	version         int32
+	blcksig         int32
+	state           int32
+	bgState         int32
+	r2ps            bool // identify this pipe is used for resp2 pubsub or not
+	noNoDelay       bool
+	optIn           bool
 }
 
 type pipeFn func(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error)
@@ -372,15 +372,12 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 			}
 		}
 	}
-	if option.AuthCredentialsFn != nil && authCredentials.RefreshAfter > 0 {
+	if option.AuthCredentialsFn != nil && !authCredentials.RefreshAfter.IsZero() {
 		authFn := option.AuthCredentialsFn
-		p.authRefreshAfter = authCredentials.RefreshAfter
-		ready := make(chan struct{})
-		p.authTimer = time.AfterFunc(p.authRefreshAfter, func() {
-			<-ready
+		p.authRefreshAt = authCredentials.RefreshAfter
+		p.authTimer = time.AfterFunc(time.Until(p.authRefreshAt), func() {
 			p.refreshAuth(authFn, authCredentialsContext)
 		})
-		close(ready)
 	}
 	if !nobg {
 		if p.timeout > 0 && p.pinggap > 0 {
@@ -761,12 +758,12 @@ func (p *pipe) backgroundPing() {
 	})
 }
 
-func (p *pipe) scheduleAuthRefresh(refreshAfter time.Duration) {
-	p.authRefreshAfter = refreshAfter
-	if p.authRefreshAfter <= 0 || p.Error() != nil || p.authTimer == nil {
+func (p *pipe) scheduleAuthRefresh(refreshAfter time.Time) {
+	p.authRefreshAt = refreshAfter
+	if p.authRefreshAt.IsZero() || p.Error() != nil || p.authTimer == nil {
 		return
 	}
-	p.authTimer.Reset(p.authRefreshAfter)
+	p.authTimer.Reset(time.Until(p.authRefreshAt))
 }
 
 func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials, error), authContext AuthCredentialsContext) {
@@ -779,7 +776,8 @@ func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials,
 		return
 	}
 	if auth.Username != "" || auth.Password != "" {
-		args := []string{"AUTH"}
+		args := make([]string, 0, 3)
+		args = append(args, "AUTH")
 		if auth.Password != "" && auth.Username == "" {
 			if !p.r2ps && p.r2p == nil {
 				args = append(args, "default")
@@ -1080,6 +1078,7 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	if err := ctx.Err(); err != nil {
 		return newErrResult(err)
 	}
+
 	cmds.CompletedCS(cmd).Verify()
 	if cmd.IsBlock() {
 		atomic.AddInt32(&p.blcksig, 1)
@@ -1940,8 +1939,8 @@ func (p *pipe) ResetTimer() bool {
 	if p.lftmTimer != nil {
 		reset = p.lftmTimer.Reset(p.lftm)
 	}
-	if p.authTimer != nil && p.authRefreshAfter > 0 {
-		reset = p.authTimer.Reset(p.authRefreshAfter) && reset
+	if p.authTimer != nil && !p.authRefreshAt.IsZero() {
+		reset = p.authTimer.Reset(time.Until(p.authRefreshAt)) && reset
 	}
 	return reset
 }
