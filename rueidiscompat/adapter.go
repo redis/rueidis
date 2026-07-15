@@ -1672,6 +1672,8 @@ func (c *Compat) HSetEXWithArgs(ctx context.Context, key string, options *HSetEX
 			partial = c.client.B().Hsetex().Key(key).Fnx().Pxat(options.ExpirationVal).Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
 		case HSetEXExpirationKEEPTTL:
 			partial = c.client.B().Hsetex().Key(key).Fnx().Keepttl().Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
+		default:
+			partial = c.client.B().Hsetex().Key(key).Fnx().Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
 		}
 	case HSetEXFXX:
 		switch options.ExpirationType {
@@ -1685,6 +1687,23 @@ func (c *Compat) HSetEXWithArgs(ctx context.Context, key string, options *HSetEX
 			partial = c.client.B().Hsetex().Key(key).Fxx().Pxat(options.ExpirationVal).Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
 		case HSetEXExpirationKEEPTTL:
 			partial = c.client.B().Hsetex().Key(key).Fxx().Keepttl().Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
+		default:
+			partial = c.client.B().Hsetex().Key(key).Fxx().Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
+		}
+	default:
+		switch options.ExpirationType {
+		case HSetEXExpirationEX:
+			partial = c.client.B().Hsetex().Key(key).Ex(options.ExpirationVal).Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
+		case HSetEXExpirationPX:
+			partial = c.client.B().Hsetex().Key(key).Px(options.ExpirationVal).Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
+		case HSetEXExpirationEXAT:
+			partial = c.client.B().Hsetex().Key(key).Exat(options.ExpirationVal).Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
+		case HSetEXExpirationPXAT:
+			partial = c.client.B().Hsetex().Key(key).Pxat(options.ExpirationVal).Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
+		case HSetEXExpirationKEEPTTL:
+			partial = c.client.B().Hsetex().Key(key).Keepttl().Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
+		default:
+			partial = c.client.B().Hsetex().Key(key).Fields().Numfields(int64(len(fieldsAndValues) / 2)).FieldValue()
 		}
 	}
 
