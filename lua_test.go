@@ -31,9 +31,9 @@ func TestNewLuaScriptOnePass(t *testing.T) {
 		},
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
 			if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA", sha, "2", "1", "2", "3", "4"}) {
-				return newResult(strmsg('+', "OK"), nil)
+				return NewResult(strmsg('+', "OK"), nil)
 			}
-			return newResult(strmsg('+', "unexpected"), nil)
+			return NewResult(strmsg('+', "unexpected"), nil)
 		},
 	}
 
@@ -62,12 +62,12 @@ func TestNewLuaScript(t *testing.T) {
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
 			if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA", sha, "2", "1", "2", "3", "4"}) {
 				eval = true
-				return newResult(strmsg('-', "NOSCRIPT"), nil)
+				return NewResult(strmsg('-', "NOSCRIPT"), nil)
 			}
 			if eval && reflect.DeepEqual(cmd.Commands(), []string{"EVAL", body, "2", "1", "2", "3", "4"}) {
-				return newResult(RedisMessage{typ: '_'}, nil)
+				return NewResult(RedisMessage{typ: '_'}, nil)
 			}
-			return newResult(strmsg('+', "unexpected"), nil)
+			return NewResult(strmsg('+', "unexpected"), nil)
 		},
 	}
 
@@ -96,9 +96,9 @@ func TestNewLuaScriptNoSha(t *testing.T) {
 				t.Fatal("EVALSHA must not be called")
 			}
 			if reflect.DeepEqual(cmd.Commands(), []string{"EVAL", body, "2", "1", "2", "3", "4"}) {
-				return newResult(RedisMessage{typ: '_'}, nil)
+				return NewResult(RedisMessage{typ: '_'}, nil)
 			}
-			return newResult(strmsg('+', "unexpected"), nil)
+			return NewResult(strmsg('+', "unexpected"), nil)
 		},
 	}
 
@@ -127,12 +127,12 @@ func TestNewLuaScriptReadOnly(t *testing.T) {
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
 			if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA_RO", sha, "2", "1", "2", "3", "4"}) {
 				eval = true
-				return newResult(strmsg('-', "NOSCRIPT"), nil)
+				return NewResult(strmsg('-', "NOSCRIPT"), nil)
 			}
 			if eval && reflect.DeepEqual(cmd.Commands(), []string{"EVAL_RO", body, "2", "1", "2", "3", "4"}) {
-				return newResult(RedisMessage{typ: '_'}, nil)
+				return NewResult(RedisMessage{typ: '_'}, nil)
 			}
-			return newResult(strmsg('+', "unexpected"), nil)
+			return NewResult(strmsg('+', "unexpected"), nil)
 		},
 	}
 
@@ -161,9 +161,9 @@ func TestNewLuaScriptReadOnlyNoSha(t *testing.T) {
 				t.Fatal("EVALSHA_RO must not be called")
 			}
 			if reflect.DeepEqual(cmd.Commands(), []string{"EVAL_RO", body, "2", "1", "2", "3", "4"}) {
-				return newResult(RedisMessage{typ: '_'}, nil)
+				return NewResult(RedisMessage{typ: '_'}, nil)
 			}
-			return newResult(strmsg('+', "unexpected"), nil)
+			return NewResult(strmsg('+', "unexpected"), nil)
 		},
 	}
 
@@ -193,17 +193,17 @@ func TestNewLuaScriptRetryable(t *testing.T) {
 			if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA", sha, "2", "1", "2", "3", "4"}) {
 				eval = true
 				if !cmd.IsRetryable() {
-					return newResult(strmsg('-', "cmd retryable unexpected"), nil)
+					return NewResult(strmsg('-', "cmd retryable unexpected"), nil)
 				}
-				return newResult(strmsg('-', "NOSCRIPT"), nil)
+				return NewResult(strmsg('-', "NOSCRIPT"), nil)
 			}
 			if eval && reflect.DeepEqual(cmd.Commands(), []string{"EVAL", body, "2", "1", "2", "3", "4"}) {
 				if !cmd.IsRetryable() {
-					return newResult(strmsg('-', "cmd retryable unexpected"), nil)
+					return NewResult(strmsg('-', "cmd retryable unexpected"), nil)
 				}
-				return newResult(RedisMessage{typ: '_'}, nil)
+				return NewResult(RedisMessage{typ: '_'}, nil)
 			}
-			return newResult(strmsg('+', "unexpected"), nil)
+			return NewResult(strmsg('+', "unexpected"), nil)
 		},
 	}
 
@@ -233,11 +233,11 @@ func TestNewLuaScriptNoShaRetryable(t *testing.T) {
 			}
 			if reflect.DeepEqual(cmd.Commands(), []string{"EVAL", body, "2", "1", "2", "3", "4"}) {
 				if !cmd.IsRetryable() {
-					return newResult(strmsg('-', "cmd retryable unexpected"), nil)
+					return NewResult(strmsg('-', "cmd retryable unexpected"), nil)
 				}
-				return newResult(RedisMessage{typ: '_'}, nil)
+				return NewResult(RedisMessage{typ: '_'}, nil)
 			}
-			return newResult(strmsg('+', "unexpected"), nil)
+			return NewResult(strmsg('+', "unexpected"), nil)
 		},
 	}
 
@@ -260,7 +260,7 @@ func TestNewLuaScriptExecMultiError(t *testing.T) {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
-			return newResult(strmsg('-', "ANY ERR"), nil)
+			return NewResult(strmsg('-', "ANY ERR"), nil)
 		},
 	}
 
@@ -284,12 +284,12 @@ func TestNewLuaScriptExecMulti(t *testing.T) {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
-			return newResult(strmsg('+', "OK"), nil)
+			return NewResult(strmsg('+', "OK"), nil)
 		},
 		DoMultiFn: func(ctx context.Context, multi ...Completed) (resp []RedisResult) {
 			for _, cmd := range multi {
 				if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA", sha, "2", "1", "2", "3", "4"}) {
-					resp = append(resp, newResult(strmsg('+', "OK"), nil))
+					resp = append(resp, NewResult(strmsg('+', "OK"), nil))
 				}
 			}
 			return resp
@@ -314,12 +314,12 @@ func TestNewLuaScriptExecMultiNoSha(t *testing.T) {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
-			return newResult(strmsg('+', "OK"), nil)
+			return NewResult(strmsg('+', "OK"), nil)
 		},
 		DoMultiFn: func(ctx context.Context, multi ...Completed) (resp []RedisResult) {
 			for _, cmd := range multi {
 				if reflect.DeepEqual(cmd.Commands(), []string{"EVAL", body, "2", "1", "2", "3", "4"}) {
-					resp = append(resp, newResult(strmsg('+', "OK"), nil))
+					resp = append(resp, NewResult(strmsg('+', "OK"), nil))
 				}
 			}
 			return resp
@@ -346,12 +346,12 @@ func TestNewLuaScriptExecMultiRo(t *testing.T) {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
-			return newResult(strmsg('+', "OK"), nil)
+			return NewResult(strmsg('+', "OK"), nil)
 		},
 		DoMultiFn: func(ctx context.Context, multi ...Completed) (resp []RedisResult) {
 			for _, cmd := range multi {
 				if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA_RO", sha, "2", "1", "2", "3", "4"}) {
-					resp = append(resp, newResult(strmsg('+', "OK"), nil))
+					resp = append(resp, NewResult(strmsg('+', "OK"), nil))
 				}
 			}
 			return resp
@@ -376,12 +376,12 @@ func TestNewLuaScriptExecMultiRoNoSha(t *testing.T) {
 			return cmds.NewBuilder(cmds.NoSlot)
 		},
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
-			return newResult(strmsg('+', "OK"), nil)
+			return NewResult(strmsg('+', "OK"), nil)
 		},
 		DoMultiFn: func(ctx context.Context, multi ...Completed) (resp []RedisResult) {
 			for _, cmd := range multi {
 				if reflect.DeepEqual(cmd.Commands(), []string{"EVAL_RO", body, "2", "1", "2", "3", "4"}) {
-					resp = append(resp, newResult(strmsg('+', "OK"), nil))
+					resp = append(resp, NewResult(strmsg('+', "OK"), nil))
 				}
 			}
 			return resp
@@ -501,16 +501,16 @@ func TestNewLuaScriptWithLoadSha1(t *testing.T) {
 			commands := cmd.Commands()
 			if reflect.DeepEqual(commands, []string{"SCRIPT", "LOAD", body}) {
 				scriptLoadCalled = true
-				return newResult(strmsg('+', sha), nil)
+				return NewResult(strmsg('+', sha), nil)
 			}
 			if reflect.DeepEqual(commands, []string{"EVALSHA", sha, "2", "1", "2", "3", "4"}) {
 				evalshaInvoked = true
-				return newResult(strmsg('+', "OK"), nil)
+				return NewResult(strmsg('+', "OK"), nil)
 			}
 			if reflect.DeepEqual(commands, []string{"EVAL", body, "2", "1", "2", "3", "4"}) {
 				t.Fatal("EVAL must not be called when load succeeds")
 			}
-			return newResult(strmsg('+', "unexpected"), nil)
+			return NewResult(strmsg('+', "unexpected"), nil)
 		},
 	}
 
@@ -544,10 +544,10 @@ func TestNewLuaScriptWithLoadSha1Error(t *testing.T) {
 		DoFn: func(ctx context.Context, cmd Completed) (resp RedisResult) {
 			commands := cmd.Commands()
 			if reflect.DeepEqual(commands, []string{"SCRIPT", "LOAD", body}) {
-				return newErrResult(expectedErr)
+				return NewErrorResult(expectedErr)
 			}
 			t.Fatal("unexpected command")
-			return newResult(strmsg('+', "unexpected"), nil)
+			return NewResult(strmsg('+', "unexpected"), nil)
 		},
 	}
 
@@ -580,21 +580,21 @@ func TestNewLuaScriptRetryableWithLoadSha1(t *testing.T) {
 			if reflect.DeepEqual(commands, []string{"SCRIPT", "LOAD", body}) {
 				scriptLoadCalled = true
 				if !cmd.IsRetryable() {
-					return newResult(strmsg('-', "cmd retryable unexpected"), nil)
+					return NewResult(strmsg('-', "cmd retryable unexpected"), nil)
 				}
-				return newResult(strmsg('+', sha), nil)
+				return NewResult(strmsg('+', sha), nil)
 			}
 			if reflect.DeepEqual(commands, []string{"EVALSHA", sha, "2", "1", "2", "3", "4"}) {
 				evalshaInvoked = true
 				if !cmd.IsRetryable() {
-					return newResult(strmsg('-', "cmd retryable unexpected"), nil)
+					return NewResult(strmsg('-', "cmd retryable unexpected"), nil)
 				}
-				return newResult(strmsg('+', "OK"), nil)
+				return NewResult(strmsg('+', "OK"), nil)
 			}
 			if reflect.DeepEqual(commands, []string{"EVAL", body, "2", "1", "2", "3", "4"}) {
 				t.Fatal("EVAL must not be called when load succeeds")
 			}
-			return newResult(strmsg('+', "unexpected"), nil)
+			return NewResult(strmsg('+', "unexpected"), nil)
 		},
 	}
 
@@ -632,16 +632,16 @@ func TestNewLuaScriptReadOnlyWithLoadSha1(t *testing.T) {
 			commands := cmd.Commands()
 			if reflect.DeepEqual(commands, []string{"SCRIPT", "LOAD", body}) {
 				scriptLoadCalled = true
-				return newResult(strmsg('+', sha), nil)
+				return NewResult(strmsg('+', sha), nil)
 			}
 			if reflect.DeepEqual(commands, []string{"EVALSHA_RO", sha, "2", "1", "2", "3", "4"}) {
 				evalshaRoInvoked = true
-				return newResult(strmsg('+', "OK"), nil)
+				return NewResult(strmsg('+', "OK"), nil)
 			}
 			if reflect.DeepEqual(commands, []string{"EVAL_RO", body, "2", "1", "2", "3", "4"}) {
 				t.Fatal("EVAL_RO must not be called when load succeeds")
 			}
-			return newResult(strmsg('+', "unexpected"), nil)
+			return NewResult(strmsg('+', "unexpected"), nil)
 		},
 	}
 
@@ -678,12 +678,12 @@ func TestNewLuaScriptWithLoadSha1Concurrent(t *testing.T) {
 			commands := cmd.Commands()
 			if reflect.DeepEqual(commands, []string{"SCRIPT", "LOAD", body}) {
 				scriptLoadCount.Add(1)
-				return newResult(strmsg('+', sha), nil)
+				return NewResult(strmsg('+', sha), nil)
 			}
 			if reflect.DeepEqual(commands, []string{"EVALSHA", sha, "2", "1", "2", "3", "4"}) {
-				return newResult(strmsg('+', "OK"), nil)
+				return NewResult(strmsg('+', "OK"), nil)
 			}
-			return newResult(strmsg('+', "unexpected"), nil)
+			return NewResult(strmsg('+', "unexpected"), nil)
 		},
 	}
 
@@ -727,14 +727,14 @@ func TestNewLuaScriptWithLoadSha1ExecMulti(t *testing.T) {
 			commands := cmd.Commands()
 			if reflect.DeepEqual(commands, []string{"SCRIPT", "LOAD", body}) {
 				scriptLoadCalled = true
-				return newResult(strmsg('+', sha), nil)
+				return NewResult(strmsg('+', sha), nil)
 			}
-			return newResult(strmsg('+', "OK"), nil)
+			return NewResult(strmsg('+', "OK"), nil)
 		},
 		DoMultiFn: func(ctx context.Context, multi ...Completed) (resp []RedisResult) {
 			for _, cmd := range multi {
 				if reflect.DeepEqual(cmd.Commands(), []string{"EVALSHA", sha, "2", "1", "2", "3", "4"}) {
-					resp = append(resp, newResult(strmsg('+', "OK"), nil))
+					resp = append(resp, NewResult(strmsg('+', "OK"), nil))
 				} else if reflect.DeepEqual(cmd.Commands(), []string{"EVAL", body, "2", "1", "2", "3", "4"}) {
 					t.Fatal("EVAL should not be called when load succeeds")
 				}
@@ -776,7 +776,7 @@ func TestNewLuaScript_MayRetryable(t *testing.T) {
 	scriptLoad := func(_, _ bool) expect {
 		return expect{
 			commands: []string{"SCRIPT", "LOAD", body},
-			reply:    newResult(strmsg('+', sha), nil),
+			reply:    NewResult(strmsg('+', sha), nil),
 			attr:     cmdAttr{ReadOnly: false, Retryable: true},
 		}
 	}
@@ -787,7 +787,7 @@ func TestNewLuaScript_MayRetryable(t *testing.T) {
 		}
 		return expect{
 			commands: []string{cmd, sha, "2", "1", "2", "3", "4"},
-			reply:    newResult(strmsg('+', "OK"), nil),
+			reply:    NewResult(strmsg('+', "OK"), nil),
 			attr:     cmdAttr{ReadOnly: readOnly, Retryable: readOnly || retryable},
 		}
 	}
@@ -798,7 +798,7 @@ func TestNewLuaScript_MayRetryable(t *testing.T) {
 		}
 		return expect{
 			commands: []string{cmd, body, "2", "1", "2", "3", "4"},
-			reply:    newResult(strmsg('+', "OK"), nil),
+			reply:    NewResult(strmsg('+', "OK"), nil),
 			attr:     cmdAttr{ReadOnly: readOnly, Retryable: readOnly || retryable},
 		}
 	}
@@ -813,12 +813,12 @@ func TestNewLuaScript_MayRetryable(t *testing.T) {
 			for _, e := range expects {
 				if reflect.DeepEqual(commands, e.commands) {
 					if cmd.IsReadOnly() != e.attr.ReadOnly || cmd.IsRetryable() != e.attr.Retryable {
-						return newErrResult(fmt.Errorf("cmd attr not match, %v %v %v %v", cmd.IsReadOnly(), e.attr.ReadOnly, cmd.IsRetryable(), e.attr.Retryable))
+						return NewErrorResult(fmt.Errorf("cmd attr not match, %v %v %v %v", cmd.IsReadOnly(), e.attr.ReadOnly, cmd.IsRetryable(), e.attr.Retryable))
 					}
 					return e.reply
 				}
 			}
-			return newResult(strmsg('-', "not expected"), nil)
+			return NewResult(strmsg('-', "not expected"), nil)
 		},
 		DoMultiFn: func(ctx context.Context, multi ...Completed) (resp []RedisResult) {
 			for _, cmd := range multi {
@@ -827,7 +827,7 @@ func TestNewLuaScript_MayRetryable(t *testing.T) {
 				for _, e := range expects {
 					if reflect.DeepEqual(commands, e.commands) {
 						if cmd.IsReadOnly() != e.attr.ReadOnly || cmd.IsRetryable() != e.attr.Retryable {
-							resp = append(resp, newErrResult(fmt.Errorf("cmd attr not match, %v %v %v %v", cmd.IsReadOnly(), e.attr.ReadOnly, cmd.IsRetryable(), e.attr.Retryable)))
+							resp = append(resp, NewErrorResult(fmt.Errorf("cmd attr not match, %v %v %v %v", cmd.IsReadOnly(), e.attr.ReadOnly, cmd.IsRetryable(), e.attr.Retryable)))
 						} else {
 							resp = append(resp, e.reply)
 						}
@@ -836,7 +836,7 @@ func TestNewLuaScript_MayRetryable(t *testing.T) {
 					}
 				}
 				if !found {
-					resp = append(resp, newResult(strmsg('-', "not expected"), nil))
+					resp = append(resp, NewResult(strmsg('-', "not expected"), nil))
 				}
 			}
 			return resp

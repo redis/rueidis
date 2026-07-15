@@ -130,11 +130,15 @@ func (r *RedisError) IsBusyGroup() bool {
 	return strings.HasPrefix(r.string(), "BUSYGROUP")
 }
 
-func newResult(val RedisMessage, err error) RedisResult {
+// NewResult returns a RedisResult with the provided RedisMessage and error. This is mostly useful for implementing
+// hooks or mocking.
+func NewResult(val RedisMessage, err error) RedisResult {
 	return RedisResult{val: val, err: err}
 }
 
-func newErrResult(err error) RedisResult {
+// NewErrorResult returns a RedisResult with the provided error. This is useful for implementing
+// hooks or mocking.
+func NewErrorResult(err error) RedisResult {
 	return RedisResult{err: err}
 }
 

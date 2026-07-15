@@ -284,7 +284,7 @@ func TestSingleClient(t *testing.T) {
 			if !reflect.DeepEqual(cmd.Commands(), c.Commands()) {
 				t.Fatalf("unexpected command %v", cmd)
 			}
-			return newResult(strmsg('+', "Do"), nil)
+			return NewResult(strmsg('+', "Do"), nil)
 		}
 		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "Do" {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -294,7 +294,7 @@ func TestSingleClient(t *testing.T) {
 	t.Run("Delegate DoStream", func(t *testing.T) {
 		c := client.B().Get().Key("Do").Build()
 		m.DoStreamFn = func(cmd Completed) RedisResultStream {
-			return RedisResultStream{e: errors.New(cmd.Commands()[1])}
+			return NewErrorResultStream(errors.New(cmd.Commands()[1]))
 		}
 		if s := client.DoStream(context.Background(), c); s.Error().Error() != "Do" {
 			t.Fatalf("unexpected response %v", s.Error())
@@ -307,7 +307,7 @@ func TestSingleClient(t *testing.T) {
 			if !reflect.DeepEqual(cmd[0].Commands(), c.Commands()) {
 				t.Fatalf("unexpected command %v", cmd)
 			}
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "Do"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "Do"), nil)}}
 		}
 		if len(client.DoMulti(context.Background())) != 0 {
 			t.Fatalf("unexpected response length")
@@ -336,7 +336,7 @@ func TestSingleClient(t *testing.T) {
 			if !reflect.DeepEqual(cmd.Commands(), c.Commands()) || ttl != 100 {
 				t.Fatalf("unexpected command %v, %v", cmd, ttl)
 			}
-			return newResult(strmsg('+', "DoCache"), nil)
+			return NewResult(strmsg('+', "DoCache"), nil)
 		}
 		if v, err := client.DoCache(context.Background(), c, 100).ToString(); err != nil || v != "DoCache" {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -349,7 +349,7 @@ func TestSingleClient(t *testing.T) {
 			if !reflect.DeepEqual(multi[0].Cmd.Commands(), c.Commands()) || multi[0].TTL != 100 {
 				t.Fatalf("unexpected command %v, %v", multi[0].Cmd, multi[0].TTL)
 			}
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "DoCache"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "DoCache"), nil)}}
 		}
 		if len(client.DoMultiCache(context.Background())) != 0 {
 			t.Fatalf("unexpected response length")
@@ -423,10 +423,10 @@ func TestSingleClient(t *testing.T) {
 		closed := false
 		w := &mockWire{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Delegate"), nil)
+				return NewResult(strmsg('+', "Delegate"), nil)
 			},
 			DoMultiFn: func(cmd ...Completed) *redisresults {
-				return &redisresults{s: []RedisResult{newResult(strmsg('+', "Delegate"), nil)}}
+				return &redisresults{s: []RedisResult{NewResult(strmsg('+', "Delegate"), nil)}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 				return ErrClosing
@@ -489,10 +489,10 @@ func TestSingleClient(t *testing.T) {
 		closed := false
 		w := &mockWire{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Delegate"), nil)
+				return NewResult(strmsg('+', "Delegate"), nil)
 			},
 			DoMultiFn: func(cmd ...Completed) *redisresults {
-				return &redisresults{s: []RedisResult{newResult(strmsg('+', "Delegate"), nil)}}
+				return &redisresults{s: []RedisResult{NewResult(strmsg('+', "Delegate"), nil)}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 				return ErrClosing
@@ -691,8 +691,8 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 	t.Run("Delegate Do ReadOnly Retry", func(t *testing.T) {
 		c, m := setup()
 		m.DoFn = makeDoFn(
-			newErrResult(ErrClosing),
-			newResult(strmsg('+', "Do"), nil),
+			NewErrorResult(ErrClosing),
+			NewResult(strmsg('+', "Do"), nil),
 		)
 		if v, err := c.Do(context.Background(), c.B().Get().Key("Do").Build()).ToString(); err != nil || v != "Do" {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -701,7 +701,7 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 
 	t.Run("Delegate Do ReadOnly NoRetry - closed", func(t *testing.T) {
 		c, m := setup()
-		m.DoFn = makeDoFn(newErrResult(ErrClosing))
+		m.DoFn = makeDoFn(NewErrorResult(ErrClosing))
 		c.Close()
 		if v, err := c.Do(context.Background(), c.B().Get().Key("Do").Build()).ToString(); err != ErrClosing {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -710,7 +710,7 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 
 	t.Run("Delegate Do ReadOnly NoRetry - ctx done", func(t *testing.T) {
 		c, m := setup()
-		m.DoFn = makeDoFn(newErrResult(ErrClosing))
+		m.DoFn = makeDoFn(NewErrorResult(ErrClosing))
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 		if v, err := c.Do(ctx, c.B().Get().Key("Do").Build()).ToString(); err != ErrClosing {
@@ -742,8 +742,8 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 			}
 		}
 		m.DoFn = makeDoFn(
-			newErrResult(ErrClosing),
-			newResult(strmsg('+', "Do"), nil),
+			NewErrorResult(ErrClosing),
+			NewResult(strmsg('+', "Do"), nil),
 		)
 		if v, err := c.Do(context.Background(), c.B().Get().Key("Do").Build()).ToString(); !errors.Is(err, ErrClosing) {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -752,7 +752,7 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 
 	t.Run("Delegate Do Write NoRetry", func(t *testing.T) {
 		c, m := setup()
-		m.DoFn = makeDoFn(newErrResult(ErrClosing))
+		m.DoFn = makeDoFn(NewErrorResult(ErrClosing))
 		if v, err := c.Do(context.Background(), c.B().Set().Key("Do").Value("V").Build()).ToString(); err != ErrClosing {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
@@ -761,8 +761,8 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 	t.Run("Delegate Do Write Retryable Retry", func(t *testing.T) {
 		c, m := setup()
 		m.DoFn = makeDoFn(
-			newErrResult(ErrClosing),
-			newResult(strmsg('+', "Do"), nil),
+			NewErrorResult(ErrClosing),
+			NewResult(strmsg('+', "Do"), nil),
 		)
 		if v, err := c.Do(context.Background(), c.B().Set().Key("Do").Value("V").Build().ToRetryable()).ToString(); err != nil || v != "Do" {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -772,8 +772,8 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 	t.Run("Delegate DoMulti ReadOnly Retry", func(t *testing.T) {
 		c, m := setup()
 		m.DoMultiFn = makeDoMultiFn(
-			[]RedisResult{newErrResult(ErrClosing)},
-			[]RedisResult{newResult(strmsg('+', "Do"), nil)},
+			[]RedisResult{NewErrorResult(ErrClosing)},
+			[]RedisResult{NewResult(strmsg('+', "Do"), nil)},
 		)
 		if v, err := c.DoMulti(context.Background(), c.B().Get().Key("Do").Build())[0].ToString(); err != nil || v != "Do" {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -782,7 +782,7 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 
 	t.Run("Delegate DoMulti ReadOnly NoRetry - closed", func(t *testing.T) {
 		c, m := setup()
-		m.DoMultiFn = makeDoMultiFn([]RedisResult{newErrResult(ErrClosing)})
+		m.DoMultiFn = makeDoMultiFn([]RedisResult{NewErrorResult(ErrClosing)})
 		c.Close()
 		if v, err := c.DoMulti(context.Background(), c.B().Get().Key("Do").Build())[0].ToString(); err != ErrClosing {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -791,7 +791,7 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 
 	t.Run("Delegate DoMulti ReadOnly NoRetry - ctx done", func(t *testing.T) {
 		c, m := setup()
-		m.DoMultiFn = makeDoMultiFn([]RedisResult{newErrResult(ErrClosing)})
+		m.DoMultiFn = makeDoMultiFn([]RedisResult{NewErrorResult(ErrClosing)})
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 		if v, err := c.DoMulti(ctx, c.B().Get().Key("Do").Build())[0].ToString(); err != ErrClosing {
@@ -831,8 +831,8 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 			}
 		}
 		m.DoMultiFn = makeDoMultiFn(
-			[]RedisResult{newErrResult(ErrClosing)},
-			[]RedisResult{newResult(strmsg('+', "Do"), nil)},
+			[]RedisResult{NewErrorResult(ErrClosing)},
+			[]RedisResult{NewResult(strmsg('+', "Do"), nil)},
 		)
 		if v, err := c.DoMulti(context.Background(), c.B().Get().Key("Do").Build())[0].ToString(); !errors.Is(err, ErrClosing) {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -841,7 +841,7 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 
 	t.Run("Delegate DoMulti Write NoRetry", func(t *testing.T) {
 		c, m := setup()
-		m.DoMultiFn = makeDoMultiFn([]RedisResult{newErrResult(ErrClosing)})
+		m.DoMultiFn = makeDoMultiFn([]RedisResult{NewErrorResult(ErrClosing)})
 		if v, err := c.DoMulti(context.Background(), c.B().Set().Key("Do").Value("V").Build())[0].ToString(); err != ErrClosing {
 			t.Fatalf("unexpected response %v %v", v, err)
 		}
@@ -850,8 +850,8 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 	t.Run("Delegate DoMulti Write Retryable Retry", func(t *testing.T) {
 		c, m := setup()
 		m.DoMultiFn = makeDoMultiFn(
-			[]RedisResult{newErrResult(ErrClosing)},
-			[]RedisResult{newResult(strmsg('+', "Do"), nil)},
+			[]RedisResult{NewErrorResult(ErrClosing)},
+			[]RedisResult{NewResult(strmsg('+', "Do"), nil)},
 		)
 		if v, err := c.DoMulti(context.Background(), c.B().Set().Key("Do").Value("V").Build().ToRetryable())[0].ToString(); err != nil || v != "Do" {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -861,8 +861,8 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 	t.Run("Delegate DoCache Retry", func(t *testing.T) {
 		c, m := setup()
 		m.DoCacheFn = makeDoCacheFn(
-			newErrResult(ErrClosing),
-			newResult(strmsg('+', "Do"), nil),
+			NewErrorResult(ErrClosing),
+			NewResult(strmsg('+', "Do"), nil),
 		)
 		if v, err := c.DoCache(context.Background(), c.B().Get().Key("Do").Cache(), 0).ToString(); err != nil || v != "Do" {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -871,7 +871,7 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 
 	t.Run("Delegate DoCache NoRetry - closed", func(t *testing.T) {
 		c, m := setup()
-		m.DoCacheFn = makeDoCacheFn(newErrResult(ErrClosing))
+		m.DoCacheFn = makeDoCacheFn(NewErrorResult(ErrClosing))
 		c.Close()
 		if v, err := c.DoCache(context.Background(), c.B().Get().Key("Do").Cache(), 0).ToString(); err != ErrClosing {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -880,7 +880,7 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 
 	t.Run("Delegate DoCache ReadOnly NoRetry - ctx done", func(t *testing.T) {
 		c, m := setup()
-		m.DoCacheFn = makeDoCacheFn(newErrResult(ErrClosing))
+		m.DoCacheFn = makeDoCacheFn(NewErrorResult(ErrClosing))
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 		if v, err := c.DoCache(ctx, c.B().Get().Key("Do").Cache(), 0).ToString(); err != ErrClosing {
@@ -912,8 +912,8 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 			}
 		}
 		m.DoCacheFn = makeDoCacheFn(
-			newErrResult(ErrClosing),
-			newResult(strmsg('+', "Do"), nil),
+			NewErrorResult(ErrClosing),
+			NewResult(strmsg('+', "Do"), nil),
 		)
 		if v, err := c.DoCache(context.Background(), c.B().Get().Key("Do").Cache(), 0).ToString(); !errors.Is(err, ErrClosing) {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -923,8 +923,8 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 	t.Run("Delegate DoMultiCache Retry", func(t *testing.T) {
 		c, m := setup()
 		m.DoMultiCacheFn = makeDoMultiCacheFn(
-			[]RedisResult{newErrResult(ErrClosing)},
-			[]RedisResult{newResult(strmsg('+', "Do"), nil)},
+			[]RedisResult{NewErrorResult(ErrClosing)},
+			[]RedisResult{NewResult(strmsg('+', "Do"), nil)},
 		)
 		if v, err := c.DoMultiCache(context.Background(), CT(c.B().Get().Key("Do").Cache(), 0))[0].ToString(); err != nil || v != "Do" {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -933,7 +933,7 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 
 	t.Run("Delegate DoMultiCache NoRetry - closed", func(t *testing.T) {
 		c, m := setup()
-		m.DoMultiCacheFn = makeDoMultiCacheFn([]RedisResult{newErrResult(ErrClosing)})
+		m.DoMultiCacheFn = makeDoMultiCacheFn([]RedisResult{NewErrorResult(ErrClosing)})
 		c.Close()
 		if v, err := c.DoMultiCache(context.Background(), CT(c.B().Get().Key("Do").Cache(), 0))[0].ToString(); err != ErrClosing {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -942,7 +942,7 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 
 	t.Run("Delegate DoMultiCache ReadOnly NoRetry - ctx done", func(t *testing.T) {
 		c, m := setup()
-		m.DoMultiCacheFn = makeDoMultiCacheFn([]RedisResult{newErrResult(ErrClosing)})
+		m.DoMultiCacheFn = makeDoMultiCacheFn([]RedisResult{NewErrorResult(ErrClosing)})
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 		if v, err := c.DoMultiCache(ctx, CT(c.B().Get().Key("Do").Cache(), 0))[0].ToString(); err != ErrClosing {
@@ -982,8 +982,8 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 			}
 		}
 		m.DoMultiCacheFn = makeDoMultiCacheFn(
-			[]RedisResult{newErrResult(ErrClosing)},
-			[]RedisResult{newResult(strmsg('+', "Do"), nil)},
+			[]RedisResult{NewErrorResult(ErrClosing)},
+			[]RedisResult{NewResult(strmsg('+', "Do"), nil)},
 		)
 		if v, err := c.DoMultiCache(context.Background(), CT(c.B().Get().Key("Do").Cache(), 0))[0].ToString(); !errors.Is(err, ErrClosing) {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -1049,8 +1049,8 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 	t.Run("Dedicate Delegate Do ReadOnly Retry", func(t *testing.T) {
 		c, m := setup()
 		m.DoFn = makeDoFn(
-			newErrResult(ErrClosing),
-			newResult(strmsg('+', "Do"), nil),
+			NewErrorResult(ErrClosing),
+			NewResult(strmsg('+', "Do"), nil),
 		)
 		m.AcquireFn = func() wire { return &mockWire{DoFn: m.DoFn} }
 		if ret := c.Dedicated(func(cc DedicatedClient) error {
@@ -1065,7 +1065,7 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 
 	t.Run("Dedicate Delegate Do ReadOnly NoRetry - broken", func(t *testing.T) {
 		c, m := setup()
-		m.DoFn = makeDoFn(newErrResult(ErrClosing))
+		m.DoFn = makeDoFn(NewErrorResult(ErrClosing))
 		m.ErrorFn = func() error { return ErrClosing }
 		m.AcquireFn = func() wire { return &mockWire{DoFn: m.DoFn, ErrorFn: m.ErrorFn} }
 		if ret := c.Dedicated(func(cc DedicatedClient) error {
@@ -1077,7 +1077,7 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 
 	t.Run("Dedicate Delegate Do ReadOnly NoRetry - ctx done", func(t *testing.T) {
 		c, m := setup()
-		m.DoFn = makeDoFn(newErrResult(ErrClosing))
+		m.DoFn = makeDoFn(NewErrorResult(ErrClosing))
 		m.AcquireFn = func() wire { return &mockWire{DoFn: m.DoFn} }
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
@@ -1091,8 +1091,8 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 	t.Run("Dedicate Delegate Do ReadOnly NoRetry - not retryable", func(t *testing.T) {
 		c, m := setup()
 		m.DoFn = makeDoFn(
-			newErrResult(ErrClosing),
-			newResult(strmsg('+', "Do"), nil),
+			NewErrorResult(ErrClosing),
+			NewResult(strmsg('+', "Do"), nil),
 		)
 		m.AcquireFn = func() wire { return &mockWire{DoFn: m.DoFn} }
 		if ret := c.Dedicated(func(cc DedicatedClient) error {
@@ -1122,7 +1122,7 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 
 	t.Run("Dedicate Delegate Do Write NoRetry", func(t *testing.T) {
 		c, m := setup()
-		m.DoFn = makeDoFn(newErrResult(ErrClosing))
+		m.DoFn = makeDoFn(NewErrorResult(ErrClosing))
 		m.AcquireFn = func() wire { return &mockWire{DoFn: m.DoFn} }
 		if ret := c.Dedicated(func(cc DedicatedClient) error {
 			return cc.Do(context.Background(), c.B().Set().Key("Do").Value("Do").Build()).Error()
@@ -1134,8 +1134,8 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 	t.Run("Dedicate Delegate Do Write Retryable Retry", func(t *testing.T) {
 		c, m := setup()
 		m.DoFn = makeDoFn(
-			newErrResult(ErrClosing),
-			newResult(strmsg('+', "Do"), nil),
+			NewErrorResult(ErrClosing),
+			NewResult(strmsg('+', "Do"), nil),
 		)
 		m.AcquireFn = func() wire { return &mockWire{DoFn: m.DoFn} }
 		if ret := c.Dedicated(func(cc DedicatedClient) error {
@@ -1151,8 +1151,8 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 	t.Run("Dedicate Delegate DoMulti ReadOnly Retry", func(t *testing.T) {
 		c, m := setup()
 		m.DoMultiFn = makeDoMultiFn(
-			[]RedisResult{newErrResult(ErrClosing)},
-			[]RedisResult{newResult(strmsg('+', "Do"), nil)},
+			[]RedisResult{NewErrorResult(ErrClosing)},
+			[]RedisResult{NewResult(strmsg('+', "Do"), nil)},
 		)
 		m.AcquireFn = func() wire { return &mockWire{DoMultiFn: m.DoMultiFn} }
 		if ret := c.Dedicated(func(cc DedicatedClient) error {
@@ -1167,7 +1167,7 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 
 	t.Run("Dedicate Delegate DoMulti ReadOnly NoRetry - broken", func(t *testing.T) {
 		c, m := setup()
-		m.DoMultiFn = makeDoMultiFn([]RedisResult{newErrResult(ErrClosing)})
+		m.DoMultiFn = makeDoMultiFn([]RedisResult{NewErrorResult(ErrClosing)})
 		m.ErrorFn = func() error { return ErrClosing }
 		m.AcquireFn = func() wire { return &mockWire{DoMultiFn: m.DoMultiFn, ErrorFn: m.ErrorFn} }
 		if ret := c.Dedicated(func(cc DedicatedClient) error {
@@ -1179,7 +1179,7 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 
 	t.Run("Dedicate Delegate DoMulti ReadOnly NoRetry - ctx done", func(t *testing.T) {
 		c, m := setup()
-		m.DoMultiFn = makeDoMultiFn([]RedisResult{newErrResult(ErrClosing)})
+		m.DoMultiFn = makeDoMultiFn([]RedisResult{NewErrorResult(ErrClosing)})
 		m.AcquireFn = func() wire { return &mockWire{DoMultiFn: m.DoMultiFn} }
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
@@ -1193,8 +1193,8 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 	t.Run("Dedicate Delegate DoMulti ReadOnly NoRetry - not retryable", func(t *testing.T) {
 		c, m := setup()
 		m.DoMultiFn = makeDoMultiFn(
-			[]RedisResult{newErrResult(ErrClosing)},
-			[]RedisResult{newResult(strmsg('+', "Do"), nil)},
+			[]RedisResult{NewErrorResult(ErrClosing)},
+			[]RedisResult{NewResult(strmsg('+', "Do"), nil)},
 		)
 		m.AcquireFn = func() wire { return &mockWire{DoMultiFn: m.DoMultiFn} }
 		if ret := c.Dedicated(func(cc DedicatedClient) error {
@@ -1224,7 +1224,7 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 
 	t.Run("Dedicate Delegate DoMulti Write NoRetry", func(t *testing.T) {
 		c, m := setup()
-		m.DoMultiFn = makeDoMultiFn([]RedisResult{newErrResult(ErrClosing)})
+		m.DoMultiFn = makeDoMultiFn([]RedisResult{NewErrorResult(ErrClosing)})
 		m.AcquireFn = func() wire { return &mockWire{DoMultiFn: m.DoMultiFn} }
 		if ret := c.Dedicated(func(cc DedicatedClient) error {
 			return cc.DoMulti(context.Background(), c.B().Set().Key("Do").Value("Do").Build())[0].Error()
@@ -1236,8 +1236,8 @@ func SetupClientRetry(t *testing.T, fn func(mock *mockConn) Client) {
 	t.Run("Dedicate Delegate DoMulti Write Retryable Retry", func(t *testing.T) {
 		c, m := setup()
 		m.DoMultiFn = makeDoMultiFn(
-			[]RedisResult{newErrResult(ErrClosing)},
-			[]RedisResult{newResult(strmsg('+', "Do"), nil)},
+			[]RedisResult{NewErrorResult(ErrClosing)},
+			[]RedisResult{NewResult(strmsg('+', "Do"), nil)},
 		)
 		m.AcquireFn = func() wire { return &mockWire{DoMultiFn: m.DoMultiFn} }
 		if ret := c.Dedicated(func(cc DedicatedClient) error {
@@ -1342,9 +1342,9 @@ func TestSingleClientLoadingRetry(t *testing.T) {
 		m.DoFn = func(cmd Completed) RedisResult {
 			attempts++
 			if attempts == 1 {
-				return newResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)
+				return NewResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)
 			}
-			return newResult(strmsg('+', "OK"), nil)
+			return NewResult(strmsg('+', "OK"), nil)
 		}
 
 		if v, err := client.Do(context.Background(), client.B().Get().Key("test").Build()).ToString(); err != nil || v != "OK" {
@@ -1361,9 +1361,9 @@ func TestSingleClientLoadingRetry(t *testing.T) {
 		m.DoFn = func(cmd Completed) RedisResult {
 			attempts++
 			if attempts == 1 {
-				return newResult(strmsg('-', "ERR some other error"), nil)
+				return NewResult(strmsg('-', "ERR some other error"), nil)
 			}
-			return newResult(strmsg('+', "OK"), nil)
+			return NewResult(strmsg('+', "OK"), nil)
 		}
 
 		if err := client.Do(context.Background(), client.B().Get().Key("test").Build()).Error(); err == nil {
@@ -1380,9 +1380,9 @@ func TestSingleClientLoadingRetry(t *testing.T) {
 		m.DoMultiFn = func(multi ...Completed) *redisresults {
 			attempts++
 			if attempts == 1 {
-				return &redisresults{s: []RedisResult{newResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)}}
+				return &redisresults{s: []RedisResult{NewResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)}}
 			}
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil)}}
 		}
 
 		cmd := client.B().Get().Key("test").Build()
@@ -1401,9 +1401,9 @@ func TestSingleClientLoadingRetry(t *testing.T) {
 		m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
 			attempts++
 			if attempts == 1 {
-				return newResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)
+				return NewResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)
 			}
-			return newResult(strmsg('+', "OK"), nil)
+			return NewResult(strmsg('+', "OK"), nil)
 		}
 
 		cmd := client.B().Get().Key("test").Cache()
@@ -1418,9 +1418,9 @@ func TestSingleClientLoadingRetry(t *testing.T) {
 		m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
 			attempts++
 			if attempts == 1 {
-				return &redisresults{s: []RedisResult{newResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)}}
+				return &redisresults{s: []RedisResult{NewResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)}}
 			}
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil)}}
 		}
 
 		cmd := client.B().Get().Key("test").Cache()
@@ -1439,9 +1439,9 @@ func TestSingleClientLoadingRetry(t *testing.T) {
 		m.DoFn = func(cmd Completed) RedisResult {
 			attempts++
 			if attempts == 1 {
-				return newResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)
+				return NewResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)
 			}
-			return newResult(strmsg('+', "OK"), nil)
+			return NewResult(strmsg('+', "OK"), nil)
 		}
 		m.AcquireFn = func() wire { return &mockWire{DoFn: m.DoFn} }
 
@@ -1462,9 +1462,9 @@ func TestSingleClientLoadingRetry(t *testing.T) {
 		m.DoMultiFn = func(multi ...Completed) *redisresults {
 			attempts++
 			if attempts == 1 {
-				return &redisresults{s: []RedisResult{newResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)}}
+				return &redisresults{s: []RedisResult{NewResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)}}
 			}
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil)}}
 		}
 		m.AcquireFn = func() wire { return &mockWire{DoMultiFn: m.DoMultiFn} }
 
@@ -1504,7 +1504,7 @@ func TestSingleClientConnLifetime(t *testing.T) {
 	t.Run("Do", func(t *testing.T) {
 		client, m := setup()
 		m.DoFn = func(cmd Completed) RedisResult {
-			return newResult(strmsg('+', "OK"), nil)
+			return NewResult(strmsg('+', "OK"), nil)
 		}
 		if v, err := client.Do(context.Background(), client.B().Get().Key("Do").Build()).ToString(); err != nil || v != "OK" {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -1514,7 +1514,7 @@ func TestSingleClientConnLifetime(t *testing.T) {
 	t.Run("DoMulti", func(t *testing.T) {
 		client, m := setup()
 		m.DoMultiFn = func(multi ...Completed) *redisresults {
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil)}}
 		}
 		if v, err := client.DoMulti(context.Background(), client.B().Get().Key("Do").Build())[0].ToString(); err != nil || v != "OK" {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -1527,9 +1527,9 @@ func TestSingleClientConnLifetime(t *testing.T) {
 		m.DoMultiFn = func(multi ...Completed) *redisresults {
 			attempts++
 			if attempts == 1 {
-				return &redisresults{s: []RedisResult{newErrResult(errConnExpired)}}
+				return &redisresults{s: []RedisResult{NewErrorResult(errConnExpired)}}
 			}
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil)}}
 		}
 		if v, err := client.DoMulti(context.Background(), client.B().Get().Key("Do").Build())[0].ToString(); err != nil || v != "OK" {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -1542,10 +1542,10 @@ func TestSingleClientConnLifetime(t *testing.T) {
 		m.DoMultiFn = func(multi ...Completed) *redisresults {
 			attempts++
 			if attempts == 1 {
-				return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil), newErrResult(errConnExpired)}}
+				return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil), NewErrorResult(errConnExpired)}}
 			}
 			// recover the failure of the first call
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil)}}
 		}
 		resps := client.DoMulti(context.Background(), client.B().Get().Key("Do").Build(), client.B().Get().Key("Do").Build())
 		if len(resps) != 2 {
@@ -1567,53 +1567,53 @@ func TestSingleClientConnLifetime(t *testing.T) {
 			switch attempts {
 			case 1: // errConnExpired at the head of processing
 				orgMulti = multi
-				return &redisresults{s: []RedisResult{newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired)}}
+				return &redisresults{s: []RedisResult{NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired)}}
 			case 2: // errConnExpired at Multi Command
 				if len(multi) != 6 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[0].Commands()) {
 					t.Fatalf("unexpected multi when errConnExpired occurred at the head of processing, %v", multi)
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "1"), nil),
-					newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired),
+					NewResult(strmsg('+', "1"), nil),
+					NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired),
 				}}
 			case 3: // errConnExpired in the middle of transaction block
 				if len(multi) != 5 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[1].Commands()) {
 					t.Fatalf("unexpected multi when errConnExpired occurred at Multi Command, %v", multi)
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "OK"), nil),
-					newResult(strmsg('+', "QUEUE"), nil),
-					newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired),
+					NewResult(strmsg('+', "OK"), nil),
+					NewResult(strmsg('+', "QUEUE"), nil),
+					NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired),
 				}}
 			case 4: // errConnExpired at Exec Command
 				if len(multi) != 5 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[1].Commands()) {
 					t.Fatalf("unexpected multi when errConnExpired occurred in the middle of transaction block, %v", multi)
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "OK"), nil),
-					newResult(strmsg('+', "QUEUE"), nil),
-					newResult(strmsg('+', "QUEUE"), nil),
-					newErrResult(errConnExpired), newErrResult(errConnExpired)}}
+					NewResult(strmsg('+', "OK"), nil),
+					NewResult(strmsg('+', "QUEUE"), nil),
+					NewResult(strmsg('+', "QUEUE"), nil),
+					NewErrorResult(errConnExpired), NewErrorResult(errConnExpired)}}
 			case 5: // errConnExpired at end of processing
 				if len(multi) != 5 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[1].Commands()) {
 					t.Fatalf("unexpected multi when errConnExpired occurred at at Exec Command, %v", multi)
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "OK"), nil),
-					newResult(strmsg('+', "QUEUE"), nil),
-					newResult(strmsg('+', "QUEUE"), nil),
-					newResult(slicemsg('*', []RedisMessage{
+					NewResult(strmsg('+', "OK"), nil),
+					NewResult(strmsg('+', "QUEUE"), nil),
+					NewResult(strmsg('+', "QUEUE"), nil),
+					NewResult(slicemsg('*', []RedisMessage{
 						strmsg('+', "2"),
 						strmsg('+', "3"),
 					}), nil),
-					newErrResult(errConnExpired),
+					NewErrorResult(errConnExpired),
 				}}
 			case 6:
 				if len(multi) != 1 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[5].Commands()) {
 					t.Fatalf("unexpected multi when errConnExpired occurred at end of processing, %v", multi)
 				}
 			}
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "4"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "4"), nil)}}
 		}
 		multi := []Completed{
 			client.B().Get().Key("1{t}").Build(),
@@ -1650,7 +1650,7 @@ func TestSingleClientConnLifetime(t *testing.T) {
 	t.Run("DoMultiCache", func(t *testing.T) {
 		client, m := setup()
 		m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil)}}
 		}
 		cmd := client.B().Get().Key("Do").Cache()
 		if v, err := client.DoMultiCache(context.Background(), CT(cmd, 0))[0].ToString(); err != nil || v != "OK" {
@@ -1664,9 +1664,9 @@ func TestSingleClientConnLifetime(t *testing.T) {
 		m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
 			attempts++
 			if attempts == 1 {
-				return &redisresults{s: []RedisResult{newErrResult(errConnExpired)}}
+				return &redisresults{s: []RedisResult{NewErrorResult(errConnExpired)}}
 			}
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil)}}
 		}
 		cmd := client.B().Get().Key("Do").Cache()
 		if v, err := client.DoMultiCache(context.Background(), CT(cmd, 0))[0].ToString(); err != nil || v != "OK" {
@@ -1680,10 +1680,10 @@ func TestSingleClientConnLifetime(t *testing.T) {
 		m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
 			attempts++
 			if attempts == 1 {
-				return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil), newErrResult(errConnExpired)}}
+				return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil), NewErrorResult(errConnExpired)}}
 			}
 			// recover the failure of the first call
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil)}}
 		}
 		resps := client.DoMultiCache(context.Background(), CT(client.B().Get().Key("Do").Cache(), 0), CT(client.B().Get().Key("Do").Cache(), 0))
 		if len(resps) != 2 {

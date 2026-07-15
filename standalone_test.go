@@ -64,19 +64,19 @@ func TestNewStandaloneClientDelegation(t *testing.T) {
 			return "p"
 		},
 		DoFn: func(cmd Completed) RedisResult {
-			return newErrResult(errors.New("primary"))
+			return NewErrorResult(errors.New("primary"))
 		},
 		DoMultiFn: func(multi ...Completed) *redisresults {
-			return &redisresults{s: []RedisResult{newErrResult(errors.New("primary"))}}
+			return &redisresults{s: []RedisResult{NewErrorResult(errors.New("primary"))}}
 		},
 		DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
-			return newErrResult(errors.New("primary"))
+			return NewErrorResult(errors.New("primary"))
 		},
 		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
-			return &redisresults{s: []RedisResult{newErrResult(errors.New("primary"))}}
+			return &redisresults{s: []RedisResult{NewErrorResult(errors.New("primary"))}}
 		},
 		DoStreamFn: func(cmd Completed) RedisResultStream {
-			return RedisResultStream{e: errors.New("primary")}
+			return NewErrorResultStream(errors.New("primary"))
 		},
 		DoMultiStreamFn: func(cmd ...Completed) MultiRedisResultStream {
 			return MultiRedisResultStream{e: errors.New("primary")}
@@ -93,13 +93,13 @@ func TestNewStandaloneClientDelegation(t *testing.T) {
 			return "r"
 		},
 		DoFn: func(cmd Completed) RedisResult {
-			return newErrResult(errors.New("replica"))
+			return NewErrorResult(errors.New("replica"))
 		},
 		DoMultiFn: func(multi ...Completed) *redisresults {
-			return &redisresults{s: []RedisResult{newErrResult(errors.New("replica"))}}
+			return &redisresults{s: []RedisResult{NewErrorResult(errors.New("replica"))}}
 		},
 		DoStreamFn: func(cmd Completed) RedisResultStream {
-			return RedisResultStream{e: errors.New("replica")}
+			return NewErrorResultStream(errors.New("replica"))
 		},
 		DoMultiStreamFn: func(cmd ...Completed) MultiRedisResultStream {
 			return MultiRedisResultStream{e: errors.New("replica")}
@@ -220,7 +220,7 @@ func TestNewStandaloneClientMultiReplicasDelegation(t *testing.T) {
 			DoFn: func(cmd Completed) RedisResult {
 				i, _ := strconv.Atoi(dst)
 				atomic.AddInt32(&counts[i], 1)
-				return newErrResult(errors.New("replica"))
+				return NewErrorResult(errors.New("replica"))
 			},
 		}
 	}, newRetryer(defaultRetryDelayFn))
@@ -254,7 +254,7 @@ func TestStandaloneRedirectHandling(t *testing.T) {
 	// Mock primary connection that returns redirect
 	primaryConn := &mockConn{
 		DoFn: func(cmd Completed) RedisResult {
-			return newErrResult(&redirectErr)
+			return NewErrorResult(&redirectErr)
 		},
 	}
 
@@ -313,7 +313,7 @@ func TestStandaloneDoCacheRedirectHandling(t *testing.T) {
 	// Mock primary connection that returns redirect
 	primaryConn := &mockConn{
 		DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
-			return newErrResult(&redirectErr)
+			return NewErrorResult(&redirectErr)
 		},
 	}
 
@@ -372,7 +372,7 @@ func TestStandaloneRedirectDisabled(t *testing.T) {
 	// Mock primary connection that returns redirect
 	primaryConn := &mockConn{
 		DoFn: func(cmd Completed) RedisResult {
-			return newErrResult(&redirectErr)
+			return NewErrorResult(&redirectErr)
 		},
 	}
 
@@ -413,7 +413,7 @@ func TestStandaloneDoCacheRedirectDisabled(t *testing.T) {
 	// Mock primary connection that returns redirect
 	primaryConn := &mockConn{
 		DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
-			return newErrResult(&redirectErr)
+			return NewErrorResult(&redirectErr)
 		},
 	}
 
@@ -483,7 +483,7 @@ func TestStandaloneDoStreamToReplica(t *testing.T) {
 	primaryConn := &mockConn{
 		DialFn: func() error { return nil },
 		DoStreamFn: func(cmd Completed) RedisResultStream {
-			return RedisResultStream{e: errors.New("primary")}
+			return NewErrorResultStream(errors.New("primary"))
 		},
 	}
 
@@ -491,7 +491,7 @@ func TestStandaloneDoStreamToReplica(t *testing.T) {
 		DialFn: func() error { return nil },
 		DoStreamFn: func(cmd Completed) RedisResultStream {
 			replicaUsed = true
-			return RedisResultStream{e: errors.New("replica")}
+			return NewErrorResultStream(errors.New("replica"))
 		},
 	}
 
@@ -702,7 +702,7 @@ func TestStandaloneDoMultiWithRedirectRetry(t *testing.T) {
 			attempts++
 			// First attempt returns redirect error, second returns success
 			if attempts == 1 {
-				return &redisresults{s: []RedisResult{newErrResult(&redirectErr)}}
+				return &redisresults{s: []RedisResult{NewErrorResult(&redirectErr)}}
 			}
 			return &redisresults{s: []RedisResult{RedisResult{val: strmsg('+', "OK")}}}
 		},
@@ -782,7 +782,7 @@ func TestStandaloneDoMultiWithRedirectRetryFailure(t *testing.T) {
 	primaryConn := &mockConn{
 		DialFn: func() error { return nil },
 		DoMultiFn: func(multi ...Completed) *redisresults {
-			return &redisresults{s: []RedisResult{newErrResult(&redirectErr)}}
+			return &redisresults{s: []RedisResult{NewErrorResult(&redirectErr)}}
 		},
 	}
 
@@ -855,7 +855,7 @@ func TestStandaloneDoMultiCacheWithRedirectRetry(t *testing.T) {
 			attempts++
 			// First attempt returns redirect error, second returns success
 			if attempts == 1 {
-				return &redisresults{s: []RedisResult{newErrResult(&redirectErr)}}
+				return &redisresults{s: []RedisResult{NewErrorResult(&redirectErr)}}
 			}
 			return &redisresults{s: []RedisResult{RedisResult{val: strmsg('+', "OK")}}}
 		},
@@ -935,7 +935,7 @@ func TestStandaloneDoMultiCacheWithRedirectRetryFailure(t *testing.T) {
 	primaryConn := &mockConn{
 		DialFn: func() error { return nil },
 		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
-			return &redisresults{s: []RedisResult{newErrResult(&redirectErr)}}
+			return &redisresults{s: []RedisResult{NewErrorResult(&redirectErr)}}
 		},
 	}
 
@@ -1002,7 +1002,7 @@ func TestStandaloneReadNodeSelector(t *testing.T) {
 	t.Run("ReadNodeSelector", func(t *testing.T) {
 		primaryNodeConn := &mockConn{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "primary"), nil)
+				return NewResult(strmsg('+', "primary"), nil)
 			},
 			AZFn: func() string {
 				return "us-east-1a"
@@ -1010,7 +1010,7 @@ func TestStandaloneReadNodeSelector(t *testing.T) {
 		}
 		replica1NodeConn := &mockConn{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "replica1"), nil)
+				return NewResult(strmsg('+', "replica1"), nil)
 			},
 			AZFn: func() string {
 				return "us-east-1a" // Same AZ as client
@@ -1018,7 +1018,7 @@ func TestStandaloneReadNodeSelector(t *testing.T) {
 		}
 		replica2NodeConn := &mockConn{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "replica2"), nil)
+				return NewResult(strmsg('+', "replica2"), nil)
 			},
 			AZFn: func() string {
 				return "us-east-1b" // Different AZ
@@ -1104,9 +1104,9 @@ func TestStandaloneClientConnLifetime(t *testing.T) {
 		primary.DoFn = func(cmd Completed) RedisResult {
 			attempts++
 			if attempts == 1 {
-				return newErrResult(errConnExpired)
+				return NewErrorResult(errConnExpired)
 			}
-			return newResult(strmsg('+', "OK"), nil)
+			return NewResult(strmsg('+', "OK"), nil)
 		}
 		if v, err := client.Do(context.Background(), client.B().Set().Key("k").Value("v").Build()).ToString(); err != nil || v != "OK" {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -1121,13 +1121,13 @@ func TestStandaloneClientConnLifetime(t *testing.T) {
 			attempts++
 			if attempts == 1 {
 				return &redisresults{s: []RedisResult{
-					newErrResult(errConnExpired),
-					newErrResult(errConnExpired),
+					NewErrorResult(errConnExpired),
+					NewErrorResult(errConnExpired),
 				}}
 			}
 			return &redisresults{s: []RedisResult{
-				newResult(strmsg('+', "1"), nil),
-				newResult(strmsg('+', "2"), nil),
+				NewResult(strmsg('+', "1"), nil),
+				NewResult(strmsg('+', "2"), nil),
 			}}
 		}
 		resps := client.DoMulti(context.Background(),
@@ -1152,12 +1152,12 @@ func TestStandaloneClientConnLifetime(t *testing.T) {
 			attempts++
 			if attempts == 1 {
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "OK"), nil),
-					newErrResult(errConnExpired),
+					NewResult(strmsg('+', "OK"), nil),
+					NewErrorResult(errConnExpired),
 				}}
 			}
 			return &redisresults{s: []RedisResult{
-				newResult(strmsg('+', "OK"), nil),
+				NewResult(strmsg('+', "OK"), nil),
 			}}
 		}
 		resps := client.DoMulti(context.Background(),
@@ -1181,9 +1181,9 @@ func TestStandaloneClientConnLifetime(t *testing.T) {
 		replica.DoMultiFn = func(multi ...Completed) *redisresults {
 			attempts++
 			if attempts == 1 {
-				return &redisresults{s: []RedisResult{newErrResult(errConnExpired)}}
+				return &redisresults{s: []RedisResult{NewErrorResult(errConnExpired)}}
 			}
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil)}}
 		}
 		resps := client.DoMulti(context.Background(),
 			client.B().Get().Key("k").Build(),
@@ -1202,9 +1202,9 @@ func TestStandaloneClientConnLifetime(t *testing.T) {
 		redirectConn.DoMultiFn = func(multi ...Completed) *redisresults {
 			attempts++
 			if attempts == 1 {
-				return &redisresults{s: []RedisResult{newErrResult(errConnExpired)}}
+				return &redisresults{s: []RedisResult{NewErrorResult(errConnExpired)}}
 			}
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil)}}
 		}
 
 		client, err := newStandaloneClient(

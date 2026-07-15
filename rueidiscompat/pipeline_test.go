@@ -65,8 +65,8 @@ func testAdapterPipeline(resp3 bool) {
 		rets, err := adapter.Pipelined(ctx, func(pipe Pipeliner) error {
 			echo = pipe.Echo(ctx, "hello")
 			ping = pipe.Ping(ctx)
-			Expect(echo.Err()).To(MatchError(placeholder.err))
-			Expect(ping.Err()).To(MatchError(placeholder.err))
+			Expect(echo.Err()).To(MatchError(errPipelineNotExecuted))
+			Expect(ping.Err()).To(MatchError(errPipelineNotExecuted))
 			return nil
 		})
 		Expect(err).NotTo(HaveOccurred())
@@ -83,8 +83,8 @@ func testAdapterPipeline(resp3 bool) {
 		pipe := adapter.Pipeline()
 		echo := pipe.Echo(ctx, "hello")
 		ping := pipe.Ping(ctx)
-		Expect(echo.Err()).To(MatchError(placeholder.err))
-		Expect(ping.Err()).To(MatchError(placeholder.err))
+		Expect(echo.Err()).To(MatchError(errPipelineNotExecuted))
+		Expect(ping.Err()).To(MatchError(errPipelineNotExecuted))
 		Expect(pipe.Len()).To(Equal(2))
 
 		rets, err := pipe.Exec(ctx)
@@ -111,8 +111,8 @@ func testAdapterPipeline(resp3 bool) {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(rets).To(HaveLen(0))
 
-		Expect(echo.Err()).To(MatchError(placeholder.err))
-		Expect(ping.Err()).To(MatchError(placeholder.err))
+		Expect(echo.Err()).To(MatchError(errPipelineNotExecuted))
+		Expect(ping.Err()).To(MatchError(errPipelineNotExecuted))
 	})
 
 	if resp3 {
@@ -636,7 +636,7 @@ func TestPipeliner(t *testing.T) {
 			t.Fatalf("unexpected pipeline calls: %v", n)
 		}
 		for i, cmd := range p.rets {
-			if err := cmd.Err(); !errors.Is(err, placeholder.err) {
+			if err := cmd.Err(); !errors.Is(err, errPipelineNotExecuted) {
 				t.Fatalf("unexpected pipeline placeholder err(%d): %v", i, err)
 			}
 		}

@@ -15,13 +15,11 @@ import (
 )
 
 func Result(val rueidis.RedisMessage) rueidis.RedisResult {
-	r := result{val: val}
-	return *(*rueidis.RedisResult)(unsafe.Pointer(&r))
+	return rueidis.NewResult(val, nil)
 }
 
 func ErrorResult(err error) rueidis.RedisResult {
-	r := result{err: err}
-	return *(*rueidis.RedisResult)(unsafe.Pointer(&r))
+	return rueidis.NewErrorResult(err)
 }
 
 func RedisString(v string) rueidis.RedisMessage {
@@ -162,11 +160,6 @@ func strmsg(typ byte, value string) message {
 		bytes:   unsafe.StringData(value),
 		integer: int64(len(value)),
 	}
-}
-
-type result struct {
-	err error
-	val rueidis.RedisMessage
 }
 
 type pool struct {

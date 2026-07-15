@@ -31,7 +31,6 @@ import (
 	"errors"
 	"runtime"
 	"time"
-	"unsafe"
 
 	"github.com/redis/rueidis"
 )
@@ -69,12 +68,7 @@ type Pipeliner interface {
 var _ Pipeliner = (*Pipeline)(nil)
 var _ Cmdable = (*Pipeline)(nil)
 
-type proxyresult struct {
-	err error
-	val rueidis.RedisMessage
-}
-
-var placeholder = proxyresult{err: errors.New("the pipeline has not been executed")}
+var errPipelineNotExecuted = errors.New("the pipeline has not been executed")
 
 type proxy struct {
 	rueidis.Client
@@ -83,7 +77,7 @@ type proxy struct {
 
 func (p *proxy) Do(_ context.Context, cmd rueidis.Completed) rueidis.RedisResult {
 	p.cmds = append(p.cmds, cmd)
-	return *(*rueidis.RedisResult)(unsafe.Pointer(&placeholder))
+	return rueidis.NewErrorResult(errPipelineNotExecuted)
 }
 
 func newPipeline(real rueidis.Client) *Pipeline {

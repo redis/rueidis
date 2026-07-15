@@ -142,7 +142,7 @@ func (c *lru) Flights(now time.Time, multi []CacheableTTL, results []RedisResult
 				if v.typ == 0 {
 					entries[i] = e
 				} else if v.relativePTTL(now) > 0 {
-					results[i] = newResult(v, nil)
+					results[i] = NewResult(v, nil)
 				} else {
 					goto miss1
 				}
@@ -196,7 +196,7 @@ func (c *lru) Flights(now time.Time, multi []CacheableTTL, results []RedisResult
 			if v.typ == 0 {
 				entries[i] = e
 			} else if v.relativePTTL(now) > 0 {
-				results[i] = newResult(v, nil)
+				results[i] = NewResult(v, nil)
 			} else {
 				c.list.Remove(ele)
 				c.size -= e.size

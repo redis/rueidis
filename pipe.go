@@ -460,7 +460,7 @@ func (p *pipe) _background() {
 		old.hooks.onInvalidations(nil)
 	}
 
-	resp := newErrResult(err)
+	resp := NewErrorResult(err)
 	for p.loadWaits() != 0 {
 		select {
 		case <-p.close: // p.queue.NextWriteCmd() can only be called after _backgroundWrite
@@ -548,9 +548,9 @@ func (p *pipe) _backgroundRead() (err error) {
 	)
 
 	defer func() {
-		resp := newErrResult(err)
+		resp := NewErrorResult(err)
 		if e := p.Error(); e == errConnExpired {
-			resp = newErrResult(e)
+			resp = NewErrorResult(e)
 		}
 		if err != nil && ff < len(multi) {
 			for ; ff < len(resps); ff++ {
@@ -693,7 +693,7 @@ func (p *pipe) _backgroundRead() (err error) {
 			skipUnsubReply = false
 			continue
 		}
-		resp := newResult(msg, err)
+		resp := NewResult(msg, err)
 		if resps != nil {
 			resps[ff] = resp
 		}
@@ -1019,7 +1019,7 @@ func (p *pipe) AZ() string {
 
 func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	if err := ctx.Err(); err != nil {
-		return newErrResult(err)
+		return NewErrorResult(err)
 	}
 
 	cmds.CompletedCS(cmd).Verify()
@@ -1059,7 +1059,7 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 		}
 		resp = p.syncDo(dl, ok, cmd)
 	} else {
-		resp = newErrResult(p.Error())
+		resp = NewErrorResult(p.Error())
 	}
 
 	if left := p.decrWaitsAndIncrRecvs(); state == 0 && left != 0 {
@@ -1071,7 +1071,7 @@ queue:
 	ch, err := p.queue.PutOne(ctx, cmd)
 	if err != nil {
 		p.decrWaits()
-		return newErrResult(err)
+		return NewErrorResult(err)
 	}
 
 	if ctxCh := ctx.Done(); ctxCh == nil {
@@ -1090,14 +1090,14 @@ abort:
 		<-ch
 		p.decrWaitsAndIncrRecvs()
 	}(ch)
-	return newErrResult(ctx.Err())
+	return NewErrorResult(ctx.Err())
 }
 
 func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 	resp := resultsp.Get(len(multi), len(multi))
 	if err := ctx.Err(); err != nil {
 		for i := 0; i < len(resp.s); i++ {
-			resp.s[i] = newErrResult(err)
+			resp.s[i] = NewErrorResult(err)
 		}
 		return resp
 	}
@@ -1116,7 +1116,7 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 	if p.version < 6 && noReply != 0 {
 		if noReply != len(multi) {
 			for i := 0; i < len(resp.s); i++ {
-				resp.s[i] = newErrResult(ErrRESP2PubSubMixed)
+				resp.s[i] = NewErrorResult(ErrRESP2PubSubMixed)
 			}
 			return resp
 		} else if p.r2p != nil {
@@ -1129,7 +1129,7 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 		if cmd.IsBlock() {
 			if noReply != 0 {
 				for i := 0; i < len(resp.s); i++ {
-					resp.s[i] = newErrResult(ErrBlockingPubSubMixed)
+					resp.s[i] = NewErrorResult(ErrBlockingPubSubMixed)
 				}
 				return resp
 			}
@@ -1168,7 +1168,7 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 		}
 		p.syncDoMulti(dl, ok, resp.s, multi)
 	} else {
-		err := newErrResult(p.Error())
+		err := NewErrorResult(p.Error())
 		for i := 0; i < len(resp.s); i++ {
 			resp.s[i] = err
 		}
@@ -1182,7 +1182,7 @@ queue:
 	ch, err := p.queue.PutMulti(ctx, multi, resp.s)
 	if err != nil {
 		p.decrWaits()
-		errResult := newErrResult(err)
+		errResult := NewErrorResult(err)
 		for i := 0; i < len(resp.s); i++ {
 			resp.s[i] = errResult
 		}
@@ -1207,7 +1207,7 @@ abort:
 		p.decrWaitsAndIncrRecvs()
 	}(resp, ch)
 	resp = resultsp.Get(len(multi), len(multi))
-	errResult := newErrResult(ctx.Err())
+	errResult := NewErrorResult(ctx.Err())
 	for i := 0; i < len(resp.s); i++ {
 		resp.s[i] = errResult
 	}
@@ -1215,6 +1215,11 @@ abort:
 }
 
 type MultiRedisResultStream = RedisResultStream
+
+// NewErrorResultStream returns a RedisResultStream with the specified error. Useful for implementing hooks or mocking.
+func NewErrorResultStream(err error) RedisResultStream {
+	return RedisResultStream{e: err}
+}
 
 type RedisResultStream struct {
 	p *pool
@@ -1262,7 +1267,7 @@ func (p *pipe) DoStream(ctx context.Context, pool *pool, cmd Completed) RedisRes
 	cmds.CompletedCS(cmd).Verify()
 
 	if err := ctx.Err(); err != nil {
-		return RedisResultStream{e: err}
+		return NewErrorResultStream(err)
 	}
 
 	state := atomic.LoadInt32(&p.state)
@@ -1303,7 +1308,7 @@ func (p *pipe) DoStream(ctx context.Context, pool *pool, cmd Completed) RedisRes
 	atomic.AddInt32(&p.blcksig, -1)
 	p.decrWaits()
 	pool.Store(p)
-	return RedisResultStream{e: p.Error()}
+	return NewErrorResultStream(p.Error())
 }
 
 func (p *pipe) DoMultiStream(ctx context.Context, pool *pool, multi ...Completed) MultiRedisResultStream {
@@ -1312,7 +1317,7 @@ func (p *pipe) DoMultiStream(ctx context.Context, pool *pool, multi ...Completed
 	}
 
 	if err := ctx.Err(); err != nil {
-		return RedisResultStream{e: err}
+		return NewErrorResultStream(err)
 	}
 
 	state := atomic.LoadInt32(&p.state)
@@ -1368,7 +1373,7 @@ func (p *pipe) DoMultiStream(ctx context.Context, pool *pool, multi ...Completed
 	atomic.AddInt32(&p.blcksig, -1)
 	p.decrWaits()
 	pool.Store(p)
-	return RedisResultStream{e: p.Error()}
+	return NewErrorResultStream(p.Error())
 }
 
 func (p *pipe) syncDo(dl time.Time, dlOk bool, cmd Completed) (resp RedisResult) {
@@ -1400,7 +1405,7 @@ func (p *pipe) syncDo(dl time.Time, dlOk bool, cmd Completed) (resp RedisResult)
 		p.conn.Close()
 		p.background() // start the background worker to clean up goroutines
 	}
-	return newResult(msg, err)
+	return NewResult(msg, err)
 }
 
 func (p *pipe) syncDoMulti(dl time.Time, dlOk bool, resp []RedisResult, multi []Completed) {
@@ -1443,7 +1448,7 @@ process:
 		if msg, err = syncRead(p.r); err != nil {
 			goto abort
 		}
-		resp[i] = newResult(msg, err)
+		resp[i] = NewResult(msg, err)
 	}
 	return
 abort:
@@ -1454,7 +1459,7 @@ abort:
 	p.conn.Close()
 	p.background() // start the background worker to clean up goroutines
 	for i := range resp {
-		resp[i] = newErrResult(err)
+		resp[i] = NewErrorResult(err)
 	}
 }
 
@@ -1489,9 +1494,9 @@ func (p *pipe) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) Re
 	ck, cc := cmds.CacheKey(cmd)
 	now := time.Now()
 	if v, entry := p.cache.Flight(ck, cc, ttl, now); v.typ != 0 {
-		return newResult(v, nil)
+		return NewResult(v, nil)
 	} else if entry != nil {
-		return newResult(entry.Wait(ctx))
+		return NewResult(entry.Wait(ctx))
 	}
 	if cmds.IsStaticTTL(Completed(cmd)) {
 		// Wire: [OPT_IN, cmd]. The read goroutine resolves the Flight
@@ -1525,9 +1530,9 @@ func (p *pipe) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) Re
 			}
 		}
 		p.cache.Cancel(ck, cc, err)
-		return newErrResult(err)
+		return NewErrorResult(err)
 	}
-	return newResult(exec[1], nil)
+	return NewResult(exec[1], nil)
 }
 
 func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration) RedisResult {
@@ -1597,7 +1602,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 			for _, key := range rewritten.Commands()[1 : keys+1] {
 				p.cache.Cancel(key, mgetcc, err)
 			}
-			return newErrResult(err)
+			return NewErrorResult(err)
 		}
 		defer func() {
 			for _, cmd := range multi[2 : len(multi)-1] {
@@ -1606,7 +1611,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 		}()
 		last := len(exec) - 1
 		if len(rewritten.Commands()) == len(commands) { // all cache misses
-			return newResult(exec[last], nil)
+			return NewResult(exec[last], nil)
 		}
 		partial = exec[last].values()
 	} else { // all cache hit
@@ -1619,7 +1624,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 	for i, entry := range entries.e {
 		v, err := entry.Wait(ctx)
 		if err != nil {
-			return newErrResult(err)
+			return NewErrorResult(err)
 		}
 		result.val.values()[i] = v
 	}
@@ -1685,7 +1690,7 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 			ck, cc := cmds.CacheKey(ct.Cmd)
 			v, entry := p.cache.Flight(ck, cc, ct.TTL, now)
 			if v.typ != 0 { // cache hit for one key
-				results.s[i] = newResult(v, nil)
+				results.s[i] = NewResult(v, nil)
 				continue
 			}
 			if entry != nil {
@@ -1736,7 +1741,7 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 	}
 
 	for i, entry := range entries.e {
-		results.s[i] = newResult(entry.Wait(ctx))
+		results.s[i] = NewResult(entry.Wait(ctx))
 	}
 
 	if len(missing) == 0 {
@@ -1773,9 +1778,9 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 							}
 						}
 					}
-					results.s[j] = newErrResult(err)
+					results.s[j] = NewErrorResult(err)
 				} else {
-					results.s[j] = newResult(exec[len(exec)-1], nil)
+					results.s[j] = NewResult(exec[len(exec)-1], nil)
 				}
 				break
 			}

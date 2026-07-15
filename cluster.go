@@ -615,7 +615,7 @@ func (c *clusterClient) do(ctx context.Context, cmd Completed) (resp RedisResult
 retry:
 	cc, err := c.pick(ctx, cmd.Slot(), c.toReplica(cmd))
 	if err != nil {
-		return newErrResult(err)
+		return NewErrorResult(err)
 	}
 	resp = cc.Do(ctx, cmd)
 	if resp.NonRedisError() == errConnExpired {
@@ -1001,7 +1001,7 @@ retry:
 func fillErrs(n int, err error) (results []RedisResult) {
 	results = resultsp.Get(n, n).s
 	for i := range results {
-		results[i] = newErrResult(err)
+		results[i] = NewErrorResult(err)
 	}
 	return results
 }
@@ -1013,7 +1013,7 @@ func (c *clusterClient) doCache(ctx context.Context, cmd Cacheable, ttl time.Dur
 retry:
 	cc, err := c.pick(ctx, cmd.Slot(), c.toReplica(Completed(cmd)))
 	if err != nil {
-		return newErrResult(err)
+		return NewErrorResult(err)
 	}
 	resp = cc.DoCache(ctx, cmd, ttl)
 	if resp.NonRedisError() == errConnExpired {
@@ -1170,9 +1170,9 @@ func (c *clusterClient) askingMultiCache(cc conn, ctx context.Context, multi []C
 				if preErr := resps.s[i-1].Error(); preErr != nil { // if {Cmd} get a RedisError
 					err = preErr
 				}
-				results.s = append(results.s, newErrResult(err))
+				results.s = append(results.s, NewErrorResult(err))
 			} else {
-				results.s = append(results.s, newResult(arr[len(arr)-1], nil))
+				results.s = append(results.s, NewResult(arr[len(arr)-1], nil))
 			}
 		}
 	}
@@ -1444,7 +1444,7 @@ ret:
 func (c *clusterClient) DoStream(ctx context.Context, cmd Completed) RedisResultStream {
 	cc, err := c.pick(ctx, cmd.Slot(), c.toReplica(cmd))
 	if err != nil {
-		return RedisResultStream{e: err}
+		return NewErrorResultStream(err)
 	}
 	ret := cc.DoStream(ctx, cmd)
 	cmds.PutCompleted(cmd)
@@ -1453,7 +1453,7 @@ func (c *clusterClient) DoStream(ctx context.Context, cmd Completed) RedisResult
 
 func (c *clusterClient) DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisResultStream {
 	if len(multi) == 0 {
-		return RedisResultStream{e: io.EOF}
+		return NewErrorResultStream(io.EOF)
 	}
 	slot := multi[0].Slot()
 	repl := c.toReplica(multi[0])
@@ -1469,7 +1469,7 @@ func (c *clusterClient) DoMultiStream(ctx context.Context, multi ...Completed) M
 	}
 	cc, err := c.pick(ctx, slot, repl)
 	if err != nil {
-		return RedisResultStream{e: err}
+		return NewErrorResultStream(err)
 	}
 	ret := cc.DoMultiStream(ctx, multi...)
 	for _, cmd := range multi {
@@ -1611,7 +1611,7 @@ func (c *dedicatedClusterClient) Do(ctx context.Context, cmd Completed) (resp Re
 	attempts := 1
 retry:
 	if w, err := c.acquire(ctx, cmd.Slot()); err != nil {
-		resp = newErrResult(err)
+		resp = NewErrorResult(err)
 	} else {
 		resp = w.Do(ctx, cmd)
 		switch _, mode := c.client.shouldRefreshRetry(resp.Error(), ctx); mode {
@@ -1667,7 +1667,7 @@ retry:
 	} else {
 		resp = resultsp.Get(len(multi), len(multi)).s
 		for i := range resp {
-			resp[i] = newErrResult(err)
+			resp[i] = NewErrorResult(err)
 		}
 	}
 	for i, cmd := range multi {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"time"
-	"unsafe"
 
 	"github.com/redis/rueidis"
 )
@@ -47,11 +46,7 @@ func (c *TxPipeline) Exec(ctx context.Context) ([]Cmder, error) {
 	}
 	for i, r := range results {
 		rets[i].SetErr(nil)
-		rets[i].from(*(*rueidis.RedisResult)(unsafe.Pointer(&proxyresult{
-			err: resp[i+1].NonRedisError(),
-			val: r,
-		})))
-
+		rets[i].from(rueidis.NewResult(r, resp[i+1].NonRedisError()))
 		if err == nil {
 			err = rets[i].Err()
 		}

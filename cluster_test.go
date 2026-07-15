@@ -18,7 +18,7 @@ import (
 	"github.com/redis/rueidis/internal/cmds"
 )
 
-var slotsResp = newResult(slicemsg('*', []RedisMessage{
+var slotsResp = NewResult(slicemsg('*', []RedisMessage{
 	slicemsg('*', []RedisMessage{
 		{typ: ':', intlen: 0},
 		{typ: ':', intlen: 16383},
@@ -35,7 +35,7 @@ var slotsResp = newResult(slicemsg('*', []RedisMessage{
 	}),
 }), nil)
 
-var slotsMultiResp = newResult(slicemsg('*', []RedisMessage{
+var slotsMultiResp = NewResult(slicemsg('*', []RedisMessage{
 	slicemsg('*', []RedisMessage{
 		{typ: ':', intlen: 0},
 		{typ: ':', intlen: 8192},
@@ -66,7 +66,7 @@ var slotsMultiResp = newResult(slicemsg('*', []RedisMessage{
 	}),
 }), nil)
 
-var slotsMultiRespWithoutReplicas = newResult(slicemsg('*', []RedisMessage{
+var slotsMultiRespWithoutReplicas = NewResult(slicemsg('*', []RedisMessage{
 	slicemsg('*', []RedisMessage{
 		{typ: ':', intlen: 0},
 		{typ: ':', intlen: 8192},
@@ -87,7 +87,7 @@ var slotsMultiRespWithoutReplicas = newResult(slicemsg('*', []RedisMessage{
 	}),
 }), nil)
 
-var slotsMultiRespWithMultiReplicas = newResult(slicemsg('*', []RedisMessage{
+var slotsMultiRespWithMultiReplicas = NewResult(slicemsg('*', []RedisMessage{
 	slicemsg('*', []RedisMessage{
 		{typ: ':', intlen: 0},
 		{typ: ':', intlen: 8192},
@@ -138,7 +138,7 @@ var slotsMultiRespWithMultiReplicas = newResult(slicemsg('*', []RedisMessage{
 	}),
 }), nil)
 
-var singleSlotResp = newResult(slicemsg('*', []RedisMessage{
+var singleSlotResp = NewResult(slicemsg('*', []RedisMessage{
 	slicemsg('*', []RedisMessage{
 		{typ: ':', intlen: 0},
 		{typ: ':', intlen: 0},
@@ -150,7 +150,7 @@ var singleSlotResp = newResult(slicemsg('*', []RedisMessage{
 	}),
 }), nil)
 
-var singleSlotResp2 = newResult(slicemsg('*', []RedisMessage{
+var singleSlotResp2 = NewResult(slicemsg('*', []RedisMessage{
 	slicemsg('*', []RedisMessage{
 		{typ: ':', intlen: 0},
 		{typ: ':', intlen: 0},
@@ -162,7 +162,7 @@ var singleSlotResp2 = newResult(slicemsg('*', []RedisMessage{
 	}),
 }), nil)
 
-var singleSlotWithoutIP = newResult(slicemsg('*', []RedisMessage{
+var singleSlotWithoutIP = NewResult(slicemsg('*', []RedisMessage{
 	slicemsg('*', []RedisMessage{
 		{typ: ':', intlen: 0},
 		{typ: ':', intlen: 0},
@@ -188,7 +188,7 @@ var singleSlotWithoutIP = newResult(slicemsg('*', []RedisMessage{
 	}),
 }), nil)
 
-var shardsResp = newResult(slicemsg(typeArray, []RedisMessage{
+var shardsResp = NewResult(slicemsg(typeArray, []RedisMessage{
 	slicemsg(typeMap, []RedisMessage{
 		strmsg(typeBlobString, "slots"),
 		slicemsg(typeArray, []RedisMessage{
@@ -267,7 +267,7 @@ var shardsResp = newResult(slicemsg(typeArray, []RedisMessage{
 	}),
 }), nil)
 
-var shardsRespTls = newResult(slicemsg(typeArray, []RedisMessage{
+var shardsRespTls = NewResult(slicemsg(typeArray, []RedisMessage{
 	slicemsg(typeMap, []RedisMessage{
 		strmsg(typeBlobString, "slots"),
 		slicemsg(typeArray, []RedisMessage{
@@ -374,7 +374,7 @@ var shardsRespTls = newResult(slicemsg(typeArray, []RedisMessage{
 	}),
 }), nil)
 
-var shardsMultiResp = newResult(slicemsg('*', []RedisMessage{
+var shardsMultiResp = NewResult(slicemsg('*', []RedisMessage{
 	slicemsg(typeMap, []RedisMessage{
 		strmsg(typeBlobString, "slots"),
 		slicemsg(typeArray, []RedisMessage{
@@ -529,7 +529,7 @@ var shardsMultiResp = newResult(slicemsg('*', []RedisMessage{
 	}),
 }), nil)
 
-var singleShardResp2 = newResult(slicemsg('*', []RedisMessage{
+var singleShardResp2 = NewResult(slicemsg('*', []RedisMessage{
 	slicemsg(typeMap, []RedisMessage{
 		strmsg(typeBlobString, "slots"),
 		slicemsg(typeArray, []RedisMessage{
@@ -586,7 +586,7 @@ var singleShardResp2 = newResult(slicemsg('*', []RedisMessage{
 	}),
 }), nil)
 
-var singleShardWithoutIP = newResult(slicemsg(typeArray, []RedisMessage{
+var singleShardWithoutIP = NewResult(slicemsg(typeArray, []RedisMessage{
 	slicemsg(typeMap, []RedisMessage{
 		strmsg(typeBlobString, "slots"),
 		slicemsg(typeArray, []RedisMessage{
@@ -751,7 +751,7 @@ func TestClusterClientInit(t *testing.T) {
 		if _, err := newClusterClient(
 			&ClientOption{InitAddress: []string{":0"}},
 			func(dst string, opt *ClientOption) conn {
-				return &mockConn{DoFn: func(cmd Completed) RedisResult { return newErrResult(v) }}
+				return &mockConn{DoFn: func(cmd Completed) RedisResult { return NewErrorResult(v) }}
 			},
 			newRetryer(defaultRetryDelayFn),
 		); err != v {
@@ -767,7 +767,7 @@ func TestClusterClientInit(t *testing.T) {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						if atomic.AddInt64(&first, 1) == 1 {
-							return newResult(slicemsg('*', []RedisMessage{}), nil)
+							return NewResult(slicemsg('*', []RedisMessage{}), nil)
 						}
 						return slotsResp
 					},
@@ -787,7 +787,7 @@ func TestClusterClientInit(t *testing.T) {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
 						if atomic.AddInt64(&first, 1) == 1 {
-							return newResult(slicemsg('*', []RedisMessage{}), nil)
+							return NewResult(slicemsg('*', []RedisMessage{}), nil)
 						}
 						return shardsResp
 					},
@@ -851,7 +851,7 @@ func TestClusterClientInit(t *testing.T) {
 			behavior[addr] = fn
 		}
 		emptyResp := func() RedisResult {
-			return newResult(slicemsg('*', []RedisMessage{}), nil)
+			return NewResult(slicemsg('*', []RedisMessage{}), nil)
 		}
 
 		resetCalls()
@@ -886,7 +886,7 @@ func TestClusterClientInit(t *testing.T) {
 			func(dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
-						return newResult(slicemsg('*', []RedisMessage{}), nil)
+						return NewResult(slicemsg('*', []RedisMessage{}), nil)
 					},
 				}
 			},
@@ -902,7 +902,7 @@ func TestClusterClientInit(t *testing.T) {
 			func(dst string, opt *ClientOption) conn {
 				return &mockConn{
 					DoFn: func(cmd Completed) RedisResult {
-						return newResult(slicemsg('*', []RedisMessage{}), nil)
+						return NewResult(slicemsg('*', []RedisMessage{}), nil)
 					},
 					VersionFn: func() int { return 8 },
 				}
@@ -1729,12 +1729,12 @@ func TestClusterClient(t *testing.T) {
 			return RedisResult{}
 		},
 		DoStreamFn: func(cmd Completed) RedisResultStream {
-			return RedisResultStream{e: errors.New(cmd.Commands()[1])}
+			return NewErrorResultStream(errors.New(cmd.Commands()[1]))
 		},
 		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
@@ -1744,21 +1744,21 @@ func TestClusterClient(t *testing.T) {
 		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
 		DoOverride: map[string]func(cmd Completed) RedisResult{
 			"GET Do": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Do"), nil)
+				return NewResult(strmsg('+', "Do"), nil)
 			},
 			"INFO": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Info"), nil)
+				return NewResult(strmsg('+', "Info"), nil)
 			},
 		},
 		DoCacheOverride: map[string]func(cmd Cacheable, ttl time.Duration) RedisResult{
 			"GET DoCache": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "DoCache"), nil)
+				return NewResult(strmsg('+', "DoCache"), nil)
 			},
 		},
 	}
@@ -2009,9 +2009,9 @@ func TestClusterClient(t *testing.T) {
 			return &mockWire{
 				DoMultiFn: func(multi ...Completed) *redisresults {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
 					}}
 				},
 			}
@@ -2072,23 +2072,23 @@ func TestClusterClient(t *testing.T) {
 		closed := false
 		w := &mockWire{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Delegate"), nil)
+				return NewResult(strmsg('+', "Delegate"), nil)
 			},
 			DoMultiFn: func(cmd ...Completed) *redisresults {
 				if len(cmd) == 4 {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{
 							strmsg('+', "Delegate0"),
 							strmsg('+', "Delegate1"),
 						}), nil),
 					}}
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "Delegate0"), nil),
-					newResult(strmsg('+', "Delegate1"), nil),
+					NewResult(strmsg('+', "Delegate0"), nil),
+					NewResult(strmsg('+', "Delegate1"), nil),
 				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
@@ -2180,23 +2180,23 @@ func TestClusterClient(t *testing.T) {
 		closed := false
 		w := &mockWire{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Delegate"), nil)
+				return NewResult(strmsg('+', "Delegate"), nil)
 			},
 			DoMultiFn: func(cmd ...Completed) *redisresults {
 				if len(cmd) == 4 {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{
 							strmsg('+', "Delegate0"),
 							strmsg('+', "Delegate1"),
 						}), nil),
 					}}
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "Delegate0"), nil),
-					newResult(strmsg('+', "Delegate1"), nil),
+					NewResult(strmsg('+', "Delegate0"), nil),
+					NewResult(strmsg('+', "Delegate1"), nil),
 				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
@@ -2394,40 +2394,40 @@ func TestClusterClient_SendToOnlyPrimaryNodes(t *testing.T) {
 				return slotsMultiResp
 			},
 			"GET Do": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET Do"), nil)
+				return NewResult(strmsg('+', "GET Do"), nil)
 			},
 			"GET K1{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K1{a}"), nil)
+				return NewResult(strmsg('+', "GET K1{a}"), nil)
 			},
 			"GET K2{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K2{a}"), nil)
+				return NewResult(strmsg('+', "GET K2{a}"), nil)
 			},
 			"INFO": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "INFO"), nil)
+				return NewResult(strmsg('+', "INFO"), nil)
 			},
 		},
 		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
 		DoCacheOverride: map[string]func(cmd Cacheable, ttl time.Duration) RedisResult{
 			"GET DoCache": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET DoCache"), nil)
+				return NewResult(strmsg('+', "GET DoCache"), nil)
 			},
 			"GET K1{a}": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET K1{a}"), nil)
+				return NewResult(strmsg('+', "GET K1{a}"), nil)
 			},
 			"GET K2{a}": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET K2{a}"), nil)
+				return NewResult(strmsg('+', "GET K2{a}"), nil)
 			},
 		},
 		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
@@ -2609,9 +2609,9 @@ func TestClusterClient_SendToOnlyPrimaryNodes(t *testing.T) {
 			return &mockWire{
 				DoMultiFn: func(multi ...Completed) *redisresults {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
 					}}
 				},
 			}
@@ -2672,23 +2672,23 @@ func TestClusterClient_SendToOnlyPrimaryNodes(t *testing.T) {
 		closed := false
 		w := &mockWire{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Delegate"), nil)
+				return NewResult(strmsg('+', "Delegate"), nil)
 			},
 			DoMultiFn: func(cmd ...Completed) *redisresults {
 				if len(cmd) == 4 {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{
 							strmsg('+', "Delegate0"),
 							strmsg('+', "Delegate1"),
 						}), nil),
 					}}
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "Delegate0"), nil),
-					newResult(strmsg('+', "Delegate1"), nil),
+					NewResult(strmsg('+', "Delegate0"), nil),
+					NewResult(strmsg('+', "Delegate1"), nil),
 				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
@@ -2780,23 +2780,23 @@ func TestClusterClient_SendToOnlyPrimaryNodes(t *testing.T) {
 		closed := false
 		w := &mockWire{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Delegate"), nil)
+				return NewResult(strmsg('+', "Delegate"), nil)
 			},
 			DoMultiFn: func(cmd ...Completed) *redisresults {
 				if len(cmd) == 4 {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{
 							strmsg('+', "Delegate0"),
 							strmsg('+', "Delegate1"),
 						}), nil),
 					}}
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "Delegate0"), nil),
-					newResult(strmsg('+', "Delegate1"), nil),
+					NewResult(strmsg('+', "Delegate0"), nil),
+					NewResult(strmsg('+', "Delegate1"), nil),
 				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
@@ -2893,10 +2893,10 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 				return slotsMultiResp
 			},
 			"INFO": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "INFO"), nil)
+				return NewResult(strmsg('+', "INFO"), nil)
 			},
 			"GET K1{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K1{a}"), nil)
+				return NewResult(strmsg('+', "GET K1{a}"), nil)
 			},
 		},
 	}
@@ -2904,31 +2904,31 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
 		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
 		DoOverride: map[string]func(cmd Completed) RedisResult{
 			"GET Do": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET Do"), nil)
+				return NewResult(strmsg('+', "GET Do"), nil)
 			},
 			"GET K1{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K1{a}"), nil)
+				return NewResult(strmsg('+', "GET K1{a}"), nil)
 			},
 			"GET K2{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K2{a}"), nil)
+				return NewResult(strmsg('+', "GET K2{a}"), nil)
 			},
 		},
 		DoCacheOverride: map[string]func(cmd Cacheable, ttl time.Duration) RedisResult{
 			"GET DoCache": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET DoCache"), nil)
+				return NewResult(strmsg('+', "GET DoCache"), nil)
 			},
 		},
 	}
@@ -3098,9 +3098,9 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 			return &mockWire{
 				DoMultiFn: func(multi ...Completed) *redisresults {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
 					}}
 				},
 			}
@@ -3164,23 +3164,23 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 		closed := false
 		w := &mockWire{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Delegate"), nil)
+				return NewResult(strmsg('+', "Delegate"), nil)
 			},
 			DoMultiFn: func(cmd ...Completed) *redisresults {
 				if len(cmd) == 4 {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{
 							strmsg('+', "Delegate0"),
 							strmsg('+', "Delegate1"),
 						}), nil),
 					}}
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "Delegate0"), nil),
-					newResult(strmsg('+', "Delegate1"), nil),
+					NewResult(strmsg('+', "Delegate0"), nil),
+					NewResult(strmsg('+', "Delegate1"), nil),
 				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
@@ -3272,23 +3272,23 @@ func TestClusterClient_SendToOnlyReplicaNodes(t *testing.T) {
 		closed := false
 		w := &mockWire{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Delegate"), nil)
+				return NewResult(strmsg('+', "Delegate"), nil)
 			},
 			DoMultiFn: func(cmd ...Completed) *redisresults {
 				if len(cmd) == 4 {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{
 							strmsg('+', "Delegate0"),
 							strmsg('+', "Delegate1"),
 						}), nil),
 					}}
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "Delegate0"), nil),
-					newResult(strmsg('+', "Delegate1"), nil),
+					NewResult(strmsg('+', "Delegate0"), nil),
+					NewResult(strmsg('+', "Delegate1"), nil),
 				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
@@ -3385,32 +3385,32 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 				return slotsMultiResp
 			},
 			"INFO": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "INFO"), nil)
+				return NewResult(strmsg('+', "INFO"), nil)
 			},
 			"SET Do V": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "SET Do V"), nil)
+				return NewResult(strmsg('+', "SET Do V"), nil)
 			},
 			"SET K2{a} V2{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "SET K2{a} V2{a}"), nil)
+				return NewResult(strmsg('+', "SET K2{a} V2{a}"), nil)
 			},
 		},
 		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
 				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "SET K1") {
-					resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+					resps[i] = NewResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
 					continue
 				}
 				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "SET K2") {
-					resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+					resps[i] = NewResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
 					continue
 				}
 				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "MULTI") {
-					resps[i] = newResult(strmsg('+', "MULTI"), nil)
+					resps[i] = NewResult(strmsg('+', "MULTI"), nil)
 					continue
 				}
 				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "EXEC") {
-					resps[i] = newResult(strmsg('+', "EXEC"), nil)
+					resps[i] = NewResult(strmsg('+', "EXEC"), nil)
 					continue
 				}
 
@@ -3424,20 +3424,20 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 	replicaNodeConn := &mockConn{
 		DoOverride: map[string]func(cmd Completed) RedisResult{
 			"GET Do": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET Do"), nil)
+				return NewResult(strmsg('+', "GET Do"), nil)
 			},
 			"GET K1{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K1{a}"), nil)
+				return NewResult(strmsg('+', "GET K1{a}"), nil)
 			},
 			"GET K2{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K2{a}"), nil)
+				return NewResult(strmsg('+', "GET K2{a}"), nil)
 			},
 		},
 		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
 				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "GET K1") {
-					resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+					resps[i] = NewResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
 					continue
 				}
 
@@ -3449,20 +3449,20 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 		},
 		DoCacheOverride: map[string]func(cmd Cacheable, ttl time.Duration) RedisResult{
 			"GET DoCache": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET DoCache"), nil)
+				return NewResult(strmsg('+', "GET DoCache"), nil)
 			},
 			"GET K1{a}": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET K1{a}"), nil)
+				return NewResult(strmsg('+', "GET K1{a}"), nil)
 			},
 			"GET K2{a}": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET K2{a}"), nil)
+				return NewResult(strmsg('+', "GET K2{a}"), nil)
 			},
 		},
 		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
 				if strings.HasPrefix(strings.Join(cmd.Cmd.Commands(), " "), "GET K1") {
-					resps[i] = newResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
+					resps[i] = NewResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
 					continue
 				}
 
@@ -3688,9 +3688,9 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 			return &mockWire{
 				DoMultiFn: func(multi ...Completed) *redisresults {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
 					}}
 				},
 			}
@@ -3754,23 +3754,23 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 		closed := false
 		w := &mockWire{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Delegate"), nil)
+				return NewResult(strmsg('+', "Delegate"), nil)
 			},
 			DoMultiFn: func(cmd ...Completed) *redisresults {
 				if len(cmd) == 4 {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{
 							strmsg('+', "Delegate0"),
 							strmsg('+', "Delegate1"),
 						}), nil),
 					}}
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "Delegate0"), nil),
-					newResult(strmsg('+', "Delegate1"), nil),
+					NewResult(strmsg('+', "Delegate0"), nil),
+					NewResult(strmsg('+', "Delegate1"), nil),
 				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
@@ -3862,23 +3862,23 @@ func TestClusterClient_SendReadOperationToReplicaNodesWriteOperationToPrimaryNod
 		closed := false
 		w := &mockWire{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Delegate"), nil)
+				return NewResult(strmsg('+', "Delegate"), nil)
 			},
 			DoMultiFn: func(cmd ...Completed) *redisresults {
 				if len(cmd) == 4 {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{
 							strmsg('+', "Delegate0"),
 							strmsg('+', "Delegate1"),
 						}), nil),
 					}}
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "Delegate0"), nil),
-					newResult(strmsg('+', "Delegate1"), nil),
+					NewResult(strmsg('+', "Delegate0"), nil),
+					NewResult(strmsg('+', "Delegate1"), nil),
 				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
@@ -3975,18 +3975,18 @@ func TestClusterClient_SendPrimaryNodeOnlyButOneSlotAssigned(t *testing.T) {
 				return singleSlotResp
 			},
 			"INFO": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "INFO"), nil)
+				return NewResult(strmsg('+', "INFO"), nil)
 			},
 		},
 		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
 				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "MULTI") {
-					resps[i] = newResult(strmsg('+', "MULTI"), nil)
+					resps[i] = NewResult(strmsg('+', "MULTI"), nil)
 					continue
 				}
 				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "EXEC") {
-					resps[i] = newResult(strmsg('+', "EXEC"), nil)
+					resps[i] = NewResult(strmsg('+', "EXEC"), nil)
 					continue
 				}
 
@@ -4042,15 +4042,15 @@ func TestClusterClientErr(t *testing.T) {
 					atomic.AddInt64(&count, 1)
 					return slotsResp
 				}
-				return newErrResult(v)
+				return NewErrorResult(v)
 			},
 			DoStreamFn: func(cmd Completed) RedisResultStream {
-				return RedisResultStream{e: v}
+				return NewErrorResultStream(v)
 			},
 			DoMultiFn: func(multi ...Completed) *redisresults {
 				res := make([]RedisResult, len(multi))
 				for i := range res {
-					res[i] = newErrResult(v)
+					res[i] = NewErrorResult(v)
 				}
 				return &redisresults{s: res}
 			},
@@ -4058,12 +4058,12 @@ func TestClusterClientErr(t *testing.T) {
 				return MultiRedisResultStream{e: v}
 			},
 			DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newErrResult(v)
+				return NewErrorResult(v)
 			},
 			DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 				res := make([]RedisResult, len(multi))
 				for i := range res {
-					res[i] = newErrResult(v)
+					res[i] = NewErrorResult(v)
 				}
 				return &redisresults{s: res}
 			},
@@ -4113,7 +4113,7 @@ func TestClusterClientErr(t *testing.T) {
 				if atomic.AddInt64(&first, 1) == 1 {
 					return singleSlotResp
 				}
-				return newErrResult(v)
+				return NewErrorResult(v)
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
 				return v
@@ -4257,9 +4257,9 @@ func TestClusterClientErr(t *testing.T) {
 						return slotsMultiResp
 					}
 					if atomic.AddInt64(&count, 1) <= 3 {
-						return newResult(strmsg('-', "MOVED 0 :0"), nil)
+						return NewResult(strmsg('-', "MOVED 0 :0"), nil)
 					}
-					return newResult(strmsg('+', "b"), nil)
+					return NewResult(strmsg('+', "b"), nil)
 				}}
 			},
 			newRetryer(defaultRetryDelayFn),
@@ -4285,9 +4285,9 @@ func TestClusterClientErr(t *testing.T) {
 						return slotsMultiResp
 					}
 					if atomic.AddInt64(&count, 1) <= 3 {
-						return newResult(strmsg('-', "MOVED 0 :1"), nil)
+						return NewResult(strmsg('-', "MOVED 0 :1"), nil)
 					}
-					return newResult(strmsg('+', "b"), nil)
+					return NewResult(strmsg('+', "b"), nil)
 				}}
 			},
 			newRetryer(defaultRetryDelayFn),
@@ -4313,10 +4313,10 @@ func TestClusterClientErr(t *testing.T) {
 
 						if strings.Contains(dst, ":0") {
 							atomic.AddInt64(&count, 1)
-							return newResult(strmsg('-', "MOVED 0 :2"), nil)
+							return NewResult(strmsg('-', "MOVED 0 :2"), nil)
 						}
 
-						return newResult(strmsg('+', "b"), nil)
+						return NewResult(strmsg('+', "b"), nil)
 					},
 				}
 			},
@@ -4348,12 +4348,12 @@ func TestClusterClientErr(t *testing.T) {
 					ret := make([]RedisResult, len(multi))
 					if atomic.AddInt64(&count, 1) <= 3 {
 						for i := range ret {
-							ret[i] = newResult(strmsg('-', "MOVED 0 :1"), nil)
+							ret[i] = NewResult(strmsg('-', "MOVED 0 :1"), nil)
 						}
 						return &redisresults{s: ret}
 					}
 					for i := range ret {
-						ret[i] = newResult(strmsg('+', multi[i].Commands()[1]), nil)
+						ret[i] = NewResult(strmsg('+', multi[i].Commands()[1]), nil)
 					}
 					return &redisresults{s: ret}
 				}}
@@ -4383,13 +4383,13 @@ func TestClusterClientErr(t *testing.T) {
 						if strings.Contains(dst, ":0") {
 							atomic.AddInt64(&count, 1)
 							for i := range ret {
-								ret[i] = newResult(strmsg('-', "MOVED 0 :2"), nil)
+								ret[i] = NewResult(strmsg('-', "MOVED 0 :2"), nil)
 							}
 							return &redisresults{s: ret}
 						}
 
 						for i := range ret {
-							ret[i] = newResult(strmsg('+', multi[i].Commands()[1]), nil)
+							ret[i] = NewResult(strmsg('+', multi[i].Commands()[1]), nil)
 						}
 						return &redisresults{s: ret}
 					},
@@ -4423,31 +4423,31 @@ func TestClusterClientErr(t *testing.T) {
 					switch atomic.AddInt64(&count, 1) {
 					case 1:
 						return &redisresults{s: []RedisResult{
-							newResult(strmsg('+', "1"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(strmsg('-', "MOVED 0 :1"), nil),
-							newResult(strmsg('-', "EXECABORT"), nil),
-							newResult(strmsg('+', "4"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('-', "MOVED 0 :1"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(strmsg('-', "EXECABORT"), nil),
-							newResult(strmsg('+', "7"), nil),
+							NewResult(strmsg('+', "1"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(strmsg('-', "MOVED 0 :1"), nil),
+							NewResult(strmsg('-', "EXECABORT"), nil),
+							NewResult(strmsg('+', "4"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('-', "MOVED 0 :1"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(strmsg('-', "EXECABORT"), nil),
+							NewResult(strmsg('+', "7"), nil),
 						}}
 					case 2:
 						return &redisresults{s: []RedisResult{
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(slicemsg('*', []RedisMessage{
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(slicemsg('*', []RedisMessage{
 								strmsg('+', "2"),
 								strmsg('+', "3"),
 							}), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(slicemsg('*', []RedisMessage{
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(slicemsg('*', []RedisMessage{
 								strmsg('+', "5"),
 								strmsg('+', "6"),
 							}), nil),
@@ -4521,33 +4521,33 @@ func TestClusterClientErr(t *testing.T) {
 					switch atomic.AddInt64(&count, 1) {
 					case 1:
 						return &redisresults{s: []RedisResult{
-							newResult(strmsg('+', "1"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(strmsg('-', "ASK 0 :1"), nil),
-							newResult(strmsg('-', "EXECABORT"), nil),
-							newResult(strmsg('+', "4"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('-', "ASK 0 :1"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(strmsg('-', "EXECABORT"), nil),
-							newResult(strmsg('+', "7"), nil),
+							NewResult(strmsg('+', "1"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(strmsg('-', "ASK 0 :1"), nil),
+							NewResult(strmsg('-', "EXECABORT"), nil),
+							NewResult(strmsg('+', "4"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('-', "ASK 0 :1"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(strmsg('-', "EXECABORT"), nil),
+							NewResult(strmsg('+', "7"), nil),
 						}}
 					case 2:
 						return &redisresults{s: []RedisResult{
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(slicemsg('*', []RedisMessage{
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(slicemsg('*', []RedisMessage{
 								strmsg('+', "2"),
 								strmsg('+', "3"),
 							}), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(slicemsg('*', []RedisMessage{
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(slicemsg('*', []RedisMessage{
 								strmsg('+', "5"),
 								strmsg('+', "6"),
 							}), nil),
@@ -4621,29 +4621,29 @@ func TestClusterClientErr(t *testing.T) {
 					switch atomic.AddInt64(&count, 1) {
 					case 1:
 						return &redisresults{s: []RedisResult{
-							newResult(strmsg('-', "MOVED 0 :1"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(slicemsg('*', []RedisMessage{
+							NewResult(strmsg('-', "MOVED 0 :1"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(slicemsg('*', []RedisMessage{
 								strmsg('+', "2"),
 								strmsg('+', "3"),
 							}), nil),
-							newResult(strmsg('-', "MOVED 0 :1"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(slicemsg('*', []RedisMessage{
+							NewResult(strmsg('-', "MOVED 0 :1"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(slicemsg('*', []RedisMessage{
 								strmsg('+', "5"),
 								strmsg('+', "6"),
 							}), nil),
-							newResult(strmsg('-', "MOVED 0 :1"), nil),
+							NewResult(strmsg('-', "MOVED 0 :1"), nil),
 						}}
 					case 2:
 						return &redisresults{s: []RedisResult{
-							newResult(strmsg('+', "1"), nil),
-							newResult(strmsg('+', "4"), nil),
-							newResult(strmsg('+', "7"), nil),
+							NewResult(strmsg('+', "1"), nil),
+							NewResult(strmsg('+', "4"), nil),
+							NewResult(strmsg('+', "7"), nil),
 						}}
 					}
 					return nil
@@ -4714,32 +4714,32 @@ func TestClusterClientErr(t *testing.T) {
 					switch atomic.AddInt64(&count, 1) {
 					case 1:
 						return &redisresults{s: []RedisResult{
-							newResult(strmsg('-', "ASK 0 :1"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(slicemsg('*', []RedisMessage{
+							NewResult(strmsg('-', "ASK 0 :1"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(slicemsg('*', []RedisMessage{
 								strmsg('+', "2"),
 								strmsg('+', "3"),
 							}), nil),
-							newResult(strmsg('-', "ASK 0 :1"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(slicemsg('*', []RedisMessage{
+							NewResult(strmsg('-', "ASK 0 :1"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(slicemsg('*', []RedisMessage{
 								strmsg('+', "5"),
 								strmsg('+', "6"),
 							}), nil),
-							newResult(strmsg('-', "ASK 0 :1"), nil),
+							NewResult(strmsg('-', "ASK 0 :1"), nil),
 						}}
 					case 2:
 						return &redisresults{s: []RedisResult{
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "1"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "4"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "7"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "1"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "4"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "7"), nil),
 						}}
 					}
 					return nil
@@ -4810,32 +4810,32 @@ func TestClusterClientErr(t *testing.T) {
 					switch atomic.AddInt64(&count, 1) {
 					case 1:
 						return &redisresults{s: []RedisResult{
-							newResult(strmsg('+', "1"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('-', "MOVED 0 :1"), nil),
-							newResult(strmsg('-', "MOVED 0 :1"), nil),
-							newResult(strmsg('-', "EXECABORT"), nil),
-							newResult(strmsg('-', "MOVED 0 :1"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('-', "MOVED 0 :1"), nil),
-							newResult(strmsg('-', "MOVED 0 :1"), nil),
-							newResult(strmsg('-', "EXECABORT"), nil),
-							newResult(strmsg('+', "7"), nil),
+							NewResult(strmsg('+', "1"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('-', "MOVED 0 :1"), nil),
+							NewResult(strmsg('-', "MOVED 0 :1"), nil),
+							NewResult(strmsg('-', "EXECABORT"), nil),
+							NewResult(strmsg('-', "MOVED 0 :1"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('-', "MOVED 0 :1"), nil),
+							NewResult(strmsg('-', "MOVED 0 :1"), nil),
+							NewResult(strmsg('-', "EXECABORT"), nil),
+							NewResult(strmsg('+', "7"), nil),
 						}}
 					case 2:
 						return &redisresults{s: []RedisResult{
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(slicemsg('*', []RedisMessage{
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(slicemsg('*', []RedisMessage{
 								strmsg('+', "2"),
 								strmsg('+', "3"),
 							}), nil),
-							newResult(strmsg('+', "4"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(slicemsg('*', []RedisMessage{
+							NewResult(strmsg('+', "4"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(slicemsg('*', []RedisMessage{
 								strmsg('+', "5"),
 								strmsg('+', "6"),
 							}), nil),
@@ -4909,35 +4909,35 @@ func TestClusterClientErr(t *testing.T) {
 					switch atomic.AddInt64(&count, 1) {
 					case 1:
 						return &redisresults{s: []RedisResult{
-							newResult(strmsg('+', "1"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('-', "ASK 0 :1"), nil),
-							newResult(strmsg('-', "ASK 0 :1"), nil),
-							newResult(strmsg('-', "EXECABORT"), nil),
-							newResult(strmsg('-', "ASK 0 :1"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('-', "ASK 0 :1"), nil),
-							newResult(strmsg('-', "ASK 0 :1"), nil),
-							newResult(strmsg('-', "EXECABORT"), nil),
-							newResult(strmsg('+', "7"), nil),
+							NewResult(strmsg('+', "1"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('-', "ASK 0 :1"), nil),
+							NewResult(strmsg('-', "ASK 0 :1"), nil),
+							NewResult(strmsg('-', "EXECABORT"), nil),
+							NewResult(strmsg('-', "ASK 0 :1"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('-', "ASK 0 :1"), nil),
+							NewResult(strmsg('-', "ASK 0 :1"), nil),
+							NewResult(strmsg('-', "EXECABORT"), nil),
+							NewResult(strmsg('+', "7"), nil),
 						}}
 					case 2:
 						return &redisresults{s: []RedisResult{
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(slicemsg('*', []RedisMessage{
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(slicemsg('*', []RedisMessage{
 								strmsg('+', "2"),
 								strmsg('+', "3"),
 							}), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "4"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(strmsg('+', "QUEUED"), nil),
-							newResult(slicemsg('*', []RedisMessage{
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "4"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(strmsg('+', "QUEUED"), nil),
+							NewResult(slicemsg('*', []RedisMessage{
 								strmsg('+', "5"),
 								strmsg('+', "6"),
 							}), nil),
@@ -5011,17 +5011,17 @@ func TestClusterClientErr(t *testing.T) {
 					switch atomic.AddInt64(&count, 1) {
 					case 1:
 						return &redisresults{s: []RedisResult{
-							newResult(strmsg('+', "1"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('-', "ERR Command not allowed inside a transaction"), nil),
-							newResult(strmsg('-', "MOVED 0 :1"), nil),
-							newResult(strmsg('-', "MOVED 0 :1"), nil),
-							newResult(strmsg('-', "EXECABORT"), nil),
-							newResult(strmsg('-', "MOVED 0 :1"), nil),
+							NewResult(strmsg('+', "1"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('-', "ERR Command not allowed inside a transaction"), nil),
+							NewResult(strmsg('-', "MOVED 0 :1"), nil),
+							NewResult(strmsg('-', "MOVED 0 :1"), nil),
+							NewResult(strmsg('-', "EXECABORT"), nil),
+							NewResult(strmsg('-', "MOVED 0 :1"), nil),
 						}}
 					case 2:
 						return &redisresults{s: []RedisResult{
-							newResult(strmsg('+', "4"), nil),
+							NewResult(strmsg('+', "4"), nil),
 						}}
 					}
 					return nil
@@ -5076,17 +5076,17 @@ func TestClusterClientErr(t *testing.T) {
 					switch atomic.AddInt64(&count, 1) {
 					case 1:
 						return &redisresults{s: []RedisResult{
-							newResult(strmsg('+', "1"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('-', "MOVED 0 :1"), nil),
-							newResult(strmsg('-', "ERR Command not allowed inside a transaction"), nil),
-							newResult(strmsg('-', "MOVED 0 :1"), nil),
-							newResult(strmsg('-', "EXECABORT"), nil),
-							newResult(strmsg('-', "MOVED 0 :1"), nil),
+							NewResult(strmsg('+', "1"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('-', "MOVED 0 :1"), nil),
+							NewResult(strmsg('-', "ERR Command not allowed inside a transaction"), nil),
+							NewResult(strmsg('-', "MOVED 0 :1"), nil),
+							NewResult(strmsg('-', "EXECABORT"), nil),
+							NewResult(strmsg('-', "MOVED 0 :1"), nil),
 						}}
 					case 2:
 						return &redisresults{s: []RedisResult{
-							newResult(strmsg('+', "4"), nil),
+							NewResult(strmsg('+', "4"), nil),
 						}}
 					}
 					return nil
@@ -5141,11 +5141,11 @@ func TestClusterClientErr(t *testing.T) {
 					switch atomic.AddInt64(&count, 1) {
 					case 1:
 						return &redisresults{s: []RedisResult{
-							newResult(strmsg('+', "1"), nil),
-							newResult(strmsg('+', "OK"), nil),
-							newResult(strmsg('-', "MOVED 0 :1"), nil),
-							newResult(strmsg('-', "ERR Command not allowed inside a transaction"), nil),
-							newResult(strmsg('-', "MOVED 0 :1"), nil),
+							NewResult(strmsg('+', "1"), nil),
+							NewResult(strmsg('+', "OK"), nil),
+							NewResult(strmsg('-', "MOVED 0 :1"), nil),
+							NewResult(strmsg('-', "ERR Command not allowed inside a transaction"), nil),
+							NewResult(strmsg('-', "MOVED 0 :1"), nil),
 						}}
 					}
 					return nil
@@ -5192,12 +5192,12 @@ func TestClusterClientErr(t *testing.T) {
 					ret := make([]RedisResult, len(multi))
 					if atomic.AddInt64(&count, 1) <= 3 {
 						for i := range ret {
-							ret[i] = newResult(strmsg('-', "MOVED 0 :1"), nil)
+							ret[i] = NewResult(strmsg('-', "MOVED 0 :1"), nil)
 						}
 						return &redisresults{s: ret}
 					}
 					for i := range ret {
-						ret[i] = newResult(strmsg('+', multi[i].Commands()[1]), nil)
+						ret[i] = NewResult(strmsg('+', multi[i].Commands()[1]), nil)
 					}
 					return &redisresults{s: ret}
 				}}
@@ -5229,12 +5229,12 @@ func TestClusterClientErr(t *testing.T) {
 					ret := make([]RedisResult, len(multi))
 					if atomic.AddInt64(&count, 1) <= 2 {
 						for i := range ret {
-							ret[i] = newResult(strmsg('-', "TRYAGAIN"), nil)
+							ret[i] = NewResult(strmsg('-', "TRYAGAIN"), nil)
 						}
 						return &redisresults{s: ret}
 					}
 					for i := range ret {
-						ret[i] = newResult(strmsg('+', multi[i].Commands()[1]), nil)
+						ret[i] = NewResult(strmsg('+', multi[i].Commands()[1]), nil)
 					}
 					return &redisresults{s: ret}
 				}}
@@ -5266,9 +5266,9 @@ func TestClusterClientErr(t *testing.T) {
 						return slotsMultiResp
 					}
 					if atomic.AddInt64(&count, 1) <= 3 {
-						return newResult(strmsg('-', "MOVED 0 :2"), nil)
+						return NewResult(strmsg('-', "MOVED 0 :2"), nil)
 					}
-					return newResult(strmsg('+', "b"), nil)
+					return NewResult(strmsg('+', "b"), nil)
 				}}
 			},
 			newRetryer(defaultRetryDelayFn),
@@ -5298,12 +5298,12 @@ func TestClusterClientErr(t *testing.T) {
 					ret := make([]RedisResult, len(multi))
 					if atomic.AddInt64(&count, 1) <= 3 {
 						for i := range ret {
-							ret[i] = newResult(strmsg('-', "MOVED 0 :2"), nil)
+							ret[i] = NewResult(strmsg('-', "MOVED 0 :2"), nil)
 						}
 						return &redisresults{s: ret}
 					}
 					for i := range ret {
-						ret[i] = newResult(strmsg('+', multi[i].Commands()[1]), nil)
+						ret[i] = NewResult(strmsg('+', multi[i].Commands()[1]), nil)
 					}
 					return &redisresults{s: ret}
 				}}
@@ -5335,12 +5335,12 @@ func TestClusterClientErr(t *testing.T) {
 					ret := make([]RedisResult, len(multi))
 					if atomic.AddInt64(&count, 1) <= 3 {
 						for i := range ret {
-							ret[i] = newResult(strmsg('-', "MOVED 0 :2"), nil)
+							ret[i] = NewResult(strmsg('-', "MOVED 0 :2"), nil)
 						}
 						return &redisresults{s: ret}
 					}
 					for i := range ret {
-						ret[i] = newResult(strmsg('+', multi[i].Commands()[1]), nil)
+						ret[i] = NewResult(strmsg('+', multi[i].Commands()[1]), nil)
 					}
 					return &redisresults{s: ret}
 				}}
@@ -5375,12 +5375,12 @@ func TestClusterClientErr(t *testing.T) {
 					ret := make([]RedisResult, len(multi))
 					if atomic.AddInt64(&count, 1) <= 2 {
 						for i := range ret {
-							ret[i] = newResult(strmsg('-', "TRYAGAIN"), nil)
+							ret[i] = NewResult(strmsg('-', "TRYAGAIN"), nil)
 						}
 						return &redisresults{s: ret}
 					}
 					for i := range ret {
-						ret[i] = newResult(strmsg('+', multi[i].Commands()[1]), nil)
+						ret[i] = NewResult(strmsg('+', multi[i].Commands()[1]), nil)
 					}
 					return &redisresults{s: ret}
 				}}
@@ -5410,9 +5410,9 @@ func TestClusterClientErr(t *testing.T) {
 					},
 					DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
 						if atomic.AddInt64(&count, 1) <= 3 {
-							return newResult(strmsg('-', "MOVED 0 :1"), nil)
+							return NewResult(strmsg('-', "MOVED 0 :1"), nil)
 						}
-						return newResult(strmsg('+', "b"), nil)
+						return NewResult(strmsg('+', "b"), nil)
 					},
 				}
 			},
@@ -5438,10 +5438,10 @@ func TestClusterClientErr(t *testing.T) {
 					DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
 						if strings.Contains(dst, ":0") {
 							atomic.AddInt64(&count, 1)
-							return newResult(strmsg('-', "MOVED 0 :2"), nil)
+							return NewResult(strmsg('-', "MOVED 0 :2"), nil)
 						}
 
-						return newResult(strmsg('+', "b"), nil)
+						return NewResult(strmsg('+', "b"), nil)
 					},
 				}
 			},
@@ -5473,12 +5473,12 @@ func TestClusterClientErr(t *testing.T) {
 					ret := make([]RedisResult, len(multi))
 					if atomic.AddInt64(&count, 1) <= 3 {
 						for i := range ret {
-							ret[i] = newResult(strmsg('-', "MOVED 0 :1"), nil)
+							ret[i] = NewResult(strmsg('-', "MOVED 0 :1"), nil)
 						}
 						return &redisresults{s: ret}
 					}
 					for i := range ret {
-						ret[i] = newResult(strmsg('+', multi[i].Cmd.Commands()[1]), nil)
+						ret[i] = NewResult(strmsg('+', multi[i].Cmd.Commands()[1]), nil)
 					}
 					return &redisresults{s: ret}
 				}}
@@ -5508,13 +5508,13 @@ func TestClusterClientErr(t *testing.T) {
 						if strings.Contains(dst, ":0") {
 							atomic.AddInt64(&count, 1)
 							for i := range ret {
-								ret[i] = newResult(strmsg('-', "MOVED 0 :2"), nil)
+								ret[i] = NewResult(strmsg('-', "MOVED 0 :2"), nil)
 							}
 							return &redisresults{s: ret}
 						}
 
 						for i := range ret {
-							ret[i] = newResult(strmsg('+', multi[i].Cmd.Commands()[1]), nil)
+							ret[i] = NewResult(strmsg('+', multi[i].Cmd.Commands()[1]), nil)
 						}
 						return &redisresults{s: ret}
 					},
@@ -5548,12 +5548,12 @@ func TestClusterClientErr(t *testing.T) {
 					ret := make([]RedisResult, len(multi))
 					if atomic.AddInt64(&count, 1) <= 3 {
 						for i := range ret {
-							ret[i] = newResult(strmsg('-', "MOVED 0 :1"), nil)
+							ret[i] = NewResult(strmsg('-', "MOVED 0 :1"), nil)
 						}
 						return &redisresults{s: ret}
 					}
 					for i := range ret {
-						ret[i] = newResult(strmsg('+', multi[i].Cmd.Commands()[1]), nil)
+						ret[i] = NewResult(strmsg('+', multi[i].Cmd.Commands()[1]), nil)
 					}
 					return &redisresults{s: ret}
 				}}
@@ -5584,13 +5584,13 @@ func TestClusterClientErr(t *testing.T) {
 						if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
 							return slotsMultiResp
 						}
-						return newResult(strmsg('-', "ASK 0 :1"), nil)
+						return NewResult(strmsg('-', "ASK 0 :1"), nil)
 					},
 					DoMultiFn: func(multi ...Completed) *redisresults {
 						if atomic.AddInt64(&count, 1) <= 3 {
-							return &redisresults{s: []RedisResult{{}, newResult(strmsg('-', "ASK 0 :1"), nil)}}
+							return &redisresults{s: []RedisResult{{}, NewResult(strmsg('-', "ASK 0 :1"), nil)}}
 						}
-						return &redisresults{s: []RedisResult{{}, newResult(strmsg('+', "b"), nil)}}
+						return &redisresults{s: []RedisResult{{}, NewResult(strmsg('+', "b"), nil)}}
 					},
 				}
 			},
@@ -5617,13 +5617,13 @@ func TestClusterClientErr(t *testing.T) {
 						ret := make([]RedisResult, len(multi))
 						if atomic.AddInt64(&count, 1) <= 3 {
 							for i := range ret {
-								ret[i] = newResult(strmsg('-', "ASK 0 :1"), nil)
+								ret[i] = NewResult(strmsg('-', "ASK 0 :1"), nil)
 							}
 							return &redisresults{s: ret}
 						}
 						for i := 0; i < len(multi); i += 2 {
-							ret[i] = newResult(strmsg('+', "OK"), nil)
-							ret[i+1] = newResult(strmsg('+', multi[i+1].Commands()[1]), nil)
+							ret[i] = NewResult(strmsg('+', "OK"), nil)
+							ret[i+1] = NewResult(strmsg('+', multi[i+1].Commands()[1]), nil)
 						}
 						return &redisresults{s: ret}
 					},
@@ -5652,13 +5652,13 @@ func TestClusterClientErr(t *testing.T) {
 						ret := make([]RedisResult, len(multi))
 						if atomic.AddInt64(&count, 1) <= 3 {
 							for i := range ret {
-								ret[i] = newResult(strmsg('-', "ASK 0 :1"), nil)
+								ret[i] = NewResult(strmsg('-', "ASK 0 :1"), nil)
 							}
 							return &redisresults{s: ret}
 						}
 						for i := 0; i < len(multi); i += 2 {
-							ret[i] = newResult(strmsg('+', "OK"), nil)
-							ret[i+1] = newResult(strmsg('+', multi[i+1].Commands()[1]), nil)
+							ret[i] = NewResult(strmsg('+', "OK"), nil)
+							ret[i+1] = NewResult(strmsg('+', multi[i+1].Commands()[1]), nil)
 						}
 						return &redisresults{s: ret}
 					},
@@ -5690,13 +5690,13 @@ func TestClusterClientErr(t *testing.T) {
 						return slotsMultiResp
 					},
 					DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
-						return newResult(strmsg('-', "ASK 0 :1"), nil)
+						return NewResult(strmsg('-', "ASK 0 :1"), nil)
 					},
 					DoMultiFn: func(multi ...Completed) *redisresults {
 						if atomic.AddInt64(&count, 1) <= 3 {
-							return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, newResult(strmsg('-', "ASK 0 :1"), nil)}}
+							return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, NewResult(strmsg('-', "ASK 0 :1"), nil)}}
 						}
-						return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, newResult(slicemsg('*', []RedisMessage{{}, strmsg('+', "b")}), nil)}}
+						return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, NewResult(slicemsg('*', []RedisMessage{{}, strmsg('+', "b")}), nil)}}
 					},
 				}
 			},
@@ -5720,13 +5720,13 @@ func TestClusterClientErr(t *testing.T) {
 						return slotsMultiResp
 					},
 					DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
-						return &redisresults{s: []RedisResult{newResult(strmsg('-', "ASK 0 :1"), nil)}}
+						return &redisresults{s: []RedisResult{NewResult(strmsg('-', "ASK 0 :1"), nil)}}
 					},
 					DoMultiFn: func(multi ...Completed) *redisresults {
 						if atomic.AddInt64(&count, 1) <= 3 {
-							return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, newResult(strmsg('-', "ASK 0 :1"), nil)}}
+							return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, NewResult(strmsg('-', "ASK 0 :1"), nil)}}
 						}
-						return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, newResult(slicemsg('*', []RedisMessage{{}, strmsg('+', "b")}), nil)}}
+						return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, NewResult(slicemsg('*', []RedisMessage{{}, strmsg('+', "b")}), nil)}}
 					},
 				}
 			},
@@ -5750,18 +5750,18 @@ func TestClusterClientErr(t *testing.T) {
 						return slotsMultiResp
 					},
 					DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
-						return &redisresults{s: []RedisResult{newResult(strmsg('-', "ASK 0 :1"), nil)}}
+						return &redisresults{s: []RedisResult{NewResult(strmsg('-', "ASK 0 :1"), nil)}}
 					},
 					DoMultiFn: func(multi ...Completed) *redisresults {
 						if atomic.AddInt64(&count, 1) <= 3 {
 							return &redisresults{s: []RedisResult{
-								{}, {}, {}, {}, {}, newResult(strmsg('-', "ASK 0 :1"), nil),
-								{}, {}, {}, {}, {}, newResult(strmsg('-', "ASK 0 :1"), nil),
+								{}, {}, {}, {}, {}, NewResult(strmsg('-', "ASK 0 :1"), nil),
+								{}, {}, {}, {}, {}, NewResult(strmsg('-', "ASK 0 :1"), nil),
 							}}
 						}
 						return &redisresults{s: []RedisResult{
-							{}, {}, {}, {}, {}, newResult(slicemsg('*', []RedisMessage{{}, {}, strmsg('+', multi[4].Commands()[1])}), nil),
-							{}, {}, {}, {}, {}, newResult(slicemsg('*', []RedisMessage{{}, {}, strmsg('+', multi[10].Commands()[1])}), nil),
+							{}, {}, {}, {}, {}, NewResult(slicemsg('*', []RedisMessage{{}, {}, strmsg('+', multi[4].Commands()[1])}), nil),
+							{}, {}, {}, {}, {}, NewResult(slicemsg('*', []RedisMessage{{}, {}, strmsg('+', multi[10].Commands()[1])}), nil),
 						}}
 					},
 				}
@@ -5792,9 +5792,9 @@ func TestClusterClientErr(t *testing.T) {
 						return slotsMultiResp
 					}
 					if atomic.AddInt64(&count, 1) <= 3 {
-						return newResult(strmsg('-', "TRYAGAIN"), nil)
+						return NewResult(strmsg('-', "TRYAGAIN"), nil)
 					}
-					return newResult(strmsg('+', "b"), nil)
+					return NewResult(strmsg('+', "b"), nil)
 				}}
 			},
 			newRetryer(defaultRetryDelayFn),
@@ -5816,10 +5816,10 @@ func TestClusterClientErr(t *testing.T) {
 					return slotsMultiResp
 				}, DoMultiFn: func(multi ...Completed) *redisresults {
 					if atomic.AddInt64(&count, 1) <= 3 {
-						return &redisresults{s: []RedisResult{newResult(strmsg('-', "TRYAGAIN"), nil)}}
+						return &redisresults{s: []RedisResult{NewResult(strmsg('-', "TRYAGAIN"), nil)}}
 					}
 					ret := make([]RedisResult, len(multi))
-					ret[0] = newResult(strmsg('+', "b"), nil)
+					ret[0] = NewResult(strmsg('+', "b"), nil)
 					return &redisresults{s: ret}
 				}}
 			},
@@ -5842,10 +5842,10 @@ func TestClusterClientErr(t *testing.T) {
 					return slotsMultiResp
 				}, DoMultiFn: func(multi ...Completed) *redisresults {
 					if atomic.AddInt64(&count, 1) <= 3 {
-						return &redisresults{s: []RedisResult{newResult(strmsg('-', "TRYAGAIN"), nil)}}
+						return &redisresults{s: []RedisResult{NewResult(strmsg('-', "TRYAGAIN"), nil)}}
 					}
 					ret := make([]RedisResult, len(multi))
-					ret[0] = newResult(strmsg('+', multi[0].Commands()[1]), nil)
+					ret[0] = NewResult(strmsg('+', multi[0].Commands()[1]), nil)
 					return &redisresults{s: ret}
 				}}
 			},
@@ -5876,9 +5876,9 @@ func TestClusterClientErr(t *testing.T) {
 					},
 					DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
 						if atomic.AddInt64(&count, 1) <= 3 {
-							return newResult(strmsg('-', "TRYAGAIN"), nil)
+							return NewResult(strmsg('-', "TRYAGAIN"), nil)
 						}
-						return newResult(strmsg('+', "b"), nil)
+						return NewResult(strmsg('+', "b"), nil)
 					},
 				}
 			},
@@ -5901,9 +5901,9 @@ func TestClusterClientErr(t *testing.T) {
 					return slotsMultiResp
 				}, DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 					if atomic.AddInt64(&count, 1) <= 3 {
-						return &redisresults{s: []RedisResult{newResult(strmsg('-', "TRYAGAIN"), nil)}}
+						return &redisresults{s: []RedisResult{NewResult(strmsg('-', "TRYAGAIN"), nil)}}
 					}
-					return &redisresults{s: []RedisResult{newResult(strmsg('+', "b"), nil)}}
+					return &redisresults{s: []RedisResult{NewResult(strmsg('+', "b"), nil)}}
 				}}
 			},
 			newRetryer(defaultRetryDelayFn),
@@ -5928,9 +5928,9 @@ func TestClusterClientErr(t *testing.T) {
 					return shardsMultiResp
 				}, DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 					if atomic.AddInt64(&count, 1) <= 3 {
-						return &redisresults{s: []RedisResult{newResult(strmsg('-', "TRYAGAIN"), nil)}}
+						return &redisresults{s: []RedisResult{NewResult(strmsg('-', "TRYAGAIN"), nil)}}
 					}
-					return &redisresults{s: []RedisResult{newResult(strmsg('+', multi[0].Cmd.Commands()[1]), nil)}}
+					return &redisresults{s: []RedisResult{NewResult(strmsg('+', multi[0].Cmd.Commands()[1]), nil)}}
 				}}
 			},
 			newRetryer(defaultRetryDelayFn),
@@ -6509,9 +6509,9 @@ func TestClusterClientLoadingRetry(t *testing.T) {
 			}
 			attempts++
 			if attempts == 1 {
-				return newResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)
+				return NewResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)
 			}
-			return newResult(strmsg('+', "OK"), nil)
+			return NewResult(strmsg('+', "OK"), nil)
 		}
 
 		if v, err := client.Do(context.Background(), client.B().Get().Key("test").Build()).ToString(); err != nil || v != "OK" {
@@ -6531,9 +6531,9 @@ func TestClusterClientLoadingRetry(t *testing.T) {
 			}
 			attempts++
 			if attempts == 1 {
-				return newResult(strmsg('-', "ERR some other error"), nil)
+				return NewResult(strmsg('-', "ERR some other error"), nil)
 			}
-			return newResult(strmsg('+', "OK"), nil)
+			return NewResult(strmsg('+', "OK"), nil)
 		}
 
 		if err := client.Do(context.Background(), client.B().Get().Key("test").Build()).Error(); err == nil {
@@ -6550,9 +6550,9 @@ func TestClusterClientLoadingRetry(t *testing.T) {
 		m.DoMultiFn = func(multi ...Completed) *redisresults {
 			attempts++
 			if attempts == 1 {
-				return &redisresults{s: []RedisResult{newResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)}}
+				return &redisresults{s: []RedisResult{NewResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)}}
 			}
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil)}}
 		}
 
 		cmd := client.B().Get().Key("test").Build()
@@ -6571,9 +6571,9 @@ func TestClusterClientLoadingRetry(t *testing.T) {
 		m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
 			attempts++
 			if attempts == 1 {
-				return newResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)
+				return NewResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)
 			}
-			return newResult(strmsg('+', "OK"), nil)
+			return NewResult(strmsg('+', "OK"), nil)
 		}
 
 		cmd := client.B().Get().Key("test").Cache()
@@ -6588,9 +6588,9 @@ func TestClusterClientLoadingRetry(t *testing.T) {
 		m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
 			attempts++
 			if attempts == 1 {
-				return &redisresults{s: []RedisResult{newResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)}}
+				return &redisresults{s: []RedisResult{NewResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)}}
 			}
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil)}}
 		}
 
 		cmd := client.B().Get().Key("test").Cache()
@@ -6612,9 +6612,9 @@ func TestClusterClientLoadingRetry(t *testing.T) {
 			}
 			attempts++
 			if attempts == 1 {
-				return newResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)
+				return NewResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)
 			}
-			return newResult(strmsg('+', "OK"), nil)
+			return NewResult(strmsg('+', "OK"), nil)
 		}
 		m.AcquireFn = func() wire { return &mockWire{DoFn: m.DoFn} }
 
@@ -6635,9 +6635,9 @@ func TestClusterClientLoadingRetry(t *testing.T) {
 		m.DoMultiFn = func(multi ...Completed) *redisresults {
 			attempts++
 			if attempts == 1 {
-				return &redisresults{s: []RedisResult{newResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)}}
+				return &redisresults{s: []RedisResult{NewResult(strmsg('-', "LOADING Redis is loading the dataset in memory"), nil)}}
 			}
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil)}}
 		}
 		m.AcquireFn = func() wire { return &mockWire{DoMultiFn: m.DoMultiFn} }
 
@@ -6687,9 +6687,9 @@ func TestClusterClientMovedRetry(t *testing.T) {
 		m.DoMultiFn = func(multi ...Completed) *redisresults {
 			attempts++
 			if attempts == 1 {
-				return &redisresults{s: []RedisResult{newResult(strmsg('-', "MOVED 0 127.0.0.1"), nil)}}
+				return &redisresults{s: []RedisResult{NewResult(strmsg('-', "MOVED 0 127.0.0.1"), nil)}}
 			}
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil)}}
 		}
 
 		cmd := client.B().Set().Key("test").Value(`test`).Build()
@@ -6713,18 +6713,18 @@ func TestClusterClientMovedRetry(t *testing.T) {
 			for i, cmd := range multi {
 				cmdName := cmd.Commands()[0]
 				if cmdName == "MULTI" {
-					results[i] = newResult(strmsg('+', "OK"), nil)
+					results[i] = NewResult(strmsg('+', "OK"), nil)
 				} else if cmdName == "EXEC" {
 					if attempts == 1 {
 						// return MOVED error only for EXEC on first attempt
 						// making sure we do not panic on wslots connection reassignment because EXEC's "slot" is 16384 (InitSlot)
-						results[i] = newResult(strmsg('-', "MOVED 1 127.0.0.1"), nil)
+						results[i] = NewResult(strmsg('-', "MOVED 1 127.0.0.1"), nil)
 					} else {
 						// return a successful transaction result for the retry
-						results[i] = newResult(slicemsg('*', []RedisMessage{strmsg('+', "some_value")}), nil)
+						results[i] = NewResult(slicemsg('*', []RedisMessage{strmsg('+', "some_value")}), nil)
 					}
 				} else {
-					results[i] = newResult(strmsg('+', "QUEUED"), nil)
+					results[i] = NewResult(strmsg('+', "QUEUED"), nil)
 				}
 			}
 			return &redisresults{s: results}
@@ -6757,9 +6757,9 @@ func TestClusterClientMovedRetry(t *testing.T) {
 		m.DoMultiFn = func(multi ...Completed) *redisresults {
 			attempts++
 			if attempts == 1 {
-				return &redisresults{s: []RedisResult{newResult(strmsg('-', "ASK 0 127.0.0.1"), nil)}}
+				return &redisresults{s: []RedisResult{NewResult(strmsg('-', "ASK 0 127.0.0.1"), nil)}}
 			}
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil), newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil), NewResult(strmsg('+', "OK"), nil)}}
 		}
 
 		cmd := client.B().Set().Key("test").Value(`test`).Build()
@@ -6783,7 +6783,7 @@ func TestClusterClientMaxMovedRedirections(t *testing.T) {
 					return slotsMultiResp
 				}
 				// Always return MOVED to simulate infinite redirect loop
-				return newResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)
+				return NewResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)
 			},
 		}
 		client, err := newClusterClient(
@@ -6819,7 +6819,7 @@ func TestClusterClientMaxMovedRedirections(t *testing.T) {
 			},
 			DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
 				// Always return MOVED to simulate infinite redirect loop
-				return newResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)
+				return NewResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)
 			},
 		}
 		client, err := newClusterClient(
@@ -6855,7 +6855,7 @@ func TestClusterClientMaxMovedRedirections(t *testing.T) {
 			},
 			DoMultiFn: func(multi ...Completed) *redisresults {
 				// Always return MOVED to simulate infinite redirect loop
-				return &redisresults{s: []RedisResult{newResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)}}
+				return &redisresults{s: []RedisResult{NewResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)}}
 			},
 		}
 		client, err := newClusterClient(
@@ -6894,7 +6894,7 @@ func TestClusterClientMaxMovedRedirections(t *testing.T) {
 			},
 			DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 				// Always return MOVED to simulate infinite redirect loop
-				return &redisresults{s: []RedisResult{newResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)}}
+				return &redisresults{s: []RedisResult{NewResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)}}
 			},
 		}
 		client, err := newClusterClient(
@@ -6933,9 +6933,9 @@ func TestClusterClientMaxMovedRedirections(t *testing.T) {
 				attempts++
 				// Return MOVED twice, then success
 				if attempts <= 2 {
-					return newResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)
+					return NewResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)
 				}
-				return newResult(strmsg('+', "OK"), nil)
+				return NewResult(strmsg('+', "OK"), nil)
 			},
 		}
 		client, err := newClusterClient(
@@ -6972,9 +6972,9 @@ func TestClusterClientMaxMovedRedirections(t *testing.T) {
 				attempts++
 				// Return MOVED 10 times, then success
 				if attempts <= 10 {
-					return newResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)
+					return NewResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)
 				}
-				return newResult(strmsg('+', "OK"), nil)
+				return NewResult(strmsg('+', "OK"), nil)
 			},
 		}
 		client, err := newClusterClient(
@@ -7015,7 +7015,7 @@ func TestClusterClientMaxMovedRedirections(t *testing.T) {
 				movedCount++
 				results := make([]RedisResult, len(multi))
 				for i := range results {
-					results[i] = newResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)
+					results[i] = NewResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)
 				}
 				return &redisresults{s: results}
 			},
@@ -7062,7 +7062,7 @@ func TestClusterClientMaxMovedRedirections(t *testing.T) {
 				// Always return MOVED
 				results := make([]RedisResult, len(multi))
 				for i := range results {
-					results[i] = newResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)
+					results[i] = NewResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)
 				}
 				return &redisresults{s: results}
 			},
@@ -7109,14 +7109,14 @@ func TestClusterClientMaxMovedRedirections(t *testing.T) {
 				if loopCount == 1 {
 					results := make([]RedisResult, len(multi))
 					for i := range results {
-						results[i] = newResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)
+						results[i] = NewResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)
 					}
 					return &redisresults{s: results}
 				}
 				// Second loop: return success
 				results := make([]RedisResult, len(multi))
 				for i := range results {
-					results[i] = newResult(strmsg('+', "OK"), nil)
+					results[i] = NewResult(strmsg('+', "OK"), nil)
 				}
 				return &redisresults{s: results}
 			},
@@ -7161,7 +7161,7 @@ func TestClusterClientMaxMovedRedirections(t *testing.T) {
 				// Always return MOVED
 				results := make([]RedisResult, len(multi))
 				for i := range results {
-					results[i] = newResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)
+					results[i] = NewResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)
 				}
 				return &redisresults{s: results}
 			},
@@ -7203,7 +7203,7 @@ func TestClusterClientMaxMovedRedirections(t *testing.T) {
 					return slotsMultiResp
 				}
 				// Always return MOVED
-				return newResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)
+				return NewResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)
 			},
 		}
 		client, err := newClusterClient(
@@ -7236,13 +7236,13 @@ func TestClusterClientMaxMovedRedirections(t *testing.T) {
 					return slotsMultiResp
 				}
 				// Return ASK error
-				return newResult(strmsg('-', "ASK 0 127.0.0.1:7001"), nil)
+				return NewResult(strmsg('-', "ASK 0 127.0.0.1:7001"), nil)
 			},
 			DoMultiFn: func(multi ...Completed) *redisresults {
 				// Return OK for ASKING, and ASK error for the command to simulate infinite loop
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "OK"), nil),
-					newResult(strmsg('-', "ASK 0 127.0.0.1:7001"), nil),
+					NewResult(strmsg('+', "OK"), nil),
+					NewResult(strmsg('-', "ASK 0 127.0.0.1:7001"), nil),
 				}}
 			},
 		}
@@ -7279,7 +7279,7 @@ func TestClusterClientMaxMovedRedirections(t *testing.T) {
 			},
 			DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
 				// Return ASK error
-				return newResult(strmsg('-', "ASK 0 127.0.0.1:7001"), nil)
+				return NewResult(strmsg('-', "ASK 0 127.0.0.1:7001"), nil)
 			},
 			DoMultiFn: func(multi ...Completed) *redisresults {
 				// DoCache with ASK uses askingMultiCache which uses DoMulti
@@ -7293,7 +7293,7 @@ func TestClusterClientMaxMovedRedirections(t *testing.T) {
 
 				return &redisresults{s: []RedisResult{
 					{}, {}, {}, {}, {}, // First 5 results (ignored/checked for errors)
-					newResult(slicemsg('*', execResp), nil), // EXEC result
+					NewResult(slicemsg('*', execResp), nil), // EXEC result
 				}}
 			},
 		}
@@ -7343,8 +7343,8 @@ func TestClusterClientMaxMovedRedirections(t *testing.T) {
 					// We need to return [OK, ASK] for each command pair (ASKING, CMD)
 					results := make([]RedisResult, len(multi))
 					for i := 0; i < len(multi); i += 2 {
-						results[i] = newResult(strmsg('+', "OK"), nil)                     // ASKING
-						results[i+1] = newResult(strmsg('-', "ASK 0 127.0.0.1:7001"), nil) // CMD
+						results[i] = NewResult(strmsg('+', "OK"), nil)                     // ASKING
+						results[i+1] = NewResult(strmsg('-', "ASK 0 127.0.0.1:7001"), nil) // CMD
 					}
 					return &redisresults{s: results}
 				}
@@ -7352,7 +7352,7 @@ func TestClusterClientMaxMovedRedirections(t *testing.T) {
 				// Initial call (no ASKING)
 				results := make([]RedisResult, len(multi))
 				for i := range results {
-					results[i] = newResult(strmsg('-', "ASK 0 127.0.0.1:7001"), nil)
+					results[i] = NewResult(strmsg('-', "ASK 0 127.0.0.1:7001"), nil)
 				}
 				return &redisresults{s: results}
 			},
@@ -7395,7 +7395,7 @@ func TestClusterClientMaxMovedRedirections(t *testing.T) {
 				// Return ASK error
 				results := make([]RedisResult, len(multi))
 				for i := range results {
-					results[i] = newResult(strmsg('-', "ASK 0 127.0.0.1:7001"), nil)
+					results[i] = NewResult(strmsg('-', "ASK 0 127.0.0.1:7001"), nil)
 				}
 				return &redisresults{s: results}
 			},
@@ -7404,18 +7404,18 @@ func TestClusterClientMaxMovedRedirections(t *testing.T) {
 				results := make([]RedisResult, len(multi))
 				for i := 0; i < len(multi); i += 6 {
 					// Fill dummies for first 5
-					results[i] = newResult(strmsg('+', "OK"), nil)
-					results[i+1] = newResult(strmsg('+', "OK"), nil)
-					results[i+2] = newResult(strmsg('+', "OK"), nil)
-					results[i+3] = newResult(strmsg('+', "OK"), nil)
-					results[i+4] = newResult(strmsg('+', "OK"), nil)
+					results[i] = NewResult(strmsg('+', "OK"), nil)
+					results[i+1] = NewResult(strmsg('+', "OK"), nil)
+					results[i+2] = NewResult(strmsg('+', "OK"), nil)
+					results[i+3] = NewResult(strmsg('+', "OK"), nil)
+					results[i+4] = NewResult(strmsg('+', "OK"), nil)
 
 					// EXEC result at index 5
 					execResp := []RedisMessage{
 						strmsg('+', "OK"),                   // PTTL result
 						strmsg('-', "ASK 0 127.0.0.1:7001"), // CMD result (ASK)
 					}
-					results[i+5] = newResult(slicemsg('*', execResp), nil)
+					results[i+5] = NewResult(slicemsg('*', execResp), nil)
 				}
 				return &redisresults{s: results}
 			},
@@ -7459,16 +7459,16 @@ func TestClusterClientMaxMovedRedirections(t *testing.T) {
 				// 3. (DoMulti handles this step, returning MOVED)
 				// 4. ASK (Limit reached)
 				if attempts == 1 {
-					return newResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)
+					return NewResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil)
 				}
-				return newResult(strmsg('-', "ASK 0 127.0.0.1:7001"), nil)
+				return NewResult(strmsg('-', "ASK 0 127.0.0.1:7001"), nil)
 			},
 			DoMultiFn: func(multi ...Completed) *redisresults {
 				// Used when ASK is handled
 				// Return OK for ASKING, and MOVED for the command
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "OK"), nil),
-					newResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil),
+					NewResult(strmsg('+', "OK"), nil),
+					NewResult(strmsg('-', "MOVED 0 127.0.0.1:7001"), nil),
 				}}
 			},
 		}
@@ -7523,14 +7523,14 @@ func TestClusterClientCacheASKRetry(t *testing.T) {
 		client, m := setup()
 		attempts := 0
 		m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
-			return newResult(strmsg('-', "ASK 0 :0"), nil)
+			return NewResult(strmsg('-', "ASK 0 :0"), nil)
 		}
 		m.DoMultiFn = func(multi ...Completed) *redisresults {
 			attempts++
 			if attempts == 1 {
-				return &redisresults{s: []RedisResult{{}, {}, {}, {}, newResult(strmsg('-', "ASK 0 :0"), nil), newResult(RedisMessage{typ: '_'}, nil)}}
+				return &redisresults{s: []RedisResult{{}, {}, {}, {}, NewResult(strmsg('-', "ASK 0 :0"), nil), NewResult(RedisMessage{typ: '_'}, nil)}}
 			}
-			return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, newResult(slicemsg('*', []RedisMessage{{}, {}, {}, {}, {}, strmsg('+', "OK")}), nil)}}
+			return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, NewResult(slicemsg('*', []RedisMessage{{}, {}, {}, {}, {}, strmsg('+', "OK")}), nil)}}
 		}
 		resp := client.DoCache(context.Background(), client.B().Get().Key("a1").Cache(), 10*time.Second)
 		if v, err := resp.ToString(); err != nil || v != "OK" {
@@ -7546,14 +7546,14 @@ func TestClusterClientCacheASKRetry(t *testing.T) {
 
 		attempts := 0
 		m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
-			return &redisresults{s: []RedisResult{newResult(strmsg('-', "ASK 0 :0"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('-', "ASK 0 :0"), nil)}}
 		}
 		m.DoMultiFn = func(multi ...Completed) *redisresults {
 			attempts++
 			if attempts == 1 {
-				return &redisresults{s: []RedisResult{{}, {}, {}, {}, newResult(strmsg('-', "ASK 0 :0"), nil), newResult(RedisMessage{typ: '_'}, nil)}}
+				return &redisresults{s: []RedisResult{{}, {}, {}, {}, NewResult(strmsg('-', "ASK 0 :0"), nil), NewResult(RedisMessage{typ: '_'}, nil)}}
 			}
-			return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, newResult(slicemsg('*', []RedisMessage{{}, {}, {}, {}, {}, strmsg('+', "OK")}), nil)}}
+			return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, NewResult(slicemsg('*', []RedisMessage{{}, {}, {}, {}, {}, strmsg('+', "OK")}), nil)}}
 		}
 		resps := client.DoMultiCache(context.Background(), CT(client.B().Get().Key("a1").Cache(), 10*time.Second))
 		if v, err := resps[0].ToString(); err != nil || v != "OK" {
@@ -7568,7 +7568,7 @@ func TestClusterClientCacheASKRetry(t *testing.T) {
 		client, m := setup()
 		askDone := false
 		m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
-			return newResult(strmsg('-', "ASK 0 :0"), nil)
+			return NewResult(strmsg('-', "ASK 0 :0"), nil)
 		}
 		m.DoMultiFn = func(multi ...Completed) *redisresults {
 			askDone = true
@@ -7579,7 +7579,7 @@ func TestClusterClientCacheASKRetry(t *testing.T) {
 				t.Errorf("expected 3 cmds on ASK wire under .ToStaticTTL(), got %d", len(multi))
 			}
 			// Reply at offset 2 is the cmd reply directly (no EXEC unwrap).
-			return &redisresults{s: []RedisResult{{}, {}, newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{{}, {}, NewResult(strmsg('+', "OK"), nil)}}
 		}
 		resp := client.DoCache(context.Background(), client.B().Get().Key("a1").Cache().ToStaticTTL(), 10*time.Second)
 		if v, err := resp.ToString(); err != nil || v != "OK" {
@@ -7594,14 +7594,14 @@ func TestClusterClientCacheASKRetry(t *testing.T) {
 		client, m := setup()
 		askDone := false
 		m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
-			return &redisresults{s: []RedisResult{newResult(strmsg('-', "ASK 0 :0"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('-', "ASK 0 :0"), nil)}}
 		}
 		m.DoMultiFn = func(multi ...Completed) *redisresults {
 			askDone = true
 			if len(multi) != 3 {
 				t.Errorf("expected 3 cmds on ASK wire under .ToStaticTTL() (1 key × stride 3), got %d", len(multi))
 			}
-			return &redisresults{s: []RedisResult{{}, {}, newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{{}, {}, NewResult(strmsg('+', "OK"), nil)}}
 		}
 		resps := client.DoMultiCache(context.Background(), CT(client.B().Get().Key("a1").Cache().ToStaticTTL(), 10*time.Second))
 		if v, err := resps[0].ToString(); err != nil || v != "OK" {
@@ -7617,7 +7617,7 @@ func TestClusterClientCacheASKRetry(t *testing.T) {
 		askDone := false
 		errInjected := false
 		m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
-			return newResult(strmsg('-', "ASK 0 :0"), nil)
+			return NewResult(strmsg('-', "ASK 0 :0"), nil)
 		}
 		m.DoMultiFn = func(multi ...Completed) *redisresults {
 			askDone = true
@@ -7628,14 +7628,14 @@ func TestClusterClientCacheASKRetry(t *testing.T) {
 				errInjected = true
 				return &redisresults{s: []RedisResult{
 					{}, {},
-					newErrResult(errors.New("transport: connection closed")),
+					NewErrorResult(errors.New("transport: connection closed")),
 				}}
 			}
 			// shouldRefreshRetry treats non-RedisError as RedirectRetry, so
 			// the cluster client loops back through pick → DoCache → ASK →
 			// askingMultiCache. On the second pass, succeed so the test
 			// terminates instead of retrying forever.
-			return &redisresults{s: []RedisResult{{}, {}, newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{{}, {}, NewResult(strmsg('+', "OK"), nil)}}
 		}
 		resp := client.DoCache(context.Background(), client.B().Get().Key("a1").Cache().ToStaticTTL(), 10*time.Second)
 		if v, err := resp.ToString(); err != nil || v != "OK" {
@@ -7653,13 +7653,13 @@ func TestClusterClientCacheASKRetry(t *testing.T) {
 		m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
 			attempts++
 			if attempts == 1 {
-				return newResult(strmsg('-', "MOVED 0 127.0.0.1:0"), nil)
+				return NewResult(strmsg('-', "MOVED 0 127.0.0.1:0"), nil)
 			}
 			// Second call runs on the new owner (ncc.DoCache); cluster
 			// passes the original Cacheable, so the static-TTL tag must
 			// still be set on the retry.
 			taggedOnRetry = cmds.IsStaticTTL(Completed(cmd))
-			return newResult(strmsg('+', "OK"), nil)
+			return NewResult(strmsg('+', "OK"), nil)
 		}
 		resp := client.DoCache(context.Background(), client.B().Get().Key("a1").Cache().ToStaticTTL(), 10*time.Second)
 		if v, err := resp.ToString(); err != nil || v != "OK" {
@@ -7688,7 +7688,7 @@ func TestClusterClientCacheASKRetry(t *testing.T) {
 			// Force ASK on both keys so askingMultiCache runs with the mixed batch.
 			rs := make([]RedisResult, len(multi))
 			for i := range multi {
-				rs[i] = newResult(strmsg('-', "ASK 0 :0"), nil)
+				rs[i] = NewResult(strmsg('-', "ASK 0 :0"), nil)
 			}
 			return &redisresults{s: rs}
 		}
@@ -7705,12 +7705,12 @@ func TestClusterClientCacheASKRetry(t *testing.T) {
 			for i := range multi {
 				switch (i + 1) % 6 {
 				case 0: // EXEC reply
-					rs[i] = newResult(slicemsg('*', []RedisMessage{
+					rs[i] = NewResult(slicemsg('*', []RedisMessage{
 						{typ: ':', intlen: 10000},
 						strmsg('$', "v"),
 					}), nil)
 				default:
-					rs[i] = newResult(strmsg('+', "OK"), nil)
+					rs[i] = NewResult(strmsg('+', "OK"), nil)
 				}
 			}
 			return &redisresults{s: rs}
@@ -7739,32 +7739,32 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 				return slotsMultiResp
 			},
 			"INFO": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "INFO"), nil)
+				return NewResult(strmsg('+', "INFO"), nil)
 			},
 			"SET Do V": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "SET Do V"), nil)
+				return NewResult(strmsg('+', "SET Do V"), nil)
 			},
 			"SET K2{a} V2{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "SET K2{a} V2{a}"), nil)
+				return NewResult(strmsg('+', "SET K2{a} V2{a}"), nil)
 			},
 		},
 		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
 				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "SET K1") {
-					resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+					resps[i] = NewResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
 					continue
 				}
 				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "SET K2") {
-					resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+					resps[i] = NewResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
 					continue
 				}
 				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "MULTI") {
-					resps[i] = newResult(strmsg('+', "MULTI"), nil)
+					resps[i] = NewResult(strmsg('+', "MULTI"), nil)
 					continue
 				}
 				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "EXEC") {
-					resps[i] = newResult(strmsg('+', "EXEC"), nil)
+					resps[i] = NewResult(strmsg('+', "EXEC"), nil)
 					continue
 				}
 
@@ -7778,20 +7778,20 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 	replicaNodeConn := &mockConn{
 		DoOverride: map[string]func(cmd Completed) RedisResult{
 			"GET Do": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET Do"), nil)
+				return NewResult(strmsg('+', "GET Do"), nil)
 			},
 			"GET K1{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K1{a}"), nil)
+				return NewResult(strmsg('+', "GET K1{a}"), nil)
 			},
 			"GET K2{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K2{a}"), nil)
+				return NewResult(strmsg('+', "GET K2{a}"), nil)
 			},
 		},
 		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
 				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "GET K1") {
-					resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+					resps[i] = NewResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
 					continue
 				}
 
@@ -7803,20 +7803,20 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 		},
 		DoCacheOverride: map[string]func(cmd Cacheable, ttl time.Duration) RedisResult{
 			"GET DoCache": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET DoCache"), nil)
+				return NewResult(strmsg('+', "GET DoCache"), nil)
 			},
 			"GET K1{a}": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET K1{a}"), nil)
+				return NewResult(strmsg('+', "GET K1{a}"), nil)
 			},
 			"GET K2{a}": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET K2{a}"), nil)
+				return NewResult(strmsg('+', "GET K2{a}"), nil)
 			},
 		},
 		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
 				if strings.HasPrefix(strings.Join(cmd.Cmd.Commands(), " "), "GET K1") {
-					resps[i] = newResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
+					resps[i] = NewResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
 					continue
 				}
 
@@ -8045,9 +8045,9 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 			return &mockWire{
 				DoMultiFn: func(multi ...Completed) *redisresults {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
 					}}
 				},
 			}
@@ -8107,23 +8107,23 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 		closed := false
 		w := &mockWire{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Delegate"), nil)
+				return NewResult(strmsg('+', "Delegate"), nil)
 			},
 			DoMultiFn: func(cmd ...Completed) *redisresults {
 				if len(cmd) == 4 {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{
 							strmsg('+', "Delegate0"),
 							strmsg('+', "Delegate1"),
 						}), nil),
 					}}
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "Delegate0"), nil),
-					newResult(strmsg('+', "Delegate1"), nil),
+					NewResult(strmsg('+', "Delegate0"), nil),
+					NewResult(strmsg('+', "Delegate1"), nil),
 				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
@@ -8215,23 +8215,23 @@ func TestClusterClient_SendReadOperationToReplicaNodeWriteOperationToPrimaryNode
 		closed := false
 		w := &mockWire{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Delegate"), nil)
+				return NewResult(strmsg('+', "Delegate"), nil)
 			},
 			DoMultiFn: func(cmd ...Completed) *redisresults {
 				if len(cmd) == 4 {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{
 							strmsg('+', "Delegate0"),
 							strmsg('+', "Delegate1"),
 						}), nil),
 					}}
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "Delegate0"), nil),
-					newResult(strmsg('+', "Delegate1"), nil),
+					NewResult(strmsg('+', "Delegate0"), nil),
+					NewResult(strmsg('+', "Delegate1"), nil),
 				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
@@ -8328,40 +8328,40 @@ func TestClusterClient_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T
 				return slotsMultiResp
 			},
 			"GET Do": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET Do"), nil)
+				return NewResult(strmsg('+', "GET Do"), nil)
 			},
 			"GET K1{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K1{a}"), nil)
+				return NewResult(strmsg('+', "GET K1{a}"), nil)
 			},
 			"GET K2{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K2{a}"), nil)
+				return NewResult(strmsg('+', "GET K2{a}"), nil)
 			},
 			"INFO": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "INFO"), nil)
+				return NewResult(strmsg('+', "INFO"), nil)
 			},
 		},
 		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
 		DoCacheOverride: map[string]func(cmd Cacheable, ttl time.Duration) RedisResult{
 			"GET DoCache": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET DoCache"), nil)
+				return NewResult(strmsg('+', "GET DoCache"), nil)
 			},
 			"GET K1{a}": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET K1{a}"), nil)
+				return NewResult(strmsg('+', "GET K1{a}"), nil)
 			},
 			"GET K2{a}": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET K2{a}"), nil)
+				return NewResult(strmsg('+', "GET K2{a}"), nil)
 			},
 		},
 		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
@@ -8546,9 +8546,9 @@ func TestClusterClient_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T
 			return &mockWire{
 				DoMultiFn: func(multi ...Completed) *redisresults {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
 					}}
 				},
 			}
@@ -8609,23 +8609,23 @@ func TestClusterClient_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T
 		closed := false
 		w := &mockWire{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Delegate"), nil)
+				return NewResult(strmsg('+', "Delegate"), nil)
 			},
 			DoMultiFn: func(cmd ...Completed) *redisresults {
 				if len(cmd) == 4 {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{
 							strmsg('+', "Delegate0"),
 							strmsg('+', "Delegate1"),
 						}), nil),
 					}}
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "Delegate0"), nil),
-					newResult(strmsg('+', "Delegate1"), nil),
+					NewResult(strmsg('+', "Delegate0"), nil),
+					NewResult(strmsg('+', "Delegate1"), nil),
 				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
@@ -8717,23 +8717,23 @@ func TestClusterClient_SendToOnlyPrimaryNodeWhenPrimaryNodeSelected(t *testing.T
 		closed := false
 		w := &mockWire{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Delegate"), nil)
+				return NewResult(strmsg('+', "Delegate"), nil)
 			},
 			DoMultiFn: func(cmd ...Completed) *redisresults {
 				if len(cmd) == 4 {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{
 							strmsg('+', "Delegate0"),
 							strmsg('+', "Delegate1"),
 						}), nil),
 					}}
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "Delegate0"), nil),
-					newResult(strmsg('+', "Delegate1"), nil),
+					NewResult(strmsg('+', "Delegate0"), nil),
+					NewResult(strmsg('+', "Delegate1"), nil),
 				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
@@ -8829,7 +8829,7 @@ func TestClusterClientConnLifetime(t *testing.T) {
 				if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
 					return slotsMultiResp
 				}
-				return newResult(strmsg('+', "OK"), nil)
+				return NewResult(strmsg('+', "OK"), nil)
 			},
 		}
 		client, err := newClusterClient(
@@ -8851,9 +8851,9 @@ func TestClusterClientConnLifetime(t *testing.T) {
 				return slotsMultiResp
 			}
 			if atomic.AddInt64(&attempts, 1) == 1 {
-				return newErrResult(errConnExpired)
+				return NewErrorResult(errConnExpired)
 			}
-			return newResult(strmsg('+', "OK"), nil)
+			return NewResult(strmsg('+', "OK"), nil)
 		}
 		c := client.B().Get().Key("Do").Build()
 		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "OK" {
@@ -8870,11 +8870,11 @@ func TestClusterClientConnLifetime(t *testing.T) {
 			}
 			switch atomic.AddInt64(&attempts, 1) {
 			case 1:
-				return newResult(strmsg('-', "MOVED 0 :1"), nil)
+				return NewResult(strmsg('-', "MOVED 0 :1"), nil)
 			case 2:
-				return newErrResult(errConnExpired)
+				return NewErrorResult(errConnExpired)
 			}
-			return newResult(strmsg('+', "OK"), nil)
+			return NewResult(strmsg('+', "OK"), nil)
 		}
 		c := client.B().Get().Key("Do").Build()
 		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "OK" {
@@ -8889,13 +8889,13 @@ func TestClusterClientConnLifetime(t *testing.T) {
 			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
 				return slotsMultiResp
 			}
-			return newResult(strmsg('-', "ASK 0 :0"), nil)
+			return NewResult(strmsg('-', "ASK 0 :0"), nil)
 		}
 		m.DoMultiFn = func(multi ...Completed) *redisresults {
 			if atomic.AddInt64(&attempts, 1) == 1 {
-				return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil), newErrResult(errConnExpired)}}
+				return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil), NewErrorResult(errConnExpired)}}
 			}
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil), newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil), NewResult(strmsg('+', "OK"), nil)}}
 		}
 		c := client.B().Get().Key("Do").Build()
 		if v, err := client.Do(context.Background(), c).ToString(); err != nil || v != "OK" {
@@ -8912,9 +8912,9 @@ func TestClusterClientConnLifetime(t *testing.T) {
 				return slotsMultiResp
 			}
 			if atomic.AddInt64(&attempts, 1) == 1 {
-				return newErrResult(errConnExpired)
+				return NewErrorResult(errConnExpired)
 			}
-			return newResult(strmsg('+', "OK"), nil)
+			return NewResult(strmsg('+', "OK"), nil)
 		}
 		if v, err := client.DoCache(context.Background(), client.B().Get().Key("Do").Cache(), 0).ToString(); err != nil || v != "OK" {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -8931,11 +8931,11 @@ func TestClusterClientConnLifetime(t *testing.T) {
 			}
 			switch atomic.AddInt64(&attempts, 1) {
 			case 1:
-				return newResult(strmsg('-', "MOVED 0 :1"), nil)
+				return NewResult(strmsg('-', "MOVED 0 :1"), nil)
 			case 2:
-				return newErrResult(errConnExpired)
+				return NewErrorResult(errConnExpired)
 			}
-			return newResult(strmsg('+', "OK"), nil)
+			return NewResult(strmsg('+', "OK"), nil)
 		}
 		if v, err := client.DoCache(context.Background(), client.B().Get().Key("Do").Cache(), 0).ToString(); err != nil || v != "OK" {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -8947,13 +8947,13 @@ func TestClusterClientConnLifetime(t *testing.T) {
 		var attempts int64
 		m.DoFn = func(cmd Completed) RedisResult { return slotsMultiResp }
 		m.DoCacheFn = func(cmd Cacheable, ttl time.Duration) RedisResult {
-			return newResult(strmsg('-', "ASK 0 :0"), nil)
+			return NewResult(strmsg('-', "ASK 0 :0"), nil)
 		}
 		m.DoMultiFn = func(multi ...Completed) *redisresults {
 			if atomic.AddInt64(&attempts, 1) == 1 {
-				return &redisresults{s: []RedisResult{{}, newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired)}}
+				return &redisresults{s: []RedisResult{{}, NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired)}}
 			}
-			return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, newResult(slicemsg('*', []RedisMessage{{}, strmsg('+', "OK")}), nil)}}
+			return &redisresults{s: []RedisResult{{}, {}, {}, {}, {}, NewResult(slicemsg('*', []RedisMessage{{}, strmsg('+', "OK")}), nil)}}
 		}
 		if v, err := client.DoCache(context.Background(), client.B().Get().Key("Do").Cache(), 0).ToString(); err != nil || v != "OK" {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -8966,9 +8966,9 @@ func TestClusterClientConnLifetime(t *testing.T) {
 		m.DoFn = func(cmd Completed) RedisResult { return slotsMultiResp }
 		m.DoMultiFn = func(multi ...Completed) *redisresults {
 			if atomic.AddInt64(&attempts, 1) == 1 {
-				return &redisresults{s: []RedisResult{newErrResult(errConnExpired)}}
+				return &redisresults{s: []RedisResult{NewErrorResult(errConnExpired)}}
 			}
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil)}}
 		}
 		if v, err := client.DoMulti(context.Background(), client.B().Get().Key("Do").Build())[0].ToString(); err != nil || v != "OK" {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -8981,10 +8981,10 @@ func TestClusterClientConnLifetime(t *testing.T) {
 		m.DoFn = func(cmd Completed) RedisResult { return slotsMultiResp }
 		m.DoMultiFn = func(multi ...Completed) *redisresults {
 			if atomic.AddInt64(&attempts, 1) == 1 {
-				return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil), newErrResult(errConnExpired)}}
+				return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil), NewErrorResult(errConnExpired)}}
 			}
 			// recover the failure of the first call
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil)}}
 		}
 		resps := client.DoMulti(context.Background(), client.B().Get().Key("Do").Build(), client.B().Get().Key("Do").Build())
 		if len(resps) != 2 {
@@ -9008,54 +9008,54 @@ func TestClusterClientConnLifetime(t *testing.T) {
 			switch atomic.AddInt64(&attempts, 1) {
 			case 1: // errConnExpired at the head of processing
 				orgMulti = multi
-				return &redisresults{s: []RedisResult{newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired)}}
+				return &redisresults{s: []RedisResult{NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired)}}
 			case 2: // errConnExpired at Multi command
 				if len(multi) != 6 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[0].Commands()) {
 					t.Fatalf("unexpected multi when errConnExpired occurred at the head of processing, %v", multi)
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "1"), nil),
-					newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired),
+					NewResult(strmsg('+', "1"), nil),
+					NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired),
 				}}
 			case 3: // errConnExpired in the middle of transaction block
 				if len(multi) != 5 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[1].Commands()) {
 					t.Fatalf("unexpected multi when errConnExpired occurred at Multi Command, %v", multi)
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "OK"), nil),
-					newResult(strmsg('+', "QUEUE"), nil),
-					newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired),
+					NewResult(strmsg('+', "OK"), nil),
+					NewResult(strmsg('+', "QUEUE"), nil),
+					NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired),
 				}}
 			case 4: // errConnExpired at Exec Command
 				if len(multi) != 5 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[1].Commands()) {
 					t.Fatalf("unexpected multi when errConnExpired occurred in the middle of transaction block, %v", multi)
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "OK"), nil),
-					newResult(strmsg('+', "QUEUE"), nil),
-					newResult(strmsg('+', "QUEUE"), nil),
-					newErrResult(errConnExpired), newErrResult(errConnExpired),
+					NewResult(strmsg('+', "OK"), nil),
+					NewResult(strmsg('+', "QUEUE"), nil),
+					NewResult(strmsg('+', "QUEUE"), nil),
+					NewErrorResult(errConnExpired), NewErrorResult(errConnExpired),
 				}}
 			case 5: // errConnExpired at end of processing
 				if len(multi) != 5 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[1].Commands()) {
 					t.Fatalf("unexpected multi when errConnExpired occurred at at Exec Command, %v", multi)
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "OK"), nil),
-					newResult(strmsg('+', "QUEUE"), nil),
-					newResult(strmsg('+', "QUEUE"), nil),
-					newResult(slicemsg('*', []RedisMessage{
+					NewResult(strmsg('+', "OK"), nil),
+					NewResult(strmsg('+', "QUEUE"), nil),
+					NewResult(strmsg('+', "QUEUE"), nil),
+					NewResult(slicemsg('*', []RedisMessage{
 						strmsg('+', "2"),
 						strmsg('+', "3"),
 					}), nil),
-					newErrResult(errConnExpired),
+					NewErrorResult(errConnExpired),
 				}}
 			case 6:
 				if len(multi) != 1 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[5].Commands()) {
 					t.Fatalf("unexpected multi when errConnExpired occurred at end of processing, %v", multi)
 				}
 			}
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "4"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "4"), nil)}}
 		}
 		multi := []Completed{
 			client.B().Get().Key("1{t}").Build(),
@@ -9098,15 +9098,15 @@ func TestClusterClientConnLifetime(t *testing.T) {
 			switch atomic.AddInt64(&attempts, 1) {
 			case 1:
 				for i := range ret {
-					ret[i] = newResult(strmsg('-', "ASK 0 :1"), nil)
+					ret[i] = NewResult(strmsg('-', "ASK 0 :1"), nil)
 				}
 				return &redisresults{s: ret}
 			case 2:
-				return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired)}}
+				return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired)}}
 			}
 			for i := 0; i < len(multi); i += 2 {
-				ret[i] = newResult(strmsg('+', "OK"), nil)
-				ret[i+1] = newResult(strmsg('+', multi[i+1].Commands()[1]), nil)
+				ret[i] = NewResult(strmsg('+', "OK"), nil)
+				ret[i+1] = NewResult(strmsg('+', multi[i+1].Commands()[1]), nil)
 			}
 			return &redisresults{s: ret}
 		}
@@ -9138,73 +9138,73 @@ func TestClusterClientConnLifetime(t *testing.T) {
 				ret := make([]RedisResult, len(multi))
 				for i := range ret {
 					if isMulti(multi[i]) || isExec(multi[i]) {
-						ret[i] = newResult(strmsg('+', "OK"), nil)
+						ret[i] = NewResult(strmsg('+', "OK"), nil)
 						continue
 					}
-					ret[i] = newResult(strmsg('-', "ASK 0 :1"), nil)
+					ret[i] = NewResult(strmsg('-', "ASK 0 :1"), nil)
 				}
 				return &redisresults{s: ret}
 			case 2: // errConnExpired at the head of processing
 				orgMulti = multi
-				return &redisresults{s: []RedisResult{newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired)}}
+				return &redisresults{s: []RedisResult{NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired)}}
 			case 3: // errConnExpired at Asking command before Multi command
 				if len(multi) != 9 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[0].Commands()) {
 					t.Fatalf("unexpected multi when errConnExpired occurred at the head of processing, %v", multi)
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "OK"), nil),
-					newResult(strmsg('+', "1"), nil),
-					newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired),
+					NewResult(strmsg('+', "OK"), nil),
+					NewResult(strmsg('+', "1"), nil),
+					NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired),
 				}}
 			case 4: // errConnExpired at Multi command
 				if len(multi) != 7 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[2].Commands()) {
 					t.Fatalf("unexpected multi when errConnExpired occurred at Asking command before Multi command, %v", multi)
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "OK"), nil),
-					newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired),
+					NewResult(strmsg('+', "OK"), nil),
+					NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired),
 				}}
 			case 5: // errConnExpired in the middle of transaction block
 				if len(multi) != 7 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[2].Commands()) {
 					t.Fatalf("unexpected multi when errConnExpired occurred at Multi Command, %v", multi)
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "OK"), nil),
-					newResult(strmsg('+', "OK"), nil),
-					newResult(strmsg('+', "QUEUE"), nil),
-					newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired),
+					NewResult(strmsg('+', "OK"), nil),
+					NewResult(strmsg('+', "OK"), nil),
+					NewResult(strmsg('+', "QUEUE"), nil),
+					NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired),
 				}}
 			case 6: // errConnExpired at Exec Command
 				if len(multi) != 7 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[2].Commands()) {
 					t.Fatalf("unexpected multi when errConnExpired occurred in the middle of transaction block, %v", multi)
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "OK"), nil),
-					newResult(strmsg('+', "QUEUE"), nil),
-					newResult(strmsg('+', "QUEUE"), nil),
-					newErrResult(errConnExpired), newErrResult(errConnExpired), newErrResult(errConnExpired),
+					NewResult(strmsg('+', "OK"), nil),
+					NewResult(strmsg('+', "QUEUE"), nil),
+					NewResult(strmsg('+', "QUEUE"), nil),
+					NewErrorResult(errConnExpired), NewErrorResult(errConnExpired), NewErrorResult(errConnExpired),
 				}}
 			case 7: // errConnExpired at end of processing
 				if len(multi) != 7 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[2].Commands()) {
 					t.Fatalf("unexpected multi when errConnExpired occurred at at Exec Command, %v", multi)
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "OK"), nil),
-					newResult(strmsg('+', "QUEUE"), nil),
-					newResult(strmsg('+', "QUEUE"), nil),
-					newResult(slicemsg('*', []RedisMessage{
+					NewResult(strmsg('+', "OK"), nil),
+					NewResult(strmsg('+', "QUEUE"), nil),
+					NewResult(strmsg('+', "QUEUE"), nil),
+					NewResult(slicemsg('*', []RedisMessage{
 						strmsg('+', "2"),
 						strmsg('+', "3"),
 					}), nil),
-					newResult(strmsg('+', "OK"), nil),
-					newErrResult(errConnExpired),
+					NewResult(strmsg('+', "OK"), nil),
+					NewErrorResult(errConnExpired),
 				}}
 			case 8:
 				if len(multi) != 2 || !reflect.DeepEqual(multi[0].Commands(), orgMulti[7].Commands()) {
 					t.Fatalf("unexpected multi when errConnExpired occurred at end of processing, %v", multi)
 				}
 			}
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "4"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "4"), nil)}}
 		}
 		multi := []Completed{
 			client.B().Get().Key("1{t}").Build(),
@@ -9243,10 +9243,10 @@ func TestClusterClientConnLifetime(t *testing.T) {
 		var attempts int64
 		m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
 			if atomic.AddInt64(&attempts, 1) == 1 {
-				return &redisresults{s: []RedisResult{newErrResult(errConnExpired)}}
+				return &redisresults{s: []RedisResult{NewErrorResult(errConnExpired)}}
 			}
 			// recover the failure of the first call
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil)}}
 		}
 		if v, err := client.DoMultiCache(context.Background(), CT(client.B().Get().Key("Do").Cache(), 0))[0].ToString(); err != nil || v != "OK" {
 			t.Fatalf("unexpected response %v %v", v, err)
@@ -9258,10 +9258,10 @@ func TestClusterClientConnLifetime(t *testing.T) {
 		var attempts int64
 		m.DoMultiCacheFn = func(multi ...CacheableTTL) *redisresults {
 			if atomic.AddInt64(&attempts, 1) == 1 {
-				return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil), newErrResult(errConnExpired)}}
+				return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil), NewErrorResult(errConnExpired)}}
 			}
 			// recover the failure of the first call
-			return &redisresults{s: []RedisResult{newResult(strmsg('+', "OK"), nil)}}
+			return &redisresults{s: []RedisResult{NewResult(strmsg('+', "OK"), nil)}}
 		}
 		resps := client.DoMultiCache(context.Background(), CT(client.B().Get().Key("Do").Cache(), 0), CT(client.B().Get().Key("Do").Cache(), 0))
 		if len(resps) != 2 {
@@ -9299,14 +9299,14 @@ func TestClusterClient_SendToAlternatePrimaryAndReplicaNodes(t *testing.T) {
 		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
 		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
@@ -9315,13 +9315,13 @@ func TestClusterClient_SendToAlternatePrimaryAndReplicaNodes(t *testing.T) {
 				return slotsMultiResp
 			},
 			"INFO": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "INFO"), nil)
+				return NewResult(strmsg('+', "INFO"), nil)
 			},
 			"GET K1{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K1{a}"), nil)
+				return NewResult(strmsg('+', "GET K1{a}"), nil)
 			},
 			"GET K2{b}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K2{b}"), nil)
+				return NewResult(strmsg('+', "GET K2{b}"), nil)
 			},
 		},
 	}
@@ -9329,31 +9329,31 @@ func TestClusterClient_SendToAlternatePrimaryAndReplicaNodes(t *testing.T) {
 		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
 		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
 		DoOverride: map[string]func(cmd Completed) RedisResult{
 			"GET Do": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET Do"), nil)
+				return NewResult(strmsg('+', "GET Do"), nil)
 			},
 			"GET K1{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K1{a}"), nil)
+				return NewResult(strmsg('+', "GET K1{a}"), nil)
 			},
 			"GET K2{b}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K2{b}"), nil)
+				return NewResult(strmsg('+', "GET K2{b}"), nil)
 			},
 		},
 		DoCacheOverride: map[string]func(cmd Cacheable, ttl time.Duration) RedisResult{
 			"GET DoCache": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET DoCache"), nil)
+				return NewResult(strmsg('+', "GET DoCache"), nil)
 			},
 		},
 	}
@@ -9440,40 +9440,40 @@ func TestClusterClient_ReadNodeSelector_SendToOnlyPrimaryNodeWhenPrimaryNodeSele
 				return slotsMultiResp
 			},
 			"GET Do": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET Do"), nil)
+				return NewResult(strmsg('+', "GET Do"), nil)
 			},
 			"GET K1{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K1{a}"), nil)
+				return NewResult(strmsg('+', "GET K1{a}"), nil)
 			},
 			"GET K2{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K2{a}"), nil)
+				return NewResult(strmsg('+', "GET K2{a}"), nil)
 			},
 			"INFO": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "INFO"), nil)
+				return NewResult(strmsg('+', "INFO"), nil)
 			},
 		},
 		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
 		DoCacheOverride: map[string]func(cmd Cacheable, ttl time.Duration) RedisResult{
 			"GET DoCache": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET DoCache"), nil)
+				return NewResult(strmsg('+', "GET DoCache"), nil)
 			},
 			"GET K1{a}": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET K1{a}"), nil)
+				return NewResult(strmsg('+', "GET K1{a}"), nil)
 			},
 			"GET K2{a}": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET K2{a}"), nil)
+				return NewResult(strmsg('+', "GET K2{a}"), nil)
 			},
 		},
 		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
@@ -9658,9 +9658,9 @@ func TestClusterClient_ReadNodeSelector_SendToOnlyPrimaryNodeWhenPrimaryNodeSele
 			return &mockWire{
 				DoMultiFn: func(multi ...Completed) *redisresults {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
 					}}
 				},
 			}
@@ -9721,23 +9721,23 @@ func TestClusterClient_ReadNodeSelector_SendToOnlyPrimaryNodeWhenPrimaryNodeSele
 		closed := false
 		w := &mockWire{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Delegate"), nil)
+				return NewResult(strmsg('+', "Delegate"), nil)
 			},
 			DoMultiFn: func(cmd ...Completed) *redisresults {
 				if len(cmd) == 4 {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{
 							strmsg('+', "Delegate0"),
 							strmsg('+', "Delegate1"),
 						}), nil),
 					}}
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "Delegate0"), nil),
-					newResult(strmsg('+', "Delegate1"), nil),
+					NewResult(strmsg('+', "Delegate0"), nil),
+					NewResult(strmsg('+', "Delegate1"), nil),
 				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
@@ -9829,23 +9829,23 @@ func TestClusterClient_ReadNodeSelector_SendToOnlyPrimaryNodeWhenPrimaryNodeSele
 		closed := false
 		w := &mockWire{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Delegate"), nil)
+				return NewResult(strmsg('+', "Delegate"), nil)
 			},
 			DoMultiFn: func(cmd ...Completed) *redisresults {
 				if len(cmd) == 4 {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{
 							strmsg('+', "Delegate0"),
 							strmsg('+', "Delegate1"),
 						}), nil),
 					}}
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "Delegate0"), nil),
-					newResult(strmsg('+', "Delegate1"), nil),
+					NewResult(strmsg('+', "Delegate0"), nil),
+					NewResult(strmsg('+', "Delegate1"), nil),
 				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
@@ -9941,40 +9941,40 @@ func TestClusterClient_ReadNodeSelector_SendToOnlyPrimaryNodeWhenIndexIsOutOfRan
 				return slotsMultiResp
 			},
 			"GET Do": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET Do"), nil)
+				return NewResult(strmsg('+', "GET Do"), nil)
 			},
 			"GET K1{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K1{a}"), nil)
+				return NewResult(strmsg('+', "GET K1{a}"), nil)
 			},
 			"GET K2{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K2{a}"), nil)
+				return NewResult(strmsg('+', "GET K2{a}"), nil)
 			},
 			"INFO": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "INFO"), nil)
+				return NewResult(strmsg('+', "INFO"), nil)
 			},
 		},
 		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
 		DoCacheOverride: map[string]func(cmd Cacheable, ttl time.Duration) RedisResult{
 			"GET DoCache": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET DoCache"), nil)
+				return NewResult(strmsg('+', "GET DoCache"), nil)
 			},
 			"GET K1{a}": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET K1{a}"), nil)
+				return NewResult(strmsg('+', "GET K1{a}"), nil)
 			},
 			"GET K2{a}": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET K2{a}"), nil)
+				return NewResult(strmsg('+', "GET K2{a}"), nil)
 			},
 		},
 		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
@@ -10159,9 +10159,9 @@ func TestClusterClient_ReadNodeSelector_SendToOnlyPrimaryNodeWhenIndexIsOutOfRan
 			return &mockWire{
 				DoMultiFn: func(multi ...Completed) *redisresults {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
 					}}
 				},
 			}
@@ -10222,23 +10222,23 @@ func TestClusterClient_ReadNodeSelector_SendToOnlyPrimaryNodeWhenIndexIsOutOfRan
 		closed := false
 		w := &mockWire{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Delegate"), nil)
+				return NewResult(strmsg('+', "Delegate"), nil)
 			},
 			DoMultiFn: func(cmd ...Completed) *redisresults {
 				if len(cmd) == 4 {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{
 							strmsg('+', "Delegate0"),
 							strmsg('+', "Delegate1"),
 						}), nil),
 					}}
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "Delegate0"), nil),
-					newResult(strmsg('+', "Delegate1"), nil),
+					NewResult(strmsg('+', "Delegate0"), nil),
+					NewResult(strmsg('+', "Delegate1"), nil),
 				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
@@ -10330,23 +10330,23 @@ func TestClusterClient_ReadNodeSelector_SendToOnlyPrimaryNodeWhenIndexIsOutOfRan
 		closed := false
 		w := &mockWire{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Delegate"), nil)
+				return NewResult(strmsg('+', "Delegate"), nil)
 			},
 			DoMultiFn: func(cmd ...Completed) *redisresults {
 				if len(cmd) == 4 {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{
 							strmsg('+', "Delegate0"),
 							strmsg('+', "Delegate1"),
 						}), nil),
 					}}
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "Delegate0"), nil),
-					newResult(strmsg('+', "Delegate1"), nil),
+					NewResult(strmsg('+', "Delegate0"), nil),
+					NewResult(strmsg('+', "Delegate1"), nil),
 				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
@@ -10442,32 +10442,32 @@ func TestClusterClient_ReadNodeSelector_SendReadOperationToReplicaNodeWriteOpera
 				return slotsMultiResp
 			},
 			"INFO": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "INFO"), nil)
+				return NewResult(strmsg('+', "INFO"), nil)
 			},
 			"SET Do V": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "SET Do V"), nil)
+				return NewResult(strmsg('+', "SET Do V"), nil)
 			},
 			"SET K2{a} V2{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "SET K2{a} V2{a}"), nil)
+				return NewResult(strmsg('+', "SET K2{a} V2{a}"), nil)
 			},
 		},
 		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
 				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "SET K1") {
-					resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+					resps[i] = NewResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
 					continue
 				}
 				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "SET K2") {
-					resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+					resps[i] = NewResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
 					continue
 				}
 				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "MULTI") {
-					resps[i] = newResult(strmsg('+', "MULTI"), nil)
+					resps[i] = NewResult(strmsg('+', "MULTI"), nil)
 					continue
 				}
 				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "EXEC") {
-					resps[i] = newResult(strmsg('+', "EXEC"), nil)
+					resps[i] = NewResult(strmsg('+', "EXEC"), nil)
 					continue
 				}
 
@@ -10481,20 +10481,20 @@ func TestClusterClient_ReadNodeSelector_SendReadOperationToReplicaNodeWriteOpera
 	replicaNodeConn := &mockConn{
 		DoOverride: map[string]func(cmd Completed) RedisResult{
 			"GET Do": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET Do"), nil)
+				return NewResult(strmsg('+', "GET Do"), nil)
 			},
 			"GET K1{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K1{a}"), nil)
+				return NewResult(strmsg('+', "GET K1{a}"), nil)
 			},
 			"GET K2{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K2{a}"), nil)
+				return NewResult(strmsg('+', "GET K2{a}"), nil)
 			},
 		},
 		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
 				if strings.HasPrefix(strings.Join(cmd.Commands(), " "), "GET K1") {
-					resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+					resps[i] = NewResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
 					continue
 				}
 
@@ -10506,20 +10506,20 @@ func TestClusterClient_ReadNodeSelector_SendReadOperationToReplicaNodeWriteOpera
 		},
 		DoCacheOverride: map[string]func(cmd Cacheable, ttl time.Duration) RedisResult{
 			"GET DoCache": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET DoCache"), nil)
+				return NewResult(strmsg('+', "GET DoCache"), nil)
 			},
 			"GET K1{a}": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET K1{a}"), nil)
+				return NewResult(strmsg('+', "GET K1{a}"), nil)
 			},
 			"GET K2{a}": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET K2{a}"), nil)
+				return NewResult(strmsg('+', "GET K2{a}"), nil)
 			},
 		},
 		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
 				if strings.HasPrefix(strings.Join(cmd.Cmd.Commands(), " "), "GET K1") {
-					resps[i] = newResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
+					resps[i] = NewResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
 					continue
 				}
 
@@ -10748,9 +10748,9 @@ func TestClusterClient_ReadNodeSelector_SendReadOperationToReplicaNodeWriteOpera
 			return &mockWire{
 				DoMultiFn: func(multi ...Completed) *redisresults {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{strmsg('+', "a")}), nil),
 					}}
 				},
 			}
@@ -10810,23 +10810,23 @@ func TestClusterClient_ReadNodeSelector_SendReadOperationToReplicaNodeWriteOpera
 		closed := false
 		w := &mockWire{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Delegate"), nil)
+				return NewResult(strmsg('+', "Delegate"), nil)
 			},
 			DoMultiFn: func(cmd ...Completed) *redisresults {
 				if len(cmd) == 4 {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{
 							strmsg('+', "Delegate0"),
 							strmsg('+', "Delegate1"),
 						}), nil),
 					}}
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "Delegate0"), nil),
-					newResult(strmsg('+', "Delegate1"), nil),
+					NewResult(strmsg('+', "Delegate0"), nil),
+					NewResult(strmsg('+', "Delegate1"), nil),
 				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
@@ -10918,23 +10918,23 @@ func TestClusterClient_ReadNodeSelector_SendReadOperationToReplicaNodeWriteOpera
 		closed := false
 		w := &mockWire{
 			DoFn: func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "Delegate"), nil)
+				return NewResult(strmsg('+', "Delegate"), nil)
 			},
 			DoMultiFn: func(cmd ...Completed) *redisresults {
 				if len(cmd) == 4 {
 					return &redisresults{s: []RedisResult{
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(strmsg('+', "OK"), nil),
-						newResult(slicemsg('*', []RedisMessage{
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(strmsg('+', "OK"), nil),
+						NewResult(slicemsg('*', []RedisMessage{
 							strmsg('+', "Delegate0"),
 							strmsg('+', "Delegate1"),
 						}), nil),
 					}}
 				}
 				return &redisresults{s: []RedisResult{
-					newResult(strmsg('+', "Delegate0"), nil),
-					newResult(strmsg('+', "Delegate1"), nil),
+					NewResult(strmsg('+', "Delegate0"), nil),
+					NewResult(strmsg('+', "Delegate1"), nil),
 				}}
 			},
 			ReceiveFn: func(ctx context.Context, subscribe Completed, fn func(message PubSubMessage)) error {
@@ -11028,14 +11028,14 @@ func TestClusterClient_ReadNodeSelector_SendToAlternatePrimaryAndReplicaNodes(t 
 		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
 		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
@@ -11044,13 +11044,13 @@ func TestClusterClient_ReadNodeSelector_SendToAlternatePrimaryAndReplicaNodes(t 
 				return slotsMultiResp
 			},
 			"INFO": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "INFO"), nil)
+				return NewResult(strmsg('+', "INFO"), nil)
 			},
 			"GET K1{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K1{a}"), nil)
+				return NewResult(strmsg('+', "GET K1{a}"), nil)
 			},
 			"GET K2{b}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K2{b}"), nil)
+				return NewResult(strmsg('+', "GET K2{b}"), nil)
 			},
 		},
 	}
@@ -11058,31 +11058,31 @@ func TestClusterClient_ReadNodeSelector_SendToAlternatePrimaryAndReplicaNodes(t 
 		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
 		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
 		DoOverride: map[string]func(cmd Completed) RedisResult{
 			"GET Do": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET Do"), nil)
+				return NewResult(strmsg('+', "GET Do"), nil)
 			},
 			"GET K1{a}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K1{a}"), nil)
+				return NewResult(strmsg('+', "GET K1{a}"), nil)
 			},
 			"GET K2{b}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K2{b}"), nil)
+				return NewResult(strmsg('+', "GET K2{b}"), nil)
 			},
 		},
 		DoCacheOverride: map[string]func(cmd Cacheable, ttl time.Duration) RedisResult{
 			"GET DoCache": func(cmd Cacheable, ttl time.Duration) RedisResult {
-				return newResult(strmsg('+', "GET DoCache"), nil)
+				return NewResult(strmsg('+', "GET DoCache"), nil)
 			},
 		},
 	}
@@ -11168,7 +11168,7 @@ func TestClusterClient_Refresh_MissingSlotsForReplicas_Do(t *testing.T) {
 		DoOverride: map[string]func(cmd Completed) RedisResult{
 			"CLUSTER SLOTS": func(cmd Completed) RedisResult {
 				if atomic.AddInt64(&refresh, 1) == 1 {
-					return newResult(slicemsg('*', slotsMultiResp.val.values()[:1]), nil)
+					return NewResult(slicemsg('*', slotsMultiResp.val.values()[:1]), nil)
 				}
 				return slotsMultiResp
 			},
@@ -11177,7 +11177,7 @@ func TestClusterClient_Refresh_MissingSlotsForReplicas_Do(t *testing.T) {
 	replicaNodeConn := &mockConn{
 		DoOverride: map[string]func(cmd Completed) RedisResult{
 			"GET K1{d}": func(cmd Completed) RedisResult {
-				return newResult(strmsg('+', "GET K1{d}"), nil)
+				return NewResult(strmsg('+', "GET K1{d}"), nil)
 			},
 		},
 	}
@@ -11219,7 +11219,7 @@ func TestClusterClient_Refresh_MissingSlotsForReplicas_DoMulti(t *testing.T) {
 		DoOverride: map[string]func(cmd Completed) RedisResult{
 			"CLUSTER SLOTS": func(cmd Completed) RedisResult {
 				if atomic.AddInt64(&refresh, 1) == 1 {
-					return newResult(slicemsg('*', slotsMultiResp.val.values()[:1]), nil)
+					return NewResult(slicemsg('*', slotsMultiResp.val.values()[:1]), nil)
 				}
 				return slotsMultiResp
 			},
@@ -11229,7 +11229,7 @@ func TestClusterClient_Refresh_MissingSlotsForReplicas_DoMulti(t *testing.T) {
 		DoMultiFn: func(multi ...Completed) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},
@@ -11274,7 +11274,7 @@ func TestClusterClient_Refresh_MissingSlotsForReplicas_DoMultiCache(t *testing.T
 		DoOverride: map[string]func(cmd Completed) RedisResult{
 			"CLUSTER SLOTS": func(cmd Completed) RedisResult {
 				if atomic.AddInt64(&refresh, 1) == 1 {
-					return newResult(slicemsg('*', slotsMultiResp.val.values()[:1]), nil)
+					return NewResult(slicemsg('*', slotsMultiResp.val.values()[:1]), nil)
 				}
 				return slotsMultiResp
 			},
@@ -11284,7 +11284,7 @@ func TestClusterClient_Refresh_MissingSlotsForReplicas_DoMultiCache(t *testing.T
 		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
 			resps := make([]RedisResult, len(multi))
 			for i, cmd := range multi {
-				resps[i] = newResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
+				resps[i] = NewResult(strmsg('+', strings.Join(cmd.Cmd.Commands(), " ")), nil)
 			}
 			return &redisresults{s: resps}
 		},

@@ -118,7 +118,7 @@ func (s *Lua) Exec(ctx context.Context, c Client, keys, args []string) (resp Red
 					s.sha1 = shaStr
 				} else {
 					s.sha1Mu.Unlock()
-					return newErrResult(result.Error())
+					return NewErrorResult(result.Error())
 				}
 			}
 			scriptSha1 = s.sha1
@@ -180,7 +180,7 @@ func (s *Lua) ExecMulti(ctx context.Context, c Client, multi ...LuaExec) (resp [
 		if err := e.Load(); err != nil {
 			resp = make([]RedisResult, len(multi))
 			for i := 0; i < len(resp); i++ {
-				resp[i] = newErrResult(err.(*errs).error)
+				resp[i] = NewErrorResult(err.(*errs).error)
 			}
 			return
 		}

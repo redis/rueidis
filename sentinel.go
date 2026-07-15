@@ -262,7 +262,7 @@ func (c *sentinelClient) DoStream(ctx context.Context, cmd Completed) RedisResul
 
 func (c *sentinelClient) DoMultiStream(ctx context.Context, multi ...Completed) MultiRedisResultStream {
 	if len(multi) == 0 {
-		return RedisResultStream{e: io.EOF}
+		return NewErrorResultStream(io.EOF)
 	}
 
 	cc := c.pickMulti(c.sendAllToReplica(multi))

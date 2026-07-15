@@ -60,8 +60,8 @@ func testAdapterTxPipeline(resp3 bool) {
 		rets, err := adapter.TxPipelined(ctx, func(pipe Pipeliner) error {
 			echo = pipe.Echo(ctx, "hello")
 			ping = pipe.Ping(ctx)
-			Expect(echo.Err()).To(MatchError(placeholder.err))
-			Expect(ping.Err()).To(MatchError(placeholder.err))
+			Expect(echo.Err()).To(MatchError(errPipelineNotExecuted))
+			Expect(ping.Err()).To(MatchError(errPipelineNotExecuted))
 			return nil
 		})
 		Expect(err).NotTo(HaveOccurred())
@@ -78,8 +78,8 @@ func testAdapterTxPipeline(resp3 bool) {
 		pipe := adapter.TxPipeline()
 		echo := pipe.Echo(ctx, "hello")
 		ping := pipe.Ping(ctx)
-		Expect(echo.Err()).To(MatchError(placeholder.err))
-		Expect(ping.Err()).To(MatchError(placeholder.err))
+		Expect(echo.Err()).To(MatchError(errPipelineNotExecuted))
+		Expect(ping.Err()).To(MatchError(errPipelineNotExecuted))
 		Expect(pipe.Len()).To(Equal(2))
 
 		rets, err := pipe.Exec(ctx)
@@ -106,8 +106,8 @@ func testAdapterTxPipeline(resp3 bool) {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(rets).To(HaveLen(0))
 
-		Expect(echo.Err()).To(MatchError(placeholder.err))
-		Expect(ping.Err()).To(MatchError(placeholder.err))
+		Expect(echo.Err()).To(MatchError(errPipelineNotExecuted))
+		Expect(ping.Err()).To(MatchError(errPipelineNotExecuted))
 	})
 
 	It("should Watch", func() {
