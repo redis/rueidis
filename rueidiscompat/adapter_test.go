@@ -12174,6 +12174,25 @@ func testAdapterRedis86() {
 			Expect(res.IIDsAdded).To(BeNumerically(">=", 0))
 			Expect(res.IIDsDuplicates).To(BeNumerically(">=", 0))
 		})
+
+		It("should HSetEXWithArgs apply ExpirationType without a Condition", func() {
+			res, err := adapter.HSetEXWithArgs(ctx, "hsetex-no-condition", &HSetEXOptions{
+				ExpirationType: HSetEXExpirationEX,
+				ExpirationVal:  100,
+			}, "field1", "value1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(res).To(Equal(int64(1)))
+
+			val, err := adapter.HGet(ctx, "hsetex-no-condition", "field1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val).To(Equal("value1"))
+
+			ttl, err := adapter.HTTL(ctx, "hsetex-no-condition", "field1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ttl).To(HaveLen(1))
+			Expect(ttl[0]).To(BeNumerically(">", 0))
+			Expect(ttl[0]).To(BeNumerically("<=", 100))
+		})
 	})
 }
 
