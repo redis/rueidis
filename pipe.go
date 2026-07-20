@@ -81,8 +81,10 @@ type pipe struct {
 	psubs           *subs // pubsub pmessage subscriptions
 	r2p             *r2p
 	pingTimer       *time.Timer // timer for background ping
+	authTimer       *time.Timer // timer for refreshing dynamic auth credentials
 	lftmTimer       *time.Timer // lifetime timer
 	info            map[string]RedisMessage
+	authRefreshAt   time.Time
 	timeout         time.Duration
 	pinggap         time.Duration
 	maxFlushDelay   time.Duration
@@ -149,11 +151,13 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 
 	username := option.Username
 	password := option.Password
+	var authCredentials AuthCredentials
+	var authCredentialsContext AuthCredentialsContext
 	if option.AuthCredentialsFn != nil {
-		authCredentialsContext := AuthCredentialsContext{
+		authCredentialsContext = AuthCredentialsContext{
 			Address: conn.RemoteAddr(),
 		}
-		authCredentials, err := option.AuthCredentialsFn(authCredentialsContext)
+		authCredentials, err = option.AuthCredentialsFn(authCredentialsContext)
 		if err != nil {
 			p.Close()
 			return nil, err
@@ -368,6 +372,13 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 			}
 		}
 	}
+	if option.AuthCredentialsFn != nil && !authCredentials.RefreshAfter.IsZero() {
+		authFn := option.AuthCredentialsFn
+		p.authRefreshAt = authCredentials.RefreshAfter
+		p.authTimer = time.AfterFunc(time.Until(p.authRefreshAt), func() {
+			p.refreshAuth(authFn, authCredentialsContext)
+		})
+	}
 	if !nobg {
 		if p.timeout > 0 && p.pinggap > 0 {
 			p.backgroundPing()
@@ -396,7 +407,6 @@ func (p *pipe) _exit(err error) {
 	p.error.CompareAndSwap(nil, &errs{error: err})
 	atomic.CompareAndSwapInt32(&p.state, 1, 2) // stop accepting new requests
 	_ = p.conn.Close()                         // force both read & write goroutine to exit
-	p.StopTimer()
 	p.clhks.Load().(func(error))(err)
 }
 
@@ -433,6 +443,9 @@ func (p *pipe) _background() {
 	}
 	if p.pingTimer != nil {
 		p.pingTimer.Stop()
+	}
+	if p.authTimer != nil {
+		p.authTimer.Stop()
 	}
 	err := p.Error()
 	p.nsubs.Close()
@@ -743,6 +756,50 @@ func (p *pipe) backgroundPing() {
 			p._exit(err)
 		}
 	})
+}
+
+func (p *pipe) scheduleAuthRefresh(refreshAfter time.Time) {
+	p.authRefreshAt = refreshAfter
+	if p.authRefreshAt.IsZero() || p.Error() != nil || p.authTimer == nil {
+		return
+	}
+	p.authTimer.Reset(time.Until(p.authRefreshAt))
+}
+
+func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials, error), authContext AuthCredentialsContext) {
+	if p.Error() != nil {
+		return
+	}
+	auth, err := authFn(authContext)
+	if err != nil {
+		p._exit(err)
+		return
+	}
+	if auth.Username != "" || auth.Password != "" {
+		args := make([]string, 0, 3)
+		args = append(args, "AUTH")
+		if auth.Password != "" && auth.Username == "" {
+			if !p.r2ps && p.r2p == nil {
+				args = append(args, "default")
+			}
+			args = append(args, auth.Password)
+		} else {
+			args = append(args, auth.Username, auth.Password)
+		}
+		ctx := context.Background()
+		var cancel context.CancelFunc
+		if p.timeout > 0 {
+			ctx, cancel = context.WithTimeout(ctx, p.timeout)
+			defer cancel()
+		}
+		cmd := cmds.NewCompleted(args)
+		result := p.Do(ctx, cmd)
+		if err := result.Error(); err != nil {
+			p._exit(err)
+			return
+		}
+	}
+	p.scheduleAuthRefresh(auth.RefreshAfter)
 }
 
 func (p *pipe) handlePush(values []RedisMessage) (reply bool, unsubscribe bool) {
@@ -1101,7 +1158,6 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 		}
 		return resp
 	}
-
 	cmds.CompletedCS(multi[0]).Verify()
 
 	isOptIn := multi[0].IsOptIn() // len(multi) > 0 should have already been checked by the upper layer
@@ -1269,7 +1325,6 @@ func (p *pipe) DoStream(ctx context.Context, pool *pool, cmd Completed) RedisRes
 	if err := ctx.Err(); err != nil {
 		return NewErrorResultStream(err)
 	}
-
 	state := atomic.LoadInt32(&p.state)
 
 	if state == 1 {
@@ -1319,7 +1374,6 @@ func (p *pipe) DoMultiStream(ctx context.Context, pool *pool, multi ...Completed
 	if err := ctx.Err(); err != nil {
 		return NewErrorResultStream(err)
 	}
-
 	state := atomic.LoadInt32(&p.state)
 
 	if state == 1 {
@@ -1860,6 +1914,9 @@ func (p *pipe) Close() {
 	if p.pingTimer != nil {
 		p.pingTimer.Stop()
 	}
+	if p.authTimer != nil {
+		p.authTimer.Stop()
+	}
 	if p.conn != nil {
 		p.conn.Close()
 	}
@@ -1869,17 +1926,28 @@ func (p *pipe) Close() {
 }
 
 func (p *pipe) StopTimer() bool {
-	if p.lftmTimer == nil {
-		return true
+	stopped := true
+	if p.lftmTimer != nil {
+		stopped = p.lftmTimer.Stop()
 	}
-	return p.lftmTimer.Stop()
+	if p.authTimer != nil {
+		stopped = p.authTimer.Stop() && stopped
+	}
+	return stopped
 }
 
 func (p *pipe) ResetTimer() bool {
-	if p.lftmTimer == nil || p.Error() != nil {
+	if p.Error() != nil {
 		return true
 	}
-	return p.lftmTimer.Reset(p.lftm)
+	reset := true
+	if p.lftmTimer != nil {
+		reset = p.lftmTimer.Reset(p.lftm)
+	}
+	if p.authTimer != nil && !p.authRefreshAt.IsZero() {
+		reset = p.authTimer.Reset(time.Until(p.authRefreshAt)) && reset
+	}
+	return reset
 }
 
 func (p *pipe) expired() {

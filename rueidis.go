@@ -483,6 +483,8 @@ type AuthCredentialsContext struct {
 type AuthCredentials struct {
 	Username string
 	Password string
+	// RefreshAfter schedules AuthCredentialsFn to be called again at this time.
+	RefreshAfter time.Time
 }
 
 // NewClient uses ClientOption to initialize the Client for both a cluster client and a single client.
