@@ -441,6 +441,18 @@ func (c *sentinelClient) _switchTarget(addr string, isMaster bool) (err error) {
 	var (
 		target conn
 		opt    *ClientOption
+		// reused reports that target is the connection still referenced by
+		// mConn/rConn rather than one we just dialed. Closing a reused
+		// connection on a failure path leaves mConn/rConn pointing at a CLOSED
+		// mux: every subsequent command then fails with ErrClosing without even
+		// attempting to dial, and nothing ever replaces it, because the swap
+		// below is only reached on success.
+		//
+		// This is reachable in ordinary operation: when Sentinel reports the
+		// same address the client already holds, target is reused; a
+		// just-demoted master answers ROLE with "slave" -> errNotMaster -> the
+		// live mConn is closed out from under every caller.
+		reused bool
 	)
 
 	if isMaster {
@@ -449,6 +461,8 @@ func (c *sentinelClient) _switchTarget(addr string, isMaster bool) (err error) {
 			target = c.mConn.Load().(conn)
 			if target.Error() != nil {
 				target = nil
+			} else {
+				reused = true
 			}
 		}
 	} else {
@@ -457,6 +471,8 @@ func (c *sentinelClient) _switchTarget(addr string, isMaster bool) (err error) {
 			target = c.rConn.Load().(conn)
 			if target.Error() != nil {
 				target = nil
+			} else {
+				reused = true
 			}
 		}
 	}
@@ -468,15 +484,24 @@ func (c *sentinelClient) _switchTarget(addr string, isMaster bool) (err error) {
 		}
 	}
 
+	// closeIfOwned closes only a connection this call created. A reused one is
+	// still referenced by mConn/rConn and must outlive the failure; the caller
+	// retries the refresh and replaces it once a real master is found.
+	closeIfOwned := func() {
+		if !reused {
+			target.Close()
+		}
+	}
+
 	resp, err := target.Do(context.Background(), cmds.RoleCmd).ToArray()
 	if err != nil {
-		target.Close()
+		closeIfOwned()
 		return err
 	}
 
 	if isMaster {
 		if resp[0].string() != "master" {
-			target.Close()
+			closeIfOwned()
 			return errNotMaster
 		}
 
@@ -489,7 +514,7 @@ func (c *sentinelClient) _switchTarget(addr string, isMaster bool) (err error) {
 		}
 	} else {
 		if resp[0].string() != "slave" {
-			target.Close()
+			closeIfOwned()
 			return errNotSlave
 		}
 
