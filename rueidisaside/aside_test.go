@@ -2,6 +2,7 @@ package rueidisaside
 
 import (
 	"context"
+	"errors"
 	"math/rand"
 	"strconv"
 	"sync"
@@ -13,6 +14,40 @@ import (
 )
 
 var addr = []string{"127.0.0.1:6379"}
+
+type cancelAfterAcquireClient struct {
+	rueidis.Client
+	key      string
+	cancel   context.CancelFunc
+	accepted bool
+}
+
+func (c *cancelAfterAcquireClient) Do(ctx context.Context, cmd rueidis.Completed) rueidis.RedisResult {
+	commands := cmd.Commands()
+	if isAcquireCommand(commands, c.key) {
+		resp := c.Client.Do(ctx, cmd)
+		if !rueidis.IsRedisNil(resp.Error()) {
+			return resp
+		}
+		c.accepted = true
+		c.cancel()
+		if err := ctx.Err(); err != nil {
+			return rueidis.NewErrorResult(err)
+		}
+		return resp
+	}
+	return c.Client.Do(ctx, cmd)
+}
+
+func isAcquireCommand(commands []string, key string) bool {
+	if len(commands) == 7 && commands[0] == "SET" {
+		return commands[1] == key && commands[3] == "NX" && commands[4] == "GET"
+	}
+	if len(commands) == 6 && (commands[0] == "EVALSHA" || commands[0] == "EVAL") {
+		return commands[2] == "1" && commands[3] == key
+	}
+	return false
+}
 
 func makeClient(t *testing.T, addr []string) CacheAsideClient {
 	client, err := NewClient(ClientOption{
@@ -300,6 +335,65 @@ func TestWriteCancelLL(t *testing.T) {
 	err = client.client.Do(context.Background(), client.client.B().Get().Key(key).Build()).Error()
 	if !rueidis.IsRedisNil(err) {
 		t.Error(err)
+	}
+}
+
+func TestAcquireCancelCleanup(t *testing.T) {
+	for _, useLuaLock := range []bool{false, true} {
+		name := "set"
+		if useLuaLock {
+			name = "lua"
+		}
+		t.Run(name, func(t *testing.T) {
+			key := strconv.Itoa(rand.Int())
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			var wrapped *cancelAfterAcquireClient
+			client, err := NewClient(ClientOption{
+				ClientOption: rueidis.ClientOption{InitAddress: addr, PipelineMultiplex: -1, SelectDB: 5},
+				ClientTTL:    time.Second,
+				UseLuaLock:   useLuaLock,
+				ClientBuilder: func(option rueidis.ClientOption) (rueidis.Client, error) {
+					client, err := rueidis.NewClient(option)
+					if err != nil {
+						return nil, err
+					}
+					wrapped = &cancelAfterAcquireClient{Client: client, key: key, cancel: cancel}
+					return wrapped, nil
+				},
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err = client.Client().Do(context.Background(), client.Client().B().Del().Key(key).Build()).Error(); err != nil {
+				t.Fatal(err)
+			}
+			defer func() {
+				client.Client().Do(context.Background(), client.Client().B().Del().Key(key).Build())
+				client.Close()
+			}()
+
+			loaderCalled := false
+			_, err = client.Get(ctx, time.Minute, key, func(context.Context, string) (string, error) {
+				loaderCalled = true
+				return "value", nil
+			})
+			if !errors.Is(err, context.Canceled) {
+				t.Fatalf("expected context.Canceled, got %v", err)
+			}
+			if !wrapped.accepted {
+				t.Fatal("Redis did not accept the lock command")
+			}
+			if loaderCalled {
+				t.Fatal("loader should not be called when lock acquisition is canceled")
+			}
+
+			val, err := client.Client().Do(context.Background(), client.Client().B().Get().Key(key).Build()).ToString()
+			if !rueidis.IsRedisNil(err) {
+				t.Fatalf("expected canceled lock acquisition to release the placeholder, got value %q and error %v", val, err)
+			}
+		})
 	}
 }
 
