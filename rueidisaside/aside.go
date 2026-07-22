@@ -157,14 +157,29 @@ retry:
 	val, err := resp.ToString()
 
 	if rueidis.IsRedisNil(err) && fn != nil { // cache miss, prepare to populate the value by fn()
+		if err = ctx.Err(); err != nil {
+			return val, err
+		}
 		var id string
 		if id, err = c.keepalive(); err == nil { // acquire client id
+			if err = ctx.Err(); err != nil {
+				return val, err
+			}
+			// Wait for the lock response even if the caller is canceled. A canceled
+			// write can still reach Redis, so ownership must be known before cleanup.
+			acquireCtx := context.WithoutCancel(ctx)
 			if c.useLuaLock {
-				val, err = acquireLock.Exec(ctx, c.client, []string{key}, []string{id, strconv.FormatInt(ttl.Milliseconds(), 10)}).ToString()
+				val, err = acquireLock.Exec(acquireCtx, c.client, []string{key}, []string{id, strconv.FormatInt(ttl.Milliseconds(), 10)}).ToString()
 			} else {
-				val, err = c.client.Do(ctx, c.client.B().Set().Key(key).Value(id).Nx().Get().Px(ttl).Build()).ToString()
+				val, err = c.client.Do(acquireCtx, c.client.B().Set().Key(key).Value(id).Nx().Get().Px(ttl).Build()).ToString()
 			}
 
+			if ctxErr := ctx.Err(); ctxErr != nil {
+				if rueidis.IsRedisNil(err) {
+					delkey.Exec(context.Background(), c.client, []string{key}, []string{id})
+				}
+				return "", ctxErr
+			}
 			if rueidis.IsRedisNil(err) { // successfully set client id on the key as a lock
 				// attach TTL pointer to context for potential modification via OverrideCacheTTL
 				ctx = context.WithValue(ctx, ttlKey, &ttl)
