@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestParseURL(t *testing.T) {
@@ -57,6 +58,12 @@ func TestParseURL(t *testing.T) {
 	}
 	if opt, err := ParseURL("redis://?write_timeout=a"); !strings.HasPrefix(err.Error(), "redis: invalid write timeout") {
 		t.Fatalf("unexpected %v %v", opt, err)
+	}
+	if opt, err := ParseURL("redis://?write_timeout=2s"); err != nil || opt.ConnWriteTimeout != 2*time.Second {
+		t.Fatalf("write_timeout should set ConnWriteTimeout: %v %v", opt, err)
+	}
+	if opt, err := ParseURL("redis://?dial_timeout=3s&write_timeout=4s"); err != nil || opt.Dialer.Timeout != 3*time.Second || opt.ConnWriteTimeout != 4*time.Second {
+		t.Fatalf("dial/write timeouts must not clobber each other: dial=%v write=%v err=%v", opt.Dialer.Timeout, opt.ConnWriteTimeout, err)
 	}
 	if opt, err := ParseURL("rediss://?skip_verify"); err != nil || opt.TLSConfig == nil || !opt.TLSConfig.InsecureSkipVerify {
 		t.Fatalf("unexpected %v %v", opt, err)
