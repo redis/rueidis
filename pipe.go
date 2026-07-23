@@ -1910,15 +1910,24 @@ func (p *pipe) Close() {
 		}
 		if block == 1 && (stopping1 || stopping2) { // make sure there is no block cmd
 			p.incrWaits()
-			ch, _ := p.queue.PutOne(context.Background(), cmds.PingCmd)
-			select {
-			case <-ch:
+			// Run the enqueue in a goroutine so that the one-second bound below
+			// covers it too. queue.PutOne blocks while every ring slot is
+			// occupied, and at Close time nothing else can free a slot: the
+			// keepalive ping is disabled (blcksig is non-zero and the error is
+			// already set), and the connection is closed only further down. If
+			// the enqueue blocks, Close proceeds after the timeout and closes
+			// the connection, which makes the background loops drain the ring
+			// and unpark this goroutine — so it does not leak.
+			answered := make(chan struct{})
+			go func() {
+				ch, _ := p.queue.PutOne(context.Background(), cmds.PingCmd)
+				<-ch
 				p.decrWaits()
+				close(answered)
+			}()
+			select {
+			case <-answered:
 			case <-time.After(time.Second):
-				go func(ch chan RedisResult) {
-					<-ch
-					p.decrWaits()
-				}(ch)
 			}
 		}
 	}
