@@ -81,6 +81,7 @@ type pipe struct {
 	psubs           *subs // pubsub pmessage subscriptions
 	r2p             *r2p
 	pingTimer       *time.Timer // timer for background ping
+	authMu          sync.Mutex  // guards authTimer and authRefreshAt across the constructor, timer callback, background and pool goroutines
 	authTimer       *time.Timer // timer for refreshing dynamic auth credentials
 	lftmTimer       *time.Timer // lifetime timer
 	info            map[string]RedisMessage
@@ -374,10 +375,16 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 	}
 	if option.AuthCredentialsFn != nil && !authCredentials.RefreshAfter.IsZero() {
 		authFn := option.AuthCredentialsFn
+		// A RefreshAfter already in the past makes the timer fire before
+		// AfterFunc even returns, and everything downstream of the callback,
+		// including the background goroutine, reads authTimer. The lock makes
+		// those readers wait for the assignment instead of racing it.
+		p.authMu.Lock()
 		p.authRefreshAt = authCredentials.RefreshAfter
 		p.authTimer = time.AfterFunc(time.Until(p.authRefreshAt), func() {
 			p.refreshAuth(authFn, authCredentialsContext)
 		})
+		p.authMu.Unlock()
 	}
 	if !nobg {
 		if p.timeout > 0 && p.pinggap > 0 {
@@ -444,9 +451,11 @@ func (p *pipe) _background() {
 	if p.pingTimer != nil {
 		p.pingTimer.Stop()
 	}
+	p.authMu.Lock()
 	if p.authTimer != nil {
 		p.authTimer.Stop()
 	}
+	p.authMu.Unlock()
 	err := p.Error()
 	p.nsubs.Close()
 	p.psubs.Close()
@@ -759,6 +768,8 @@ func (p *pipe) backgroundPing() {
 }
 
 func (p *pipe) scheduleAuthRefresh(refreshAfter time.Time) {
+	p.authMu.Lock()
+	defer p.authMu.Unlock()
 	p.authRefreshAt = refreshAfter
 	if p.authRefreshAt.IsZero() || p.Error() != nil || p.authTimer == nil {
 		return
@@ -1914,9 +1925,11 @@ func (p *pipe) Close() {
 	if p.pingTimer != nil {
 		p.pingTimer.Stop()
 	}
+	p.authMu.Lock()
 	if p.authTimer != nil {
 		p.authTimer.Stop()
 	}
+	p.authMu.Unlock()
 	if p.conn != nil {
 		p.conn.Close()
 	}
@@ -1930,9 +1943,11 @@ func (p *pipe) StopTimer() bool {
 	if p.lftmTimer != nil {
 		stopped = p.lftmTimer.Stop()
 	}
+	p.authMu.Lock()
 	if p.authTimer != nil {
 		stopped = p.authTimer.Stop() && stopped
 	}
+	p.authMu.Unlock()
 	return stopped
 }
 
@@ -1944,9 +1959,11 @@ func (p *pipe) ResetTimer() bool {
 	if p.lftmTimer != nil {
 		reset = p.lftmTimer.Reset(p.lftm)
 	}
+	p.authMu.Lock()
 	if p.authTimer != nil && !p.authRefreshAt.IsZero() {
 		reset = p.authTimer.Reset(time.Until(p.authRefreshAt)) && reset
 	}
+	p.authMu.Unlock()
 	return reset
 }
 
