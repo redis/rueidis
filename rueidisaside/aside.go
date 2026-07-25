@@ -157,14 +157,8 @@ retry:
 	val, err := resp.ToString()
 
 	if rueidis.IsRedisNil(err) && fn != nil { // cache miss, prepare to populate the value by fn()
-		if err = ctx.Err(); err != nil {
-			return val, err
-		}
 		var id string
 		if id, err = c.keepalive(); err == nil { // acquire client id
-			if err = ctx.Err(); err != nil {
-				return val, err
-			}
 			// Wait for the lock response even if the caller is canceled. A canceled
 			// write can still reach Redis, so ownership must be known before cleanup.
 			acquireCtx := context.WithoutCancel(ctx)
