@@ -81,10 +81,10 @@ type pipe struct {
 	psubs           *subs // pubsub pmessage subscriptions
 	r2p             *r2p
 	pingTimer       *time.Timer // timer for background ping
-	authTimer       *time.Timer // timer for refreshing dynamic auth credentials
+	authTimer       *time.Timer // timer for refreshing dynamic auth credentials, written once in _newPipe
 	lftmTimer       *time.Timer // lifetime timer
 	info            map[string]RedisMessage
-	authRefreshAt   time.Time
+	authRefreshAt   atomic.Pointer[time.Time]
 	timeout         time.Duration
 	pinggap         time.Duration
 	maxFlushDelay   time.Duration
@@ -374,10 +374,23 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 	}
 	if option.AuthCredentialsFn != nil && !authCredentials.RefreshAfter.IsZero() {
 		authFn := option.AuthCredentialsFn
-		p.authRefreshAt = authCredentials.RefreshAfter
-		p.authTimer = time.AfterFunc(time.Until(p.authRefreshAt), func() {
+		p.authRefreshAt.Store(&authCredentials.RefreshAfter)
+		// A RefreshAfter already in the past makes the timer fire before
+		// AfterFunc even returns. The captured mutex makes the callback wait
+		// for the assignment below, and everything the callback spawns
+		// inherits that ordering, so every reader reached through the
+		// callback sees authTimer set. All other readers see it through the
+		// pipe being published after _newPipe returns: the field is written
+		// exactly once, here. Holding the mutex for the whole refresh also
+		// keeps overlapping fires from running refreshAuth concurrently.
+		var mu sync.Mutex
+		mu.Lock()
+		p.authTimer = time.AfterFunc(time.Until(authCredentials.RefreshAfter), func() {
+			mu.Lock()
 			p.refreshAuth(authFn, authCredentialsContext)
+			mu.Unlock()
 		})
+		mu.Unlock()
 	}
 	if !nobg {
 		if p.timeout > 0 && p.pinggap > 0 {
@@ -759,11 +772,11 @@ func (p *pipe) backgroundPing() {
 }
 
 func (p *pipe) scheduleAuthRefresh(refreshAfter time.Time) {
-	p.authRefreshAt = refreshAfter
-	if p.authRefreshAt.IsZero() || p.Error() != nil || p.authTimer == nil {
+	p.authRefreshAt.Store(&refreshAfter)
+	if refreshAfter.IsZero() || p.Error() != nil || p.authTimer == nil {
 		return
 	}
-	p.authTimer.Reset(time.Until(p.authRefreshAt))
+	p.authTimer.Reset(time.Until(refreshAfter))
 }
 
 func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials, error), authContext AuthCredentialsContext) {
@@ -1944,8 +1957,10 @@ func (p *pipe) ResetTimer() bool {
 	if p.lftmTimer != nil {
 		reset = p.lftmTimer.Reset(p.lftm)
 	}
-	if p.authTimer != nil && !p.authRefreshAt.IsZero() {
-		reset = p.authTimer.Reset(time.Until(p.authRefreshAt)) && reset
+	if p.authTimer != nil {
+		if at := p.authRefreshAt.Load(); at != nil && !at.IsZero() {
+			reset = p.authTimer.Reset(time.Until(*at)) && reset
+		}
 	}
 	return reset
 }
