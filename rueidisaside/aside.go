@@ -5,9 +5,9 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"math/rand"
-	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unsafe"
 
@@ -19,7 +19,7 @@ type ClientOption struct {
 	ClientBuilder func(option rueidis.ClientOption) (rueidis.Client, error)
 	ClientOption  rueidis.ClientOption
 	ClientTTL     time.Duration // TTL for the client marker, refreshed every 1/2 TTL. Defaults to 10s. The marker allows other clients to know if this client is still alive.
-	UseLuaLock    bool
+	UseLuaLock    bool          // Use the Redis < 7 compatible lock implementation.
 }
 
 type CacheAsideClient interface {
@@ -35,6 +35,7 @@ func NewClient(option ClientOption) (cc CacheAsideClient, err error) {
 	}
 	ca := &Client{
 		waits:      make(map[string]chan struct{}),
+		flights:    make(map[flightKey]*flight),
 		ttl:        option.ClientTTL,
 		useLuaLock: option.UseLuaLock,
 	}
@@ -55,8 +56,10 @@ type Client struct {
 	client     rueidis.Client
 	ctx        context.Context
 	waits      map[string]chan struct{}
+	flights    map[flightKey]*flight
 	cancel     context.CancelFunc
 	id         string
+	attempts   atomic.Uint64
 	ttl        time.Duration
 	mu         sync.Mutex
 	useLuaLock bool
@@ -72,6 +75,7 @@ func (c *Client) onInvalidation(messages []rueidis.RedisMessage) {
 			close(ch)
 		}
 		c.waits = make(map[string]chan struct{})
+		c.resetFlightsLocked()
 	} else {
 		for _, m := range messages {
 			key, _ := m.ToString()
@@ -158,32 +162,22 @@ retry:
 
 	if rueidis.IsRedisNil(err) && fn != nil { // cache miss, prepare to populate the value by fn()
 		var id string
-		if id, err = c.keepalive(); err == nil { // acquire client id
-			// Wait for the lock response even if the caller is canceled. A canceled
-			// write can still reach Redis, so ownership must be known before cleanup.
-			acquireCtx := context.WithoutCancel(ctx)
-			if c.useLuaLock {
-				val, err = acquireLock.Exec(acquireCtx, c.client, []string{key}, []string{id, strconv.FormatInt(ttl.Milliseconds(), 10)}).ToString()
-			} else {
-				val, err = c.client.Do(acquireCtx, c.client.B().Set().Key(key).Value(id).Nx().Get().Px(ttl).Build()).ToString()
+		if id, err = c.keepalive(); err == nil {
+			f, leader := c.beginFlight(key, id)
+			if f == nil { // the client id changed while preparing the flight
+				goto retry
 			}
-
-			if ctxErr := ctx.Err(); ctxErr != nil {
-				if rueidis.IsRedisNil(err) {
-					delkey.Exec(context.Background(), c.client, []string{key}, []string{id})
-				}
-				return "", ctxErr
-			}
-			if rueidis.IsRedisNil(err) { // successfully set client id on the key as a lock
-				// attach TTL pointer to context for potential modification via OverrideCacheTTL
-				ctx = context.WithValue(ctx, ttlKey, &ttl)
-				if val, err = fn(ctx, key); err == nil {
-					err = setkey.Exec(ctx, c.client, []string{key}, []string{id, val, strconv.FormatInt(ttl.Milliseconds(), 10)}).Error()
-				}
-				if err != nil { // failed to populate the value, release the lock.
-					delkey.Exec(context.Background(), c.client, []string{key}, []string{id})
+			if !leader {
+				select {
+				case <-f.done:
+					goto retry
+				case <-ctx.Done():
+					return "", ctx.Err()
+				case <-c.ctx.Done():
+					return "", c.ctx.Err()
 				}
 			}
+			val, err = c.populate(ctx, ttl, key, id, fn, f)
 		}
 	}
 
@@ -229,7 +223,7 @@ func (c *Client) Close() {
 	id := c.id
 	c.mu.Unlock()
 	if id != "" {
-		c.client.Do(context.Background(), c.client.B().Del().Key(c.id).Build())
+		c.client.Do(context.Background(), c.client.B().Del().Key(id).Build())
 	}
 	c.client.Close()
 }
@@ -249,8 +243,4 @@ func OverrideCacheTTL(ctx context.Context, ttl time.Duration) {
 	}
 }
 
-var (
-	delkey      = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("DEL",KEYS[1]) else return 0 end`)
-	setkey      = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("SET",KEYS[1],ARGV[2],"PX",ARGV[3]) else return 0 end`)
-	acquireLock = rueidis.NewLuaScript(`if redis.call("SET", KEYS[1], ARGV[1], "NX", "PX", ARGV[2]) then return nil else return redis.call("GET", KEYS[1]) end`)
-)
+var delkey = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("DEL",KEYS[1]) else return 0 end`)
