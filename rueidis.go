@@ -301,6 +301,25 @@ type SentinelOption struct {
 	Username   string
 	Password   string
 	ClientName string
+
+	// TopologyRefreshInterval, when > 0, periodically reconciles this client's
+	// targets with the sentinels, in addition to reacting to +switch-master
+	// PUB/SUB events. Zero disables it (the default); a negative value is
+	// rejected. A few seconds is a reasonable value; 5s works well. There is no
+	// benefit to a very small interval: it only adds load on the sentinels, and
+	// recovery just needs to catch a missed event, not react instantly.
+	//
+	// Enabling it is recommended. Sentinel topology tracking is otherwise
+	// purely event-driven, and unlike the cluster client the sentinel client
+	// has no reactive fallback: a demoted master stays alive so no connection
+	// closes (SetOnCloseHook never fires), and a replication role change causes
+	// no MOVED. A single missed +switch-master then binds the client to the old
+	// master until it is restarted, and periodic reconciliation is the only
+	// thing that recovers from it.
+	//
+	// It reconciles whichever targets the client uses: the master by default,
+	// the replica under ReplicaOnly, and both under SendToReplicas.
+	TopologyRefreshInterval time.Duration
 }
 
 // ClusterOption is the options for the redis cluster client.

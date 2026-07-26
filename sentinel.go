@@ -27,6 +27,7 @@ func newSentinelClient(opt *ClientOption, connFn connFn, retryer retryHandler) (
 		retryHandler: retryer,
 		hasLftm:      opt.ConnLifetime > 0,
 		replica:      opt.ReplicaOnly,
+		closeCh:      make(chan struct{}),
 	}
 
 	for _, sentinel := range opt.InitAddress {
@@ -35,6 +36,10 @@ func newSentinelClient(opt *ClientOption, connFn connFn, retryer retryHandler) (
 
 	if opt.ReplicaOnly && opt.SendToReplicas != nil {
 		return nil, ErrReplicaOnlyConflict
+	}
+
+	if opt.Sentinel.TopologyRefreshInterval < 0 {
+		return nil, ErrInvalidTopologyRefreshInterval
 	}
 
 	if opt.SendToReplicas != nil || opt.ReplicaOnly {
@@ -48,10 +53,46 @@ func newSentinelClient(opt *ClientOption, connFn connFn, retryer retryHandler) (
 		return nil, err
 	}
 
+	// Only run the background reconciler when an interval is configured; it is
+	// off by default. See SentinelOption.TopologyRefreshInterval for when and
+	// why to enable it.
+	if interval := opt.Sentinel.TopologyRefreshInterval; interval > 0 {
+		go client.runTopologyRefreshment(interval)
+	}
+
 	return client, nil
 }
 
+// runTopologyRefreshment periodically reconciles the master address with the
+// sentinels, so the client does not depend solely on catching a single
+// +switch-master PUB/SUB event. Mirrors runClusterTopologyRefreshment on the
+// cluster side. See SentinelOption.TopologyRefreshInterval for why event-only
+// tracking is not sufficient.
+func (c *sentinelClient) runTopologyRefreshment(interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-c.closeCh:
+			// Exit immediately on Close rather than on the next tick: with a
+			// multi-second interval, polling c.stop would keep the goroutine
+			// alive well past shutdown.
+			return
+		case <-ticker.C:
+			if atomic.LoadUint32(&c.stop) == 1 {
+				return
+			}
+			// Errors are ignored on purpose: the next tick retries, and
+			// refresh() is already serialised through the singleflight in c.sc.
+			_ = c.refresh()
+		}
+	}
+}
+
 type sentinelClient struct {
+	// closeCh is closed exactly once by Close, so background goroutines exit
+	// immediately instead of waiting out a refresh interval.
+	closeCh      chan struct{}
 	mConn        atomic.Value
 	rConn        atomic.Value
 	sConn        conn
@@ -324,7 +365,9 @@ func (c *sentinelClient) Mode() ClientMode {
 }
 
 func (c *sentinelClient) Close() {
-	atomic.StoreUint32(&c.stop, 1)
+	if atomic.CompareAndSwapUint32(&c.stop, 0, 1) {
+		close(c.closeCh)
+	}
 	c.mu.Lock()
 	if c.sConn != nil {
 		c.sConn.Close()
@@ -626,6 +669,15 @@ func (c *sentinelClient) _refresh() (err error) {
 	return err
 }
 
+// currentReplica reports the replica address this client is using, or "" before
+// the first one has been resolved.
+func (c *sentinelClient) currentReplica() string {
+	if addr := c.rAddr.Load(); addr != nil {
+		return addr.(string)
+	}
+	return ""
+}
+
 // listWatch will use sentinel to list the current master,replica address along with sentinel address
 func (c *sentinelClient) listWatch(cc conn) (master string, replica string, sentinels []string, err error) {
 	ctx := context.Background()
@@ -697,9 +749,9 @@ func (c *sentinelClient) listWatch(cc conn) (master string, replica string, sent
 		}
 	}
 
-	// we return a random slave address instead of master
+	// we return a slave address instead of master
 	if c.replica {
-		addr, err := pickReplica(resp.s[1])
+		addr, err := pickReplica(resp.s[1], c.currentReplica())
 		if err != nil {
 			return "", "", nil, err
 		}
@@ -709,7 +761,7 @@ func (c *sentinelClient) listWatch(cc conn) (master string, replica string, sent
 
 	var r string
 	if c.mOpt.SendToReplicas != nil {
-		addr, err := pickReplica(resp.s[2])
+		addr, err := pickReplica(resp.s[2], c.currentReplica())
 		if err != nil {
 			return "", "", nil, err
 		}
@@ -724,7 +776,18 @@ func (c *sentinelClient) listWatch(cc conn) (master string, replica string, sent
 	return net.JoinHostPort(m[0], m[1]), r, sentinels, nil
 }
 
-func pickReplica(resp RedisResult) (string, error) {
+// pickReplica chooses which replica to talk to. current is the address already
+// in use, if any: it is kept whenever it is still eligible, and only a client
+// that has none, or whose replica has gone away, draws a new one at random.
+//
+// The random draw spreads clients over the replicas, but it belongs at the
+// point where a client needs a replica, not at every refresh. Refresh used to
+// happen only on a sentinel event, so re-drawing there was rare; with
+// TopologyRefreshInterval it happens on every tick, and _switchTarget closes
+// the connection it replaces immediately, so a fresh draw on each tick would
+// tear down a working replica connection — and the requests in flight on it —
+// several times a minute for no reason.
+func pickReplica(resp RedisResult, current string) (string, error) {
 	replicas, err := resp.ToArray()
 	if err != nil {
 		return "", err
@@ -746,6 +809,15 @@ func pickReplica(resp RedisResult) (string, error) {
 		return "", fmt.Errorf("not enough ready replicas")
 	}
 
+	// stay on the replica already in use while it is still healthy
+	if current != "" {
+		for _, m := range eligible {
+			if addr := net.JoinHostPort(m["ip"], m["port"]); addr == current {
+				return addr, nil
+			}
+		}
+	}
+
 	// choose a replica randomly
 	m := eligible[util.FastRand(len(eligible))]
 	return net.JoinHostPort(m["ip"], m["port"]), nil
@@ -761,6 +833,10 @@ func newSentinelOpt(opt *ClientOption) *ClientOption {
 	o.SelectDB = 0 // https://github.com/redis/rueidis/issues/138
 	return &o
 }
+
+// ErrInvalidTopologyRefreshInterval mirrors ErrInvalidShardsRefreshInterval on
+// the cluster side.
+var ErrInvalidTopologyRefreshInterval = errors.New("TopologyRefreshInterval must be greater than or equal to 0")
 
 var (
 	errNotMaster = errors.New("the redis role is not master")
