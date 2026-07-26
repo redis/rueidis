@@ -110,7 +110,7 @@ func main() {
 
 ## Limitation
 
-By default, lock acquisition uses the Redis 7.0 `SET NX GET` behavior inside a Lua script.
+By default, lock acquisition uses the Redis 7.0 `SET NX GET` behavior.
 The `UseLuaLock` option switches the acquisition step to a Lua implementation that is compatible with older Redis versions < 7.0.
 
 To configure the Lua fallback option:

@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 	"unsafe"
 
@@ -39,6 +38,7 @@ func NewClient(option ClientOption) (cc CacheAsideClient, err error) {
 		ttl:        option.ClientTTL,
 		useLuaLock: option.UseLuaLock,
 	}
+	option.ClientOption.PipelineMultiplex = -1 // ensure lock and cleanup commands use the same connection.
 	option.ClientOption.OnInvalidations = ca.onInvalidation
 	if option.ClientBuilder != nil {
 		ca.client, err = option.ClientBuilder(option.ClientOption)
@@ -59,7 +59,6 @@ type Client struct {
 	flights    map[flightKey]*flight
 	cancel     context.CancelFunc
 	id         string
-	attempts   atomic.Uint64
 	ttl        time.Duration
 	mu         sync.Mutex
 	useLuaLock bool
@@ -243,4 +242,8 @@ func OverrideCacheTTL(ctx context.Context, ttl time.Duration) {
 	}
 }
 
-var delkey = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("DEL",KEYS[1]) else return 0 end`)
+var (
+	delkey      = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("DEL",KEYS[1]) else return 0 end`)
+	setkey      = rueidis.NewLuaScript(`if redis.call("GET",KEYS[1]) == ARGV[1] then return redis.call("SET",KEYS[1],ARGV[2],"PX",ARGV[3]) else return 0 end`)
+	acquireLock = rueidis.NewLuaScript(`if redis.call("SET", KEYS[1], ARGV[1], "NX", "PX", ARGV[2]) then return nil else return redis.call("GET", KEYS[1]) end`)
+)

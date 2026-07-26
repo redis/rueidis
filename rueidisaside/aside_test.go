@@ -45,9 +45,11 @@ func TestClientErr(t *testing.T) {
 
 func TestWithClientBuilder(t *testing.T) {
 	var client rueidis.Client
+	var pipelineMultiplex int
 	c, err := NewClient(ClientOption{
-		ClientOption: rueidis.ClientOption{InitAddress: addr, SelectDB: 5},
+		ClientOption: rueidis.ClientOption{InitAddress: addr, PipelineMultiplex: 3, SelectDB: 5},
 		ClientBuilder: func(option rueidis.ClientOption) (_ rueidis.Client, err error) {
+			pipelineMultiplex = option.PipelineMultiplex
 			client, err = rueidis.NewClient(option)
 			return client, err
 		},
@@ -58,6 +60,9 @@ func TestWithClientBuilder(t *testing.T) {
 	defer c.Close()
 	if c.Client() != client {
 		t.Fatal("client mismatched")
+	}
+	if pipelineMultiplex != -1 {
+		t.Fatalf("expected PipelineMultiplex -1, got %d", pipelineMultiplex)
 	}
 }
 
