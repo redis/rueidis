@@ -3,6 +3,7 @@ package rueidis
 import (
 	"context"
 	"net"
+	"sync"
 	"testing"
 	"time"
 
@@ -103,4 +104,65 @@ func TestCloseAfterConnErrorOnFullRing(t *testing.T) {
 	case <-time.After(3 * time.Second):
 		t.Fatal("pipe.Close() did not return although the connection had already errored")
 	}
+}
+
+// TestCloseReturnsOnFullRingBeforeBackground pins the link Close relies on to
+// escape a stuck enqueue: cutting the connection only unparks queue.PutOne
+// because the background loops then error out and drain the queue. That
+// requires a background worker, and this is the one path to the enqueue where
+// none is running yet.
+//
+// The pipe is still in sync mode: one caller owns the connection in syncDo,
+// the others have queued behind it and filled the ring, and the peer never
+// answers. Nothing here has started _background, and Close does not start it
+// either — waits != 1 tells it a sync read may be in flight, and racing a
+// second reader onto the same connection is what 8503b21 fixed. So the drain
+// hangs on the sync read breaking first: the connection Close cuts is what
+// breaks it, and its error path (pipe.go, syncDo) is what finally starts the
+// worker that drains the ring.
+func TestCloseReturnsOnFullRingBeforeBackground(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, mock, _, closeConn := setup(t, ClientOption{
+		RingScaleEachConn: 1, // 2-slot ring, cheap to fill
+	})
+	// No p.background() here: the pipe must stay in sync mode.
+
+	var callers sync.WaitGroup
+
+	// context.Background() carries neither a deadline nor a Done channel, so
+	// this one takes the syncDo path and owns the connection. ConnWriteTimeout
+	// is unset, so syncDo clears the connection deadline and its read has no
+	// bound of its own.
+	callers.Add(1)
+	go func() {
+		defer callers.Done()
+		_ = p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).Error()
+	}()
+	mock.Expect("GET", "a") // reaches the peer, which never answers
+	time.Sleep(50 * time.Millisecond)
+
+	// Fill the ring behind the sync command. These never reach the socket:
+	// with no background writer they just sit in their slots.
+	ringLen := len(p.queue.(*ring).store)
+	callers.Add(ringLen)
+	for i := 0; i < ringLen; i++ {
+		go func() {
+			defer callers.Done()
+			_ = p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "b"})).Error()
+		}()
+	}
+	time.Sleep(50 * time.Millisecond)
+
+	done := make(chan struct{})
+	go func() { p.Close(); close(done) }()
+
+	// Close's internal escape is one second; three is a deadlock.
+	select {
+	case <-done:
+	case <-time.After(3 * time.Second):
+		closeConn() // unpark the wedged Close so the leak detector can finish
+		<-done
+		t.Fatal("pipe.Close() did not return with a full ring and no background worker running")
+	}
+	callers.Wait()
 }

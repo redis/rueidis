@@ -1910,24 +1910,32 @@ func (p *pipe) Close() {
 		}
 		if block == 1 && (stopping1 || stopping2) { // make sure there is no block cmd
 			p.incrWaits()
-			// Run the enqueue in a goroutine so that the one-second bound below
-			// covers it too. queue.PutOne blocks while every ring slot is
-			// occupied, and at Close time nothing else can free a slot: the
-			// keepalive ping is disabled (blcksig is non-zero and the error is
-			// already set), and the connection is closed only further down. If
-			// the enqueue blocks, Close proceeds after the timeout and closes
-			// the connection, which makes the background loops drain the ring
-			// and unpark this goroutine — so it does not leak.
-			answered := make(chan struct{})
-			go func() {
-				ch, _ := p.queue.PutOne(context.Background(), cmds.PingCmd)
-				<-ch
-				p.decrWaits()
-				close(answered)
-			}()
+			// The one-second bound of this graceful shutdown must cover the
+			// enqueue as well: queue.PutOne blocks while the slot it claims is
+			// still occupied, and at Close time nothing else can free it,
+			// because the keepalive ping is disabled (blcksig is non-zero and
+			// the error is already set) and the connection is closed only
+			// further down. Cutting the connection is what unparks it: the
+			// background loops then error out and drain the queue. The timer
+			// costs a goroutine only if it fires, which happens only when the
+			// enqueue is stuck.
+			deadline := time.Now().Add(time.Second)
+			var escape *time.Timer
+			if p.conn != nil {
+				escape = time.AfterFunc(time.Second, func() { p.conn.Close() })
+			}
+			ch, _ := p.queue.PutOne(context.Background(), cmds.PingCmd)
+			if escape != nil {
+				escape.Stop()
+			}
 			select {
-			case <-answered:
-			case <-time.After(time.Second):
+			case <-ch:
+				p.decrWaits()
+			case <-time.After(time.Until(deadline)): // the remaining budget, so the whole shutdown stays within one second
+				go func(ch chan RedisResult) {
+					<-ch
+					p.decrWaits()
+				}(ch)
 			}
 		}
 	}
