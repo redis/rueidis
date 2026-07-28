@@ -34,7 +34,7 @@ func NewClient(option ClientOption) (cc CacheAsideClient, err error) {
 	}
 	ca := &Client{
 		waits:      make(map[string]chan struct{}),
-		flights:    make(map[flightKey]*flight),
+		flights:    make(map[string]*flight),
 		ttl:        option.ClientTTL,
 		useLuaLock: option.UseLuaLock,
 	}
@@ -56,7 +56,7 @@ type Client struct {
 	client     rueidis.Client
 	ctx        context.Context
 	waits      map[string]chan struct{}
-	flights    map[flightKey]*flight
+	flights    map[string]*flight
 	cancel     context.CancelFunc
 	id         string
 	ttl        time.Duration
@@ -74,7 +74,6 @@ func (c *Client) onInvalidation(messages []rueidis.RedisMessage) {
 			close(ch)
 		}
 		c.waits = make(map[string]chan struct{})
-		c.resetFlightsLocked()
 	} else {
 		for _, m := range messages {
 			key, _ := m.ToString()

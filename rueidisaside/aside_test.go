@@ -2,6 +2,7 @@ package rueidisaside
 
 import (
 	"context"
+	"errors"
 	"math/rand"
 	"strconv"
 	"sync"
@@ -346,102 +347,100 @@ func TestTimeoutLL(t *testing.T) {
 
 func TestDisconnect(t *testing.T) {
 	client := makeClient(t, addr).(*Client)
-	defer client.Close()
-	key := strconv.Itoa(rand.Int())
-	ch := make(chan string, 2)
-	val, err := client.Get(context.Background(), time.Second*5, key, func(ctx context.Context, key string) (val string, err error) {
-		id1, err := client.client.Do(context.Background(), client.client.B().Get().Key(key).Build()).ToString()
-		if err != nil {
-			t.Error(err)
-		}
-		go func() {
-			val, err := client.Get(context.Background(), time.Second*5, key, func(ctx context.Context, key string) (val string, err error) {
-				id2, err := client.client.Do(context.Background(), client.client.B().Get().Key(key).Build()).ToString()
-				if err != nil {
-					t.Error(err)
-				}
-				ch <- id2
-				return "2", nil
-			})
-			if val != "2" {
-				t.Error(err)
-			}
-		}()
-		client.onInvalidation(nil) // simulate disconnection
-		id2 := <-ch
-		if id1 == id2 {
-			t.Error("id not changed")
-		}
-		ch <- id1
-		ch <- id2
-		return "1", nil
-	})
-	if val != "1" {
-		t.Fatal(err)
-	}
-	val, err = client.Get(context.Background(), time.Millisecond*500, key, nil)
-	if val != "2" {
-		t.Error(err)
-	}
-	err = client.client.Do(context.Background(), client.client.B().Get().Key(<-ch).Build()).Error() // id1
-	if !rueidis.IsRedisNil(err) {
-		t.Error(err)
-	}
-	err = client.client.Do(context.Background(), client.client.B().Get().Key(<-ch).Build()).Error() // id2
-	if err != nil {
-		t.Error(err)
-	}
-	time.Sleep(client.ttl) // wait old refresh goroutine exit
+	testDisconnectWaitsForFlight(t, client)
 }
 
 func TestDisconnectLL(t *testing.T) {
 	client := makeClientWithLuaLock(t, addr).(*Client)
+	testDisconnectWaitsForFlight(t, client)
+}
+
+func testDisconnectWaitsForFlight(t *testing.T, client *Client) {
+	t.Helper()
 	defer client.Close()
 	key := strconv.Itoa(rand.Int())
-	ch := make(chan string, 2)
-	val, err := client.Get(context.Background(), time.Second*5, key, func(ctx context.Context, key string) (val string, err error) {
-		id1, err := client.client.Do(context.Background(), client.client.B().Get().Key(key).Build()).ToString()
-		if err != nil {
-			t.Error(err)
-		}
-		go func() {
-			val, err := client.Get(context.Background(), time.Second*5, key, func(ctx context.Context, key string) (val string, err error) {
-				id2, err := client.client.Do(context.Background(), client.client.B().Get().Key(key).Build()).ToString()
-				if err != nil {
-					t.Error(err)
-				}
-				ch <- id2
-				return "2", nil
-			})
-			if val != "2" {
-				t.Error(err)
+	defer client.client.Do(context.Background(), client.client.B().Del().Key(key).Build())
+
+	leaderErr := errors.New("leader stopped after disconnect")
+	leaderReady := make(chan string, 1)
+	leaderRelease := make(chan struct{})
+	var releaseOnce sync.Once
+	releaseLeader := func() {
+		releaseOnce.Do(func() { close(leaderRelease) })
+	}
+	defer releaseLeader()
+
+	leaderResult := make(chan getResult, 1)
+	go func() {
+		val, err := client.Get(context.Background(), time.Second*5, key, func(ctx context.Context, key string) (string, error) {
+			id1, err := client.client.Do(context.Background(), client.client.B().Get().Key(key).Build()).ToString()
+			if err != nil {
+				return "", err
 			}
-		}()
-		client.onInvalidation(nil) // simulate disconnection
-		id2 := <-ch
-		if id1 == id2 {
-			t.Error("id not changed")
-		}
-		ch <- id1
-		ch <- id2
-		return "1", nil
+			client.onInvalidation(nil) // simulate disconnection
+			leaderReady <- id1
+			<-leaderRelease
+			return "", leaderErr
+		})
+		leaderResult <- getResult{val: val, err: err}
+	}()
+
+	var id1 string
+	select {
+	case id1 = <-leaderReady:
+	case <-time.After(time.Second):
+		t.Fatal("leader did not reach the loader")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	var followerLoaderCalled atomic.Bool
+	_, err := client.Get(ctx, time.Second*5, key, func(context.Context, string) (string, error) {
+		followerLoaderCalled.Store(true)
+		return "unexpected", nil
 	})
-	if val != "1" {
-		t.Fatal(err)
+	cancel()
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("expected follower to wait for the active flight, got %v", err)
 	}
-	val, err = client.Get(context.Background(), time.Millisecond*500, key, nil)
-	if val != "2" {
-		t.Error(err)
+	if followerLoaderCalled.Load() {
+		t.Fatal("follower started another loader while the old generation was active")
 	}
-	err = client.client.Do(context.Background(), client.client.B().Get().Key(<-ch).Build()).Error() // id1
+
+	releaseLeader()
+	select {
+	case result := <-leaderResult:
+		if !errors.Is(result.err, leaderErr) {
+			t.Fatalf("expected leader error, got %q, %v", result.val, result.err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("leader did not finish")
+	}
+
+	var id2 string
+	val, err := client.Get(context.Background(), time.Second*5, key, func(context.Context, string) (string, error) {
+		var err error
+		id2, err = client.client.Do(context.Background(), client.client.B().Get().Key(key).Build()).ToString()
+		return "2", err
+	})
+	if err != nil || val != "2" {
+		t.Fatalf("new generation did not populate the cache: %q, %v", val, err)
+	}
+	if id1 == id2 {
+		t.Fatal("client id did not change")
+	}
+
+	val, err = client.client.Do(context.Background(), client.client.B().Get().Key(key).Build()).ToString()
+	if err != nil || val != "2" {
+		t.Fatalf("unexpected cache value: %q, %v", val, err)
+	}
+	err = client.client.Do(context.Background(), client.client.B().Get().Key(id1).Build()).Error()
 	if !rueidis.IsRedisNil(err) {
-		t.Error(err)
+		t.Fatalf("old client marker still exists: %v", err)
 	}
-	err = client.client.Do(context.Background(), client.client.B().Get().Key(<-ch).Build()).Error() // id2
+	err = client.client.Do(context.Background(), client.client.B().Get().Key(id2).Build()).Error()
 	if err != nil {
-		t.Error(err)
+		t.Fatalf("new client marker is missing: %v", err)
 	}
-	time.Sleep(client.ttl) // wait old refresh goroutine exit
 }
 
 func TestMultipleClient(t *testing.T) {

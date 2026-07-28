@@ -69,21 +69,31 @@ type getResult struct {
 	err error
 }
 
-func TestBeginFlightRejectsStaleGeneration(t *testing.T) {
+func TestBeginFlightWaitsAcrossGenerations(t *testing.T) {
 	c := &Client{
 		id:      "new-generation",
-		flights: make(map[flightKey]*flight),
+		flights: make(map[string]*flight),
 	}
-	if f, _ := c.beginFlight("key", "old-generation"); f != nil {
+	if f, leader := c.beginFlight("key", "old-generation"); f != nil || leader {
 		t.Fatal("stale generation created a flight")
 	}
 	f, leader := c.beginFlight("key", "new-generation")
 	if f == nil || !leader {
 		t.Fatal("current generation did not create a flight")
 	}
+	staleFollower, leader := c.beginFlight("key", "old-generation")
+	if staleFollower != f || leader {
+		t.Fatal("stale generation did not join the current flight")
+	}
 	follower, leader := c.beginFlight("key", "new-generation")
 	if follower != f || leader {
 		t.Fatal("same key did not join the active flight")
+	}
+	if staleOther, leader := c.beginFlight("other-key", "old-generation"); staleOther != nil || leader {
+		t.Fatal("stale generation joined a flight for another key")
+	}
+	if len(c.flights) != 1 {
+		t.Fatalf("stale generation changed the flights map: %d entries", len(c.flights))
 	}
 	if other, leader := c.beginFlight("other-key", "new-generation"); other == nil || !leader {
 		t.Fatal("different key did not create an independent flight")
@@ -93,7 +103,7 @@ func TestBeginFlightRejectsStaleGeneration(t *testing.T) {
 		t.Fatal("flight completed before the leader finished")
 	default:
 	}
-	c.finishFlight("key", "new-generation", f)
+	c.finishFlight("key", f)
 	select {
 	case <-f.done:
 	default:
