@@ -104,6 +104,162 @@ func TestSingleFlightJoinerReceivesFlightError(t *testing.T) {
 	}
 }
 
+// TestSingleFlightJoinerKeepsItsOwnFlightError: a waiter must get the error of
+// the flight it waited on even when the next flight overlaps with it.
+//
+// The call struct is reused. do() clears the flight before it closes the
+// channel, so the next flight can start while the previous waiters are still
+// waking up. Anything per-flight kept on call itself is overwritten in that
+// window, and the waiters then read the next flight's result instead of their
+// own — nil, which is the failure this fix is about. Keeping err on the flight
+// avoids it, and also removes the need to synchronize the read: the write
+// happens before close(ch), and the read happens after <-ch.
+func TestSingleFlightJoinerKeepsItsOwnFlightError(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	flightErr := errors.New("flight failed")
+	const joiners = 50
+
+	for range 200 {
+		var (
+			sg    = call{}
+			block = make(chan struct{})
+			errs  = make([]error, joiners)
+			done  int64
+		)
+
+		go func() {
+			sg.Do(context.Background(), func() error {
+				<-block
+				return flightErr
+			})
+		}()
+		for sg.suppressing() != 1 {
+			runtime.Gosched()
+		}
+
+		for j := range joiners {
+			go func(j int) {
+				errs[j] = sg.Do(context.Background(), func() error { return nil })
+				atomic.AddInt64(&done, 1)
+			}(j)
+		}
+		for sg.suppressing() != joiners+1 {
+			runtime.Gosched()
+		}
+
+		// The next flight starts as soon as the current one clears its
+		// counter, which is before the waiters are released.
+		next := make(chan struct{})
+		go func() {
+			defer close(next)
+			for sg.suppressing() != 0 {
+				runtime.Gosched()
+			}
+			sg.Do(context.Background(), func() error { return nil })
+		}()
+
+		close(block)
+		for atomic.LoadInt64(&done) != joiners {
+			runtime.Gosched()
+		}
+		<-next
+
+		for j := range errs {
+			if errs[j] != flightErr {
+				t.Fatalf("joiner %v got %v, want %v", j, errs[j], flightErr)
+			}
+		}
+	}
+}
+
+// TestSingleFlightCancellableJoinerAtCompletion drives callers into the moment
+// a flight completes, half of them able to be cancelled and half not, since the
+// two take different branches of Do.
+//
+// do() clears c.fl before it releases the waiters, so a caller arriving in that
+// window finds no flight and starts its own instead of joining. Whichever side
+// of it a caller lands on, it must come back with the error of the flight it
+// waited on, and none may stay parked.
+func TestSingleFlightCancellableJoinerAtCompletion(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	flightErr := errors.New("flight failed")
+	const callers = 20
+
+	for range 200 {
+		var (
+			sg      call
+			done    int64
+			results = make([]error, callers)
+		)
+		for j := range callers {
+			go func(j int) {
+				ctx := context.Background()
+				if j%2 == 0 { // half wait through the ctx branch of Do
+					c, cancel := context.WithCancel(ctx)
+					defer cancel()
+					ctx = c
+				}
+				results[j] = sg.Do(ctx, func() error {
+					runtime.Gosched()
+					return flightErr
+				})
+				atomic.AddInt64(&done, 1)
+			}(j)
+		}
+		for atomic.LoadInt64(&done) != callers {
+			runtime.Gosched()
+		}
+		for j := range results {
+			if results[j] != flightErr {
+				t.Fatalf("caller %v got %v, want %v", j, results[j], flightErr)
+			}
+		}
+	}
+}
+
+// TestSingleFlightCancelledJoinerAtCompletion: the same window, with the
+// cancellable waiters cancelled around the time the flight ends. Each must come
+// back with either its flight's error or the cancellation, never nil and never
+// parked, and the runner must still release the waiters that stayed.
+func TestSingleFlightCancelledJoinerAtCompletion(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	flightErr := errors.New("flight failed")
+	const callers = 20
+
+	for range 200 {
+		var (
+			sg      call
+			done    int64
+			release = make(chan struct{})
+			results = make([]error, callers)
+		)
+		for j := range callers {
+			go func(j int) {
+				ctx, cancel := context.WithCancel(context.Background())
+				if j%2 == 0 {
+					defer cancel()
+				} else {
+					cancel() // already cancelled on arrival
+				}
+				results[j] = sg.Do(ctx, func() error {
+					<-release
+					return flightErr
+				})
+				atomic.AddInt64(&done, 1)
+			}(j)
+		}
+		close(release)
+		for atomic.LoadInt64(&done) != callers {
+			runtime.Gosched()
+		}
+		for j := range results {
+			if results[j] != flightErr && results[j] != context.Canceled {
+				t.Fatalf("caller %v got %v", j, results[j])
+			}
+		}
+	}
+}
+
 func TestSingleFlightWithContext(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 	ch := make(chan struct{})
