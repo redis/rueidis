@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math/rand"
 	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -54,6 +55,28 @@ func (c *blockingAcquireClient) Do(ctx context.Context, cmd rueidis.Completed) r
 	return c.Client.Do(ctx, cmd)
 }
 
+type blockingKeepaliveClient struct {
+	rueidis.Client
+	started chan struct{}
+	release chan struct{}
+	calls   atomic.Int64
+}
+
+func (c *blockingKeepaliveClient) Do(ctx context.Context, cmd rueidis.Completed) rueidis.RedisResult {
+	commands := cmd.Commands()
+	if len(commands) >= 2 && commands[0] == "SET" && strings.HasPrefix(commands[1], PlaceholderPrefix) {
+		if c.calls.Add(1) == 1 {
+			close(c.started)
+			select {
+			case <-c.release:
+			case <-ctx.Done():
+				return rueidis.NewErrorResult(ctx.Err())
+			}
+		}
+	}
+	return c.Client.Do(ctx, cmd)
+}
+
 func isAcquireCommand(commands []string, key string) bool {
 	if len(commands) == 7 && commands[0] == "SET" {
 		return commands[1] == key && commands[3] == "NX" && commands[4] == "GET"
@@ -69,33 +92,23 @@ type getResult struct {
 	err error
 }
 
-func TestBeginFlightWaitsAcrossGenerations(t *testing.T) {
+func TestBeginFlightIsPerKey(t *testing.T) {
 	c := &Client{
-		id:      "new-generation",
 		flights: make(map[string]*flight),
 	}
-	if f, leader := c.beginFlight("key", "old-generation"); f != nil || leader {
-		t.Fatal("stale generation created a flight")
-	}
-	f, leader := c.beginFlight("key", "new-generation")
+	f, leader := c.beginFlight("key")
 	if f == nil || !leader {
-		t.Fatal("current generation did not create a flight")
+		t.Fatal("first caller did not create a flight")
 	}
-	staleFollower, leader := c.beginFlight("key", "old-generation")
-	if staleFollower != f || leader {
-		t.Fatal("stale generation did not join the current flight")
-	}
-	follower, leader := c.beginFlight("key", "new-generation")
+	c.id = "new-generation"
+	follower, leader := c.beginFlight("key")
 	if follower != f || leader {
-		t.Fatal("same key did not join the active flight")
-	}
-	if staleOther, leader := c.beginFlight("other-key", "old-generation"); staleOther != nil || leader {
-		t.Fatal("stale generation joined a flight for another key")
+		t.Fatal("same key did not join the active flight after the client id changed")
 	}
 	if len(c.flights) != 1 {
-		t.Fatalf("stale generation changed the flights map: %d entries", len(c.flights))
+		t.Fatalf("follower changed the flights map: %d entries", len(c.flights))
 	}
-	if other, leader := c.beginFlight("other-key", "new-generation"); other == nil || !leader {
+	if other, leader := c.beginFlight("other-key"); other == nil || !leader {
 		t.Fatal("different key did not create an independent flight")
 	}
 	select {
@@ -166,6 +179,80 @@ func TestAcquireCancellationCleansPlaceholder(t *testing.T) {
 				t.Fatalf("expected cleanup to remove the placeholder, got %q, %v", val, err)
 			}
 		})
+	}
+}
+
+func TestSingleflightStartsBeforeKeepalive(t *testing.T) {
+	key := "singleflight-keepalive-" + strconv.Itoa(rand.Int())
+
+	var wrapped *blockingKeepaliveClient
+	client, err := NewClient(ClientOption{
+		ClientOption: rueidis.ClientOption{InitAddress: addr, SelectDB: 5},
+		ClientTTL:    5 * time.Second,
+		ClientBuilder: func(option rueidis.ClientOption) (rueidis.Client, error) {
+			client, err := rueidis.NewClient(option)
+			if err != nil {
+				return nil, err
+			}
+			wrapped = &blockingKeepaliveClient{
+				Client:  client,
+				started: make(chan struct{}),
+				release: make(chan struct{}),
+			}
+			return wrapped, nil
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+	defer client.Client().Do(context.Background(), client.Client().B().Del().Key(key).Build())
+	defer func() {
+		select {
+		case <-wrapped.release:
+		default:
+			close(wrapped.release)
+		}
+	}()
+
+	first := make(chan getResult, 1)
+	go func() {
+		val, err := client.Get(context.Background(), time.Second, key, func(context.Context, string) (string, error) {
+			return "value", nil
+		})
+		first <- getResult{val: val, err: err}
+	}()
+	select {
+	case <-wrapped.started:
+	case <-time.After(time.Second):
+		t.Fatal("first keepalive did not start")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancel()
+	var secondLoaderCalled atomic.Bool
+	_, secondErr := client.Get(ctx, time.Second, key, func(context.Context, string) (string, error) {
+		secondLoaderCalled.Store(true)
+		return "second", nil
+	})
+	if !errors.Is(secondErr, context.DeadlineExceeded) {
+		t.Fatalf("expected follower deadline, got %v", secondErr)
+	}
+	if secondLoaderCalled.Load() {
+		t.Fatal("follower called the loader")
+	}
+	if calls := wrapped.calls.Load(); calls != 1 {
+		t.Fatalf("expected one keepalive while the flight was active, got %d", calls)
+	}
+
+	close(wrapped.release)
+	select {
+	case result := <-first:
+		if result.err != nil || result.val != "value" {
+			t.Fatalf("leader returned %q, %v", result.val, result.err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("leader did not finish")
 	}
 }
 

@@ -159,24 +159,18 @@ retry:
 	val, err := resp.ToString()
 
 	if rueidis.IsRedisNil(err) && fn != nil { // cache miss, prepare to populate the value by fn()
-		var id string
-		if id, err = c.keepalive(); err == nil {
-			f, leader := c.beginFlight(key, id)
-			if f == nil { // the client id changed while preparing the flight
+		f, leader := c.beginFlight(key)
+		if !leader {
+			select {
+			case <-f.done:
 				goto retry
+			case <-ctx.Done():
+				return "", ctx.Err()
+			case <-c.ctx.Done():
+				return "", c.ctx.Err()
 			}
-			if !leader {
-				select {
-				case <-f.done:
-					goto retry
-				case <-ctx.Done():
-					return "", ctx.Err()
-				case <-c.ctx.Done():
-					return "", c.ctx.Err()
-				}
-			}
-			val, err = c.populate(ctx, ttl, key, id, fn, f)
 		}
+		val, err = c.populate(ctx, ttl, key, fn, f)
 	}
 
 	if err != nil {

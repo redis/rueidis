@@ -12,15 +12,12 @@ type flight struct {
 	done chan struct{}
 }
 
-func (c *Client) beginFlight(key, id string) (f *flight, leader bool) {
+func (c *Client) beginFlight(key string) (f *flight, leader bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	if f = c.flights[key]; f != nil {
 		return f, false
-	}
-	if c.id != id {
-		return nil, false
 	}
 	f = &flight{done: make(chan struct{})}
 	c.flights[key] = f
@@ -40,12 +37,18 @@ func (c *Client) finishFlight(key string, f *flight) {
 func (c *Client) populate(
 	ctx context.Context,
 	ttl time.Duration,
-	key, id string,
+	key string,
 	fn func(ctx context.Context, key string) (val string, err error),
 	f *flight,
 ) (val string, err error) {
-	cleanup := true
 	defer c.finishFlight(key, f)
+
+	id, err := c.keepalive()
+	if err != nil {
+		return "", err
+	}
+
+	cleanup := true
 	defer func() {
 		if cleanup {
 			delkey.Exec(context.Background(), c.client, []string{key}, []string{id})
