@@ -1910,15 +1910,25 @@ func (p *pipe) Close() {
 		}
 		if block == 1 && (stopping1 || stopping2) { // make sure there is no block cmd
 			p.incrWaits()
+			// The timer closes the connection after one second. That is the
+			// only way to unblock the two steps below when the peer is silent:
+			// PutOne waits for a free slot, <-ch waits for the reply. A closed
+			// connection makes the background loops fail and drain the queue,
+			// which frees a slot and answers the PING with an error. The timer
+			// costs a goroutine only when it fires.
+			//
+			// The drain runs in the background worker. There is always one
+			// here: it is already running, or the branch above started it, or
+			// syncDo starts it when the closed connection breaks its read.
+			var escape *time.Timer
+			if p.conn != nil {
+				escape = time.AfterFunc(time.Second, func() { p.conn.Close() })
+			}
 			ch, _ := p.queue.PutOne(context.Background(), cmds.PingCmd)
-			select {
-			case <-ch:
-				p.decrWaits()
-			case <-time.After(time.Second):
-				go func(ch chan RedisResult) {
-					<-ch
-					p.decrWaits()
-				}(ch)
+			<-ch
+			p.decrWaits()
+			if escape != nil {
+				escape.Stop()
 			}
 		}
 	}
