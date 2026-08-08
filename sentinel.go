@@ -530,10 +530,61 @@ func (c *sentinelClient) _switchTarget(addr string, isMaster bool) (err error) {
 	return nil
 }
 
+const (
+	// refreshMaxRetryShift caps the exponent, not the number of retries: the
+	// delay stops doubling once attempts reach it, but refreshRetry keeps going
+	// until it succeeds or the client is closed. It only bounds how fast the
+	// client retries, never whether it does — the client always heals itself.
+	refreshMaxRetryShift = 9
+	refreshMaxRetryDelay = time.Second
+)
+
+// refreshRetryDelay is the backoff applied between failed refresh attempts.
+// It mirrors defaultRetryDelayFn's "equal jitter" scheme, but on a millisecond
+// rather than a microsecond base: a refresh is a multi-round-trip operation
+// against every known sentinel, so retrying it hundreds of thousands of times
+// per second is never useful. It settles at ~512ms-1s.
+func refreshRetryDelay(attempts int) time.Duration {
+	base := 1 << min(refreshMaxRetryShift, attempts)
+	jitter := util.FastRand(base)
+	return min(refreshMaxRetryDelay, time.Duration(base+jitter)*time.Millisecond)
+}
+
+// refreshRetry keeps refreshing the topology until it succeeds or the client is
+// closed.
+//
+// This used to be an unbounded `goto retry` loop with no delay at all. When
+// every sentinel is unreachable — precisely what happens during a failover
+// where the primary and a co-located sentinel go down together — refresh()
+// fails immediately and the loop spins as fast as the CPU allows. Each
+// iteration also dials every sentinel in the list, so one client can saturate a
+// core and flood the surviving sentinels with connection attempts exactly while
+// they are running the election.
+//
+// refreshRetry is additionally re-entered from listWatch's error handler, so
+// failures compound.
 func (c *sentinelClient) refreshRetry() {
-retry:
-	if err := c.refresh(); err != nil {
-		goto retry
+	// Stop once Close() has been called, so a client shut down while its
+	// sentinels are unreachable does not leak this goroutine. The check is at
+	// the loop head so a Close() during the backoff wait exits without a further
+	// refresh.
+	for attempts := 0; atomic.LoadUint32(&c.stop) == 0; attempts++ {
+		if err := c.refresh(); err == nil {
+			return
+		}
+		c.waitBeforeRetry(refreshRetryDelay(attempts))
+	}
+}
+
+// waitBeforeRetry sleeps for d, but returns early once Close() has been called
+// so shutdown does not have to wait out a full backoff interval. There is no
+// close channel to select on here, so it polls c.stop in short steps.
+func (c *sentinelClient) waitBeforeRetry(d time.Duration) {
+	const step = 20 * time.Millisecond
+	for d > 0 && atomic.LoadUint32(&c.stop) == 0 {
+		s := min(step, d)
+		time.Sleep(s)
+		d -= s
 	}
 }
 

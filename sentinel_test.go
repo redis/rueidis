@@ -3570,3 +3570,125 @@ func TestSentinelSendToReplicasClientPubSub(t *testing.T) {
 		time.Sleep(time.Millisecond * 100)
 	}
 }
+
+func TestRefreshRetryDelay(t *testing.T) {
+	// Must never be zero: a zero delay reintroduces the hot spin this backoff
+	// exists to prevent.
+	for attempts := 0; attempts < 64; attempts++ {
+		d := refreshRetryDelay(attempts)
+		if d <= 0 {
+			t.Fatalf("attempts %d: delay must be positive, got %v", attempts, d)
+		}
+		if d > refreshMaxRetryDelay {
+			t.Fatalf("attempts %d: delay %v exceeds cap %v", attempts, d, refreshMaxRetryDelay)
+		}
+	}
+	// And it must actually grow, otherwise a long outage still hammers the
+	// sentinels at the initial rate.
+	if refreshRetryDelay(0) >= refreshRetryDelay(refreshMaxRetryShift) {
+		t.Fatalf("delay should increase with attempts: first=%v capped=%v",
+			refreshRetryDelay(0), refreshRetryDelay(refreshMaxRetryShift))
+	}
+	// The jitter has to survive once the base stops growing, which is where a
+	// long outage spends all of its time. Capping the jittered sum at the same
+	// magnitude as the base clamps every sample onto the cap, and a fleet of
+	// clients then retries in lockstep — exactly the thundering herd the jitter
+	// exists to prevent.
+	for _, attempts := range []int{refreshMaxRetryShift, refreshMaxRetryShift + 1, 64} {
+		seen := make(map[time.Duration]struct{})
+		for range 2000 {
+			seen[refreshRetryDelay(attempts)] = struct{}{}
+		}
+		if len(seen) < 2 {
+			t.Fatalf("attempts %d: every retry lands on the same delay %v, the jitter is being clamped away",
+				attempts, refreshRetryDelay(attempts))
+		}
+	}
+}
+
+// TestRefreshRetryWaitCancelsOnStop pins that the backoff wait is interruptible:
+// a Close() mid-wait must return promptly instead of sleeping out the interval.
+// It waits an hour, so a plain time.Sleep would hang the test.
+func TestRefreshRetryWaitCancelsOnStop(t *testing.T) {
+	c := &sentinelClient{}
+	done := make(chan struct{})
+	go func() {
+		c.waitBeforeRetry(time.Hour)
+		close(done)
+	}()
+	time.Sleep(30 * time.Millisecond) // let the goroutine enter the wait
+	atomic.StoreUint32(&c.stop, 1)
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("waitBeforeRetry did not return promptly after stop was set")
+	}
+}
+
+// TestSentinelRefreshRetryBackoff pins the two properties that matter when every
+// sentinel is unreachable: refreshRetry must not spin, and it must exit once the
+// client is closed rather than leaking a goroutine that retries forever.
+func TestSentinelRefreshRetryBackoff(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	var failing atomic.Bool
+	var attempts atomic.Int64
+
+	s0 := &mockConn{
+		DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			if failing.Load() {
+				attempts.Add(1)
+				return &redisresults{s: []RedisResult{
+					NewErrorResult(ErrClosing), NewErrorResult(ErrClosing),
+				}}
+			}
+			return &redisresults{s: []RedisResult{
+				{val: slicemsg('*', []RedisMessage{})},
+				{val: slicemsg('*', []RedisMessage{strmsg('+', ""), strmsg('+', "1")})},
+			}}
+		},
+	}
+	m := &mockConn{
+		DoFn: func(cmd Completed) RedisResult {
+			return RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "master")})}
+		},
+	}
+	client, err := newSentinelClient(
+		&ClientOption{InitAddress: []string{":0"}},
+		func(dst string, opt *ClientOption) conn {
+			switch dst {
+			case ":0":
+				return s0
+			case ":1":
+				return m
+			}
+			return nil
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	failing.Store(true)
+	done := make(chan struct{})
+	go func() {
+		client.refreshRetry()
+		close(done)
+	}()
+
+	time.Sleep(200 * time.Millisecond)
+	// Without backoff this loop managed hundreds of thousands of iterations in
+	// this window; with it, a few dozen at most.
+	if n := attempts.Load(); n > 500 {
+		t.Fatalf("refreshRetry spun %d times in 200ms — backoff not applied", n)
+	}
+
+	client.Close()
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("refreshRetry did not return after Close — goroutine leaked")
+	}
+}
