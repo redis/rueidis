@@ -28,6 +28,7 @@ type RateLimiterClient interface {
 	Allow(ctx context.Context, identifier string, options ...RateLimitOption) (Result, error)
 	AllowN(ctx context.Context, identifier string, n int64, options ...RateLimitOption) (Result, error)
 	Limit() int
+	Close()
 }
 
 const (
@@ -159,6 +160,10 @@ func (l *rateLimiter) AllowN(ctx context.Context, identifier string, n int64, op
 		Remaining: remaining,
 		ResetAtMs: resetAt,
 	}, nil
+}
+
+func (l *rateLimiter) Close() {
+	l.client.Close()
 }
 
 var rateLimitScript = rueidis.NewLuaScript(`

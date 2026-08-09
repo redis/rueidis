@@ -404,6 +404,27 @@ func TestRateLimiter_AllowN_Dragonfly(t *testing.T) {
 	}
 }
 
+func TestRateLimiter_Close(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	client := mock.NewClient(ctrl)
+	client.EXPECT().Close().Times(1)
+
+	limiter, err := rueidislimiter.NewRateLimiter(rueidislimiter.RateLimiterOption{
+		ClientBuilder: func(option rueidis.ClientOption) (rueidis.Client, error) {
+			return client, nil
+		},
+		Limit:  10,
+		Window: time.Second,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	limiter.Close()
+}
+
 func BenchmarkAllowN(b *testing.B) {
 	ctrl := gomock.NewController(b)
 	defer ctrl.Finish()
