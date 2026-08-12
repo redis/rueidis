@@ -9,4 +9,4 @@ require (
 	go.uber.org/mock v0.6.0
 )
 
-require golang.org/x/sys v0.43.0 // indirect
+require golang.org/x/sys v0.47.0 // indirect
