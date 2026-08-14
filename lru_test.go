@@ -116,6 +116,41 @@ func TestLRU(t *testing.T) {
 		}
 	})
 
+	t.Run("Cache Evict Multiple Entries", func(t *testing.T) {
+		const cmd = "GET"
+		old := strmsg('+', "0")
+		oldEntrySize := entryBaseSize + 2*(len("0")+len(cmd)) + old.approximateSize()
+		lru := newLRU(CacheStoreOption{CacheSizeEachConn: oldEntrySize * 2}).(*lru)
+
+		for _, key := range []string{"0", "1"} {
+			lru.Flight(key, cmd, TTL, time.Now())
+			lru.Update(key, cmd, old)
+		}
+		if lru.size != lru.max {
+			t.Fatalf("cache should be full before inserting the large entry: size=%d max=%d", lru.size, lru.max)
+		}
+
+		large := strmsg('+', "22") // One byte larger, so both old entries must be evicted.
+		largeEntrySize := entryBaseSize + 2*(len("2")+len(cmd)) + large.approximateSize()
+		lru.Flight("2", cmd, TTL, time.Now())
+		lru.Update("2", cmd, large)
+
+		if lru.size != largeEntrySize {
+			t.Fatalf("unexpected cache size after eviction: got %d, want %d", lru.size, largeEntrySize)
+		}
+		if lru.list.Len() != 1 {
+			t.Fatalf("unexpected cache entry count after eviction: got %d, want 1", lru.list.Len())
+		}
+		for _, key := range []string{"0", "1"} {
+			if _, ok := lru.store[key]; ok {
+				t.Fatalf("old entry %q should be evicted", key)
+			}
+		}
+		if kc, ok := lru.store["2"]; !ok || kc.cache[cmd] == nil {
+			t.Fatal("latest entry should remain cached")
+		}
+	})
+
 	t.Run("Cache Delete", func(t *testing.T) {
 		lru := setup(t)
 		lru.Delete([]RedisMessage{strmsg(0x0, "0")})
