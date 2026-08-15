@@ -640,7 +640,9 @@ type Compat struct {
 	pOnly  bool
 }
 
-// CacheCompat implements commands that support client-side caching.
+// CacheCompat is the surface for client-side cached commands, returned by Cache().
+// Only exported methods are part of the interface, so it can be implemented by
+// external test doubles such as mockery or gomock mocks.
 type CacheCompat interface {
 	BitCount(ctx context.Context, key string, bitCount *BitCount) *IntCmd
 	BitPos(ctx context.Context, key string, bit int64, pos ...int64) *IntCmd
