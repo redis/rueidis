@@ -2,6 +2,7 @@ package rueidiscompat_test
 
 import (
 	"context"
+	"reflect"
 	"testing"
 	"time"
 
@@ -84,7 +85,9 @@ func (c fakeCache) GeoRadiusByMember(ctx context.Context, key string, member str
 func (c fakeCache) GeoSearch(ctx context.Context, key string, q rueidiscompat.GeoSearchQuery) *rueidiscompat.StringSliceCmd {
 	return nil
 }
-func (c fakeCache) Get(ctx context.Context, key string) *rueidiscompat.StringCmd { return nil }
+func (c fakeCache) Get(ctx context.Context, key string) *rueidiscompat.StringCmd {
+	return &rueidiscompat.StringCmd{}
+}
 func (c fakeCache) GetBit(ctx context.Context, key string, offset int64) *rueidiscompat.IntCmd {
 	return nil
 }
@@ -232,9 +235,21 @@ var _ rueidiscompat.CacheCompat = fakeCache{}
 func TestCacheCompatMockability(t *testing.T) {
 	// A user test double satisfies the interface (the #972 failure mode).
 	var cc rueidiscompat.CacheCompat = fakeCache{}
-	if got := cc.Get(context.Background(), "key"); got != nil {
-		t.Fatalf("stub should return nil, got %v", got)
+	// Non-vacuous dispatch check: the fake returns a distinguishable payload, so
+	// this fails if the method does not actually round-trip through the interface.
+	if got := cc.Get(context.Background(), "key"); got == nil {
+		t.Fatal("CacheCompat test double did not dispatch Get through the interface")
 	}
 	// The concrete handle from Cache() also flows through the interface (chained-call pattern).
 	_ = (&rueidiscompat.Compat{}).Cache(time.Second)
+	// Pin the interface surface (the #972 guarantee) so that a method REMOVED from
+	// the interface (surface shrink) or dropped from the fake fails the test, not
+	// only additions that the external-package compile guard already catches.
+	const want = 82
+	if n := reflect.TypeOf((*rueidiscompat.CacheCompat)(nil)).Elem().NumMethod(); n != want {
+		t.Fatalf("CacheCompat interface has %d methods, want %d", n, want)
+	}
+	if n := reflect.TypeOf(fakeCache{}).NumMethod(); n != want {
+		t.Fatalf("fakeCache implements %d methods, want %d", n, want)
+	}
 }
