@@ -641,10 +641,97 @@ type Compat struct {
 }
 
 // CacheCompat implements commands that support client-side caching.
-type CacheCompat struct {
+type CacheCompat interface {
+	BitCount(ctx context.Context, key string, bitCount *BitCount) *IntCmd
+	BitPos(ctx context.Context, key string, bit int64, pos ...int64) *IntCmd
+	BitPosSpan(ctx context.Context, key string, bit, start, end int64, span string) *IntCmd
+	BitFieldRO(ctx context.Context, key string, args ...any) *IntSliceCmd
+	EvalRO(ctx context.Context, script string, keys []string, args ...any) *Cmd
+	EvalShaRO(ctx context.Context, sha1 string, keys []string, args ...any) *Cmd
+	FCallRO(ctx context.Context, function string, keys []string, args ...any) *Cmd
+	GeoDist(ctx context.Context, key, member1, member2, unit string) *FloatCmd
+	GeoHash(ctx context.Context, key string, members ...string) *StringSliceCmd
+	GeoPos(ctx context.Context, key string, members ...string) *GeoPosCmd
+	GeoRadius(ctx context.Context, key string, longitude, latitude float64, query GeoRadiusQuery) *GeoLocationCmd
+	GeoRadiusByMember(ctx context.Context, key, member string, query GeoRadiusQuery) *GeoLocationCmd
+	GeoSearch(ctx context.Context, key string, q GeoSearchQuery) *StringSliceCmd
+	Get(ctx context.Context, key string) *StringCmd
+	MGet(ctx context.Context, keys ...string) *SliceCmd
+	GetBit(ctx context.Context, key string, offset int64) *IntCmd
+	GetRange(ctx context.Context, key string, start, end int64) *StringCmd
+	HExists(ctx context.Context, key, field string) *BoolCmd
+	HGet(ctx context.Context, key, field string) *StringCmd
+	HGetAll(ctx context.Context, key string) *StringStringMapCmd
+	HKeys(ctx context.Context, key string) *StringSliceCmd
+	HLen(ctx context.Context, key string) *IntCmd
+	HStrLen(ctx context.Context, key, field string) *IntCmd
+	HMGet(ctx context.Context, key string, fields ...string) *SliceCmd
+	HVals(ctx context.Context, key string) *StringSliceCmd
+	LIndex(ctx context.Context, key string, index int64) *StringCmd
+	LLen(ctx context.Context, key string) *IntCmd
+	LPos(ctx context.Context, key string, element string, a LPosArgs) *IntCmd
+	LRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd
+	PTTL(ctx context.Context, key string) *DurationCmd
+	SCard(ctx context.Context, key string) *IntCmd
+	SIsMember(ctx context.Context, key string, member any) *BoolCmd
+	SMIsMember(ctx context.Context, key string, members ...any) *BoolSliceCmd
+	SMembers(ctx context.Context, key string) *StringSliceCmd
+	SortRO(ctx context.Context, key string, sort Sort) *StringSliceCmd
+	StrLen(ctx context.Context, key string) *IntCmd
+	TTL(ctx context.Context, key string) *DurationCmd
+	Type(ctx context.Context, key string) *StatusCmd
+	ZCard(ctx context.Context, key string) *IntCmd
+	ZCount(ctx context.Context, key, min, max string) *IntCmd
+	ZLexCount(ctx context.Context, key, min, max string) *IntCmd
+	ZMScore(ctx context.Context, key string, members ...string) *FloatSliceCmd
+	ZRangeWithScores(ctx context.Context, key string, start, stop int64) *ZSliceCmd
+	ZRangeByScore(ctx context.Context, key string, opt ZRangeBy) *StringSliceCmd
+	ZRangeByLex(ctx context.Context, key string, opt ZRangeBy) *StringSliceCmd
+	ZRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) *ZSliceCmd
+	ZRangeArgs(ctx context.Context, z ZRangeArgs) *StringSliceCmd
+	ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) *ZSliceCmd
+	ZRank(ctx context.Context, key, member string) *IntCmd
+	ZRankWithScore(ctx context.Context, key, member string) *RankWithScoreCmd
+	ZRevRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd
+	ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) *ZSliceCmd
+	ZRevRangeByScore(ctx context.Context, key string, opt ZRangeBy) *StringSliceCmd
+	ZRevRangeByLex(ctx context.Context, key string, opt ZRangeBy) *StringSliceCmd
+	ZRevRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) *ZSliceCmd
+	ZRevRank(ctx context.Context, key, member string) *IntCmd
+	ZRevRankWithScore(ctx context.Context, key, member string) *RankWithScoreCmd
+	ZScore(ctx context.Context, key, member string) *FloatCmd
+	BFExists(ctx context.Context, key string, element interface{}) *BoolCmd
+	BFInfo(ctx context.Context, key string) *BFInfoCmd
+	BFInfoArg(ctx context.Context, key, option string) *BFInfoCmd
+	BFInfoCapacity(ctx context.Context, key string) *BFInfoCmd
+	BFInfoSize(ctx context.Context, key string) *BFInfoCmd
+	BFInfoFilters(ctx context.Context, key string) *BFInfoCmd
+	BFInfoItems(ctx context.Context, key string) *BFInfoCmd
+	BFInfoExpansion(ctx context.Context, key string) *BFInfoCmd
+	CFCount(ctx context.Context, key string, element interface{}) *IntCmd
+	CFExists(ctx context.Context, key string, element interface{}) *BoolCmd
+	CFInfo(ctx context.Context, key string) *CFInfoCmd
+	CMSInfo(ctx context.Context, key string) *CMSInfoCmd
+	CMSQuery(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd
+	TopKInfo(ctx context.Context, key string) *TopKInfoCmd
+	TopKList(ctx context.Context, key string) *StringSliceCmd
+	TopKQuery(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd
+	JSONArrIndex(ctx context.Context, key, path string, value ...interface{}) *IntSliceCmd
+	JSONArrLen(ctx context.Context, key, path string) *IntSliceCmd
+	JSONGet(ctx context.Context, key string, paths ...string) *JSONCmd
+	JSONMGet(ctx context.Context, path string, keys ...string) *JSONSliceCmd
+	JSONObjKeys(ctx context.Context, key, path string) *SliceCmd
+	JSONObjLen(ctx context.Context, key, path string) *IntPointerSliceCmd
+	JSONStrLen(ctx context.Context, key, path string) *IntPointerSliceCmd
+	JSONType(ctx context.Context, key, path string) *JSONSliceCmd
+}
+
+type cacheCompat struct {
 	client rueidis.Client
 	ttl    time.Duration
 }
+
+var _ CacheCompat = cacheCompat{}
 
 // AdapterOption is a functional option type for NewAdapter
 type AdapterOption func(c *Compat)
@@ -682,7 +769,7 @@ func (c *Compat) ForEachMaster(ctx context.Context, fn func(ctx context.Context,
 }
 
 func (c *Compat) Cache(ttl time.Duration) CacheCompat {
-	return CacheCompat{client: c.client, ttl: ttl}
+	return cacheCompat{client: c.client, ttl: ttl}
 }
 
 func (c *Compat) Command(ctx context.Context) *CommandsInfoCmd {
@@ -5962,7 +6049,7 @@ func (c *Compat) ModuleLoadex(ctx context.Context, conf *ModuleLoadexConfig) *St
 	return newStringCmd(resp)
 }
 
-func (c CacheCompat) BitCount(ctx context.Context, key string, bitCount *BitCount) *IntCmd {
+func (c cacheCompat) BitCount(ctx context.Context, key string, bitCount *BitCount) *IntCmd {
 	var resp rueidis.RedisResult
 	if bitCount == nil {
 		resp = c.client.DoCache(ctx, c.client.B().Bitcount().Key(key).Cache(), c.ttl)
@@ -5983,7 +6070,7 @@ func (c CacheCompat) BitCount(ctx context.Context, key string, bitCount *BitCoun
 	return newIntCmd(resp)
 }
 
-func (c CacheCompat) BitPos(ctx context.Context, key string, bit int64, pos ...int64) *IntCmd {
+func (c cacheCompat) BitPos(ctx context.Context, key string, bit int64, pos ...int64) *IntCmd {
 	var resp rueidis.RedisResult
 	switch len(pos) {
 	case 0:
@@ -5998,7 +6085,7 @@ func (c CacheCompat) BitPos(ctx context.Context, key string, bit int64, pos ...i
 	return newIntCmd(resp)
 }
 
-func (c CacheCompat) BitPosSpan(ctx context.Context, key string, bit, start, end int64, span string) *IntCmd {
+func (c cacheCompat) BitPosSpan(ctx context.Context, key string, bit, start, end int64, span string) *IntCmd {
 	var resp rueidis.RedisResult
 	if strings.ToLower(span) == "bit" {
 		resp = c.client.DoCache(ctx, c.client.B().Bitpos().Key(key).Bit(bit).Start(start).End(end).Bit().Cache(), c.ttl)
@@ -6008,7 +6095,7 @@ func (c CacheCompat) BitPosSpan(ctx context.Context, key string, bit, start, end
 	return newIntCmd(resp)
 }
 
-func (c CacheCompat) BitFieldRO(ctx context.Context, key string, args ...any) *IntSliceCmd {
+func (c cacheCompat) BitFieldRO(ctx context.Context, key string, args ...any) *IntSliceCmd {
 	cmd := c.client.B().Arbitrary("BITFIELD_RO").Keys(key)
 	for i := 0; i < len(args); i += 2 {
 		cmd = cmd.Args("GET", str(args[i]), str(args[i+1]))
@@ -6017,22 +6104,22 @@ func (c CacheCompat) BitFieldRO(ctx context.Context, key string, args ...any) *I
 	return newIntSliceCmd(resp)
 }
 
-func (c CacheCompat) EvalRO(ctx context.Context, script string, keys []string, args ...any) *Cmd {
+func (c cacheCompat) EvalRO(ctx context.Context, script string, keys []string, args ...any) *Cmd {
 	cmd := c.client.B().EvalRo().Script(script).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Cache()
 	return newCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) EvalShaRO(ctx context.Context, sha1 string, keys []string, args ...any) *Cmd {
+func (c cacheCompat) EvalShaRO(ctx context.Context, sha1 string, keys []string, args ...any) *Cmd {
 	cmd := c.client.B().EvalshaRo().Sha1(sha1).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Cache()
 	return newCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) FCallRO(ctx context.Context, function string, keys []string, args ...any) *Cmd {
+func (c cacheCompat) FCallRO(ctx context.Context, function string, keys []string, args ...any) *Cmd {
 	cmd := c.client.B().FcallRo().Function(function).Numkeys(int64(len(keys))).Key(keys...).Arg(argsToSlice(args)...).Cache()
 	return newCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) GeoDist(ctx context.Context, key, member1, member2, unit string) *FloatCmd {
+func (c cacheCompat) GeoDist(ctx context.Context, key, member1, member2, unit string) *FloatCmd {
 	var resp rueidis.RedisResult
 	switch strings.ToUpper(unit) {
 	case "M":
@@ -6049,20 +6136,20 @@ func (c CacheCompat) GeoDist(ctx context.Context, key, member1, member2, unit st
 	return newFloatCmd(resp)
 }
 
-func (c CacheCompat) GeoHash(ctx context.Context, key string, members ...string) *StringSliceCmd {
+func (c cacheCompat) GeoHash(ctx context.Context, key string, members ...string) *StringSliceCmd {
 	cmd := c.client.B().Geohash().Key(key).Member(members...).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newStringSliceCmd(resp)
 }
 
-func (c CacheCompat) GeoPos(ctx context.Context, key string, members ...string) *GeoPosCmd {
+func (c cacheCompat) GeoPos(ctx context.Context, key string, members ...string) *GeoPosCmd {
 	cmd := c.client.B().Geopos().Key(key).Member(members...).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newGeoPosCmd(resp)
 }
 
 // GeoRadius is a read-only GEORADIUS_RO command.
-func (c CacheCompat) GeoRadius(ctx context.Context, key string, longitude, latitude float64, query GeoRadiusQuery) *GeoLocationCmd {
+func (c cacheCompat) GeoRadius(ctx context.Context, key string, longitude, latitude float64, query GeoRadiusQuery) *GeoLocationCmd {
 	cmd := c.client.B().Arbitrary("GEORADIUS_RO").Keys(key).Args(strconv.FormatFloat(longitude, 'f', -1, 64), strconv.FormatFloat(latitude, 'f', -1, 64))
 	if query.Store != "" || query.StoreDist != "" {
 		panic("GeoRadius does not support Store or StoreDist")
@@ -6073,7 +6160,7 @@ func (c CacheCompat) GeoRadius(ctx context.Context, key string, longitude, latit
 }
 
 // GeoRadiusByMember is a read-only GEORADIUSBYMEMBER_RO command.
-func (c CacheCompat) GeoRadiusByMember(ctx context.Context, key, member string, query GeoRadiusQuery) *GeoLocationCmd {
+func (c cacheCompat) GeoRadiusByMember(ctx context.Context, key, member string, query GeoRadiusQuery) *GeoLocationCmd {
 	cmd := c.client.B().Arbitrary("GEORADIUSBYMEMBER_RO").Keys(key).Args(member)
 	if query.Store != "" || query.StoreDist != "" {
 		panic("GeoRadiusByMember does not support Store or StoreDist")
@@ -6083,98 +6170,98 @@ func (c CacheCompat) GeoRadiusByMember(ctx context.Context, key, member string, 
 	return newGeoLocationCmd(resp)
 }
 
-func (c CacheCompat) GeoSearch(ctx context.Context, key string, q GeoSearchQuery) *StringSliceCmd {
+func (c cacheCompat) GeoSearch(ctx context.Context, key string, q GeoSearchQuery) *StringSliceCmd {
 	cmd := c.client.B().Arbitrary("GEOSEARCH").Keys(key)
 	cmd = cmd.Args(q.args()...)
 	resp := c.client.DoCache(ctx, rueidis.Cacheable(cmd.Build()), c.ttl)
 	return newStringSliceCmd(resp)
 }
 
-func (c CacheCompat) Get(ctx context.Context, key string) *StringCmd {
+func (c cacheCompat) Get(ctx context.Context, key string) *StringCmd {
 	cmd := c.client.B().Get().Key(key).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newStringCmd(resp)
 }
 
-func (c CacheCompat) MGet(ctx context.Context, keys ...string) *SliceCmd {
+func (c cacheCompat) MGet(ctx context.Context, keys ...string) *SliceCmd {
 	cmd := c.client.B().Mget().Key(keys...).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newSliceCmd(resp, false, keys...)
 }
 
-func (c CacheCompat) GetBit(ctx context.Context, key string, offset int64) *IntCmd {
+func (c cacheCompat) GetBit(ctx context.Context, key string, offset int64) *IntCmd {
 	cmd := c.client.B().Getbit().Key(key).Offset(offset).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newIntCmd(resp)
 }
 
-func (c CacheCompat) GetRange(ctx context.Context, key string, start, end int64) *StringCmd {
+func (c cacheCompat) GetRange(ctx context.Context, key string, start, end int64) *StringCmd {
 	cmd := c.client.B().Getrange().Key(key).Start(start).End(end).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newStringCmd(resp)
 }
 
-func (c CacheCompat) HExists(ctx context.Context, key, field string) *BoolCmd {
+func (c cacheCompat) HExists(ctx context.Context, key, field string) *BoolCmd {
 	cmd := c.client.B().Hexists().Key(key).Field(field).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newBoolCmd(resp)
 }
 
-func (c CacheCompat) HGet(ctx context.Context, key, field string) *StringCmd {
+func (c cacheCompat) HGet(ctx context.Context, key, field string) *StringCmd {
 	cmd := c.client.B().Hget().Key(key).Field(field).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newStringCmd(resp)
 }
 
-func (c CacheCompat) HGetAll(ctx context.Context, key string) *StringStringMapCmd {
+func (c cacheCompat) HGetAll(ctx context.Context, key string) *StringStringMapCmd {
 	cmd := c.client.B().Hgetall().Key(key).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newStringStringMapCmd(resp)
 }
 
-func (c CacheCompat) HKeys(ctx context.Context, key string) *StringSliceCmd {
+func (c cacheCompat) HKeys(ctx context.Context, key string) *StringSliceCmd {
 	cmd := c.client.B().Hkeys().Key(key).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newStringSliceCmd(resp)
 }
 
-func (c CacheCompat) HLen(ctx context.Context, key string) *IntCmd {
+func (c cacheCompat) HLen(ctx context.Context, key string) *IntCmd {
 	cmd := c.client.B().Hlen().Key(key).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newIntCmd(resp)
 }
 
-func (c CacheCompat) HStrLen(ctx context.Context, key, field string) *IntCmd {
+func (c cacheCompat) HStrLen(ctx context.Context, key, field string) *IntCmd {
 	cmd := c.client.B().Hstrlen().Key(key).Field(field).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newIntCmd(resp)
 }
 
-func (c CacheCompat) HMGet(ctx context.Context, key string, fields ...string) *SliceCmd {
+func (c cacheCompat) HMGet(ctx context.Context, key string, fields ...string) *SliceCmd {
 	cmd := c.client.B().Hmget().Key(key).Field(fields...).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newSliceCmd(resp, false, fields...)
 }
 
-func (c CacheCompat) HVals(ctx context.Context, key string) *StringSliceCmd {
+func (c cacheCompat) HVals(ctx context.Context, key string) *StringSliceCmd {
 	cmd := c.client.B().Hvals().Key(key).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newStringSliceCmd(resp)
 }
 
-func (c CacheCompat) LIndex(ctx context.Context, key string, index int64) *StringCmd {
+func (c cacheCompat) LIndex(ctx context.Context, key string, index int64) *StringCmd {
 	cmd := c.client.B().Lindex().Key(key).Index(index).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newStringCmd(resp)
 }
 
-func (c CacheCompat) LLen(ctx context.Context, key string) *IntCmd {
+func (c cacheCompat) LLen(ctx context.Context, key string) *IntCmd {
 	cmd := c.client.B().Llen().Key(key).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newIntCmd(resp)
 }
 
-func (c CacheCompat) LPos(ctx context.Context, key string, element string, a LPosArgs) *IntCmd {
+func (c cacheCompat) LPos(ctx context.Context, key string, element string, a LPosArgs) *IntCmd {
 	cmd := c.client.B().Arbitrary("LPOS").Keys(key).Args(element)
 	if a.Rank != 0 {
 		cmd = cmd.Args("RANK", strconv.FormatInt(a.Rank, 10))
@@ -6186,43 +6273,43 @@ func (c CacheCompat) LPos(ctx context.Context, key string, element string, a LPo
 	return newIntCmd(resp)
 }
 
-func (c CacheCompat) LRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd {
+func (c cacheCompat) LRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd {
 	cmd := c.client.B().Lrange().Key(key).Start(start).Stop(stop).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newStringSliceCmd(resp)
 }
 
-func (c CacheCompat) PTTL(ctx context.Context, key string) *DurationCmd {
+func (c cacheCompat) PTTL(ctx context.Context, key string) *DurationCmd {
 	cmd := c.client.B().Pttl().Key(key).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newDurationCmd(resp, time.Millisecond)
 }
 
-func (c CacheCompat) SCard(ctx context.Context, key string) *IntCmd {
+func (c cacheCompat) SCard(ctx context.Context, key string) *IntCmd {
 	cmd := c.client.B().Scard().Key(key).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newIntCmd(resp)
 }
 
-func (c CacheCompat) SIsMember(ctx context.Context, key string, member any) *BoolCmd {
+func (c cacheCompat) SIsMember(ctx context.Context, key string, member any) *BoolCmd {
 	cmd := c.client.B().Sismember().Key(key).Member(str(member)).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newBoolCmd(resp)
 }
 
-func (c CacheCompat) SMIsMember(ctx context.Context, key string, members ...any) *BoolSliceCmd {
+func (c cacheCompat) SMIsMember(ctx context.Context, key string, members ...any) *BoolSliceCmd {
 	cmd := c.client.B().Smismember().Key(key).Member(argsToSlice(members)...).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newBoolSliceCmd(resp)
 }
 
-func (c CacheCompat) SMembers(ctx context.Context, key string) *StringSliceCmd {
+func (c cacheCompat) SMembers(ctx context.Context, key string) *StringSliceCmd {
 	cmd := c.client.B().Smembers().Key(key).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newStringSliceCmd(resp)
 }
 
-func (c CacheCompat) SortRO(ctx context.Context, key string, sort Sort) *StringSliceCmd {
+func (c cacheCompat) SortRO(ctx context.Context, key string, sort Sort) *StringSliceCmd {
 	cmd := c.client.B().Arbitrary("SORT_RO").Keys(key)
 	if sort.By != "" {
 		cmd = cmd.Args("BY", sort.By)
@@ -6247,49 +6334,49 @@ func (c CacheCompat) SortRO(ctx context.Context, key string, sort Sort) *StringS
 	return newStringSliceCmd(resp)
 }
 
-func (c CacheCompat) StrLen(ctx context.Context, key string) *IntCmd {
+func (c cacheCompat) StrLen(ctx context.Context, key string) *IntCmd {
 	cmd := c.client.B().Strlen().Key(key).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newIntCmd(resp)
 }
 
-func (c CacheCompat) TTL(ctx context.Context, key string) *DurationCmd {
+func (c cacheCompat) TTL(ctx context.Context, key string) *DurationCmd {
 	cmd := c.client.B().Ttl().Key(key).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newDurationCmd(resp, time.Second)
 }
 
-func (c CacheCompat) Type(ctx context.Context, key string) *StatusCmd {
+func (c cacheCompat) Type(ctx context.Context, key string) *StatusCmd {
 	cmd := c.client.B().Type().Key(key).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newStatusCmd(resp)
 }
 
-func (c CacheCompat) ZCard(ctx context.Context, key string) *IntCmd {
+func (c cacheCompat) ZCard(ctx context.Context, key string) *IntCmd {
 	cmd := c.client.B().Zcard().Key(key).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newIntCmd(resp)
 }
 
-func (c CacheCompat) ZCount(ctx context.Context, key, min, max string) *IntCmd {
+func (c cacheCompat) ZCount(ctx context.Context, key, min, max string) *IntCmd {
 	cmd := c.client.B().Zcount().Key(key).Min(min).Max(max).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newIntCmd(resp)
 }
 
-func (c CacheCompat) ZLexCount(ctx context.Context, key, min, max string) *IntCmd {
+func (c cacheCompat) ZLexCount(ctx context.Context, key, min, max string) *IntCmd {
 	cmd := c.client.B().Zlexcount().Key(key).Min(min).Max(max).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newIntCmd(resp)
 }
 
-func (c CacheCompat) ZMScore(ctx context.Context, key string, members ...string) *FloatSliceCmd {
+func (c cacheCompat) ZMScore(ctx context.Context, key string, members ...string) *FloatSliceCmd {
 	cmd := c.client.B().Zmscore().Key(key).Member(members...).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newFloatSliceCmd(resp)
 }
 
-func (c CacheCompat) zRangeArgs(withScores bool, z ZRangeArgs) rueidis.Cacheable {
+func (c cacheCompat) zRangeArgs(withScores bool, z ZRangeArgs) rueidis.Cacheable {
 	cmd := c.client.B().Arbitrary("ZRANGE").Keys(z.Key)
 	cmd = cmd.Args(str(z.Start), str(z.Stop))
 	if z.ByScore {
@@ -6309,7 +6396,7 @@ func (c CacheCompat) zRangeArgs(withScores bool, z ZRangeArgs) rueidis.Cacheable
 	return rueidis.Cacheable(cmd.Build())
 }
 
-func (c CacheCompat) ZRangeWithScores(ctx context.Context, key string, start, stop int64) *ZSliceCmd {
+func (c cacheCompat) ZRangeWithScores(ctx context.Context, key string, start, stop int64) *ZSliceCmd {
 	cmd := c.zRangeArgs(true, ZRangeArgs{
 		Key:   key,
 		Start: start,
@@ -6319,7 +6406,7 @@ func (c CacheCompat) ZRangeWithScores(ctx context.Context, key string, start, st
 	return newZSliceCmd(resp)
 }
 
-func (c CacheCompat) ZRangeByScore(ctx context.Context, key string, opt ZRangeBy) *StringSliceCmd {
+func (c cacheCompat) ZRangeByScore(ctx context.Context, key string, opt ZRangeBy) *StringSliceCmd {
 	var resp rueidis.RedisResult
 	if opt.Offset != 0 || opt.Count != 0 {
 		resp = c.client.DoCache(ctx, c.client.B().Zrangebyscore().Key(key).Min(opt.Min).Max(opt.Max).Limit(opt.Offset, opt.Count).Cache(), c.ttl)
@@ -6329,7 +6416,7 @@ func (c CacheCompat) ZRangeByScore(ctx context.Context, key string, opt ZRangeBy
 	return newStringSliceCmd(resp)
 }
 
-func (c CacheCompat) ZRangeByLex(ctx context.Context, key string, opt ZRangeBy) *StringSliceCmd {
+func (c cacheCompat) ZRangeByLex(ctx context.Context, key string, opt ZRangeBy) *StringSliceCmd {
 	var resp rueidis.RedisResult
 	if opt.Offset != 0 || opt.Count != 0 {
 		resp = c.client.DoCache(ctx, c.client.B().Zrangebylex().Key(key).Min(opt.Min).Max(opt.Max).Limit(opt.Offset, opt.Count).Cache(), c.ttl)
@@ -6339,7 +6426,7 @@ func (c CacheCompat) ZRangeByLex(ctx context.Context, key string, opt ZRangeBy) 
 	return newStringSliceCmd(resp)
 }
 
-func (c CacheCompat) ZRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) *ZSliceCmd {
+func (c cacheCompat) ZRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) *ZSliceCmd {
 	var resp rueidis.RedisResult
 	if opt.Offset != 0 || opt.Count != 0 {
 		resp = c.client.DoCache(ctx, c.client.B().Zrangebyscore().Key(key).Min(opt.Min).Max(opt.Max).Withscores().Limit(opt.Offset, opt.Count).Cache(), c.ttl)
@@ -6349,43 +6436,43 @@ func (c CacheCompat) ZRangeByScoreWithScores(ctx context.Context, key string, op
 	return newZSliceCmd(resp)
 }
 
-func (c CacheCompat) ZRangeArgs(ctx context.Context, z ZRangeArgs) *StringSliceCmd {
+func (c cacheCompat) ZRangeArgs(ctx context.Context, z ZRangeArgs) *StringSliceCmd {
 	cmd := c.zRangeArgs(false, z)
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newStringSliceCmd(resp)
 }
 
-func (c CacheCompat) ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) *ZSliceCmd {
+func (c cacheCompat) ZRangeArgsWithScores(ctx context.Context, z ZRangeArgs) *ZSliceCmd {
 	cmd := c.zRangeArgs(true, z)
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newZSliceCmd(resp)
 }
 
-func (c CacheCompat) ZRank(ctx context.Context, key, member string) *IntCmd {
+func (c cacheCompat) ZRank(ctx context.Context, key, member string) *IntCmd {
 	cmd := c.client.B().Zrank().Key(key).Member(member).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newIntCmd(resp)
 }
 
-func (c CacheCompat) ZRankWithScore(ctx context.Context, key, member string) *RankWithScoreCmd {
+func (c cacheCompat) ZRankWithScore(ctx context.Context, key, member string) *RankWithScoreCmd {
 	cmd := c.client.B().Zrank().Key(key).Member(member).Withscore().Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newRankWithScoreCmd(resp)
 }
 
-func (c CacheCompat) ZRevRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd {
+func (c cacheCompat) ZRevRange(ctx context.Context, key string, start, stop int64) *StringSliceCmd {
 	cmd := c.client.B().Zrevrange().Key(key).Start(start).Stop(stop).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newStringSliceCmd(resp)
 }
 
-func (c CacheCompat) ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) *ZSliceCmd {
+func (c cacheCompat) ZRevRangeWithScores(ctx context.Context, key string, start, stop int64) *ZSliceCmd {
 	cmd := c.client.B().Zrevrange().Key(key).Start(start).Stop(stop).Withscores().Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newZSliceCmd(resp)
 }
 
-func (c CacheCompat) ZRevRangeByScore(ctx context.Context, key string, opt ZRangeBy) *StringSliceCmd {
+func (c cacheCompat) ZRevRangeByScore(ctx context.Context, key string, opt ZRangeBy) *StringSliceCmd {
 	var resp rueidis.RedisResult
 	if opt.Offset != 0 || opt.Count != 0 {
 		resp = c.client.DoCache(ctx, c.client.B().Zrevrangebyscore().Key(key).Max(opt.Max).Min(opt.Min).Limit(opt.Offset, opt.Count).Cache(), c.ttl)
@@ -6395,7 +6482,7 @@ func (c CacheCompat) ZRevRangeByScore(ctx context.Context, key string, opt ZRang
 	return newStringSliceCmd(resp)
 }
 
-func (c CacheCompat) ZRevRangeByLex(ctx context.Context, key string, opt ZRangeBy) *StringSliceCmd {
+func (c cacheCompat) ZRevRangeByLex(ctx context.Context, key string, opt ZRangeBy) *StringSliceCmd {
 	var resp rueidis.RedisResult
 	if opt.Offset != 0 || opt.Count != 0 {
 		resp = c.client.DoCache(ctx, c.client.B().Zrevrangebylex().Key(key).Max(opt.Max).Min(opt.Min).Limit(opt.Offset, opt.Count).Cache(), c.ttl)
@@ -6405,7 +6492,7 @@ func (c CacheCompat) ZRevRangeByLex(ctx context.Context, key string, opt ZRangeB
 	return newStringSliceCmd(resp)
 }
 
-func (c CacheCompat) ZRevRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) *ZSliceCmd {
+func (c cacheCompat) ZRevRangeByScoreWithScores(ctx context.Context, key string, opt ZRangeBy) *ZSliceCmd {
 	var resp rueidis.RedisResult
 	if opt.Offset != 0 || opt.Count != 0 {
 		resp = c.client.DoCache(ctx, c.client.B().Zrevrangebyscore().Key(key).Max(opt.Max).Min(opt.Min).Withscores().Limit(opt.Offset, opt.Count).Cache(), c.ttl)
@@ -6415,37 +6502,37 @@ func (c CacheCompat) ZRevRangeByScoreWithScores(ctx context.Context, key string,
 	return newZSliceCmd(resp)
 }
 
-func (c CacheCompat) ZRevRank(ctx context.Context, key, member string) *IntCmd {
+func (c cacheCompat) ZRevRank(ctx context.Context, key, member string) *IntCmd {
 	cmd := c.client.B().Zrevrank().Key(key).Member(member).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newIntCmd(resp)
 }
 
-func (c CacheCompat) ZRevRankWithScore(ctx context.Context, key, member string) *RankWithScoreCmd {
+func (c cacheCompat) ZRevRankWithScore(ctx context.Context, key, member string) *RankWithScoreCmd {
 	cmd := c.client.B().Zrevrank().Key(key).Member(member).Withscore().Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newRankWithScoreCmd(resp)
 }
 
-func (c CacheCompat) ZScore(ctx context.Context, key, member string) *FloatCmd {
+func (c cacheCompat) ZScore(ctx context.Context, key, member string) *FloatCmd {
 	cmd := c.client.B().Zscore().Key(key).Member(member).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newFloatCmd(resp)
 }
 
-func (c CacheCompat) BFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
+func (c cacheCompat) BFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
 	cmd := c.client.B().BfExists().Key(key).Item(str(element)).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newBoolCmd(resp)
 }
 
-func (c CacheCompat) BFInfo(ctx context.Context, key string) *BFInfoCmd {
+func (c cacheCompat) BFInfo(ctx context.Context, key string) *BFInfoCmd {
 	cmd := c.client.B().BfInfo().Key(key).Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newBFInfoCmd(resp)
 }
 
-func (c CacheCompat) BFInfoArg(ctx context.Context, key, option string) *BFInfoCmd {
+func (c cacheCompat) BFInfoArg(ctx context.Context, key, option string) *BFInfoCmd {
 	switch option {
 	case "CAPACITY":
 		return c.BFInfoCapacity(ctx, key)
@@ -6462,57 +6549,57 @@ func (c CacheCompat) BFInfoArg(ctx context.Context, key, option string) *BFInfoC
 	}
 }
 
-func (c CacheCompat) BFInfoCapacity(ctx context.Context, key string) *BFInfoCmd {
+func (c cacheCompat) BFInfoCapacity(ctx context.Context, key string) *BFInfoCmd {
 	cmd := c.client.B().BfInfo().Key(key).Capacity().Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newBFInfoCmd(resp)
 }
 
-func (c CacheCompat) BFInfoSize(ctx context.Context, key string) *BFInfoCmd {
+func (c cacheCompat) BFInfoSize(ctx context.Context, key string) *BFInfoCmd {
 	cmd := c.client.B().BfInfo().Key(key).Size().Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newBFInfoCmd(resp)
 }
 
-func (c CacheCompat) BFInfoFilters(ctx context.Context, key string) *BFInfoCmd {
+func (c cacheCompat) BFInfoFilters(ctx context.Context, key string) *BFInfoCmd {
 	cmd := c.client.B().BfInfo().Key(key).Filters().Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newBFInfoCmd(resp)
 }
 
-func (c CacheCompat) BFInfoItems(ctx context.Context, key string) *BFInfoCmd {
+func (c cacheCompat) BFInfoItems(ctx context.Context, key string) *BFInfoCmd {
 	cmd := c.client.B().BfInfo().Key(key).Items().Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newBFInfoCmd(resp)
 }
 
-func (c CacheCompat) BFInfoExpansion(ctx context.Context, key string) *BFInfoCmd {
+func (c cacheCompat) BFInfoExpansion(ctx context.Context, key string) *BFInfoCmd {
 	cmd := c.client.B().BfInfo().Key(key).Expansion().Cache()
 	resp := c.client.DoCache(ctx, cmd, c.ttl)
 	return newBFInfoCmd(resp)
 }
 
-func (c CacheCompat) CFCount(ctx context.Context, key string, element interface{}) *IntCmd {
+func (c cacheCompat) CFCount(ctx context.Context, key string, element interface{}) *IntCmd {
 	cmd := c.client.B().CfCount().Key(key).Item(str(element)).Cache()
 	return newIntCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) CFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
+func (c cacheCompat) CFExists(ctx context.Context, key string, element interface{}) *BoolCmd {
 	cmd := c.client.B().CfExists().Key(key).Item(str(element)).Cache()
 	return newBoolCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) CFInfo(ctx context.Context, key string) *CFInfoCmd {
+func (c cacheCompat) CFInfo(ctx context.Context, key string) *CFInfoCmd {
 	cmd := c.client.B().CfInfo().Key(key).Cache()
 	return newCFInfoCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) CMSInfo(ctx context.Context, key string) *CMSInfoCmd {
+func (c cacheCompat) CMSInfo(ctx context.Context, key string) *CMSInfoCmd {
 	cmd := c.client.B().CmsInfo().Key(key).Cache()
 	return newCMSInfoCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) CMSQuery(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
+func (c cacheCompat) CMSQuery(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
 	_cmd := c.client.B().CmsQuery().Key(key)
 	for _, e := range elements {
 		_cmd.Item(str(e))
@@ -6521,17 +6608,17 @@ func (c CacheCompat) CMSQuery(ctx context.Context, key string, elements ...inter
 	return newIntSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) TopKInfo(ctx context.Context, key string) *TopKInfoCmd {
+func (c cacheCompat) TopKInfo(ctx context.Context, key string) *TopKInfoCmd {
 	cmd := c.client.B().TopkInfo().Key(key).Cache()
 	return newTopKInfoCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) TopKList(ctx context.Context, key string) *StringSliceCmd {
+func (c cacheCompat) TopKList(ctx context.Context, key string) *StringSliceCmd {
 	cmd := c.client.B().TopkList().Key(key).Cache()
 	return newStringSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) TopKQuery(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
+func (c cacheCompat) TopKQuery(ctx context.Context, key string, elements ...interface{}) *BoolSliceCmd {
 	_cmd := c.client.B().TopkQuery().Key(key)
 	for _, e := range elements {
 		_cmd.Item(str(e))
@@ -6540,7 +6627,7 @@ func (c CacheCompat) TopKQuery(ctx context.Context, key string, elements ...inte
 	return newBoolSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) JSONArrIndex(ctx context.Context, key, path string, value ...interface{}) *IntSliceCmd {
+func (c cacheCompat) JSONArrIndex(ctx context.Context, key, path string, value ...interface{}) *IntSliceCmd {
 	_cmd := c.client.B().JsonArrindex().Key(key).Path(path)
 	switch len(value) {
 	case 1:
@@ -6559,37 +6646,37 @@ func (c CacheCompat) JSONArrIndex(ctx context.Context, key, path string, value .
 	return newIntSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) JSONArrLen(ctx context.Context, key, path string) *IntSliceCmd {
+func (c cacheCompat) JSONArrLen(ctx context.Context, key, path string) *IntSliceCmd {
 	cmd := c.client.B().JsonArrlen().Key(key).Path(path).Cache()
 	return newIntSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) JSONGet(ctx context.Context, key string, paths ...string) *JSONCmd {
+func (c cacheCompat) JSONGet(ctx context.Context, key string, paths ...string) *JSONCmd {
 	cmd := c.client.B().JsonGet().Key(key).Path(paths...).Cache()
 	return newJSONCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) JSONMGet(ctx context.Context, path string, keys ...string) *JSONSliceCmd {
+func (c cacheCompat) JSONMGet(ctx context.Context, path string, keys ...string) *JSONSliceCmd {
 	cmd := c.client.B().JsonMget().Key(keys...).Path(path).Cache()
 	return newJSONSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) JSONObjKeys(ctx context.Context, key, path string) *SliceCmd {
+func (c cacheCompat) JSONObjKeys(ctx context.Context, key, path string) *SliceCmd {
 	cmd := c.client.B().JsonObjkeys().Key(key).Path(path).Cache()
 	return newSliceCmd(c.client.DoCache(ctx, cmd, c.ttl), true)
 }
 
-func (c CacheCompat) JSONObjLen(ctx context.Context, key, path string) *IntPointerSliceCmd {
+func (c cacheCompat) JSONObjLen(ctx context.Context, key, path string) *IntPointerSliceCmd {
 	cmd := c.client.B().JsonObjlen().Key(key).Path(path).Cache()
 	return newIntPointerSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) JSONStrLen(ctx context.Context, key, path string) *IntPointerSliceCmd {
+func (c cacheCompat) JSONStrLen(ctx context.Context, key, path string) *IntPointerSliceCmd {
 	cmd := c.client.B().JsonStrlen().Key(key).Path(path).Cache()
 	return newIntPointerSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
 
-func (c CacheCompat) JSONType(ctx context.Context, key, path string) *JSONSliceCmd {
+func (c cacheCompat) JSONType(ctx context.Context, key, path string) *JSONSliceCmd {
 	cmd := c.client.B().JsonType().Key(key).Path(path).Cache()
 	return newJSONSliceCmd(c.client.DoCache(ctx, cmd, c.ttl))
 }
