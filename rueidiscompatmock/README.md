@@ -47,3 +47,15 @@ p.Get(ctx, "k1")
 p.Set(ctx, "k2", "v2", 0)
 p.Exec(ctx)
 ```
+
+### Client-side caching example
+
+Cached commands (`Cache(ttl)`) use the same `Expect*` calls as non-cached commands.
+The TTL argument is not matched against expectations.
+
+```golang
+compatmock.ExpectGet("key").SetVal("val")
+
+cached := rdb.Cache(100 * time.Millisecond)
+cached.Get(context.Background(), "key")
+```
