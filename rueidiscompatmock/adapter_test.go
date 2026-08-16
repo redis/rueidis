@@ -3066,6 +3066,138 @@ func wantAnyErr(err error) error {
 	return nil
 }
 
+func TestCacheCompatGet(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	cm.ExpectGet("key").SetVal("v")
+	cmd := rdb.Cache(100 * time.Millisecond).Get(ctx, "key")
+	if got := cmd.Val(); got != "v" {
+		t.Fatalf("expected %q, got %q", "v", got)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestCacheCompatViaNewAdapter(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	ctx := context.Background()
+	raw := mock.NewClient(ctrl)
+	cm := NewAdapter(raw)
+	rdb := rueidiscompat.NewAdapter(raw)
+
+	cm.ExpectGet("key").SetVal("v")
+	cmd := rdb.Cache(time.Second).Get(ctx, "key")
+	if got := cmd.Val(); got != "v" {
+		t.Fatalf("expected %q, got %q", "v", got)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestCacheCompatMultiCommand(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	cm.ExpectMGet("k1", "k2").SetVal([]any{"v1", "v2"})
+	cm.ExpectHGetAll("h").SetVal(map[string]string{"f": "v"})
+	cm.ExpectGetRange("s", 0, 1).SetVal("ab")
+
+	cache := rdb.Cache(time.Minute)
+	if got := cache.MGet(ctx, "k1", "k2").Val(); !reflect.DeepEqual(got, []any{"v1", "v2"}) {
+		t.Fatalf("unexpected MGet result %v", got)
+	}
+	if got := cache.HGetAll(ctx, "h").Val(); !reflect.DeepEqual(got, map[string]string{"f": "v"}) {
+		t.Fatalf("unexpected HGetAll result %v", got)
+	}
+	if got := cache.GetRange(ctx, "s", 0, 1).Val(); got != "ab" {
+		t.Fatalf("unexpected GetRange result %q", got)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestCacheCompatCacheableWrapped(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	cm.ExpectEvalRO("return 1", []string{}).SetValInt(1)
+	cmd := rdb.Cache(time.Second).EvalRO(ctx, "return 1", []string{})
+	if got := cmd.Val(); got != int64(1) {
+		t.Fatalf("unexpected EvalRO result %v", got)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestCacheCompatRedisNil(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	cm.ExpectGet("key").RedisNil()
+	if err := rdb.Cache(time.Second).Get(ctx, "key").Err(); !errors.Is(err, rueidiscompat.Nil) {
+		t.Fatalf("expected Nil, got %v", err)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestCacheCompatSetErr(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	cm.ExpectGet("key").SetErr(errors.New("any"))
+	if err := rdb.Cache(time.Second).Get(ctx, "key").Err(); err == nil || err.Error() != "any" {
+		t.Fatalf("expected err \"any\", got %v", err)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestCacheCompatTTLIrrelevant(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	cm.ExpectGet("k").SetVal("a")
+	cm.ExpectGet("k").SetVal("b")
+	if got := rdb.Cache(time.Millisecond).Get(ctx, "k").Val(); got != "a" {
+		t.Fatalf("expected %q, got %q", "a", got)
+	}
+	if got := rdb.Cache(time.Hour).Get(ctx, "k").Val(); got != "b" {
+		t.Fatalf("expected %q, got %q", "b", got)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestCacheCompatUnmatched(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	err := rdb.Cache(time.Second).Get(ctx, "key").Err()
+	if err == nil || !strings.Contains(err.Error(), "no expectation for command") {
+		t.Fatalf("expected no-expectation error, got %v", err)
+	}
+	if err := cm.ExpectationsWereMet(); err == nil {
+		t.Fatal("expected unmatched expectation error")
+	}
+}
+
 func runCases(t *testing.T, cm ClientMock, cases []func() error) {
 	t.Helper()
 	for i, c := range cases {

@@ -562,6 +562,12 @@ func (m *clientMock) wire() {
 			return m.consume(len(cmds), cmds)
 		}).
 		AnyTimes()
+	m.raw.EXPECT().
+		DoCache(gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(_ context.Context, cmd rueidis.Cacheable, _ time.Duration) rueidis.RedisResult {
+			return m.consume(1, []rueidis.Completed{rueidis.Completed(cmd)})[0]
+		}).
+		AnyTimes()
 }
 
 func (m *clientMock) consume(n int, cmds []rueidis.Completed) []rueidis.RedisResult {
