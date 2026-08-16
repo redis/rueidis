@@ -3158,8 +3158,8 @@ func TestCacheCompatSetErr(t *testing.T) {
 	defer rdb.Close()
 
 	cm.ExpectGet("key").SetErr(errors.New("any"))
-	if err := rdb.Cache(time.Second).Get(ctx, "key").Err(); err == nil || err.Error() != "any" {
-		t.Fatalf("expected err \"any\", got %v", err)
+	if err := wantAnyErr(rdb.Cache(time.Second).Get(ctx, "key").Err()); err != nil {
+		t.Fatal(err)
 	}
 	if err := cm.ExpectationsWereMet(); err != nil {
 		t.Fatalf("unexpected err %v", err)
