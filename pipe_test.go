@@ -7296,3 +7296,20 @@ func TestDisableCacheStaticClientTTLDoMultiCache(t *testing.T) {
 		}
 	})
 }
+
+func TestDisableCacheStaticClientTTLDoCache(t *testing.T) {
+	p, mock, cancel, _ := setup(t, ClientOption{DisableCache: true})
+	defer cancel()
+
+	go func() {
+		mock.Expect("GET", "k").ReplyString("value")
+	}()
+
+	ctx, cancelCtx := context.WithCancel(context.Background())
+	defer cancelCtx()
+	got, err := p.DoCache(ctx,
+		Cacheable(cmds.NewCompleted([]string{"GET", "k"})).ToStaticTTL(), time.Second).ToString()
+	if err != nil || got != "value" {
+		t.Fatalf("got %q / %v", got, err)
+	}
+}
