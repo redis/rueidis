@@ -7243,3 +7243,73 @@ func TestClientSideCachingStaticClientTTLDoMultiCacheMixedNoPollution(t *testing
 		t.Fatalf("k2 cache state: got %q want %q", r2.string(), "v2")
 	}
 }
+
+func TestDisableCacheStaticClientTTLDoMultiCache(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		p, mock, cancel, _ := setup(t, ClientOption{DisableCache: true})
+		defer cancel()
+
+		go func() {
+			mock.Expect("GET", "a").
+				Expect("GET", "b").
+				ReplyString("av").
+				ReplyString("bv")
+		}()
+
+		ctx, cancelCtx := context.WithCancel(context.Background())
+		defer cancelCtx()
+		results := p.DoMultiCache(ctx,
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a"})).ToStaticTTL(), time.Second),
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "b"})).ToStaticTTL(), time.Second),
+		)
+		for i, want := range []string{"av", "bv"} {
+			got, err := results.s[i].ToString()
+			if err != nil || got != want {
+				t.Fatalf("result[%d]: got %q / %v, want %q", i, got, err, want)
+			}
+		}
+	})
+
+	t.Run("RedisError", func(t *testing.T) {
+		p, mock, cancel, _ := setup(t, ClientOption{DisableCache: true})
+		defer cancel()
+
+		go func() {
+			mock.Expect("GET", "a").
+				Expect("GET", "b").
+				ReplyString("av").
+				ReplyError("WRONGTYPE Operation against a key holding the wrong kind of value")
+		}()
+
+		ctx, cancelCtx := context.WithCancel(context.Background())
+		defer cancelCtx()
+		results := p.DoMultiCache(ctx,
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "a"})).ToStaticTTL(), time.Second),
+			CT(Cacheable(cmds.NewCompleted([]string{"GET", "b"})).ToStaticTTL(), time.Second),
+		)
+		if got, err := results.s[0].ToString(); err != nil || got != "av" {
+			t.Fatalf("result[0]: got %q / %v", got, err)
+		}
+		err := results.s[1].Error()
+		if _, ok := err.(*RedisError); !ok {
+			t.Fatal("result[1]: expected Redis error")
+		}
+	})
+}
+
+func TestDisableCacheStaticClientTTLDoCache(t *testing.T) {
+	p, mock, cancel, _ := setup(t, ClientOption{DisableCache: true})
+	defer cancel()
+
+	go func() {
+		mock.Expect("GET", "k").ReplyString("value")
+	}()
+
+	ctx, cancelCtx := context.WithCancel(context.Background())
+	defer cancelCtx()
+	got, err := p.DoCache(ctx,
+		Cacheable(cmds.NewCompleted([]string{"GET", "k"})).ToStaticTTL(), time.Second).ToString()
+	if err != nil || got != "value" {
+		t.Fatalf("got %q / %v", got, err)
+	}
+}

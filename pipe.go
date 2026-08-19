@@ -1550,6 +1550,7 @@ func (p *pipe) optInCmd() cmds.Completed {
 
 func (p *pipe) DoCache(ctx context.Context, cmd Cacheable, ttl time.Duration) RedisResult {
 	if p.cache == nil {
+		cmds.ClearStaticTTL(&cmd)
 		return p.Do(ctx, Completed(cmd))
 	}
 
@@ -1712,7 +1713,9 @@ func (p *pipe) DoMultiCache(ctx context.Context, multi ...CacheableTTL) *redisre
 	if p.cache == nil {
 		commands := make([]Completed, len(multi))
 		for i, ct := range multi {
-			commands[i] = Completed(ct.Cmd)
+			cmd := ct.Cmd
+			cmds.ClearStaticTTL(&cmd)
+			commands[i] = Completed(cmd)
 		}
 		return p.DoMulti(ctx, commands...)
 	}
