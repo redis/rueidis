@@ -3252,6 +3252,53 @@ func TestCacheCompatViaCacheUnordered(t *testing.T) {
 	}
 }
 
+func TestCacheCompatViaCacheUnorderedGenericQueuedFirst(t *testing.T) {
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	raw := mock.NewClient(ctrl)
+	cm := NewAdapter(raw)
+	rdb := rueidiscompat.NewAdapter(raw)
+	cm.MatchExpectationsInOrder(false)
+
+	// Same as TestCacheCompatViaCacheUnordered but with queue order reversed:
+	// the unmarked (generic) expectation is queued BEFORE the ViaCache()
+	// expectation. A cached call must still prefer the cache-specific entry
+	// rather than "stealing" the generic one queued ahead of it.
+	cm.ExpectGet("key").SetVal("plain")
+	cm.ExpectGet("key").ViaCache().SetVal("cached")
+
+	if got := rdb.Cache(time.Second).Get(ctx, "key").Val(); got != "cached" {
+		t.Fatalf("expected cached call to match the ViaCache expectation, got %q", got)
+	}
+	if got := rdb.Get(ctx, "key").Val(); got != "plain" {
+		t.Fatalf("expected the remaining plain call to match the unmarked expectation, got %q", got)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestCacheCompatViaCacheUnorderedFallsBackToGeneric(t *testing.T) {
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	raw := mock.NewClient(ctrl)
+	cm := NewAdapter(raw)
+	rdb := rueidiscompat.NewAdapter(raw)
+	cm.MatchExpectationsInOrder(false)
+
+	// No cache-specific expectation is queued at all; a cached call must
+	// still fall back to matching the first generic expectation, exactly as
+	// before this fix.
+	cm.ExpectGet("key").SetVal("plain")
+
+	if got := rdb.Cache(time.Second).Get(ctx, "key").Val(); got != "plain" {
+		t.Fatalf("expected cached call to fall back to the unmarked expectation, got %q", got)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
 func TestCacheCompatUnmarkedMatchesBothOrigins(t *testing.T) {
 	ctx := context.Background()
 	rdb, cm := NewClientMock()
