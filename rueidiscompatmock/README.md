@@ -59,3 +59,19 @@ compatmock.ExpectGet("key").SetVal("val")
 cached := rdb.Cache(100 * time.Millisecond)
 cached.Get(context.Background(), "key")
 ```
+
+If a test needs to assert that a call went through the cache path specifically
+(as opposed to a plain, non-cached call), chain `ViaCache()` onto the
+expectation. A `ViaCache()` expectation is only satisfied by a call made
+through `Cache(ttl)`; a plain call for the same command will not match it.
+Expectations that don't call `ViaCache()` are unaffected and continue to match
+calls from either origin.
+
+```golang
+compatmock.ExpectGet("key").ViaCache().SetVal("val")
+
+cached := rdb.Cache(100 * time.Millisecond)
+cached.Get(context.Background(), "key") // matches
+
+rdb.Get(context.Background(), "key") // would NOT match the ViaCache() expectation
+```

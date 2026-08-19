@@ -3198,6 +3198,79 @@ func TestCacheCompatUnmatched(t *testing.T) {
 	}
 }
 
+func TestCacheCompatViaCacheRequired(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	cm.ExpectGet("key").ViaCache().SetVal("v")
+	if got := rdb.Cache(time.Second).Get(ctx, "key").Val(); got != "v" {
+		t.Fatalf("expected %q, got %q", "v", got)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestCacheCompatViaCacheRejectsPlainCall(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	cm.ExpectGet("key").ViaCache().SetVal("v")
+	err := rdb.Get(ctx, "key").Err()
+	if err == nil || !strings.Contains(err.Error(), "no expectation for command") {
+		t.Fatalf("expected no-expectation error for plain call against a ViaCache expectation, got %v", err)
+	}
+	if err := cm.ExpectationsWereMet(); err == nil {
+		t.Fatal("expected the ViaCache expectation to remain unmatched")
+	}
+}
+
+func TestCacheCompatViaCacheUnordered(t *testing.T) {
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	raw := mock.NewClient(ctrl)
+	cm := NewAdapter(raw)
+	rdb := rueidiscompat.NewAdapter(raw)
+	cm.MatchExpectationsInOrder(false)
+
+	// Two expectations for the same key: one plain, one cache-required. In
+	// unordered mode the scan must pick the one matching the call's origin,
+	// not just the first one for the command/key.
+	cm.ExpectGet("key").ViaCache().SetVal("cached")
+	cm.ExpectGet("key").SetVal("plain")
+
+	if got := rdb.Get(ctx, "key").Val(); got != "plain" {
+		t.Fatalf("expected plain call to match the non-cache expectation, got %q", got)
+	}
+	if got := rdb.Cache(time.Second).Get(ctx, "key").Val(); got != "cached" {
+		t.Fatalf("expected cached call to match the ViaCache expectation, got %q", got)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestCacheCompatUnmarkedMatchesBothOrigins(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	cm.ExpectGet("k1").SetVal("plain")
+	if got := rdb.Get(ctx, "k1").Val(); got != "plain" {
+		t.Fatalf("expected %q, got %q", "plain", got)
+	}
+
+	cm.ExpectGet("k2").SetVal("cached")
+	if got := rdb.Cache(time.Second).Get(ctx, "k2").Val(); got != "cached" {
+		t.Fatalf("expected %q, got %q", "cached", got)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
 func runCases(t *testing.T, cm ClientMock, cases []func() error) {
 	t.Helper()
 	for i, c := range cases {
