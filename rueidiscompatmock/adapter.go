@@ -621,16 +621,6 @@ func (m *clientMock) matchLocked(cmd rueidis.Completed, viaCache bool) (int, boo
 		}
 		return 0, true
 	}
-	if viaCache {
-		// Prefer a cache-specific expectation over a generic (unmarked) one,
-		// regardless of queue order, so a ViaCache() expectation isn't stolen
-		// by an unmarked expectation queued ahead of it for the same command.
-		for i, e := range m.queue {
-			if e.requireCache && e.matches(cmd, viaCache) {
-				return i, true
-			}
-		}
-	}
 	for i, e := range m.queue {
 		if e.matches(cmd, viaCache) {
 			return i, true
@@ -640,7 +630,7 @@ func (m *clientMock) matchLocked(cmd rueidis.Completed, viaCache bool) (int, boo
 }
 
 func (e *expectation) matches(cmd rueidis.Completed, viaCache bool) bool {
-	if e.requireCache && !viaCache {
+	if e.requireCache != viaCache {
 		return false
 	}
 	if e.customMatch == nil && !e.regexpMatch {

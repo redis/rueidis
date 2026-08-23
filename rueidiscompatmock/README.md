@@ -50,22 +50,11 @@ p.Exec(ctx)
 
 ### Client-side caching example
 
-Cached commands (`Cache(ttl)`) use the same `Expect*` calls as non-cached commands.
-The TTL argument is not matched against expectations.
-
-```golang
-compatmock.ExpectGet("key").SetVal("val")
-
-cached := rdb.Cache(100 * time.Millisecond)
-cached.Get(context.Background(), "key")
-```
-
-If a test needs to assert that a call went through the cache path specifically
-(as opposed to a plain, non-cached call), chain `ViaCache()` onto the
-expectation. A `ViaCache()` expectation is only satisfied by a call made
-through `Cache(ttl)`; a plain call for the same command will not match it.
-Expectations that don't call `ViaCache()` are unaffected and continue to match
-calls from either origin.
+Cached commands (`Cache(ttl)`) use the same `Expect*` calls as non-cached
+commands, but expectation matching is origin-aware: a call made through
+`Cache(ttl)` only matches an expectation marked `ViaCache()`, and a plain call
+only matches an expectation without it. The TTL argument itself is not
+matched against expectations.
 
 ```golang
 compatmock.ExpectGet("key").ViaCache().SetVal("val")
@@ -74,4 +63,18 @@ cached := rdb.Cache(100 * time.Millisecond)
 cached.Get(context.Background(), "key") // matches
 
 rdb.Get(context.Background(), "key") // would NOT match the ViaCache() expectation
+```
+
+The reverse also holds: an expectation without `ViaCache()` only matches a
+plain call and will not be satisfied by a call routed through `Cache(ttl)`.
+`ExpectationsWereMet()` reports an unmatched expectation when the two origins
+are mixed.
+
+```golang
+compatmock.ExpectGet("key").SetVal("val")
+
+rdb.Get(context.Background(), "key") // matches
+
+cached := rdb.Cache(100 * time.Millisecond)
+cached.Get(context.Background(), "key") // would NOT match the plain expectation
 ```

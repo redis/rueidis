@@ -3071,7 +3071,7 @@ func TestCacheCompatGet(t *testing.T) {
 	rdb, cm := NewClientMock()
 	defer rdb.Close()
 
-	cm.ExpectGet("key").SetVal("v")
+	cm.ExpectGet("key").ViaCache().SetVal("v")
 	cmd := rdb.Cache(100 * time.Millisecond).Get(ctx, "key")
 	if got := cmd.Val(); got != "v" {
 		t.Fatalf("expected %q, got %q", "v", got)
@@ -3089,7 +3089,7 @@ func TestCacheCompatViaNewAdapter(t *testing.T) {
 	cm := NewAdapter(raw)
 	rdb := rueidiscompat.NewAdapter(raw)
 
-	cm.ExpectGet("key").SetVal("v")
+	cm.ExpectGet("key").ViaCache().SetVal("v")
 	cmd := rdb.Cache(time.Second).Get(ctx, "key")
 	if got := cmd.Val(); got != "v" {
 		t.Fatalf("expected %q, got %q", "v", got)
@@ -3104,9 +3104,9 @@ func TestCacheCompatMultiCommand(t *testing.T) {
 	rdb, cm := NewClientMock()
 	defer rdb.Close()
 
-	cm.ExpectMGet("k1", "k2").SetVal([]any{"v1", "v2"})
-	cm.ExpectHGetAll("h").SetVal(map[string]string{"f": "v"})
-	cm.ExpectGetRange("s", 0, 1).SetVal("ab")
+	cm.ExpectMGet("k1", "k2").ViaCache().SetVal([]any{"v1", "v2"})
+	cm.ExpectHGetAll("h").ViaCache().SetVal(map[string]string{"f": "v"})
+	cm.ExpectGetRange("s", 0, 1).ViaCache().SetVal("ab")
 
 	cache := rdb.Cache(time.Minute)
 	if got := cache.MGet(ctx, "k1", "k2").Val(); !reflect.DeepEqual(got, []any{"v1", "v2"}) {
@@ -3128,7 +3128,7 @@ func TestCacheCompatCacheableWrapped(t *testing.T) {
 	rdb, cm := NewClientMock()
 	defer rdb.Close()
 
-	cm.ExpectEvalRO("return 1", []string{}).SetValInt(1)
+	cm.ExpectEvalRO("return 1", []string{}).ViaCache().SetValInt(1)
 	cmd := rdb.Cache(time.Second).EvalRO(ctx, "return 1", []string{})
 	if got := cmd.Val(); got != int64(1) {
 		t.Fatalf("unexpected EvalRO result %v", got)
@@ -3143,7 +3143,7 @@ func TestCacheCompatRedisNil(t *testing.T) {
 	rdb, cm := NewClientMock()
 	defer rdb.Close()
 
-	cm.ExpectGet("key").RedisNil()
+	cm.ExpectGet("key").ViaCache().RedisNil()
 	if err := rdb.Cache(time.Second).Get(ctx, "key").Err(); !errors.Is(err, rueidiscompat.Nil) {
 		t.Fatalf("expected Nil, got %v", err)
 	}
@@ -3157,7 +3157,7 @@ func TestCacheCompatSetErr(t *testing.T) {
 	rdb, cm := NewClientMock()
 	defer rdb.Close()
 
-	cm.ExpectGet("key").SetErr(errors.New("any"))
+	cm.ExpectGet("key").ViaCache().SetErr(errors.New("any"))
 	if err := wantAnyErr(rdb.Cache(time.Second).Get(ctx, "key").Err()); err != nil {
 		t.Fatal(err)
 	}
@@ -3171,8 +3171,8 @@ func TestCacheCompatTTLIrrelevant(t *testing.T) {
 	rdb, cm := NewClientMock()
 	defer rdb.Close()
 
-	cm.ExpectGet("k").SetVal("a")
-	cm.ExpectGet("k").SetVal("b")
+	cm.ExpectGet("k").ViaCache().SetVal("a")
+	cm.ExpectGet("k").ViaCache().SetVal("b")
 	if got := rdb.Cache(time.Millisecond).Get(ctx, "k").Val(); got != "a" {
 		t.Fatalf("expected %q, got %q", "a", got)
 	}
@@ -3278,7 +3278,7 @@ func TestCacheCompatViaCacheUnorderedGenericQueuedFirst(t *testing.T) {
 	}
 }
 
-func TestCacheCompatViaCacheUnorderedFallsBackToGeneric(t *testing.T) {
+func TestCacheCompatViaCacheUnorderedRequiresViaCache(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 	raw := mock.NewClient(ctrl)
@@ -3286,20 +3286,20 @@ func TestCacheCompatViaCacheUnorderedFallsBackToGeneric(t *testing.T) {
 	rdb := rueidiscompat.NewAdapter(raw)
 	cm.MatchExpectationsInOrder(false)
 
-	// No cache-specific expectation is queued at all; a cached call must
-	// still fall back to matching the first generic expectation, exactly as
-	// before this fix.
+	// No cache-specific expectation is queued at all; a cached call must not
+	// fall back to the unmarked expectation for the same command.
 	cm.ExpectGet("key").SetVal("plain")
 
-	if got := rdb.Cache(time.Second).Get(ctx, "key").Val(); got != "plain" {
-		t.Fatalf("expected cached call to fall back to the unmarked expectation, got %q", got)
+	err := rdb.Cache(time.Second).Get(ctx, "key").Err()
+	if err == nil || !strings.Contains(err.Error(), "no expectation for command") {
+		t.Fatalf("expected no-expectation error for cached call against only an unmarked expectation, got %v", err)
 	}
-	if err := cm.ExpectationsWereMet(); err != nil {
-		t.Fatalf("unexpected err %v", err)
+	if err := cm.ExpectationsWereMet(); err == nil {
+		t.Fatal("expected the unmarked expectation to remain unmatched")
 	}
 }
 
-func TestCacheCompatUnmarkedMatchesBothOrigins(t *testing.T) {
+func TestCacheCompatUnmarkedMatchesPlainOnly(t *testing.T) {
 	ctx := context.Background()
 	rdb, cm := NewClientMock()
 	defer rdb.Close()
@@ -3309,12 +3309,13 @@ func TestCacheCompatUnmarkedMatchesBothOrigins(t *testing.T) {
 		t.Fatalf("expected %q, got %q", "plain", got)
 	}
 
-	cm.ExpectGet("k2").SetVal("cached")
-	if got := rdb.Cache(time.Second).Get(ctx, "k2").Val(); got != "cached" {
-		t.Fatalf("expected %q, got %q", "cached", got)
+	cm.ExpectGet("k2").SetVal("plain")
+	err := rdb.Cache(time.Second).Get(ctx, "k2").Err()
+	if err == nil || !strings.Contains(err.Error(), "no expectation for command") {
+		t.Fatalf("expected no-expectation error for cached call against an unmarked expectation, got %v", err)
 	}
-	if err := cm.ExpectationsWereMet(); err != nil {
-		t.Fatalf("unexpected err %v", err)
+	if err := cm.ExpectationsWereMet(); err == nil {
+		t.Fatal("expected the unmarked expectation for k2 to remain unmatched")
 	}
 }
 
