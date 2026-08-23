@@ -3066,21 +3066,6 @@ func wantAnyErr(err error) error {
 	return nil
 }
 
-func TestCacheCompatGet(t *testing.T) {
-	ctx := context.Background()
-	rdb, cm := NewClientMock()
-	defer rdb.Close()
-
-	cm.ExpectGet("key").ViaCache().SetVal("v")
-	cmd := rdb.Cache(100 * time.Millisecond).Get(ctx, "key")
-	if got := cmd.Val(); got != "v" {
-		t.Fatalf("expected %q, got %q", "v", got)
-	}
-	if err := cm.ExpectationsWereMet(); err != nil {
-		t.Fatalf("unexpected err %v", err)
-	}
-}
-
 func TestCacheCompatViaNewAdapter(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -3190,8 +3175,22 @@ func TestCacheCompatUnmatched(t *testing.T) {
 	defer rdb.Close()
 
 	err := rdb.Cache(time.Second).Get(ctx, "key").Err()
-	if err == nil || !strings.Contains(err.Error(), "no expectation for command") {
-		t.Fatalf("expected no-expectation error, got %v", err)
+	if err == nil || !strings.Contains(err.Error(), "no expectation for command") || !strings.Contains(err.Error(), "via cache") {
+		t.Fatalf(`expected no-expectation error mentioning "via cache", got %v`, err)
+	}
+	if err := cm.ExpectationsWereMet(); err == nil {
+		t.Fatal("expected unmatched expectation error")
+	}
+}
+
+func TestCacheCompatUnmatchedPlainCallOmitsViaCache(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	err := rdb.Get(ctx, "key").Err()
+	if err == nil || !strings.Contains(err.Error(), "no expectation for command") || strings.Contains(err.Error(), "via cache") {
+		t.Fatalf(`expected no-expectation error without "via cache", got %v`, err)
 	}
 	if err := cm.ExpectationsWereMet(); err == nil {
 		t.Fatal("expected unmatched expectation error")

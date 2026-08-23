@@ -571,6 +571,13 @@ func (m *clientMock) wire() {
 		AnyTimes()
 }
 
+func unmatchedErr(cmd rueidis.Completed, viaCache bool) error {
+	if viaCache {
+		return fmt.Errorf("rueidiscompatmock: no expectation for command %v via cache", cmd.Commands())
+	}
+	return fmt.Errorf("rueidiscompatmock: no expectation for command %v", cmd.Commands())
+}
+
 func (m *clientMock) consume(n int, cmds []rueidis.Completed, viaCache bool) []rueidis.RedisResult {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -578,7 +585,7 @@ func (m *clientMock) consume(n int, cmds []rueidis.Completed, viaCache bool) []r
 	for i, cmd := range cmds {
 		idx, ok := m.matchLocked(cmd, viaCache)
 		if !ok {
-			err := fmt.Errorf("rueidiscompatmock: no expectation for command %v", cmd.Commands())
+			err := unmatchedErr(cmd, viaCache)
 			m.unmatched = append(m.unmatched, err)
 			out[i] = mock.ErrorResult(err)
 			for j := i + 1; j < n; j++ {
@@ -597,7 +604,7 @@ func (m *clientMock) consumeWithRaw(cmd rueidis.Completed) resolvedExpectation {
 	defer m.mu.Unlock()
 	idx, ok := m.matchLocked(cmd, false)
 	if !ok {
-		err := fmt.Errorf("rueidiscompatmock: no expectation for command %v", cmd.Commands())
+		err := unmatchedErr(cmd, false)
 		m.unmatched = append(m.unmatched, err)
 		return resolvedExpectation{result: mock.ErrorResult(err)}
 	}
