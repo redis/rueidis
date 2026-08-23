@@ -3,7 +3,8 @@ package rueidiscompatmock
 // ViaCache marks this expectation so it is only satisfied by a call routed
 // through DoCache (i.e. rueidiscompat.Cache(ttl).<Cmd>()). A plain, non-cached
 // call for the same command will not match it. Expectations that do not call
-// ViaCache are unaffected and continue to match calls from either origin.
+// ViaCache match only plain calls and will not be satisfied by a call routed
+// through DoCache.
 
 func (e *ExpectedString) ViaCache() *ExpectedString {
 	e.exp.requireCache = true
