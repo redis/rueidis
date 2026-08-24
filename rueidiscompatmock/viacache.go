@@ -5,7 +5,6 @@ package rueidiscompatmock
 // call for the same command will not match it. Expectations that do not call
 // ViaCache match only plain calls and will not be satisfied by a call routed
 // through DoCache.
-
 func (e *ExpectedString) ViaCache() *ExpectedString {
 	e.exp.requireCache = true
 	return e
