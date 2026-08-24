@@ -3066,6 +3066,258 @@ func wantAnyErr(err error) error {
 	return nil
 }
 
+func TestCacheCompatViaNewAdapter(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	ctx := context.Background()
+	raw := mock.NewClient(ctrl)
+	cm := NewAdapter(raw)
+	rdb := rueidiscompat.NewAdapter(raw)
+
+	cm.ExpectGet("key").ViaCache().SetVal("v")
+	cmd := rdb.Cache(time.Second).Get(ctx, "key")
+	if got := cmd.Val(); got != "v" {
+		t.Fatalf("expected %q, got %q", "v", got)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestCacheCompatMultiCommand(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	cm.ExpectMGet("k1", "k2").ViaCache().SetVal([]any{"v1", "v2"})
+	cm.ExpectHGetAll("h").ViaCache().SetVal(map[string]string{"f": "v"})
+	cm.ExpectGetRange("s", 0, 1).ViaCache().SetVal("ab")
+
+	cache := rdb.Cache(time.Minute)
+	if got := cache.MGet(ctx, "k1", "k2").Val(); !reflect.DeepEqual(got, []any{"v1", "v2"}) {
+		t.Fatalf("unexpected MGet result %v", got)
+	}
+	if got := cache.HGetAll(ctx, "h").Val(); !reflect.DeepEqual(got, map[string]string{"f": "v"}) {
+		t.Fatalf("unexpected HGetAll result %v", got)
+	}
+	if got := cache.GetRange(ctx, "s", 0, 1).Val(); got != "ab" {
+		t.Fatalf("unexpected GetRange result %q", got)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestCacheCompatCacheableWrapped(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	cm.ExpectEvalRO("return 1", []string{}).ViaCache().SetValInt(1)
+	cmd := rdb.Cache(time.Second).EvalRO(ctx, "return 1", []string{})
+	if got := cmd.Val(); got != int64(1) {
+		t.Fatalf("unexpected EvalRO result %v", got)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestCacheCompatRedisNil(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	cm.ExpectGet("key").ViaCache().RedisNil()
+	if err := rdb.Cache(time.Second).Get(ctx, "key").Err(); !errors.Is(err, rueidiscompat.Nil) {
+		t.Fatalf("expected Nil, got %v", err)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestCacheCompatSetErr(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	cm.ExpectGet("key").ViaCache().SetErr(errors.New("any"))
+	if err := wantAnyErr(rdb.Cache(time.Second).Get(ctx, "key").Err()); err != nil {
+		t.Fatal(err)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestCacheCompatTTLIrrelevant(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	cm.ExpectGet("k").ViaCache().SetVal("a")
+	cm.ExpectGet("k").ViaCache().SetVal("b")
+	if got := rdb.Cache(time.Millisecond).Get(ctx, "k").Val(); got != "a" {
+		t.Fatalf("expected %q, got %q", "a", got)
+	}
+	if got := rdb.Cache(time.Hour).Get(ctx, "k").Val(); got != "b" {
+		t.Fatalf("expected %q, got %q", "b", got)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestCacheCompatUnmatched(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	err := rdb.Cache(time.Second).Get(ctx, "key").Err()
+	if err == nil || !strings.Contains(err.Error(), "no expectation for command") || !strings.Contains(err.Error(), "via cache") {
+		t.Fatalf(`expected no-expectation error mentioning "via cache", got %v`, err)
+	}
+	if err := cm.ExpectationsWereMet(); err == nil {
+		t.Fatal("expected unmatched expectation error")
+	}
+}
+
+func TestCacheCompatUnmatchedPlainCallOmitsViaCache(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	err := rdb.Get(ctx, "key").Err()
+	if err == nil || !strings.Contains(err.Error(), "no expectation for command") || strings.Contains(err.Error(), "via cache") {
+		t.Fatalf(`expected no-expectation error without "via cache", got %v`, err)
+	}
+	if err := cm.ExpectationsWereMet(); err == nil {
+		t.Fatal("expected unmatched expectation error")
+	}
+}
+
+func TestCacheCompatViaCacheRequired(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	cm.ExpectGet("key").ViaCache().SetVal("v")
+	if got := rdb.Cache(time.Second).Get(ctx, "key").Val(); got != "v" {
+		t.Fatalf("expected %q, got %q", "v", got)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestCacheCompatViaCacheRejectsPlainCall(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	cm.ExpectGet("key").ViaCache().SetVal("v")
+	err := rdb.Get(ctx, "key").Err()
+	if err == nil || !strings.Contains(err.Error(), "no expectation for command") {
+		t.Fatalf("expected no-expectation error for plain call against a ViaCache expectation, got %v", err)
+	}
+	if err := cm.ExpectationsWereMet(); err == nil {
+		t.Fatal("expected the ViaCache expectation to remain unmatched")
+	}
+}
+
+func TestCacheCompatViaCacheUnordered(t *testing.T) {
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	raw := mock.NewClient(ctrl)
+	cm := NewAdapter(raw)
+	rdb := rueidiscompat.NewAdapter(raw)
+	cm.MatchExpectationsInOrder(false)
+
+	// Two expectations for the same key: one plain, one cache-required. In
+	// unordered mode the scan must pick the one matching the call's origin,
+	// not just the first one for the command/key.
+	cm.ExpectGet("key").ViaCache().SetVal("cached")
+	cm.ExpectGet("key").SetVal("plain")
+
+	if got := rdb.Get(ctx, "key").Val(); got != "plain" {
+		t.Fatalf("expected plain call to match the non-cache expectation, got %q", got)
+	}
+	if got := rdb.Cache(time.Second).Get(ctx, "key").Val(); got != "cached" {
+		t.Fatalf("expected cached call to match the ViaCache expectation, got %q", got)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestCacheCompatViaCacheUnorderedGenericQueuedFirst(t *testing.T) {
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	raw := mock.NewClient(ctrl)
+	cm := NewAdapter(raw)
+	rdb := rueidiscompat.NewAdapter(raw)
+	cm.MatchExpectationsInOrder(false)
+
+	// Same as TestCacheCompatViaCacheUnordered but with queue order reversed:
+	// the unmarked (generic) expectation is queued BEFORE the ViaCache()
+	// expectation. A cached call must still prefer the cache-specific entry
+	// rather than "stealing" the generic one queued ahead of it.
+	cm.ExpectGet("key").SetVal("plain")
+	cm.ExpectGet("key").ViaCache().SetVal("cached")
+
+	if got := rdb.Cache(time.Second).Get(ctx, "key").Val(); got != "cached" {
+		t.Fatalf("expected cached call to match the ViaCache expectation, got %q", got)
+	}
+	if got := rdb.Get(ctx, "key").Val(); got != "plain" {
+		t.Fatalf("expected the remaining plain call to match the unmarked expectation, got %q", got)
+	}
+	if err := cm.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+}
+
+func TestCacheCompatViaCacheUnorderedRequiresViaCache(t *testing.T) {
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	raw := mock.NewClient(ctrl)
+	cm := NewAdapter(raw)
+	rdb := rueidiscompat.NewAdapter(raw)
+	cm.MatchExpectationsInOrder(false)
+
+	// No cache-specific expectation is queued at all; a cached call must not
+	// fall back to the unmarked expectation for the same command.
+	cm.ExpectGet("key").SetVal("plain")
+
+	err := rdb.Cache(time.Second).Get(ctx, "key").Err()
+	if err == nil || !strings.Contains(err.Error(), "no expectation for command") {
+		t.Fatalf("expected no-expectation error for cached call against only an unmarked expectation, got %v", err)
+	}
+	if err := cm.ExpectationsWereMet(); err == nil {
+		t.Fatal("expected the unmarked expectation to remain unmatched")
+	}
+}
+
+func TestCacheCompatUnmarkedMatchesPlainOnly(t *testing.T) {
+	ctx := context.Background()
+	rdb, cm := NewClientMock()
+	defer rdb.Close()
+
+	cm.ExpectGet("k1").SetVal("plain")
+	if got := rdb.Get(ctx, "k1").Val(); got != "plain" {
+		t.Fatalf("expected %q, got %q", "plain", got)
+	}
+
+	cm.ExpectGet("k2").SetVal("plain")
+	err := rdb.Cache(time.Second).Get(ctx, "k2").Err()
+	if err == nil || !strings.Contains(err.Error(), "no expectation for command") {
+		t.Fatalf("expected no-expectation error for cached call against an unmarked expectation, got %v", err)
+	}
+	if err := cm.ExpectationsWereMet(); err == nil {
+		t.Fatal("expected the unmarked expectation for k2 to remain unmatched")
+	}
+}
+
 func runCases(t *testing.T, cm ClientMock, cases []func() error) {
 	t.Helper()
 	for i, c := range cases {
