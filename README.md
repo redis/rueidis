@@ -501,8 +501,20 @@ client, err := rueidis.NewClient(rueidis.ClientOption{
     SendToReplicas: func(cmd rueidis.Completed) bool {
         return cmd.IsReadOnly()
     },
+    ClusterOption: valkey.ClusterOption{
+        // Set this to periodically refresh the cluster topology.
+        // Without it, newly added or removed replicas won't be picked up,
+        // because the topology is only refreshed on MOVED/ASK errors or connection closures.
+        ShardsRefreshInterval: 10 * time.Second,
+    },
 })
+```
 
+Note that scaling the number of replicas on an existing shard (e.g. via ElastiCache modify-replication-group)
+neither moves slots nor closes existing connections, so without `ShardsRefreshInterval`
+the client never discovers the new replicas and continues reading the old shard.
+
+```golang
 // Connect to sentinels
 client, err := rueidis.NewClient(rueidis.ClientOption{
     InitAddress: []string{"127.0.0.1:26379", "127.0.0.1:26380", "127.0.0.1:26381"},
