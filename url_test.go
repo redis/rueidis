@@ -35,6 +35,12 @@ func TestParseURL(t *testing.T) {
 	if opt, err := ParseURL("redis://?addr=:6380&addr=:6381"); err != nil || opt.InitAddress[0] != "localhost:6379" || opt.InitAddress[1] != "localhost:6380" || opt.InitAddress[2] != "localhost:6381" {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}
+	if opt, err := ParseURL("redis://cache:6379?addr=:6380"); err != nil || opt.InitAddress[0] != "cache:6379" || opt.InitAddress[1] != "cache:6380" {
+		t.Fatalf("unexpected %v %v", opt, err)
+	}
+	if opt, err := ParseURL("redis://[::1]:6379?addr=:6380"); err != nil || opt.InitAddress[0] != "[::1]:6379" || opt.InitAddress[1] != "[::1]:6380" {
+		t.Fatalf("unexpected %v %v", opt, err)
+	}
 	if opt, err := ParseURL("redis://myhost:1234"); err != nil || opt.InitAddress[0] != "myhost:1234" {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}

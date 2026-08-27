@@ -23,10 +23,11 @@ func ParseURL(str string) (opt ClientOption, err error) {
 	if err != nil {
 		return opt, err
 	}
+	fallbackHost := u.Host
 	parseAddr := func(hostport string) (host string, addr string) {
 		host, port, _ := net.SplitHostPort(hostport)
 		if host == "" {
-			host = u.Host
+			host = fallbackHost
 		}
 		if host == "" {
 			host = "localhost"
@@ -52,6 +53,7 @@ func ParseURL(str string) (opt ClientOption, err error) {
 	}
 	if opt.InitAddress == nil {
 		host, addr := parseAddr(u.Host)
+		fallbackHost = host
 		opt.InitAddress = []string{addr}
 		if opt.TLSConfig != nil {
 			opt.TLSConfig.ServerName = host
