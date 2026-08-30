@@ -26,7 +26,7 @@ func ParseURL(str string) (opt ClientOption, err error) {
 	parseAddr := func(hostport string) (host string, addr string) {
 		host, port, _ := net.SplitHostPort(hostport)
 		if host == "" {
-			host = u.Host
+			host = u.Hostname()
 		}
 		if host == "" {
 			host = "localhost"
