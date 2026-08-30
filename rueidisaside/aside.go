@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"math/rand"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -18,7 +19,7 @@ type ClientOption struct {
 	ClientBuilder func(option rueidis.ClientOption) (rueidis.Client, error)
 	ClientOption  rueidis.ClientOption
 	ClientTTL     time.Duration // TTL for the client marker, refreshed every 1/2 TTL. Defaults to 10s. The marker allows other clients to know if this client is still alive.
-	UseLuaLock    bool          // Use the Redis < 7 compatible lock implementation.
+	UseLuaLock    bool
 }
 
 type CacheAsideClient interface {
@@ -34,11 +35,12 @@ func NewClient(option ClientOption) (cc CacheAsideClient, err error) {
 	}
 	ca := &Client{
 		waits:      make(map[string]chan struct{}),
-		flights:    make(map[string]*flight),
+		flights:    make(map[string]chan struct{}),
 		ttl:        option.ClientTTL,
 		useLuaLock: option.UseLuaLock,
 	}
 	option.ClientOption.PipelineMultiplex = -1 // ensure lock and cleanup commands use the same connection.
+	option.ClientOption.DisableAutoPipelining = false
 	option.ClientOption.OnInvalidations = ca.onInvalidation
 	if option.ClientBuilder != nil {
 		ca.client, err = option.ClientBuilder(option.ClientOption)
@@ -56,7 +58,7 @@ type Client struct {
 	client     rueidis.Client
 	ctx        context.Context
 	waits      map[string]chan struct{}
-	flights    map[string]*flight
+	flights    map[string]chan struct{}
 	cancel     context.CancelFunc
 	id         string
 	ttl        time.Duration
@@ -162,7 +164,7 @@ retry:
 		f, leader := c.beginFlight(key)
 		if !leader {
 			select {
-			case <-f.done:
+			case <-f:
 				goto retry
 			case <-ctx.Done():
 				return "", ctx.Err()
@@ -197,6 +199,72 @@ retry:
 		}
 	}
 
+	return val, err
+}
+
+func (c *Client) beginFlight(key string) (f chan struct{}, leader bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if f = c.flights[key]; f != nil {
+		return f, false
+	}
+	f = make(chan struct{})
+	c.flights[key] = f
+	return f, true
+}
+
+func (c *Client) finishFlight(key string, f chan struct{}) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.flights[key] == f {
+		delete(c.flights, key)
+		close(f)
+	}
+}
+
+func (c *Client) populate(
+	ctx context.Context,
+	ttl time.Duration,
+	key string,
+	fn func(ctx context.Context, key string) (val string, err error),
+	f chan struct{},
+) (val string, err error) {
+	defer c.finishFlight(key, f)
+
+	id, err := c.keepalive()
+	if err != nil {
+		return "", err
+	}
+
+	cleanup := true
+	defer func() {
+		if cleanup {
+			delkey.Exec(context.Background(), c.client, []string{key}, []string{id})
+		}
+	}()
+
+	if c.useLuaLock {
+		val, err = acquireLock.Exec(ctx, c.client, []string{key}, []string{id, strconv.FormatInt(ttl.Milliseconds(), 10)}).ToString()
+	} else {
+		val, err = c.client.Do(ctx, c.client.B().Set().Key(key).Value(id).Nx().Get().Px(ttl).Build()).ToString()
+	}
+	if err == nil {
+		cleanup = false
+		return val, nil
+	}
+	if !rueidis.IsRedisNil(err) {
+		return val, err
+	}
+
+	ctx = context.WithValue(ctx, ttlKey, &ttl)
+	if val, err = fn(ctx, key); err == nil {
+		err = setkey.Exec(ctx, c.client, []string{key}, []string{id, val, strconv.FormatInt(ttl.Milliseconds(), 10)}).Error()
+	}
+	if err == nil {
+		cleanup = false
+	}
 	return val, err
 }
 

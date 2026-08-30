@@ -94,7 +94,7 @@ type getResult struct {
 
 func TestBeginFlightIsPerKey(t *testing.T) {
 	c := &Client{
-		flights: make(map[string]*flight),
+		flights: make(map[string]chan struct{}),
 	}
 	f, leader := c.beginFlight("key")
 	if f == nil || !leader {
@@ -112,15 +112,35 @@ func TestBeginFlightIsPerKey(t *testing.T) {
 		t.Fatal("different key did not create an independent flight")
 	}
 	select {
-	case <-f.done:
+	case <-f:
 		t.Fatal("flight completed before the leader finished")
 	default:
 	}
 	c.finishFlight("key", f)
 	select {
-	case <-f.done:
+	case <-f:
 	default:
 		t.Fatal("flight did not wake its follower")
+	}
+
+	next, leader := c.beginFlight("key")
+	if next == f || !leader {
+		t.Fatal("completed flight was reused")
+	}
+	c.finishFlight("key", f)
+	if c.flights["key"] != next {
+		t.Fatal("old flight removed the current flight")
+	}
+	select {
+	case <-next:
+		t.Fatal("old flight closed the current flight")
+	default:
+	}
+	c.finishFlight("key", next)
+	select {
+	case <-next:
+	default:
+		t.Fatal("current flight did not wake its follower")
 	}
 }
 
@@ -137,7 +157,7 @@ func TestAcquireCancellationCleansPlaceholder(t *testing.T) {
 
 			var wrapped *cancelAfterAcquireClient
 			client, err := NewClient(ClientOption{
-				ClientOption: rueidis.ClientOption{InitAddress: addr, SelectDB: 5},
+				ClientOption: rueidis.ClientOption{InitAddress: addr, DisableAutoPipelining: true, SelectDB: 5},
 				ClientTTL:    time.Second,
 				UseLuaLock:   useLuaLock,
 				ClientBuilder: func(option rueidis.ClientOption) (rueidis.Client, error) {
