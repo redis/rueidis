@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"iter"
+	"strconv"
 	"sync/atomic"
 	"time"
 
@@ -107,6 +108,24 @@ func MSetNX(client Client, ctx context.Context, kvs map[string]string) map[strin
 	return doMultiSet(client, ctx, cmds)
 }
 
+// MSetEX is a helper that consults the valkey directly with multiple keys by grouping keys within the same slot into MSETEXs or multiple SETs
+func MSetEX(client Client, ctx context.Context, kvs map[string]string, options ...string) map[string]error {
+	if len(kvs) == 0 {
+		return make(map[string]error)
+	}
+
+	switch client.(type) {
+	case *singleClient, *standalone, *sentinelClient:
+		return clientMSetEX(client, ctx, kvs, options, make(map[string]error, len(kvs)))
+	}
+
+	cmds := mgetcmdsp.Get(0, len(kvs))
+	for k, v := range kvs {
+		cmds.s = append(cmds.s, client.B().Arbitrary("SET").Keys(k).Args(v).Args(options...).Build().Pin())
+	}
+	return doMultiSet(client, ctx, cmds)
+}
+
 // JsonMGetCache is a helper that consults the client-side caches with multiple keys by grouping keys within the same slot into multiple JSON.GETs
 func JsonMGetCache(client Client, ctx context.Context, ttl time.Duration, keys []string, path string) (ret map[string]RedisMessage, err error) {
 	if len(keys) == 0 {
@@ -189,6 +208,22 @@ func clientMSet(client Client, ctx context.Context, mset string, kvs map[string]
 	ok, err := client.Do(ctx, cmd.Build()).AsBool()
 	if err == nil && !ok {
 		err = ErrMSetNXNotSet
+	}
+	for k := range kvs {
+		ret[k] = err
+	}
+	return ret
+}
+
+func clientMSetEX(client Client, ctx context.Context, kvs map[string]string, options []string, ret map[string]error) map[string]error {
+	cmd := client.B().Arbitrary("MSETEX", strconv.Itoa(len(kvs)))
+	for k, v := range kvs {
+		cmd = cmd.Args(k, v)
+	}
+	cmd = cmd.Args(options...)
+	ok, err := client.Do(ctx, cmd.Build()).AsBool()
+	if err == nil && !ok {
+		err = ErrMSetEXNotSet
 	}
 	for k := range kvs {
 		ret[k] = err
@@ -347,6 +382,10 @@ func clusterJsonMGet(client Client, ctx context.Context, keys []string, path str
 // ErrMSetNXNotSet is used in the MSetNX helper when the underlying MSETNX response is 0.
 // Ref: https://redis.io/commands/msetnx/
 var ErrMSetNXNotSet = errors.New("MSETNX: no key was set")
+
+// ErrMSetEXNotSet is used in the MSetEX helper when the underlying MSETEX response is 0.
+// Ref: https://valkey.io/commands/msetex/
+var ErrMSetEXNotSet = errors.New("MSETEX: no key was set")
 
 type Scanner struct {
 	next func(cursor uint64) (ScanEntry, error)

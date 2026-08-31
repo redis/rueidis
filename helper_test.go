@@ -904,6 +904,265 @@ func TestMSetNXNotSet(t *testing.T) {
 	})
 }
 
+func TestMSetEX(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	t.Run("single client", func(t *testing.T) {
+		m := &mockConn{}
+		client, err := newSingleClient(
+			&ClientOption{InitAddress: []string{""}},
+			m,
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate Do", func(t *testing.T) {
+			m.DoFn = func(cmd Completed) RedisResult {
+				if !reflect.DeepEqual(cmd.Commands(), []string{"MSETEX", "2", "1", "1", "2", "2", "NX", "EX", "10"}) &&
+					!reflect.DeepEqual(cmd.Commands(), []string{"MSETEX", "2", "2", "2", "1", "1", "NX", "EX", "10"}) {
+					t.Fatalf("unexpected command %v", cmd)
+				}
+				return NewResult(RedisMessage{typ: ':', intlen: 1}, nil)
+			}
+			if err := MSetEX(client, context.Background(), map[string]string{"1": "1", "2": "2"}, "NX", "EX", "10"); err["1"] != nil || err["2"] != nil {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+		t.Run("Delegate Do No Options", func(t *testing.T) {
+			m.DoFn = func(cmd Completed) RedisResult {
+				if !reflect.DeepEqual(cmd.Commands(), []string{"MSETEX", "2", "1", "1", "2", "2"}) &&
+					!reflect.DeepEqual(cmd.Commands(), []string{"MSETEX", "2", "2", "2", "1", "1"}) {
+					t.Fatalf("unexpected command %v", cmd)
+				}
+				return NewResult(RedisMessage{typ: ':', intlen: 1}, nil)
+			}
+			if err := MSetEX(client, context.Background(), map[string]string{"1": "1", "2": "2"}); err["1"] != nil || err["2"] != nil {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+		t.Run("Delegate Do Empty", func(t *testing.T) {
+			if err := MSetEX(client, context.Background(), map[string]string{}, "NX", "EX", "10"); len(err) != 0 {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+		t.Run("Delegate Do Err", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			m.DoFn = func(cmd Completed) RedisResult {
+				return NewResult(RedisMessage{}, context.Canceled)
+			}
+			if err := MSetEX(client, ctx, map[string]string{"1": "1", "2": "2"}, "NX", "EX", "10"); err["1"] != context.Canceled || err["2"] != context.Canceled {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+	})
+	t.Run("standalone client", func(t *testing.T) {
+		m := &mockConn{}
+		client, err := newStandaloneClient(
+			&ClientOption{
+				InitAddress: []string{""},
+				Standalone: StandaloneOption{
+					ReplicaAddress: []string{""},
+				},
+				SendToReplicas: func(cmd Completed) bool {
+					return cmd.IsReadOnly()
+				},
+			},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate Do", func(t *testing.T) {
+			m.DoFn = func(cmd Completed) RedisResult {
+				if !reflect.DeepEqual(cmd.Commands(), []string{"MSETEX", "2", "1", "1", "2", "2", "NX", "EX", "10"}) &&
+					!reflect.DeepEqual(cmd.Commands(), []string{"MSETEX", "2", "2", "2", "1", "1", "NX", "EX", "10"}) {
+					t.Fatalf("unexpected command %v", cmd)
+				}
+				return NewResult(RedisMessage{typ: ':', intlen: 1}, nil)
+			}
+			if err := MSetEX(client, context.Background(), map[string]string{"1": "1", "2": "2"}, "NX", "EX", "10"); err["1"] != nil || err["2"] != nil {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+		t.Run("Delegate Do No Options", func(t *testing.T) {
+			m.DoFn = func(cmd Completed) RedisResult {
+				if !reflect.DeepEqual(cmd.Commands(), []string{"MSETEX", "2", "1", "1", "2", "2"}) &&
+					!reflect.DeepEqual(cmd.Commands(), []string{"MSETEX", "2", "2", "2", "1", "1"}) {
+					t.Fatalf("unexpected command %v", cmd)
+				}
+				return NewResult(RedisMessage{typ: ':', intlen: 1}, nil)
+			}
+			if err := MSetEX(client, context.Background(), map[string]string{"1": "1", "2": "2"}); err["1"] != nil || err["2"] != nil {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+		t.Run("Delegate Do Empty", func(t *testing.T) {
+			if err := MSetEX(client, context.Background(), map[string]string{}, "NX", "EX", "10"); len(err) != 0 {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+		t.Run("Delegate Do Err", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			m.DoFn = func(cmd Completed) RedisResult {
+				return NewResult(RedisMessage{}, context.Canceled)
+			}
+			if err := MSetEX(client, ctx, map[string]string{"1": "1", "2": "2"}, "NX", "EX", "10"); err["1"] != context.Canceled || err["2"] != context.Canceled {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+	})
+	t.Run("cluster client", func(t *testing.T) {
+		m := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				return slotsResp
+			},
+		}
+		client, err := newClusterClient(
+			&ClientOption{InitAddress: []string{":0"}},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate Do", func(t *testing.T) {
+			keys := make(map[string]string, 100)
+			for i := range 100 {
+				keys[strconv.Itoa(i)] = strconv.Itoa(i)
+			}
+			cpy := make(map[string]struct{}, len(keys))
+			for k := range keys {
+				cpy[k] = struct{}{}
+			}
+			m.DoMultiFn = func(cmd ...Completed) *redisresults {
+				result := make([]RedisResult, len(cmd))
+				for i, c := range cmd {
+					delete(cpy, c.Commands()[1])
+					if c.Commands()[0] != "SET" || keys[c.Commands()[1]] != c.Commands()[2] ||
+						c.Commands()[3] != "NX" || c.Commands()[4] != "EX" || c.Commands()[5] != "10" {
+						t.Fatalf("unexpected command %v", cmd)
+						return nil
+					}
+					result[i] = NewResult(strmsg('+', "OK"), nil)
+				}
+				if len(cpy) != 0 {
+					t.Fatalf("unexpected command %v", cmd)
+					return nil
+				}
+				return &redisresults{s: result}
+			}
+			err := MSetEX(client, context.Background(), keys, "NX", "EX", "10")
+			for key := range keys {
+				if err[key] != nil {
+					t.Fatalf("unexpected response %v", err)
+				}
+			}
+		})
+		t.Run("Delegate Do No Options", func(t *testing.T) {
+			keys := make(map[string]string, 100)
+			for i := range 100 {
+				keys[strconv.Itoa(i)] = strconv.Itoa(i)
+			}
+			cpy := make(map[string]struct{}, len(keys))
+			for k := range keys {
+				cpy[k] = struct{}{}
+			}
+			m.DoMultiFn = func(cmd ...Completed) *redisresults {
+				result := make([]RedisResult, len(cmd))
+				for i, c := range cmd {
+					delete(cpy, c.Commands()[1])
+					if !reflect.DeepEqual(c.Commands(), []string{"SET", c.Commands()[1], keys[c.Commands()[1]]}) {
+						t.Fatalf("unexpected command %v", cmd)
+						return nil
+					}
+					result[i] = NewResult(strmsg('+', "OK"), nil)
+				}
+				if len(cpy) != 0 {
+					t.Fatalf("unexpected command %v", cmd)
+					return nil
+				}
+				return &redisresults{s: result}
+			}
+			err := MSetEX(client, context.Background(), keys)
+			for key := range keys {
+				if err[key] != nil {
+					t.Fatalf("unexpected response %v", err)
+				}
+			}
+		})
+		t.Run("Delegate Do Empty", func(t *testing.T) {
+			if err := MSetEX(client, context.Background(), map[string]string{}, "NX", "EX", "10"); len(err) != 0 {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+		t.Run("Delegate Do Err", func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			m.DoMultiFn = func(cmd ...Completed) *redisresults {
+				return &redisresults{s: []RedisResult{NewErrorResult(context.Canceled), NewErrorResult(context.Canceled)}}
+			}
+			if err := MSetEX(client, ctx, map[string]string{"1": "1", "2": "2"}, "NX", "EX", "10"); err["1"] != context.Canceled || err["2"] != context.Canceled {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+	})
+}
+
+func TestMSetEXNotSet(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	t.Run("single client", func(t *testing.T) {
+		m := &mockConn{}
+		client, err := newSingleClient(
+			&ClientOption{InitAddress: []string{""}},
+			m,
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate Do Not Set", func(t *testing.T) {
+			m.DoFn = func(cmd Completed) RedisResult {
+				return NewResult(RedisMessage{typ: ':', intlen: 0}, nil)
+			}
+			if err := MSetEX(client, context.Background(), map[string]string{"1": "1", "2": "2"}, "NX", "EX", "10"); err["1"] != ErrMSetEXNotSet || err["2"] != ErrMSetEXNotSet {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+	})
+	t.Run("standalone client", func(t *testing.T) {
+		m := &mockConn{}
+		client, err := newStandaloneClient(
+			&ClientOption{
+				InitAddress: []string{""},
+				Standalone: StandaloneOption{
+					ReplicaAddress: []string{""},
+				},
+				SendToReplicas: func(cmd Completed) bool {
+					return cmd.IsReadOnly()
+				},
+			},
+			func(dst string, opt *ClientOption) conn { return m },
+			newRetryer(defaultRetryDelayFn),
+		)
+		if err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+		t.Run("Delegate Do Not Set", func(t *testing.T) {
+			m.DoFn = func(cmd Completed) RedisResult {
+				return NewResult(RedisMessage{typ: ':', intlen: 0}, nil)
+			}
+			if err := MSetEX(client, context.Background(), map[string]string{"1": "1", "2": "2"}, "NX", "EX", "10"); err["1"] != ErrMSetEXNotSet || err["2"] != ErrMSetEXNotSet {
+				t.Fatalf("unexpected response %v", err)
+			}
+		})
+	})
+}
+
 //gocyclo:ignore
 func TestJsonMGetCache(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
