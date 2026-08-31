@@ -35,9 +35,12 @@ func NewClient(option ClientOption) (cc CacheAsideClient, err error) {
 	}
 	ca := &Client{
 		waits:      make(map[string]chan struct{}),
+		flights:    make(map[string]chan struct{}),
 		ttl:        option.ClientTTL,
 		useLuaLock: option.UseLuaLock,
 	}
+	option.ClientOption.PipelineMultiplex = -1 // ensure lock and cleanup commands use the same connection.
+	option.ClientOption.DisableAutoPipelining = false
 	option.ClientOption.OnInvalidations = ca.onInvalidation
 	if option.ClientBuilder != nil {
 		ca.client, err = option.ClientBuilder(option.ClientOption)
@@ -55,6 +58,7 @@ type Client struct {
 	client     rueidis.Client
 	ctx        context.Context
 	waits      map[string]chan struct{}
+	flights    map[string]chan struct{}
 	cancel     context.CancelFunc
 	id         string
 	ttl        time.Duration
@@ -157,25 +161,18 @@ retry:
 	val, err := resp.ToString()
 
 	if rueidis.IsRedisNil(err) && fn != nil { // cache miss, prepare to populate the value by fn()
-		var id string
-		if id, err = c.keepalive(); err == nil { // acquire client id
-			if c.useLuaLock {
-				val, err = acquireLock.Exec(ctx, c.client, []string{key}, []string{id, strconv.FormatInt(ttl.Milliseconds(), 10)}).ToString()
-			} else {
-				val, err = c.client.Do(ctx, c.client.B().Set().Key(key).Value(id).Nx().Get().Px(ttl).Build()).ToString()
-			}
-
-			if rueidis.IsRedisNil(err) { // successfully set client id on the key as a lock
-				// attach TTL pointer to context for potential modification via OverrideCacheTTL
-				ctx = context.WithValue(ctx, ttlKey, &ttl)
-				if val, err = fn(ctx, key); err == nil {
-					err = setkey.Exec(ctx, c.client, []string{key}, []string{id, val, strconv.FormatInt(ttl.Milliseconds(), 10)}).Error()
-				}
-				if err != nil { // failed to populate the value, release the lock.
-					delkey.Exec(context.Background(), c.client, []string{key}, []string{id})
-				}
+		f, leader := c.beginFlight(key)
+		if !leader {
+			select {
+			case <-f:
+				goto retry
+			case <-ctx.Done():
+				return "", ctx.Err()
+			case <-c.ctx.Done():
+				return "", c.ctx.Err()
 			}
 		}
+		val, err = c.populate(ctx, ttl, key, fn, f)
 	}
 
 	if err != nil {
@@ -205,6 +202,72 @@ retry:
 	return val, err
 }
 
+func (c *Client) beginFlight(key string) (f chan struct{}, leader bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if f = c.flights[key]; f != nil {
+		return f, false
+	}
+	f = make(chan struct{})
+	c.flights[key] = f
+	return f, true
+}
+
+func (c *Client) finishFlight(key string, f chan struct{}) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.flights[key] == f {
+		delete(c.flights, key)
+		close(f)
+	}
+}
+
+func (c *Client) populate(
+	ctx context.Context,
+	ttl time.Duration,
+	key string,
+	fn func(ctx context.Context, key string) (val string, err error),
+	f chan struct{},
+) (val string, err error) {
+	defer c.finishFlight(key, f)
+
+	id, err := c.keepalive()
+	if err != nil {
+		return "", err
+	}
+
+	cleanup := true
+	defer func() {
+		if cleanup {
+			delkey.Exec(context.Background(), c.client, []string{key}, []string{id})
+		}
+	}()
+
+	if c.useLuaLock {
+		val, err = acquireLock.Exec(ctx, c.client, []string{key}, []string{id, strconv.FormatInt(ttl.Milliseconds(), 10)}).ToString()
+	} else {
+		val, err = c.client.Do(ctx, c.client.B().Set().Key(key).Value(id).Nx().Get().Px(ttl).Build()).ToString()
+	}
+	if err == nil {
+		cleanup = false
+		return val, nil
+	}
+	if !rueidis.IsRedisNil(err) {
+		return val, err
+	}
+
+	ctx = context.WithValue(ctx, ttlKey, &ttl)
+	if val, err = fn(ctx, key); err == nil {
+		err = setkey.Exec(ctx, c.client, []string{key}, []string{id, val, strconv.FormatInt(ttl.Milliseconds(), 10)}).Error()
+	}
+	if err == nil {
+		cleanup = false
+	}
+	return val, err
+}
+
 func (c *Client) Del(ctx context.Context, key string) error {
 	return c.client.Do(ctx, c.client.B().Del().Key(key).Build()).Error()
 }
@@ -220,7 +283,7 @@ func (c *Client) Close() {
 	id := c.id
 	c.mu.Unlock()
 	if id != "" {
-		c.client.Do(context.Background(), c.client.B().Del().Key(c.id).Build())
+		c.client.Do(context.Background(), c.client.B().Del().Key(id).Build())
 	}
 	c.client.Close()
 }
