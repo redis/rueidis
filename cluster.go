@@ -257,15 +257,11 @@ func (c *clusterClient) _refresh() (err error) {
 		}
 	}
 
-	var removes []conn
-
 	c.mu.RLock()
 	for addr, cc := range c.conns {
 		if fresh, ok := conns[addr]; ok {
 			fresh.conn = cc.conn
 			conns[addr] = fresh
-		} else {
-			removes = append(removes, cc.conn)
 		}
 	}
 	c.mu.RUnlock()
@@ -340,7 +336,58 @@ func (c *clusterClient) _refresh() (err error) {
 		}
 	}
 
+	var removes []conn
+	var replaced map[conn]conn
+
 	c.mu.Lock()
+	// redirectOrNew may have changed c.conns while the lock was released above.
+	// Reconcile here, otherwise the conns it added are dropped without being closed.
+	for addr, cc := range c.conns {
+		fresh, ok := conns[addr]
+		if !ok {
+			removes = append(removes, cc.conn)
+			continue
+		}
+		if fresh.conn != cc.conn {
+			// Keep the conn redirectOrNew installed here, and close fresh.conn since
+			// the AZ() calls above may have already connected it.
+			if replaced == nil {
+				replaced = make(map[conn]conn, 1)
+			}
+			replaced[fresh.conn] = cc.conn
+			removes = append(removes, fresh.conn)
+			fresh.conn = cc.conn
+			conns[addr] = fresh
+		}
+	}
+	if replaced != nil {
+		for _, g := range groups {
+			hit := false
+			for i := range g.nodes {
+				if _, ok := replaced[g.nodes[i].conn]; ok {
+					hit = true
+					break
+				}
+			}
+			if !hit {
+				continue
+			}
+			for _, slot := range g.slots {
+				for i := slot[0]; i <= slot[1] && i >= 0 && i < 16384; i++ {
+					if cc, ok := replaced[wslots[i]]; ok {
+						wslots[i] = cc
+					}
+					if rslots != nil {
+						for j := range rslots[i] {
+							if cc, ok := replaced[rslots[i][j].conn]; ok {
+								rslots[i][j].conn = cc
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 	c.wslots = wslots
 	c.rslots = rslots
 	c.conns = conns
