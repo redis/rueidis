@@ -432,10 +432,12 @@ func TestRedisResult(t *testing.T) {
 		if _, err := (RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "key"), strmsg('+', "value")})}).AsIntMap(); err == nil {
 			t.Fatal("AsIntMap not failed as expected")
 		}
-		values := []RedisMessage{strmsg('+', "k1"), strmsg('+', "1"), strmsg('+', "k2"), {intlen: 2, typ: ':'}}
+		values := []RedisMessage{strmsg('+', "k1"), strmsg('+', "1"), strmsg('+', "k2"), {intlen: 2, typ: ':'}, strmsg('+', "k3"), strmsg('+', "010"), strmsg('+', "k4"), strmsg('+', "08")}
 		if ret, _ := (RedisResult{val: slicemsg('*', values)}).AsIntMap(); !reflect.DeepEqual(map[string]int64{
 			"k1": 1,
 			"k2": 2,
+			"k3": 10,
+			"k4": 8,
 		}, ret) {
 			t.Fatal("AsIntMap not get value as expected")
 		}
