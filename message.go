@@ -1259,7 +1259,7 @@ func (m *RedisMessage) AsIntMap() (map[string]int64, error) {
 			v := m.values()[i+1]
 			if k.typ == typeBlobString || k.typ == typeSimpleString {
 				if len(v.string()) != 0 {
-					if r[k.string()], err = strconv.ParseInt(v.string(), 0, 64); err != nil {
+					if r[k.string()], err = strconv.ParseInt(v.string(), 10, 64); err != nil {
 						return nil, err
 					}
 				} else if v.typ == typeInteger || v.typ == typeNull {
