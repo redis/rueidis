@@ -1712,6 +1712,12 @@ func (c *Pipeline) Info(ctx context.Context, section ...string) *StringCmd {
 	return ret
 }
 
+func (c *Pipeline) InfoMap(ctx context.Context, section ...string) *StringStringStringMapCmd {
+	ret := c.comp.InfoMap(ctx, section...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) LastSave(ctx context.Context) *IntCmd {
 	ret := c.comp.LastSave(ctx)
 	c.rets = append(c.rets, ret)

@@ -401,6 +401,13 @@ var _ = Describe("Commands", func() {
 			Expect(cmd.Err()).To(Equal(err))
 		}
 		{
+			cmd := &StringStringStringMapCmd{}
+			cmd.SetVal(map[string]map[string]string{"a": {"k": "v"}})
+			Expect(cmd.Val()).To(Equal(map[string]map[string]string{"a": {"k": "v"}}))
+			cmd.SetErr(err)
+			Expect(cmd.Err()).To(Equal(err))
+		}
+		{
 			cmd := &StringIntMapCmd{}
 			cmd.SetVal(map[string]int64{"a": 1})
 			Expect(cmd.Val()).To(Equal(map[string]int64{"a": 1}))
@@ -683,6 +690,46 @@ func testCmd(resp3 bool) {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(tm2).To(BeTemporally("==", tm))
 	})
+
+	It("InfoMap", func() {
+		cmd := adapter.InfoMap(ctx)
+		Expect(cmd.Err()).NotTo(HaveOccurred())
+	})
+
+	It("parseInfoString", func() {
+		txt := `#server
+redis_version:6.2.5
+used_memory:1024
+#clients
+connected_clients:10
+`
+		got := parseInfoString(txt)
+		Expect(got).To(Equal(map[string]map[string]string{
+			"server": {
+				"redis_version": "6.2.5",
+				"used_memory":   "1024",
+			},
+			"clients": {
+				"connected_clients": "10",
+			},
+		}))
+	})
+}
+
+func TestParseInfoString(t *testing.T) {
+	txt := `#server
+redis_version:6.2.5
+used_memory:1024
+#clients
+connected_clients:10
+`
+	got := parseInfoString(txt)
+	if got["server"]["redis_version"] != "6.2.5" || got["server"]["used_memory"] != "1024" {
+		t.Fatalf("unexpected server section: %v", got["server"])
+	}
+	if got["clients"]["connected_clients"] != "10" {
+		t.Fatalf("unexpected clients section: %v", got["clients"])
+	}
 }
 
 func TestGeoSearchQueryArgs(t *testing.T) {

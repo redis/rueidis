@@ -349,6 +349,7 @@ type CoreCmdable interface {
 	FlushDB(ctx context.Context) *StatusCmd
 	FlushDBAsync(ctx context.Context) *StatusCmd
 	Info(ctx context.Context, section ...string) *StringCmd
+	InfoMap(ctx context.Context, section ...string) *StringStringStringMapCmd
 	LastSave(ctx context.Context) *IntCmd
 	Save(ctx context.Context) *StatusCmd
 	Shutdown(ctx context.Context) *StatusCmd
@@ -2909,6 +2910,13 @@ func (c *Compat) Info(ctx context.Context, section ...string) *StringCmd {
 	cmd := c.client.B().Info().Section(section...).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStringCmd(resp)
+}
+
+// InfoMap returns INFO parsed into sections as map[string]map[string]string
+func (c *Compat) InfoMap(ctx context.Context, section ...string) *StringStringStringMapCmd {
+	cmd := c.client.B().Info().Section(section...).Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStringStringStringMapCmd(resp)
 }
 
 func (c *Compat) LastSave(ctx context.Context) *IntCmd {

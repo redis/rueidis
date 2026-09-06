@@ -352,6 +352,15 @@ func testAdapter(resp3 bool) {
 			Expect(info.Val()).NotTo(Equal(""))
 		})
 
+		It("should InfoMap", func() {
+			info := adapter.InfoMap(ctx)
+			Expect(info.Err()).NotTo(HaveOccurred())
+			m, err := info.Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(m).NotTo(BeEmpty())
+			Expect(m).To(HaveKey("CPU"))
+		})
+
 		It("should Info cpu", func() {
 			info := adapter.Info(ctx, "cpu")
 			Expect(info.Err()).NotTo(HaveOccurred())
