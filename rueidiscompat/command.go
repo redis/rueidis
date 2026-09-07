@@ -361,6 +361,15 @@ type StringCmd struct {
 	baseCmd[string]
 }
 
+type ZeroCopyStringCmd struct {
+	baseCmd[int]
+	buf []byte
+}
+
+func (cmd *ZeroCopyStringCmd) Bytes() []byte {
+	return cmd.buf[:cmd.Val()]
+}
+
 func (cmd *StringCmd) from(res rueidis.RedisResult) {
 	val, err := res.ToString()
 	cmd.SetErr(err)

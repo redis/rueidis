@@ -99,6 +99,14 @@ func testAdapterPipeline(resp3 bool) {
 		Expect(ping.Val()).To(Equal("PONG"))
 	})
 
+	It("should panic for GetToBuffer in Pipeline", func() {
+		pipe := adapter.Pipeline()
+
+		Expect(func() {
+			pipe.GetToBuffer(ctx, "key", make([]byte, 10))
+		}).To(Panic())
+	})
+
 	It("should Discard", func() {
 		pipe := adapter.Pipeline()
 		echo := pipe.Echo(ctx, "hello")

@@ -30,6 +30,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math"
 	"strconv"
 	"strings"
@@ -1481,6 +1482,120 @@ func testAdapter(resp3 bool) {
 			getRange = adapter.GetRange(ctx, "key", 10, 100)
 			Expect(getRange.Err()).NotTo(HaveOccurred())
 			Expect(getRange.Val()).To(Equal("string"))
+		})
+
+		It("should GetToBuffer", func() {
+			set := adapter.Set(ctx, "key", "hello", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			buf := make([]byte, 32)
+			get := adapter.GetToBuffer(ctx, "key", buf)
+
+			n, err := get.Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(n).To(Equal(5))
+			Expect(get.Val()).To(Equal(5))
+			Expect(get.Bytes()).To(Equal([]byte("hello")))
+		})
+
+		It("should GetToBuffer with exact size buffer", func() {
+			set := adapter.Set(ctx, "key", "hello", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+
+			buf := make([]byte, 5)
+			get := adapter.GetToBuffer(ctx, "key", buf)
+
+			n, err := get.Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(n).To(Equal(5))
+			Expect(get.Bytes()).To(Equal([]byte("hello")))
+		})
+
+		It("should GetToBuffer with larger buffer", func() {
+			set := adapter.Set(ctx, "key", "hello", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+
+			buf := make([]byte, 100)
+			get := adapter.GetToBuffer(ctx, "key", buf)
+
+			n, err := get.Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(n).To(Equal(5))
+			Expect(len(get.Bytes())).To(Equal(5))
+			Expect(get.Bytes()).To(Equal([]byte("hello")))
+		})
+
+		It("should GetToBuffer with small buffer and keep connection usable", func() {
+			set := adapter.Set(ctx, "large", "hello world", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+
+			set = adapter.Set(ctx, "next", "second", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+
+			buf := make([]byte, 5)
+			get := adapter.GetToBuffer(ctx, "large", buf)
+
+			n, err := get.Result()
+			Expect(n).To(Equal(5))
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(io.ErrShortBuffer))
+			Expect(get.Bytes()).To(Equal([]byte("hello")))
+
+			value, err := adapter.Get(ctx, "next").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(value).To(Equal("second"))
+		})
+
+		It("should GetToBuffer preserve missing key semantics", func() {
+			buf := make([]byte, 32)
+			get := adapter.GetToBuffer(ctx, "gtb-missing", buf)
+
+			n, err := get.Result()
+			Expect(n).To(Equal(0))
+			Expect(rueidis.IsRedisNil(err)).To(BeTrue())
+			Expect(get.Bytes()).To(BeEmpty())
+		})
+
+		It("should GetToBuffer handle empty value", func() {
+			set := adapter.Set(ctx, "gtb-empty", "", 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+
+			buf := make([]byte, 32)
+			get := adapter.GetToBuffer(ctx, "gtb-empty", buf)
+
+			n, err := get.Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(n).To(Equal(0))
+			Expect(get.Bytes()).To(BeEmpty())
+		})
+
+		It("should GetToBuffer preserve binary payload", func() {
+			value := []byte{0x00, 0x01, 0xff, 0x7f, 0x80}
+			set := adapter.Set(ctx, "gtb-binary", string(value), 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+
+			buf := make([]byte, len(value))
+			get := adapter.GetToBuffer(ctx, "gtb-binary", buf)
+
+			n, err := get.Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(n).To(Equal(len(value)))
+			Expect(get.Bytes()).To(Equal(value))
+		})
+
+		It("should GetToBuffer handle large payload", func() {
+			value := strings.Repeat("x", 1024*1024)
+			set := adapter.Set(ctx, "gtb-large-payload", value, 0)
+			Expect(set.Err()).NotTo(HaveOccurred())
+
+			buf := make([]byte, len(value))
+			get := adapter.GetToBuffer(ctx, "gtb-large-payload", buf)
+
+			n, err := get.Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(n).To(Equal(len(value)))
+			Expect(get.Bytes()).To(Equal([]byte(value)))
 		})
 
 		It("should GetSet", func() {

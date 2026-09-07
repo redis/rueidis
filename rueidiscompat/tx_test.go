@@ -178,4 +178,12 @@ func testAdapterTxPipeline(resp3 bool) {
 			Expect(err).To(Equal(cmder.Err()))
 		})
 	}
+
+	It("should panic for GetToBuffer in TxPipeline", func() {
+		pipe := adapter.TxPipeline()
+
+		Expect(func() {
+			pipe.GetToBuffer(ctx, "key", make([]byte, 10))
+		}).To(Panic())
+	})
 }
