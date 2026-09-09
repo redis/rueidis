@@ -468,6 +468,12 @@ func (c *Pipeline) SetRange(ctx context.Context, key string, offset int64, value
 	return ret
 }
 
+func (c *Pipeline) SetFromBuffer(ctx context.Context, key string, buf []byte) *StatusCmd {
+	ret := c.comp.SetFromBuffer(ctx, key, buf)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) StrLen(ctx context.Context, key string) *IntCmd {
 	ret := c.comp.StrLen(ctx, key)
 	c.rets = append(c.rets, ret)

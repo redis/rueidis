@@ -2074,6 +2074,16 @@ func testAdapter(resp3 bool) {
 			Expect(get.Val()).To(Equal("hello"))
 		})
 
+		It("should SetFromBuffer", func() {
+			set := adapter.SetFromBuffer(ctx, "key", []byte("hello"))
+			Expect(set.Err()).NotTo(HaveOccurred())
+			Expect(set.Val()).To(Equal("OK"))
+
+			get := adapter.Get(ctx, "key")
+			Expect(get.Err()).NotTo(HaveOccurred())
+			Expect(get.Val()).To(Equal("hello"))
+		})
+
 		It("should SetEX", func() {
 			err := adapter.SetEX(ctx, "key", "hello", 1*time.Second).Err()
 			Expect(err).NotTo(HaveOccurred())
