@@ -837,6 +837,104 @@ func (c ClusterSlots) Build() Completed {
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
+type Clusterscan Incomplete
+
+func (b Builder) Clusterscan() (c Clusterscan) {
+	c = Clusterscan{cs: get(), ks: b.ks}
+	c.cs.s = append(c.cs.s, "CLUSTERSCAN")
+	return c
+}
+
+func (c Clusterscan) Cursor(cursor string) ClusterscanCursor {
+	c.cs.s = append(c.cs.s, cursor)
+	return (ClusterscanCursor)(c)
+}
+
+type ClusterscanCount Incomplete
+
+func (c ClusterscanCount) Type(typ string) ClusterscanType {
+	c.cs.s = append(c.cs.s, "TYPE", typ)
+	return (ClusterscanType)(c)
+}
+
+func (c ClusterscanCount) Slot(slot int64) ClusterscanSlot {
+	c.cs.s = append(c.cs.s, "SLOT", strconv.FormatInt(slot, 10))
+	return (ClusterscanSlot)(c)
+}
+
+func (c ClusterscanCount) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type ClusterscanCursor Incomplete
+
+func (c ClusterscanCursor) Match(pattern string) ClusterscanMatch {
+	c.cs.s = append(c.cs.s, "MATCH", pattern)
+	return (ClusterscanMatch)(c)
+}
+
+func (c ClusterscanCursor) Count(count int64) ClusterscanCount {
+	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
+	return (ClusterscanCount)(c)
+}
+
+func (c ClusterscanCursor) Type(typ string) ClusterscanType {
+	c.cs.s = append(c.cs.s, "TYPE", typ)
+	return (ClusterscanType)(c)
+}
+
+func (c ClusterscanCursor) Slot(slot int64) ClusterscanSlot {
+	c.cs.s = append(c.cs.s, "SLOT", strconv.FormatInt(slot, 10))
+	return (ClusterscanSlot)(c)
+}
+
+func (c ClusterscanCursor) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type ClusterscanMatch Incomplete
+
+func (c ClusterscanMatch) Count(count int64) ClusterscanCount {
+	c.cs.s = append(c.cs.s, "COUNT", strconv.FormatInt(count, 10))
+	return (ClusterscanCount)(c)
+}
+
+func (c ClusterscanMatch) Type(typ string) ClusterscanType {
+	c.cs.s = append(c.cs.s, "TYPE", typ)
+	return (ClusterscanType)(c)
+}
+
+func (c ClusterscanMatch) Slot(slot int64) ClusterscanSlot {
+	c.cs.s = append(c.cs.s, "SLOT", strconv.FormatInt(slot, 10))
+	return (ClusterscanSlot)(c)
+}
+
+func (c ClusterscanMatch) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type ClusterscanSlot Incomplete
+
+func (c ClusterscanSlot) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+type ClusterscanType Incomplete
+
+func (c ClusterscanType) Slot(slot int64) ClusterscanSlot {
+	c.cs.s = append(c.cs.s, "SLOT", strconv.FormatInt(slot, 10))
+	return (ClusterscanSlot)(c)
+}
+
+func (c ClusterscanType) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
 type Readonly Incomplete
 
 func (b Builder) Readonly() (c Readonly) {

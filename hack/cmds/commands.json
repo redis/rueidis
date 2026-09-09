@@ -1702,6 +1702,42 @@
     "since": "8.0.0",
     "group": "cluster"
   },
+  "CLUSTERSCAN": {
+    "summary": "Incrementally iterate the keys space in a cluster",
+    "complexity": "O(N)",
+    "arguments": [
+      {
+        "name": "cursor",
+        "type": "string"
+      },
+      {
+        "command": "MATCH",
+        "name": "pattern",
+        "type": "pattern",
+        "optional": true
+      },
+      {
+        "command": "COUNT",
+        "name": "count",
+        "type": "integer",
+        "optional": true
+      },
+      {
+        "command": "TYPE",
+        "name": "type",
+        "type": "string",
+        "optional": true
+      },
+      {
+        "command": "SLOT",
+        "name": "slot",
+        "type": "integer",
+        "optional": true
+      }
+    ],
+    "since": "9.1.0",
+    "group": "cluster"
+  },
   "COMMAND COUNT": {
     "summary": "Get total number of Redis commands",
     "complexity": "O(1)",
