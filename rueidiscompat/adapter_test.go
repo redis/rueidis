@@ -7582,6 +7582,23 @@ func testAdapterCache(resp3 bool) {
 				Expect(len(result)).NotTo(BeZero())
 			})
 		})
+
+		Describe("SlowLogLen", func() {
+			It("returns the number of slow queries", func() {
+				const key = "slowlog-log-slower-than"
+
+				old := adapter.ConfigGet(ctx, key).Val()
+				adapter.ConfigSet(ctx, key, "0")
+				defer adapter.ConfigSet(ctx, key, old[key])
+
+				Expect(adapter.SlowLogReset(ctx).Err()).NotTo(HaveOccurred())
+				adapter.Set(ctx, "slowlog-len-test", "true", 0)
+
+				length, err := adapter.SlowLogLen(ctx).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(length).To(BeNumerically(">", 0))
+			})
+		})
 	}
 
 	Describe("keys", func() {

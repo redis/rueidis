@@ -360,6 +360,7 @@ type CoreCmdable interface {
 	ShutdownNoSave(ctx context.Context) *StatusCmd
 	SlaveOf(ctx context.Context, host, port string) *StatusCmd
 	SlowLogGet(ctx context.Context, num int64) *SlowLogCmd
+	SlowLogLen(ctx context.Context) *IntCmd
 	SlowLogReset(ctx context.Context) *StatusCmd
 	Time(ctx context.Context) *TimeCmd
 	DebugObject(ctx context.Context, key string) *StringCmd
@@ -3008,6 +3009,12 @@ func (c *Compat) SlowLogGet(ctx context.Context, num int64) *SlowLogCmd {
 	cmd := c.client.B().SlowlogGet().Count(num).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newSlowLogCmd(resp)
+}
+
+func (c *Compat) SlowLogLen(ctx context.Context) *IntCmd {
+	cmd := c.client.B().SlowlogLen().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
 }
 
 func (c *Compat) SlowLogReset(ctx context.Context) *StatusCmd {
