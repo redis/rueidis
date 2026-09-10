@@ -934,6 +934,93 @@ func (c *clusterClient) doresultfn(
 	return clean
 }
 
+// rebucketRetries re-picks the non-ASK portion of retries.m against the
+// current slot map. Called after WaitForRetry so lazyRefresh has had time to
+// converge on a live replica or the primary. ASK sub-buckets (cAskings /
+// aIndexes) stay pinned to the conn that redirectOrNew already selected.
+// A MULTI..EXEC transaction span is moved as a unit to _pick(slot, false)
+// (the primary) so a transaction never splits across two conns.
+func (c *clusterClient) rebucketRetries(retries *connretry) {
+	type moved struct {
+		nc     conn
+		cIndex int
+		cmd    Completed
+	}
+	var moves []moved
+	for oldConn, nr := range retries.m {
+		if len(nr.commands) == 0 {
+			continue
+		}
+		n := len(nr.commands)
+		keepIdx := nr.cIndexes[:0]
+		keepCmd := nr.commands[:0]
+		for i := 0; i < n; {
+			if !isMulti(nr.commands[i]) {
+				cmd := nr.commands[i]
+				nc := c._pick(cmd.Slot(), c.toReplica(cmd))
+				if nc == nil || nc == oldConn {
+					keepIdx = append(keepIdx, nr.cIndexes[i])
+					keepCmd = append(keepCmd, cmd)
+				} else {
+					moves = append(moves, moved{nc: nc, cIndex: nr.cIndexes[i], cmd: cmd})
+				}
+				i++
+				continue
+			}
+			// Find the matching EXEC. If the bucket only holds a partial
+			// span (which can happen if the original MULTI reply was not
+			// OK), no EXEC is found and the span runs to the end of the
+			// bucket instead; either way, keep the span intact.
+			j := i + 1
+			for j < n && !isExec(nr.commands[j]) {
+				j++
+			}
+			if j == n {
+				j = n - 1
+			}
+			// Pick a slot for the whole span. MULTI/EXEC carry InitSlot, so
+			// prefer the slot of a real key inside the span.
+			spanSlot := nr.commands[i].Slot()
+			for k := i; k <= j; k++ {
+				if s := nr.commands[k].Slot(); s != cmds.InitSlot {
+					spanSlot = s
+					break
+				}
+			}
+			nc := c._pick(spanSlot, false)
+			if nc == nil {
+				nc = oldConn
+			}
+			if nc == oldConn {
+				for k := i; k <= j; k++ {
+					keepIdx = append(keepIdx, nr.cIndexes[k])
+					keepCmd = append(keepCmd, nr.commands[k])
+				}
+			} else {
+				for k := i; k <= j; k++ {
+					moves = append(moves, moved{nc: nc, cIndex: nr.cIndexes[k], cmd: nr.commands[k]})
+				}
+			}
+			i = j + 1
+		}
+		nr.cIndexes = keepIdx
+		nr.commands = keepCmd
+		if len(nr.cIndexes) == 0 && len(nr.cAskings) == 0 {
+			retryp.Put(nr)
+			delete(retries.m, oldConn)
+		}
+	}
+	for _, mv := range moves {
+		nr := retries.m[mv.nc]
+		if nr == nil {
+			nr = retryp.Get(0, 1)
+			retries.m[mv.nc] = nr
+		}
+		nr.cIndexes = append(nr.cIndexes, mv.cIndex)
+		nr.commands = append(nr.commands, mv.cmd)
+	}
+}
+
 func (c *clusterClient) doretry(
 	ctx context.Context, cc conn, results *redisresults, retries *connretry, re *retry, mu *sync.Mutex, wg *sync.WaitGroup, attempts int, hasInit bool,
 ) {
@@ -1032,6 +1119,7 @@ retry:
 		}
 		if retries.RetryDelay >= 0 {
 			c.retryHandler.WaitForRetry(ctx, retries.RetryDelay)
+			c.rebucketRetries(retries)
 			attempts++
 			goto retry
 		}
@@ -1363,6 +1451,49 @@ func (c *clusterClient) resultcachefn(
 	return clean
 }
 
+// rebucketRetriesCache mirrors rebucketRetries for the DoMultiCache path.
+// Cacheable commands never contain MULTI/EXEC so the transaction pinning
+// is omitted, but the ASK-preservation and empty-bucket cleanup match.
+func (c *clusterClient) rebucketRetriesCache(retries *connretrycache) {
+	type moved struct {
+		nc     conn
+		cIndex int
+		cmd    CacheableTTL
+	}
+	var moves []moved
+	for oldConn, nr := range retries.m {
+		if len(nr.commands) == 0 {
+			continue
+		}
+		keepIdx := nr.cIndexes[:0]
+		keepCmd := nr.commands[:0]
+		for j, cm := range nr.commands {
+			nc := c._pick(cm.Cmd.Slot(), c.toReplica(Completed(cm.Cmd)))
+			if nc == nil || nc == oldConn {
+				keepIdx = append(keepIdx, nr.cIndexes[j])
+				keepCmd = append(keepCmd, cm)
+				continue
+			}
+			moves = append(moves, moved{nc: nc, cIndex: nr.cIndexes[j], cmd: cm})
+		}
+		nr.cIndexes = keepIdx
+		nr.commands = keepCmd
+		if len(nr.cIndexes) == 0 && len(nr.cAskings) == 0 {
+			retrycachep.Put(nr)
+			delete(retries.m, oldConn)
+		}
+	}
+	for _, mv := range moves {
+		nr := retries.m[mv.nc]
+		if nr == nil {
+			nr = retrycachep.Get(0, 1)
+			retries.m[mv.nc] = nr
+		}
+		nr.cIndexes = append(nr.cIndexes, mv.cIndex)
+		nr.commands = append(nr.commands, mv.cmd)
+	}
+}
+
 func (c *clusterClient) doretrycache(
 	ctx context.Context, cc conn, results *redisresults, retries *connretrycache, re *retrycache, mu *sync.Mutex, wg *sync.WaitGroup, attempts int,
 ) {
@@ -1450,6 +1581,7 @@ retry:
 		}
 		if retries.RetryDelay >= 0 {
 			c.retryHandler.WaitForRetry(ctx, retries.RetryDelay)
+			c.rebucketRetriesCache(retries)
 			attempts++
 			goto retry
 		}

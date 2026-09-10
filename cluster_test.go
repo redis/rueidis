@@ -11653,3 +11653,685 @@ func TestClusterClientRefreshClosesConnConnectedByAZ(t *testing.T) {
 	}
 	t.Fatalf("the conn AZ() connected was dropped without being closed")
 }
+
+// Tests below cover the fix for valkey-io/valkey-go#59: DoMulti / DoMultiCache
+// must re-pick unfinished commands against the current slot map between retry
+// iterations. Before the fix, a network error on a removed replica caused an
+// unbounded retry loop because retries.m re-buckets under the same dead conn.
+
+func TestClusterDoMultiRepicksAfterReplicaRemoval(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	var primaryCalls, replicaCalls, initCalls int64
+
+	initConn := &mockConn{
+		DoFn: func(cmd Completed) RedisResult {
+			atomic.AddInt64(&initCalls, 1)
+			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+				return slotsResp
+			}
+			return RedisResult{}
+		},
+	}
+	primaryConn := &mockConn{
+		DoFn: func(cmd Completed) RedisResult {
+			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+				return slotsResp
+			}
+			return RedisResult{}
+		},
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			atomic.AddInt64(&primaryCalls, 1)
+			out := make([]RedisResult, len(multi))
+			for i := range multi {
+				out[i] = NewResult(strmsg('+', "OK"), nil)
+			}
+			return &redisresults{s: out}
+		},
+	}
+	replicaConn := &mockConn{
+		DoFn: func(cmd Completed) RedisResult {
+			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+				return slotsResp
+			}
+			return RedisResult{}
+		},
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			atomic.AddInt64(&replicaCalls, 1)
+			out := make([]RedisResult, len(multi))
+			for i := range multi {
+				out[i] = NewErrorResult(errors.New("read: connection reset by peer"))
+			}
+			return &redisresults{s: out}
+		},
+	}
+
+	client, err := newClusterClient(
+		&ClientOption{
+			InitAddress:    []string{":0"},
+			SendToReplicas: func(cmd Completed) bool { return cmd.IsReadOnly() },
+		},
+		func(dst string, opt *ClientOption) conn {
+			switch dst {
+			case "127.0.0.1:0":
+				return primaryConn
+			case "127.0.1.1:1":
+				return replicaConn
+			}
+			return initConn
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+	defer client.Close()
+
+	var handlerCalls int64
+	client.retryHandler = &mockRetryHandler{
+		RetryDelayFn: func(int, Completed, error) time.Duration { return time.Microsecond },
+		WaitForRetryFn: func(ctx context.Context, d time.Duration) {
+			atomic.AddInt64(&handlerCalls, 1)
+			// Simulate lazyRefresh convergence: replica is now unreachable in
+			// topology, so rslots for its slots now point at the primary.
+			client.mu.Lock()
+			for i := range client.rslots {
+				if client.rslots[i] != nil {
+					client.rslots[i] = []NodeInfo{{conn: primaryConn, Addr: "127.0.0.1:0"}}
+				}
+			}
+			client.mu.Unlock()
+		},
+	}
+
+	cmd := client.B().Get().Key("test").Build()
+	resps := client.DoMulti(context.Background(), cmd)
+	if len(resps) != 1 {
+		t.Fatalf("unexpected response length %v", len(resps))
+	}
+	if v, err := resps[0].ToString(); err != nil || v != "OK" {
+		t.Fatalf("unexpected response %v %v", v, err)
+	}
+	if got := atomic.LoadInt64(&replicaCalls); got != 1 {
+		t.Fatalf("replica DoMulti calls = %d; want 1", got)
+	}
+	if got := atomic.LoadInt64(&primaryCalls); got != 1 {
+		t.Fatalf("primary DoMulti calls = %d; want 1", got)
+	}
+	if got := atomic.LoadInt64(&handlerCalls); got != 1 {
+		t.Fatalf("retry handler calls = %d; want 1", got)
+	}
+}
+
+func TestClusterDoMultiPreservesAskingBucketing(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	var replicaCalls, primaryCalls, targetCalls int64
+	var targetBatch []string
+	var targetMu sync.Mutex
+
+	primaryConn := &mockConn{
+		DoFn: func(cmd Completed) RedisResult {
+			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+				return slotsResp
+			}
+			return RedisResult{}
+		},
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			atomic.AddInt64(&primaryCalls, 1)
+			out := make([]RedisResult, len(multi))
+			for i := range multi {
+				out[i] = NewResult(strmsg('+', "primary-ok"), nil)
+			}
+			return &redisresults{s: out}
+		},
+	}
+	replicaConn := &mockConn{
+		DoFn: func(cmd Completed) RedisResult {
+			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+				return slotsResp
+			}
+			return RedisResult{}
+		},
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			atomic.AddInt64(&replicaCalls, 1)
+			out := make([]RedisResult, len(multi))
+			for i, cm := range multi {
+				if cm.Commands()[0] == "GET" && cm.Commands()[1] == "{t}k1" {
+					out[i] = NewResult(strmsg('-', "ASK 0 127.0.0.99:0"), nil)
+				} else {
+					out[i] = NewErrorResult(errors.New("read: connection reset by peer"))
+				}
+			}
+			return &redisresults{s: out}
+		},
+	}
+	targetConn := &mockConn{
+		DoFn: func(cmd Completed) RedisResult { return RedisResult{} },
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			atomic.AddInt64(&targetCalls, 1)
+			targetMu.Lock()
+			for _, cm := range multi {
+				targetBatch = append(targetBatch, strings.Join(cm.Commands(), " "))
+			}
+			targetMu.Unlock()
+			out := make([]RedisResult, len(multi))
+			for i := range multi {
+				out[i] = NewResult(strmsg('+', "target-ok"), nil)
+			}
+			return &redisresults{s: out}
+		},
+	}
+
+	client, err := newClusterClient(
+		&ClientOption{
+			InitAddress:    []string{":0"},
+			SendToReplicas: func(cmd Completed) bool { return cmd.IsReadOnly() },
+		},
+		func(dst string, opt *ClientOption) conn {
+			switch dst {
+			case "127.0.0.1:0":
+				return primaryConn
+			case "127.0.1.1:1":
+				return replicaConn
+			case "127.0.0.99:0":
+				return targetConn
+			}
+			return &mockConn{
+				DoFn: func(cmd Completed) RedisResult {
+					if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+						return slotsResp
+					}
+					return RedisResult{}
+				},
+			}
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+	defer client.Close()
+
+	client.retryHandler = &mockRetryHandler{
+		RetryDelayFn: func(int, Completed, error) time.Duration { return time.Microsecond },
+		WaitForRetryFn: func(ctx context.Context, d time.Duration) {
+			client.mu.Lock()
+			for i := range client.rslots {
+				if client.rslots[i] != nil {
+					client.rslots[i] = []NodeInfo{{conn: primaryConn, Addr: "127.0.0.1:0"}}
+				}
+			}
+			client.mu.Unlock()
+		},
+	}
+
+	// Same hash tag keeps both keys in the same slot so they initially bucket
+	// under the same replica conn.
+	cmd1 := client.B().Get().Key("{t}k1").Build()
+	cmd2 := client.B().Get().Key("{t}k2").Build()
+	resps := client.DoMulti(context.Background(), cmd1, cmd2)
+	if len(resps) != 2 {
+		t.Fatalf("unexpected response length %v", len(resps))
+	}
+	if v, err := resps[0].ToString(); err != nil || v != "target-ok" {
+		t.Fatalf("cmd1 unexpected response %v %v", v, err)
+	}
+	if v, err := resps[1].ToString(); err != nil || v != "primary-ok" {
+		t.Fatalf("cmd2 unexpected response %v %v", v, err)
+	}
+	// The ASK bucket must reach the target conn correctly (its routing is not
+	// touched by rebucketRetries). The net-error cmd must eventually reach
+	// the fresh primary via _pick after rebucketRetries.
+	if got := atomic.LoadInt64(&targetCalls); got != 1 {
+		t.Fatalf("target DoMulti calls = %d; want 1 (ASK bucket must reach target once)", got)
+	}
+	if got := atomic.LoadInt64(&primaryCalls); got == 0 {
+		t.Fatalf("primary DoMulti calls = 0; want > 0 (cmd2 must rebucket to fresh conn)")
+	}
+	if got := atomic.LoadInt64(&replicaCalls); got == 0 {
+		t.Fatalf("replica DoMulti calls = 0; want > 0 (initial batch must reach replica)")
+	}
+	targetMu.Lock()
+	defer targetMu.Unlock()
+	if len(targetBatch) < 2 || targetBatch[0] != "ASKING" || targetBatch[1] != "GET {t}k1" {
+		t.Fatalf("target batch = %v; want [ASKING GET {t}k1 ...]", targetBatch)
+	}
+}
+
+func TestClusterDoMultiCacheRepicksAfterReplicaRemoval(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	var primaryCalls, replicaCalls int64
+
+	primaryConn := &mockConn{
+		DoFn: func(cmd Completed) RedisResult {
+			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+				return slotsResp
+			}
+			return RedisResult{}
+		},
+		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
+			atomic.AddInt64(&primaryCalls, 1)
+			out := make([]RedisResult, len(multi))
+			for i := range multi {
+				out[i] = NewResult(strmsg('+', "OK"), nil)
+			}
+			return &redisresults{s: out}
+		},
+	}
+	replicaConn := &mockConn{
+		DoFn: func(cmd Completed) RedisResult {
+			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+				return slotsResp
+			}
+			return RedisResult{}
+		},
+		DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
+			atomic.AddInt64(&replicaCalls, 1)
+			out := make([]RedisResult, len(multi))
+			for i := range multi {
+				out[i] = NewErrorResult(errors.New("read: connection reset by peer"))
+			}
+			return &redisresults{s: out}
+		},
+	}
+
+	client, err := newClusterClient(
+		&ClientOption{
+			InitAddress:    []string{":0"},
+			SendToReplicas: func(cmd Completed) bool { return cmd.IsReadOnly() },
+		},
+		func(dst string, opt *ClientOption) conn {
+			switch dst {
+			case "127.0.0.1:0":
+				return primaryConn
+			case "127.0.1.1:1":
+				return replicaConn
+			}
+			return &mockConn{
+				DoFn: func(cmd Completed) RedisResult {
+					if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+						return slotsResp
+					}
+					return RedisResult{}
+				},
+			}
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+	defer client.Close()
+
+	client.retryHandler = &mockRetryHandler{
+		RetryDelayFn: func(int, Completed, error) time.Duration { return time.Microsecond },
+		WaitForRetryFn: func(ctx context.Context, d time.Duration) {
+			client.mu.Lock()
+			for i := range client.rslots {
+				if client.rslots[i] != nil {
+					client.rslots[i] = []NodeInfo{{conn: primaryConn, Addr: "127.0.0.1:0"}}
+				}
+			}
+			client.mu.Unlock()
+		},
+	}
+
+	cmd := client.B().Get().Key("test").Cache()
+	resps := client.DoMultiCache(context.Background(), CT(cmd, time.Second))
+	if len(resps) != 1 {
+		t.Fatalf("unexpected response length %v", len(resps))
+	}
+	if v, err := resps[0].ToString(); err != nil || v != "OK" {
+		t.Fatalf("unexpected response %v %v", v, err)
+	}
+	if got := atomic.LoadInt64(&replicaCalls); got != 1 {
+		t.Fatalf("replica DoMultiCache calls = %d; want 1", got)
+	}
+	if got := atomic.LoadInt64(&primaryCalls); got != 1 {
+		t.Fatalf("primary DoMultiCache calls = %d; want 1", got)
+	}
+}
+
+// TestClusterDoMultiTransactionNeverGoesToReplica guards against a tempting
+// but wrong simplification: picking a retrying command's new conn with
+// c._pick(cm.Slot(), c.toReplica(cm)) directly in doresultfn, using the
+// failing command's own replica-routing flag, instead of keeping the conn
+// the transaction was already on. _pickMulti always sends a batch
+// containing MULTI/EXEC to the primary (wslots), never a replica, because a
+// transaction cannot reliably run on a replica. If a retryable read inside
+// the transaction fails and is eligible for replica routing, re-picking the
+// whole MULTI..EXEC span with that command's own toReplica flag would send
+// the entire transaction to a replica on retry. doresultfn keeps nc == cc
+// (the conn already in use) for RedirectRetry precisely to avoid this.
+func TestClusterDoMultiTransactionNeverGoesToReplica(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	var primaryCalls, replicaCalls int64
+
+	primaryConn := &mockConn{
+		DoFn: func(cmd Completed) RedisResult {
+			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+				return slotsResp
+			}
+			return RedisResult{}
+		},
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			n := atomic.AddInt64(&primaryCalls, 1)
+			out := make([]RedisResult, len(multi))
+			for i, cmd := range multi {
+				if n == 1 && strings.Join(cmd.Commands(), " ") == "GET {t}k" {
+					out[i] = NewErrorResult(errors.New("read: connection reset by peer"))
+				} else {
+					out[i] = NewResult(strmsg('+', "OK"), nil)
+				}
+			}
+			return &redisresults{s: out}
+		},
+	}
+	replicaConn := &mockConn{
+		DoFn: func(cmd Completed) RedisResult {
+			if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+				return slotsResp
+			}
+			return RedisResult{}
+		},
+		DoMultiFn: func(multi ...Completed) *redisresults {
+			atomic.AddInt64(&replicaCalls, 1)
+			out := make([]RedisResult, len(multi))
+			for i := range multi {
+				out[i] = NewResult(strmsg('+', "OK"), nil)
+			}
+			return &redisresults{s: out}
+		},
+	}
+
+	client, err := newClusterClient(
+		&ClientOption{
+			InitAddress:    []string{":0"},
+			SendToReplicas: func(cmd Completed) bool { return cmd.IsReadOnly() },
+		},
+		func(dst string, opt *ClientOption) conn {
+			switch dst {
+			case "127.0.0.1:0":
+				return primaryConn
+			case "127.0.1.1:1":
+				return replicaConn
+			}
+			return primaryConn
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+	defer client.Close()
+
+	multiCmd := client.B().Multi().Build()
+	getCmd := client.B().Get().Key("{t}k").Build()
+	execCmd := client.B().Exec().Build()
+
+	resps := client.DoMulti(context.Background(), multiCmd, getCmd, execCmd)
+	for i, resp := range resps {
+		if v, err := resp.ToString(); err != nil || v != "OK" {
+			t.Fatalf("unexpected response[%d] %v %v", i, v, err)
+		}
+	}
+	if got := atomic.LoadInt64(&replicaCalls); got != 0 {
+		t.Fatalf("replica DoMulti calls = %d; want 0, transaction must never be sent to a replica", got)
+	}
+	if got := atomic.LoadInt64(&primaryCalls); got != 2 {
+		t.Fatalf("primary DoMulti calls = %d; want 2 (initial send + retry)", got)
+	}
+}
+
+// TestClusterDoMultiTransactionStaysCoherent unit-tests rebucketRetries
+// directly. The DoMulti retry envelope's Redirects branch pre-empts the
+// RetryDelay branch whenever a transaction is detected in retries.m (see the
+// retries.Redirects++ inside doresultfn's transaction insertion), so a
+// natural DoMulti call with a transaction can never reach rebucketRetries.
+// The guard we care about is: if rebucketRetries were ever handed a bucket
+// containing a MULTI..EXEC span, the span moves as a single unit and never
+// splits across two conns.
+func TestClusterDoMultiTransactionStaysCoherent(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	oldConn := &mockConn{DoFn: func(cmd Completed) RedisResult { return RedisResult{} }}
+	newConn := &mockConn{DoFn: func(cmd Completed) RedisResult { return RedisResult{} }}
+
+	client := newRebucketTestClient(t)
+	defer client.Close()
+
+	// Simulate lazyRefresh convergence: every slot now routes to newConn.
+	client.mu.Lock()
+	for i := range client.wslots {
+		client.wslots[i] = newConn
+	}
+	client.mu.Unlock()
+
+	multiCmd := client.B().Multi().Build()
+	setCmd := client.B().Set().Key("{t}k").Value("v").Build()
+	execCmd := client.B().Exec().Build()
+	hgetCmd := client.B().Hget().Key("{t}k").Field("f").Build()
+
+	retries := connretryp.Get(1, 1)
+	defer connretryp.Put(retries)
+	nr := retryp.Get(0, 4)
+	nr.cIndexes = append(nr.cIndexes, 0, 1, 2, 3)
+	nr.commands = append(nr.commands, multiCmd, setCmd, execCmd, hgetCmd)
+	retries.m[oldConn] = nr
+
+	client.rebucketRetries(retries)
+
+	if _, still := retries.m[oldConn]; still {
+		t.Fatalf("oldConn bucket must be drained/removed after rebucket, got %+v", retries.m[oldConn])
+	}
+	moved := retries.m[newConn]
+	if moved == nil {
+		t.Fatalf("newConn bucket missing after rebucket")
+	}
+	if len(moved.commands) != 4 {
+		t.Fatalf("expected 4 cmds on newConn bucket, got %d: %+v", len(moved.commands), moved.commands)
+	}
+	// MULTI, SET, EXEC must be present and contiguous in the moved bucket.
+	mi, si, ei := -1, -1, -1
+	for i, cm := range moved.commands {
+		switch strings.Join(cm.Commands(), " ") {
+		case "MULTI":
+			mi = i
+		case "SET {t}k v":
+			si = i
+		case "EXEC":
+			ei = i
+		}
+	}
+	if !(mi >= 0 && si == mi+1 && ei == si+1) {
+		t.Fatalf("transaction span not contiguous MULTI/SET/EXEC in moved bucket: %+v", moved.commands)
+	}
+	// cIndexes must be preserved: MULTI kept its original batch index 0, SET 1, EXEC 2.
+	if moved.cIndexes[mi] != 0 || moved.cIndexes[si] != 1 || moved.cIndexes[ei] != 2 {
+		t.Fatalf("cIndexes not preserved for transaction span: %+v", moved.cIndexes)
+	}
+}
+
+// newRebucketTestClient builds a cluster client whose slot map every test
+// below can rewrite directly. Like TestClusterDoMultiTransactionStaysCoherent,
+// these unit-test rebucketRetries / rebucketRetriesCache directly, since a
+// natural DoMulti call with a transaction never reaches rebucketRetries.
+func newRebucketTestClient(t *testing.T) *clusterClient {
+	t.Helper()
+	client, err := newClusterClient(
+		&ClientOption{InitAddress: []string{":0"}},
+		func(dst string, opt *ClientOption) conn {
+			return &mockConn{
+				DoFn: func(cmd Completed) RedisResult {
+					if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+						return slotsResp
+					}
+					return RedisResult{}
+				},
+			}
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+	return client
+}
+
+// TestClusterRebucketRetriesSpanStaysWhenSlotUnchanged covers the span branch
+// where _pick returns the conn the span is already on, so it stays put.
+func TestClusterRebucketRetriesSpanStaysWhenSlotUnchanged(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	client := newRebucketTestClient(t)
+	defer client.Close()
+
+	oldConn := &mockConn{DoFn: func(cmd Completed) RedisResult { return RedisResult{} }}
+	// The span's slot still maps to oldConn: _pick(spanSlot, false) == oldConn.
+	client.mu.Lock()
+	for i := range client.wslots {
+		client.wslots[i] = oldConn
+	}
+	client.mu.Unlock()
+
+	retries := connretryp.Get(1, 1)
+	defer connretryp.Put(retries)
+	nr := retryp.Get(0, 3)
+	nr.cIndexes = append(nr.cIndexes, 0, 1, 2)
+	nr.commands = append(nr.commands, client.B().Multi().Build(), client.B().Set().Key("{t}k").Value("v").Build(), client.B().Exec().Build())
+	retries.m[oldConn] = nr
+
+	client.rebucketRetries(retries)
+
+	kept := retries.m[oldConn]
+	if kept == nil || len(kept.commands) != 3 {
+		t.Fatalf("span should stay on oldConn intact, got %+v", retries.m)
+	}
+	if len(retries.m) != 1 {
+		t.Fatalf("no new bucket expected, got %d buckets", len(retries.m))
+	}
+}
+
+// TestClusterRebucketRetriesSpanStaysWhenSlotUnmapped covers the span branch
+// where _pick returns nil (slot has no primary conn) and the span falls back
+// to oldConn.
+func TestClusterRebucketRetriesSpanStaysWhenSlotUnmapped(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	client := newRebucketTestClient(t)
+	defer client.Close()
+
+	oldConn := &mockConn{DoFn: func(cmd Completed) RedisResult { return RedisResult{} }}
+	// Every slot is unmapped: _pick(spanSlot, false) == nil.
+	client.mu.Lock()
+	for i := range client.wslots {
+		client.wslots[i] = nil
+	}
+	client.mu.Unlock()
+
+	retries := connretryp.Get(1, 1)
+	defer connretryp.Put(retries)
+	nr := retryp.Get(0, 3)
+	nr.cIndexes = append(nr.cIndexes, 0, 1, 2)
+	nr.commands = append(nr.commands, client.B().Multi().Build(), client.B().Set().Key("{t}k").Value("v").Build(), client.B().Exec().Build())
+	retries.m[oldConn] = nr
+
+	client.rebucketRetries(retries)
+
+	kept := retries.m[oldConn]
+	if kept == nil || len(kept.commands) != 3 {
+		t.Fatalf("span should stay on oldConn when slot is unmapped, got %+v", retries.m)
+	}
+	if len(retries.m) != 1 {
+		t.Fatalf("no new bucket expected, got %d buckets", len(retries.m))
+	}
+}
+
+// TestClusterRebucketRetriesPartialSpanWithoutExec covers the j == n fallback:
+// a MULTI with no matching EXEC (a partial span) runs to the end of the bucket
+// and still moves as a single unit.
+func TestClusterRebucketRetriesPartialSpanWithoutExec(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	client := newRebucketTestClient(t)
+	defer client.Close()
+
+	oldConn := &mockConn{DoFn: func(cmd Completed) RedisResult { return RedisResult{} }}
+	newConn := &mockConn{DoFn: func(cmd Completed) RedisResult { return RedisResult{} }}
+	client.mu.Lock()
+	for i := range client.wslots {
+		client.wslots[i] = newConn
+	}
+	client.mu.Unlock()
+
+	// MULTI + SET, no EXEC: the span has no matching EXEC and runs to the end.
+	retries := connretryp.Get(1, 1)
+	defer connretryp.Put(retries)
+	nr := retryp.Get(0, 2)
+	nr.cIndexes = append(nr.cIndexes, 0, 1)
+	nr.commands = append(nr.commands, client.B().Multi().Build(), client.B().Set().Key("{t}k").Value("v").Build())
+	retries.m[oldConn] = nr
+
+	client.rebucketRetries(retries)
+
+	if _, still := retries.m[oldConn]; still {
+		t.Fatalf("oldConn bucket must be drained, got %+v", retries.m[oldConn])
+	}
+	moved := retries.m[newConn]
+	if moved == nil || len(moved.commands) != 2 {
+		t.Fatalf("partial span should move to newConn intact, got %+v", retries.m)
+	}
+	if strings.Join(moved.commands[0].Commands(), " ") != "MULTI" || moved.cIndexes[0] != 0 || moved.cIndexes[1] != 1 {
+		t.Fatalf("partial span not preserved contiguously: %+v", moved.commands)
+	}
+}
+
+// TestClusterRebucketRetriesAskOnlyBucket covers the len(nr.commands) == 0
+// continue: a bucket that holds only ASK-redirected commands is skipped and
+// left untouched.
+func TestClusterRebucketRetriesAskOnlyBucket(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	client := newRebucketTestClient(t)
+	defer client.Close()
+
+	askConn := &mockConn{DoFn: func(cmd Completed) RedisResult { return RedisResult{} }}
+
+	retries := connretryp.Get(1, 1)
+	defer connretryp.Put(retries)
+	nr := retryp.Get(0, 1)
+	// Only ASK entries, no normal commands.
+	nr.aIndexes = append(nr.aIndexes, 0)
+	nr.cAskings = append(nr.cAskings, client.B().Get().Key("{t}k").Build())
+	retries.m[askConn] = nr
+
+	client.rebucketRetries(retries)
+
+	kept := retries.m[askConn]
+	if kept == nil || len(kept.cAskings) != 1 {
+		t.Fatalf("ASK-only bucket must be left untouched, got %+v", retries.m)
+	}
+}
+
+// TestClusterRebucketRetriesCacheAskOnlyBucket covers the same
+// len(nr.commands) == 0 continue in the DoMultiCache path.
+func TestClusterRebucketRetriesCacheAskOnlyBucket(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	client := newRebucketTestClient(t)
+	defer client.Close()
+
+	askConn := &mockConn{DoFn: func(cmd Completed) RedisResult { return RedisResult{} }}
+
+	retries := connretrycachep.Get(1, 1)
+	defer connretrycachep.Put(retries)
+	nr := retrycachep.Get(0, 1)
+	nr.aIndexes = append(nr.aIndexes, 0)
+	nr.cAskings = append(nr.cAskings, CT(client.B().Get().Key("{t}k").Cache(), time.Second))
+	retries.m[askConn] = nr
+
+	client.rebucketRetriesCache(retries)
+
+	kept := retries.m[askConn]
+	if kept == nil || len(kept.cAskings) != 1 {
+		t.Fatalf("ASK-only cache bucket must be left untouched, got %+v", retries.m)
+	}
+}
