@@ -43,7 +43,6 @@ func TestTypedCacheAsideClient_Get(t *testing.T) {
 		val, err := client.Get(context.Background(), time.Second, key, func(ctx context.Context, key string) (*testStruct, error) {
 			return expected, nil
 		})
-
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -98,7 +97,6 @@ func TestTypedCacheAsideClient_Get(t *testing.T) {
 		val, err := client.Get(context.Background(), time.Second, key, func(ctx context.Context, key string) (*testStruct, error) {
 			return nil, nil
 		})
-
 		if err != nil {
 			t.Fatalf("nil value should not return error: %v", err)
 		}
@@ -216,4 +214,83 @@ func TestTypedCacheAsideClient_OverrideTTL(t *testing.T) {
 			t.Fatalf("expected %v, got %v", found, val)
 		}
 	})
+}
+
+func TestTypedCacheAsideClientWithCodec_Get(t *testing.T) {
+	baseClient := makeClient(t, addr)
+	t.Cleanup(baseClient.Close)
+
+	type contextKey string
+	const requestContextKey contextKey = "request"
+	key := randStr()
+	expected := &testStruct{ID: 1, Name: "test"}
+	serializerCalls := 0
+	deserializerCalls := 0
+
+	codec := TypedCodec[testStruct]{
+		Marshal: func(ctx context.Context, gotKey string, val *testStruct) (string, error) {
+			serializerCalls++
+			if got, want := ctx.Value(requestContextKey), "populate"; got != want {
+				t.Errorf("serializer context value = %v, want %v", got, want)
+			}
+			if gotKey != key {
+				t.Errorf("serializer key = %q, want %q", gotKey, key)
+			}
+			bytes, err := json.Marshal(val)
+			return string(bytes), err
+		},
+		Unmarshal: func(ctx context.Context, gotKey, str string) (*testStruct, error) {
+			deserializerCalls++
+			wantContext := "populate"
+			if deserializerCalls == 2 {
+				wantContext = "cached"
+			}
+			if got := ctx.Value(requestContextKey); got != wantContext {
+				t.Errorf("deserializer context value = %v, want %v", got, wantContext)
+			}
+			if gotKey != key {
+				t.Errorf("deserializer key = %q, want %q", gotKey, key)
+			}
+			var val testStruct
+			if err := json.Unmarshal([]byte(str), &val); err != nil {
+				return nil, err
+			}
+			return &val, nil
+		},
+	}
+
+	client := NewTypedCacheAsideClientWithCodec[testStruct](baseClient, codec)
+
+	val, err := client.Get(context.WithValue(context.Background(), requestContextKey, "populate"), time.Second, key, func(ctx context.Context, gotKey string) (*testStruct, error) {
+		if got := ctx.Value(requestContextKey); got != "populate" {
+			t.Errorf("fetch context value = %v, want %v", got, "populate")
+		}
+		if gotKey != key {
+			t.Errorf("fetch key = %q, want %q", gotKey, key)
+		}
+		return expected, nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if *val != *expected {
+		t.Fatalf("value = %v, want %v", val, expected)
+	}
+
+	cached, err := client.Get(context.WithValue(context.Background(), requestContextKey, "cached"), time.Second, key, func(context.Context, string) (*testStruct, error) {
+		t.Fatal("fetch function should not be called for a cached value")
+		return nil, nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if *cached != *expected {
+		t.Fatalf("cached value = %v, want %v", cached, expected)
+	}
+	if serializerCalls != 1 {
+		t.Errorf("serializer calls = %d, want 1", serializerCalls)
+	}
+	if deserializerCalls != 2 {
+		t.Errorf("deserializer calls = %d, want 2", deserializerCalls)
+	}
 }
