@@ -382,6 +382,12 @@ func testAdapter(resp3 bool) {
 			}, "10s").Should(Equal("OK"))
 		})
 
+		It("should ReplicaOf", func() {
+			r := adapter.ReplicaOf(ctx, "NO", "ONE")
+			Expect(r.Err()).NotTo(HaveOccurred())
+			Expect(r.Val()).To(Equal("OK"))
+		})
+
 		It("should Time", func() {
 			tm, err := adapter.Time(ctx).Result()
 			Expect(err).NotTo(HaveOccurred())
