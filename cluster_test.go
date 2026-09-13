@@ -6295,6 +6295,40 @@ func TestConnectToNonAvailableCluster(t *testing.T) {
 	wg.Wait()
 }
 
+func TestGetClusterSlotsPreferShards(t *testing.T) {
+	for _, tc := range []struct {
+		version      int
+		preferShards bool
+		wantCmd      string
+		wantShards   bool
+	}{
+		{version: 8, preferShards: false, wantCmd: "CLUSTER SHARDS", wantShards: true},  // >= 8 always shards
+		{version: 7, preferShards: false, wantCmd: "CLUSTER SLOTS", wantShards: false},  // default keeps 7.x on slots
+		{version: 7, preferShards: true, wantCmd: "CLUSTER SHARDS", wantShards: true},   // opt-in enables shards on 7
+		{version: 6, preferShards: true, wantCmd: "CLUSTER SLOTS", wantShards: false},   // floor: no shards below 7
+		{version: 5, preferShards: true, wantCmd: "CLUSTER SLOTS", wantShards: false},   // RESP2 fallback stays slots
+	} {
+		t.Run(fmt.Sprintf("v%d_prefer%v", tc.version, tc.preferShards), func(t *testing.T) {
+			var got string
+			c := &mockConn{
+				VersionFn: func() int { return tc.version },
+				AddrFn:    func() string { return "127.0.0.1:0" },
+				DoFn: func(cmd Completed) RedisResult {
+					got = strings.Join(cmd.Commands(), " ")
+					return NewResult(slicemsg('*', []RedisMessage{}), nil)
+				},
+			}
+			res := getClusterSlots(c, 0, tc.preferShards)
+			if got != tc.wantCmd {
+				t.Fatalf("version %d preferShards %v: sent %q, want %q", tc.version, tc.preferShards, got, tc.wantCmd)
+			}
+			if res.useShards != tc.wantShards {
+				t.Fatalf("version %d preferShards %v: useShards %v, want %v", tc.version, tc.preferShards, res.useShards, tc.wantShards)
+			}
+		})
+	}
+}
+
 func TestClusterTopologyRefreshment(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 

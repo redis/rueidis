@@ -337,6 +337,14 @@ type ClusterOption struct {
 
 	// PreferInitAddressRefresh only uses ClientOption.InitAddress nodes during cluster topology refresh.
 	PreferInitAddressRefresh bool
+
+	// PreferClusterShards uses CLUSTER SHARDS instead of CLUSTER SLOTS to refresh the cluster topology
+	// on servers with version >= 7 (by default CLUSTER SHARDS is only used on version >= 8).
+	// CLUSTER SHARDS reports the per-node "health" field, which lets the client drop nodes that are not
+	// online (e.g. LOADING during a failover) instead of routing to them.
+	// Enable this ONLY if your engine's CLUSTER SHARDS is fixed: Valkey >= 7.2.6 or Redis >= 8.0.
+	// Do NOT enable it on Redis 7.x: its CLUSTER SHARDS returns wrong topology after a failover.
+	PreferClusterShards bool
 }
 
 // StandaloneOption is the options for the standalone client.

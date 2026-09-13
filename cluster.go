@@ -198,19 +198,19 @@ func clusterRefreshAutoMaxDelay(n int) time.Duration {
 }
 
 type clusterslots struct {
-	addr  string
-	reply RedisResult
-	ver   int
+	addr      string
+	reply     RedisResult
+	useShards bool
 }
 
 func (s clusterslots) parse(tls bool) map[string]group {
-	if s.ver < 8 {
+	if !s.useShards {
 		return parseSlots(s.reply.val, s.addr)
 	}
 	return parseShards(s.reply.val, s.addr, tls)
 }
 
-func getClusterSlots(c conn, timeout time.Duration) clusterslots {
+func getClusterSlots(c conn, timeout time.Duration, preferShards bool) clusterslots {
 	var ctx context.Context
 	var cancel context.CancelFunc
 	if timeout > 0 {
@@ -220,10 +220,13 @@ func getClusterSlots(c conn, timeout time.Duration) clusterslots {
 		ctx = context.Background()
 	}
 	v := c.Version()
-	if v < 8 {
-		return clusterslots{reply: c.Do(ctx, cmds.SlotCmd), addr: c.Addr(), ver: v}
+	// CLUSTER SHARDS on >= 8 always; below that only when opted in, and never
+	// below 7 where the command does not exist. See ClusterOption.PreferClusterShards.
+	useShards := v >= 8 || (preferShards && v >= 7)
+	if !useShards {
+		return clusterslots{reply: c.Do(ctx, cmds.SlotCmd), addr: c.Addr()}
 	}
-	return clusterslots{reply: c.Do(ctx, cmds.ShardsCmd), addr: c.Addr(), ver: v}
+	return clusterslots{reply: c.Do(ctx, cmds.ShardsCmd), addr: c.Addr(), useShards: true}
 }
 
 func (c *clusterClient) _refresh() (err error) {
@@ -429,15 +432,16 @@ func (c *clusterClient) clusterRefreshConns() []conn {
 
 func (c *clusterClient) refreshConns(pending []conn, batchDelay time.Duration) (result clusterslots, err error) {
 	results := make(chan clusterslots, len(pending))
+	preferShards := c.opt.ClusterOption.PreferClusterShards
 	for i := 0; i < len(pending); i++ {
 		if i&3 == 0 { // batch CLUSTER SLOTS/CLUSTER SHARDS for every 4 connections
 			if i > 0 && batchDelay > 0 {
 				time.Sleep(batchDelay)
 			}
 			for j := i; j < i+4 && j < len(pending); j++ {
-				go func(c conn, timeout time.Duration) {
-					results <- getClusterSlots(c, timeout)
-				}(pending[j], c.opt.ConnWriteTimeout)
+				go func(c conn, timeout time.Duration, preferShards bool) {
+					results <- getClusterSlots(c, timeout, preferShards)
+				}(pending[j], c.opt.ConnWriteTimeout, preferShards)
 			}
 		}
 		result = <-results
