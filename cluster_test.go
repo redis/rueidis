@@ -12335,3 +12335,44 @@ func TestClusterRebucketRetriesCacheAskOnlyBucket(t *testing.T) {
 		t.Fatalf("ASK-only cache bucket must be left untouched, got %+v", retries.m)
 	}
 }
+
+// TestClusterRebucketRetriesKeylessConsolidates verifies that several keyless
+// commands in one bucket re-pick onto a single conn instead of fanning out
+// across the arbitrary conns _pick(InitSlot) would otherwise return.
+func TestClusterRebucketRetriesKeylessConsolidates(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	client := newRebucketTestClient(t)
+	defer client.Close()
+
+	// Three live conns to choose from; oldConn is not among them, so the
+	// keyless commands must move. Without consolidation each could land on a
+	// different one of the three.
+	cA := &mockConn{DoFn: func(cmd Completed) RedisResult { return RedisResult{} }}
+	cB := &mockConn{DoFn: func(cmd Completed) RedisResult { return RedisResult{} }}
+	cC := &mockConn{DoFn: func(cmd Completed) RedisResult { return RedisResult{} }}
+	client.mu.Lock()
+	client.conns = map[string]connrole{"a": {conn: cA}, "b": {conn: cB}, "c": {conn: cC}}
+	client.mu.Unlock()
+
+	oldConn := &mockConn{DoFn: func(cmd Completed) RedisResult { return RedisResult{} }}
+	retries := connretryp.Get(1, 1)
+	defer connretryp.Put(retries)
+	nr := retryp.Get(0, 3)
+	nr.cIndexes = append(nr.cIndexes, 0, 1, 2)
+	nr.commands = append(nr.commands, client.B().Ping().Build(), client.B().Ping().Build(), client.B().Ping().Build())
+	retries.m[oldConn] = nr
+
+	client.rebucketRetries(retries)
+
+	if _, still := retries.m[oldConn]; still {
+		t.Fatalf("oldConn bucket must be drained, got %+v", retries.m[oldConn])
+	}
+	if len(retries.m) != 1 {
+		t.Fatalf("keyless commands must consolidate onto one conn, got %d buckets", len(retries.m))
+	}
+	for _, bucket := range retries.m {
+		if len(bucket.commands) != 3 {
+			t.Fatalf("expected all 3 keyless commands on one conn, got %d", len(bucket.commands))
+		}
+	}
+}

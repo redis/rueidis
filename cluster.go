@@ -947,6 +947,11 @@ func (c *clusterClient) rebucketRetries(retries *connretry) {
 		cmd    Completed
 	}
 	var moves []moved
+	// prev is the last conn we re-picked. Keyless commands (InitSlot) have no
+	// slot to route by, so instead of letting _pick return an arbitrary conn
+	// per command we consolidate them onto prev, keeping the retry round on
+	// fewer conns.
+	var prev conn
 	for oldConn, nr := range retries.m {
 		if len(nr.commands) == 0 {
 			continue
@@ -957,12 +962,21 @@ func (c *clusterClient) rebucketRetries(retries *connretry) {
 		for i := 0; i < n; {
 			if !isMulti(nr.commands[i]) {
 				cmd := nr.commands[i]
-				nc := c._pick(cmd.Slot(), c.toReplica(cmd))
+				var nc conn
+				if cmd.Slot() == cmds.InitSlot {
+					nc = prev
+				}
+				if nc == nil {
+					nc = c._pick(cmd.Slot(), c.toReplica(cmd))
+				}
 				if nc == nil || nc == oldConn {
 					keepIdx = append(keepIdx, nr.cIndexes[i])
 					keepCmd = append(keepCmd, cmd)
 				} else {
 					moves = append(moves, moved{nc: nc, cIndex: nr.cIndexes[i], cmd: cmd})
+				}
+				if nc != nil {
+					prev = nc
 				}
 				i++
 				continue
@@ -1001,6 +1015,7 @@ func (c *clusterClient) rebucketRetries(retries *connretry) {
 					moves = append(moves, moved{nc: nc, cIndex: nr.cIndexes[k], cmd: nr.commands[k]})
 				}
 			}
+			prev = nc // always a primary (or live oldConn), safe to reuse
 			i = j + 1
 		}
 		nr.cIndexes = keepIdx
