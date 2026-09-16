@@ -337,7 +337,7 @@ Note that `client.Receive()` doesn't unsubscribe channels automatically when it 
 ```go
 ctx, cancel := context.WithCancel(context.Background())
 
-ctx = rueidis.WithOnReceiveReturnHook(context.Background(), func(err error, client rueidis.CommandClient) error {
+ctx = rueidis.WithOnReceiveReturnHook(ctx, func(err error, client rueidis.CommandClient) error {
   if errors.Is(err, context.Canceled) {
     // Send UNSUBSCRIBE command to the connection
     return client.Do(context.Background(), client.B().Unsubscribe().Channel("news").Build()).Error()
@@ -641,7 +641,7 @@ If an incorrect parser function is chosen, an errParse will be returned. Here's 
 // Attempt to parse the response. If a parsing error occurs, check if the error is a parse error and handle it.
 // Normally, you should fix the code by choosing the correct parser function.
 // For instance, use ToString() if the expected response is a string, or ToArray() if the expected response is an array as follows:
-if err := client.Do(ctx, client.B().Get().Key("k").Build()).ToArray(); IsParseErr(err) {
+if _, err := client.Do(ctx, client.B().Get().Key("k").Build()).ToArray(); rueidis.IsParseErr(err) {
     fmt.Println("Parsing error:", err)
 }
 ```
