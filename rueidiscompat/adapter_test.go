@@ -1811,6 +1811,7 @@ func testAdapter(resp3 bool) {
 			Expect(mSetNX.Err()).NotTo(HaveOccurred())
 			Expect(mSetNX.Val()).To(Equal(true))
 		})
+
 		It("SetWithArgs should panic wrong mode", func() {
 			Expect(func() {
 				adapter.SetArgs(ctx, "key", "hello", SetArgs{Mode: "ANY"})
@@ -12349,6 +12350,354 @@ func testAdapterRedis86() {
 			Expect(ttl).To(HaveLen(1))
 			Expect(ttl[0]).To(BeNumerically(">", 0))
 			Expect(ttl[0]).To(BeNumerically("<=", 100))
+		})
+
+		It("should MSetEX", func() {
+			// Test MSetEX with EX (seconds)
+			// Returns 1 when all keys are successfully set
+			mSetEX := adapter.MSetEX(ctx, MSetEXArgs{
+				Expiration: &ExpirationOption{
+					Mode:  EX,
+					Value: 10,
+				},
+			}, "key1", "hello1", "key2", "hello2")
+			Expect(mSetEX.Err()).NotTo(HaveOccurred())
+			Expect(mSetEX.Val()).To(Equal(int64(1)))
+			// Verify values were set
+			val1, err := adapter.Get(ctx, "key1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val1).To(Equal("hello1"))
+
+			val2, err := adapter.Get(ctx, "key2").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val2).To(Equal("hello2"))
+
+			// Verify TTL was set
+			ttl1, err := adapter.TTL(ctx, "key1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ttl1).To(BeNumerically(">", 0))
+			Expect(ttl1).To(BeNumerically("<=", 10*time.Second))
+
+			// Clean up
+			adapter.Del(ctx, "key1", "key2")
+
+			// Test MSetEX with NX condition
+			// Returns 1 when condition is satisfied and keys are set
+			mSetEX = adapter.MSetEX(ctx, MSetEXArgs{
+				Condition: NX,
+				Expiration: &ExpirationOption{
+					Mode:  EX,
+					Value: 10,
+				},
+			}, "key3", "hello3", "key4", "hello4")
+			Expect(mSetEX.Err()).NotTo(HaveOccurred())
+			Expect(mSetEX.Val()).To(Equal(int64(1)))
+
+			// Try again with NX - should fail if keys exist
+			mSetEX = adapter.MSetEX(ctx, MSetEXArgs{
+				Condition: NX,
+				Expiration: &ExpirationOption{
+					Mode:  EX,
+					Value: 10,
+				},
+			}, "key3", "new_value", "key5", "hello5")
+			Expect(mSetEX.Err()).NotTo(HaveOccurred())
+			Expect(mSetEX.Val()).To(Equal(int64(0))) // 0 because key3 already exists
+
+			// Verify original value is still there
+			val3, err := adapter.Get(ctx, "key3").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val3).To(Equal("hello3"))
+
+			// Clean up
+			adapter.Del(ctx, "key3", "key4", "key5")
+		})
+
+		It("should MSetEX with PX (milliseconds)", func() {
+			// Test MSetEX with PX (milliseconds)
+			mSetEX := adapter.MSetEX(ctx, MSetEXArgs{
+				Expiration: &ExpirationOption{
+					Mode:  PX,
+					Value: 5000, // 5000 milliseconds = 5 seconds
+				},
+			}, "msetex_px_key1", "value1", "msetex_px_key2", "value2")
+			Expect(mSetEX.Err()).NotTo(HaveOccurred())
+			Expect(mSetEX.Val()).To(Equal(int64(1)))
+
+			// Verify values were set
+			val1, err := adapter.Get(ctx, "msetex_px_key1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val1).To(Equal("value1"))
+
+			// Verify PTTL is correct (within 5-second range)
+			pttl, err := adapter.PTTL(ctx, "msetex_px_key1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pttl).To(BeNumerically(">", 0))
+			Expect(pttl).To(BeNumerically("<=", 5000*time.Millisecond))
+
+			// Clean up
+			adapter.Del(ctx, "msetex_px_key1", "msetex_px_key2")
+		})
+
+		It("should MSetEX with EXAT (Unix timestamp in seconds)", func() {
+			// Test MSetEX with EXAT - set to expire 10 seconds from now
+			futureTime := time.Now().Add(10 * time.Second)
+			exatValue := futureTime.Unix()
+
+			mSetEX := adapter.MSetEX(ctx, MSetEXArgs{
+				Expiration: &ExpirationOption{
+					Mode:  EXAT,
+					Value: exatValue,
+				},
+			}, "msetex_exat_key1", "value1", "msetex_exat_key2", "value2")
+			Expect(mSetEX.Err()).NotTo(HaveOccurred())
+			Expect(mSetEX.Val()).To(Equal(int64(1)))
+
+			// Verify values were set
+			val1, err := adapter.Get(ctx, "msetex_exat_key1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val1).To(Equal("value1"))
+
+			// Verify TTL is within expected range (close to 10 seconds)
+			ttl, err := adapter.TTL(ctx, "msetex_exat_key1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ttl).To(BeNumerically(">", 0))
+			Expect(ttl).To(BeNumerically("<=", 10*time.Second))
+
+			// Clean up
+			adapter.Del(ctx, "msetex_exat_key1", "msetex_exat_key2")
+		})
+
+		It("should MSetEX with PXAT (Unix timestamp in milliseconds)", func() {
+			// Test MSetEX with PXAT - set to expire 10 seconds from now
+			futureTime := time.Now().Add(10 * time.Second)
+			pxatValue := futureTime.UnixMilli()
+
+			mSetEX := adapter.MSetEX(ctx, MSetEXArgs{
+				Expiration: &ExpirationOption{
+					Mode:  PXAT,
+					Value: pxatValue,
+				},
+			}, "msetex_pxat_key1", "value1", "msetex_pxat_key2", "value2")
+			Expect(mSetEX.Err()).NotTo(HaveOccurred())
+			Expect(mSetEX.Val()).To(Equal(int64(1)))
+
+			// Verify values were set
+			val1, err := adapter.Get(ctx, "msetex_pxat_key1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val1).To(Equal("value1"))
+
+			// Verify PTTL is within expected range
+			pttl, err := adapter.PTTL(ctx, "msetex_pxat_key1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(pttl).To(BeNumerically(">", 0))
+			Expect(pttl).To(BeNumerically("<=", 10*time.Second))
+
+			// Clean up
+			adapter.Del(ctx, "msetex_pxat_key1", "msetex_pxat_key2")
+		})
+
+		It("should MSetEX with KEEPTTL (preserve existing TTL)", func() {
+			// First, set a key with a TTL
+			adapter.Set(ctx, "msetex_keepttl_key1", "original_value", 30*time.Second)
+
+			// Get original TTL
+			originalTTL, _ := adapter.TTL(ctx, "msetex_keepttl_key1").Result()
+
+			// Now use MSetEX with KEEPTTL to update value while keeping TTL
+			mSetEX := adapter.MSetEX(ctx, MSetEXArgs{
+				Expiration: &ExpirationOption{
+					Mode: KEEPTTL,
+				},
+			}, "msetex_keepttl_key1", "updated_value", "msetex_keepttl_key2", "value2")
+			Expect(mSetEX.Err()).NotTo(HaveOccurred())
+			Expect(mSetEX.Val()).To(Equal(int64(1)))
+
+			// Verify values were updated
+			val1, err := adapter.Get(ctx, "msetex_keepttl_key1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val1).To(Equal("updated_value"))
+
+			// Verify TTL is preserved (should be approximately the same as before)
+			newTTL, err := adapter.TTL(ctx, "msetex_keepttl_key1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(newTTL).To(BeNumerically(">", 0))
+			// TTL should be slightly less than original (due to time passing)
+			Expect(newTTL).To(BeNumerically("<=", originalTTL))
+
+			// Clean up
+			adapter.Del(ctx, "msetex_keepttl_key1", "msetex_keepttl_key2")
+		})
+
+		It("should MSetEX with XX condition (success)", func() {
+			// First, set existing keys
+			adapter.Set(ctx, "msetex_xx_existing1", "old_value1", 0)
+			adapter.Set(ctx, "msetex_xx_existing2", "old_value2", 0)
+
+			// Now use MSetEX with XX condition to update existing keys
+			mSetEX := adapter.MSetEX(ctx, MSetEXArgs{
+				Condition: XX,
+				Expiration: &ExpirationOption{
+					Mode:  EX,
+					Value: 10,
+				},
+			}, "msetex_xx_existing1", "new_value1", "msetex_xx_existing2", "new_value2")
+			Expect(mSetEX.Err()).NotTo(HaveOccurred())
+			Expect(mSetEX.Val()).To(Equal(int64(1)))
+
+			// Verify values were updated
+			val1, err := adapter.Get(ctx, "msetex_xx_existing1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val1).To(Equal("new_value1"))
+
+			// Verify TTL was set
+			ttl, err := adapter.TTL(ctx, "msetex_xx_existing1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ttl).To(BeNumerically(">", 0))
+
+			// Clean up
+			adapter.Del(ctx, "msetex_xx_existing1", "msetex_xx_existing2")
+		})
+
+		It("should MSetEX with XX condition (failure - key does not exist)", func() {
+			// Try to use XX condition with non-existent keys
+			mSetEX := adapter.MSetEX(ctx, MSetEXArgs{
+				Condition: XX,
+				Expiration: &ExpirationOption{
+					Mode:  EX,
+					Value: 10,
+				},
+			}, "msetex_xx_nonexist1", "value1", "msetex_xx_nonexist2", "value2")
+			Expect(mSetEX.Err()).NotTo(HaveOccurred())
+			Expect(mSetEX.Val()).To(Equal(int64(0))) // Should return 0 since keys don't exist
+
+			// Verify keys were NOT created
+			exists, err := adapter.Exists(ctx, "msetex_xx_nonexist1", "msetex_xx_nonexist2").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(exists).To(Equal(int64(0)))
+
+			// Clean up
+			adapter.Del(ctx, "msetex_xx_nonexist1", "msetex_xx_nonexist2")
+		})
+
+		It("should MSetEX with multiple key-value pairs (>2)", func() {
+			// Test MSetEX with 3 key-value pairs
+			mSetEX := adapter.MSetEX(ctx, MSetEXArgs{
+				Expiration: &ExpirationOption{
+					Mode:  EX,
+					Value: 10,
+				},
+			}, "msetex_multi1", "value1", "msetex_multi2", "value2", "msetex_multi3", "value3")
+			Expect(mSetEX.Err()).NotTo(HaveOccurred())
+			Expect(mSetEX.Val()).To(Equal(int64(1)))
+
+			// Verify all values were set
+			val1, _ := adapter.Get(ctx, "msetex_multi1").Result()
+			Expect(val1).To(Equal("value1"))
+
+			val2, _ := adapter.Get(ctx, "msetex_multi2").Result()
+			Expect(val2).To(Equal("value2"))
+
+			val3, _ := adapter.Get(ctx, "msetex_multi3").Result()
+			Expect(val3).To(Equal("value3"))
+
+			// Verify all have TTL
+			ttl1, _ := adapter.TTL(ctx, "msetex_multi1").Result()
+			Expect(ttl1).To(BeNumerically(">", 0))
+
+			// Clean up
+			adapter.Del(ctx, "msetex_multi1", "msetex_multi2", "msetex_multi3")
+		})
+
+		It("should MSetEX reject odd number of arguments", func() {
+			// Test MSetEX with odd number of arguments (should fail)
+			mSetEX := adapter.MSetEX(ctx, MSetEXArgs{
+				Expiration: &ExpirationOption{
+					Mode:  EX,
+					Value: 10,
+				},
+			}, "key1", "value1", "key2") // Odd number: 3 args
+			Expect(mSetEX.Err()).To(HaveOccurred())
+
+			// Clean up
+			adapter.Del(ctx, "key1", "key2")
+		})
+
+		It("should compare MSetEX expiration", func() {
+			adapter.Del(ctx, "compare1", "compare2")
+
+			result := adapter.MSetEX(ctx, MSetEXArgs{
+				Expiration: &ExpirationOption{
+					Mode:  EX,
+					Value: 1,
+				},
+			}, "compare1", "value1", "compare2", "value2")
+
+			Expect(result.Err()).NotTo(HaveOccurred())
+			Expect(result.Val()).To(Equal(int64(1)))
+
+			pttl1 := adapter.PTTL(ctx, "compare1").Val()
+			pttl2 := adapter.PTTL(ctx, "compare2").Val()
+
+			Expect(pttl1).To(BeNumerically(">", 0))
+			Expect(pttl2).To(BeNumerically(">", 0))
+
+			Eventually(func() int64 {
+				return adapter.Exists(ctx, "compare1").Val()
+			}, 2*time.Second, 50*time.Millisecond).Should(Equal(int64(0)))
+
+			Eventually(func() int64 {
+				return adapter.Exists(ctx, "compare2").Val()
+			}, 2*time.Second, 50*time.Millisecond).Should(Equal(int64(0)))
+		})
+
+		It("should MSetEX work with pipeline", func() {
+			pipe := adapter.Pipeline()
+
+			// Add MSetEX command to pipeline
+			mSetEX := pipe.MSetEX(ctx, MSetEXArgs{
+				Expiration: &ExpirationOption{
+					Mode:  EX,
+					Value: 10,
+				},
+			}, "pipeline_msetex1", "value1", "pipeline_msetex2", "value2")
+
+			// Execute pipeline
+			_, err := pipe.Exec(ctx)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Verify command result
+			Expect(mSetEX.Val()).To(Equal(int64(1)))
+
+			// Verify values were actually set
+			val1, err := adapter.Get(ctx, "pipeline_msetex1").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(val1).To(Equal("value1"))
+
+			// Clean up
+			adapter.Del(ctx, "pipeline_msetex1", "pipeline_msetex2")
+		})
+
+		It("should MSetEX reject empty values", func() {
+			mSetEX := adapter.MSetEX(ctx, MSetEXArgs{
+				Expiration: &ExpirationOption{Mode: EX, Value: 10},
+			})
+			Expect(mSetEX.Err()).To(HaveOccurred())
+		})
+
+		It("should MSetEX reject empty map", func() {
+			empty := map[string]string{}
+			mSetEX := adapter.MSetEX(ctx, MSetEXArgs{
+				Expiration: &ExpirationOption{Mode: EX, Value: 10},
+			}, empty)
+			Expect(mSetEX.Err()).To(HaveOccurred())
+		})
+
+		It("should MSetEX reject invalid condition", func() {
+			mSetEX := adapter.MSetEX(ctx, MSetEXArgs{
+				Condition: "INVALID",
+			}, "key1", "val1")
+			Expect(mSetEX.Err()).To(HaveOccurred())
 		})
 	})
 }

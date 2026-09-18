@@ -200,6 +200,7 @@ func TestPipeliner(t *testing.T) {
 		p.MGet(ctx, "1", "2")
 		p.MSet(ctx, 1, 2)
 		p.MSetNX(ctx, 1, 2)
+		p.MSetEX(ctx, MSetEXArgs{Expiration: &ExpirationOption{Mode: EX, Value: 1}}, 1, 2)
 		p.Set(ctx, "1", 2, time.Second)
 		p.SetArgs(ctx, "1", 2, SetArgs{})
 		p.SetFromBuffer(ctx, "1", []byte("3"))
@@ -644,7 +645,7 @@ func TestPipeliner(t *testing.T) {
 			Args: []any{"1", "2"},
 		})
 
-		if n := len(p.rets); n != 495 {
+		if n := len(p.rets); n != 496 {
 			t.Fatalf("unexpected pipeline calls: %v", n)
 		}
 		for i, cmd := range p.rets {
@@ -652,7 +653,7 @@ func TestPipeliner(t *testing.T) {
 				t.Fatalf("unexpected pipeline placeholder err(%d): %v", i, err)
 			}
 		}
-		if n := len(p.comp.client.(*proxy).cmds); n != 495 {
+		if n := len(p.comp.client.(*proxy).cmds); n != 496 {
 			t.Fatalf("unexpected pipeline commands: %v", n)
 		}
 		var pipeline [][]string
@@ -740,6 +741,7 @@ var golden = `[
     ["MGET","1","2"],
     ["MSET","1","2"],
     ["MSETNX","1","2"],
+    ["MSETEX","1","1","2","EX","1"],
     ["SET","1","2","EX","1"],
     ["SET","1","2"],
     ["SET","1","3"],

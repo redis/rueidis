@@ -2359,6 +2359,46 @@ type SetArgs struct {
 	KeepTTL  bool
 }
 
+// SetCondition is the condition for MSetEX
+type SetCondition string
+
+const (
+	// NX only sets the keys and their expiration if none exist
+	NX SetCondition = "NX"
+	// XX only sets the keys and their expiration if all already exist
+	XX SetCondition = "XX"
+)
+
+// ExpirationMode is the expiration mode for MSetEX
+type ExpirationMode string
+
+const (
+	// EX sets expiration in seconds
+	EX ExpirationMode = "EX"
+	// PX sets expiration in milliseconds
+	PX ExpirationMode = "PX"
+	// EXAT sets expiration as Unix timestamp in seconds
+	EXAT ExpirationMode = "EXAT"
+	// PXAT sets expiration as Unix timestamp in milliseconds
+	PXAT ExpirationMode = "PXAT"
+	// KEEPTTL keeps the existing TTL
+	KEEPTTL ExpirationMode = "KEEPTTL"
+	// PERSIST removes the existing TTL. Used by INCREX.
+	PERSIST ExpirationMode = "PERSIST"
+)
+
+// ExpirationOption provides expiration options
+type ExpirationOption struct {
+	Mode  ExpirationMode
+	Value int64
+}
+
+// MSetEXArgs provides arguments for the MSetEX function
+type MSetEXArgs struct {
+	Condition  SetCondition
+	Expiration *ExpirationOption
+}
+
 type BitCount struct {
 	Unit       string // Stores BIT or BYTE
 	Start, End int64

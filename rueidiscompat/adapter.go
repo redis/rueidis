@@ -127,6 +127,7 @@ type CoreCmdable interface {
 	MGet(ctx context.Context, keys ...string) *SliceCmd
 	MSet(ctx context.Context, values ...any) *StatusCmd
 	MSetNX(ctx context.Context, values ...any) *BoolCmd
+	MSetEX(ctx context.Context, args MSetEXArgs, values ...any) *IntCmd
 	Set(ctx context.Context, key string, value any, expiration time.Duration) *StatusCmd
 	SetArgs(ctx context.Context, key string, value any, a SetArgs) *StatusCmd
 	SetFromBuffer(ctx context.Context, key string, buf []byte) *StatusCmd
@@ -1131,6 +1132,54 @@ func (c *Compat) MSetNX(ctx context.Context, values ...any) *BoolCmd {
 
 	resp := c.client.Do(ctx, cmd)
 	return newBoolCmd(resp)
+}
+
+// MSetEX sets the given keys to their respective values with expiration options.
+// Supported expiration modes: EX (seconds), PX (milliseconds), EXAT (Unix timestamp in seconds),
+// PXAT (Unix timestamp in milliseconds), or KEEPTTL (preserve existing TTL).
+// Conditions: NX (only if keys don't exist) or XX (only if keys do exist).
+//
+// Returns 1 if all keys were successfully set, 0 if the condition was not satisfied.
+
+func (c *Compat) MSetEX(ctx context.Context, args MSetEXArgs, values ...any) *IntCmd {
+	expandedArgs := argsToSlice(values)
+
+	numkeys := len(expandedArgs) / 2
+
+	cmd := c.client.B().Arbitrary("MSETEX").Args(strconv.Itoa(numkeys))
+
+	// Add all key-value pairs and register keys for proper routing in cluster mode.
+	// Use Keys(...) to mark key positions and Args(...) for the corresponding values.
+	for i := 0; i < len(expandedArgs)-1; i += 2 {
+		cmd = cmd.Keys(expandedArgs[i]).Args(expandedArgs[i+1])
+	}
+	if len(expandedArgs)%2 != 0 {
+		cmd = cmd.Args(expandedArgs[len(expandedArgs)-1])
+	}
+
+	// Add condition (NX or XX)
+	if args.Condition != "" {
+		cmd = cmd.Args(string(args.Condition))
+	}
+
+	// Add expiration options
+	if args.Expiration != nil {
+		switch args.Expiration.Mode {
+		case EX:
+			cmd = cmd.Args("EX", strconv.FormatInt(args.Expiration.Value, 10))
+		case PX:
+			cmd = cmd.Args("PX", strconv.FormatInt(args.Expiration.Value, 10))
+		case EXAT:
+			cmd = cmd.Args("EXAT", strconv.FormatInt(args.Expiration.Value, 10))
+		case PXAT:
+			cmd = cmd.Args("PXAT", strconv.FormatInt(args.Expiration.Value, 10))
+		case KEEPTTL:
+			cmd = cmd.Args("KEEPTTL")
+		}
+	}
+
+	resp := c.client.Do(ctx, cmd.Build())
+	return newIntCmd(resp)
 }
 
 // Set key value [expiration]

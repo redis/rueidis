@@ -432,6 +432,12 @@ func (c *Pipeline) MSetNX(ctx context.Context, values ...any) *BoolCmd {
 	return ret
 }
 
+func (c *Pipeline) MSetEX(ctx context.Context, args MSetEXArgs, values ...any) *IntCmd {
+	ret := c.comp.MSetEX(ctx, args, values...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) Set(ctx context.Context, key string, value any, expiration time.Duration) *StatusCmd {
 	ret := c.comp.Set(ctx, key, value, expiration)
 	c.rets = append(c.rets, ret)
