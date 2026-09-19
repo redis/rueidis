@@ -364,6 +364,8 @@ type CoreCmdable interface {
 	SlowLogGet(ctx context.Context, num int64) *SlowLogCmd
 	SlowLogLen(ctx context.Context) *IntCmd
 	SlowLogReset(ctx context.Context) *StatusCmd
+	Latency(ctx context.Context) *LatencyCmd
+	LatencyReset(ctx context.Context, events ...interface{}) *StatusCmd
 	Time(ctx context.Context) *TimeCmd
 	DebugObject(ctx context.Context, key string) *StringCmd
 	ReadOnly(ctx context.Context) *StatusCmd
@@ -3075,6 +3077,23 @@ func (c *Compat) SlowLogLen(ctx context.Context) *IntCmd {
 
 func (c *Compat) SlowLogReset(ctx context.Context) *StatusCmd {
 	cmd := c.client.B().SlowlogReset().Build()
+	resp := c.client.Do(ctx, cmd)
+	return newStatusCmd(resp)
+}
+
+func (c *Compat) Latency(ctx context.Context) *LatencyCmd {
+	cmd := c.client.B().Arbitrary("LATENCY", "LATEST").ReadOnly()
+	resp := c.client.Do(ctx, cmd)
+	return newLatencyCmd(resp)
+}
+
+func (c *Compat) LatencyReset(ctx context.Context, events ...interface{}) *StatusCmd {
+	b := c.client.B().Arbitrary("LATENCY", "RESET")
+	if len(events) > 0 {
+		b = b.Args(argsToSlice(events)...)
+	}
+
+	cmd := b.Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStatusCmd(resp)
 }

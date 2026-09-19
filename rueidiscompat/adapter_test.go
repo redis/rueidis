@@ -7606,6 +7606,26 @@ func testAdapterCache(resp3 bool) {
 				Expect(length).To(BeNumerically(">", 0))
 			})
 		})
+
+		Describe("Latency", func() {
+			It("returns latest latency events", func() {
+				result, err := adapter.Latency(ctx).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(result).NotTo(BeNil())
+			})
+		})
+
+		Describe("LatencyReset", func() {
+			It("resets latency events", func() {
+				err := adapter.LatencyReset(ctx).Err()
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("resets specific latency events", func() {
+				err := adapter.LatencyReset(ctx, "command").Err()
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
 	}
 
 	Describe("keys", func() {

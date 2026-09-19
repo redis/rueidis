@@ -1794,6 +1794,18 @@ func (c *Pipeline) SlowLogReset(ctx context.Context) *StatusCmd {
 	return ret
 }
 
+func (c *Pipeline) Latency(ctx context.Context) *LatencyCmd {
+	ret := c.comp.Latency(ctx)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) LatencyReset(ctx context.Context, events ...interface{}) *StatusCmd {
+	ret := c.comp.LatencyReset(ctx, events...)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) Time(ctx context.Context) *TimeCmd {
 	ret := c.comp.Time(ctx)
 	c.rets = append(c.rets, ret)

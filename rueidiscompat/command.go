@@ -372,6 +372,12 @@ func (cmd *ZeroCopyStringCmd) Bytes() []byte {
 
 func (cmd *StringCmd) from(res rueidis.RedisResult) {
 	val, err := res.ToString()
+	if err != nil {
+		if v, errInt := res.AsInt64(); errInt == nil {
+			val = strconv.FormatInt(v, 10)
+			err = nil
+		}
+	}
 	cmd.SetErr(err)
 	cmd.SetVal(val)
 	cmd.setIsCacheHit(res.IsCacheHit())
@@ -511,9 +517,7 @@ type StatusCmd = StringCmd
 
 func newStatusCmd(res rueidis.RedisResult) *StatusCmd {
 	cmd := &StatusCmd{}
-	val, err := res.ToString()
-	cmd.SetErr(err)
-	cmd.SetVal(val)
+	cmd.from(res)
 	return cmd
 }
 
@@ -5263,6 +5267,79 @@ func (cmd *ClusterLinksCmd) Val() []ClusterLink {
 
 func (cmd *ClusterLinksCmd) Result() ([]ClusterLink, error) {
 	return cmd.Val(), cmd.Err()
+}
+
+type Latency struct {
+	Name   string
+	Time   time.Time
+	Latest time.Duration
+	Max    time.Duration
+}
+
+type LatencyCmd struct {
+	baseCmd[[]Latency]
+}
+
+func (cmd *LatencyCmd) from(res rueidis.RedisResult) {
+	arr, err := res.ToArray()
+	if err != nil {
+		cmd.SetErr(err)
+		return
+	}
+
+	latencies := make([]Latency, 0, len(arr))
+
+	for _, entry := range arr {
+		fields, err := entry.ToArray()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+
+		if len(fields) < 4 {
+			cmd.SetErr(fmt.Errorf("redis: got %d elements in latency latest, expected at least 4", len(fields)))
+			return
+		}
+
+		name, err := fields[0].ToString()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+
+		timestamp, err := fields[1].AsInt64()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+
+		latest, err := fields[2].AsInt64()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+
+		max, err := fields[3].AsInt64()
+		if err != nil {
+			cmd.SetErr(err)
+			return
+		}
+
+		latencies = append(latencies, Latency{
+			Name:   name,
+			Time:   time.Unix(timestamp, 0),
+			Latest: time.Duration(latest) * time.Millisecond,
+			Max:    time.Duration(max) * time.Millisecond,
+		})
+	}
+
+	cmd.SetVal(latencies)
+}
+
+func newLatencyCmd(res rueidis.RedisResult) *LatencyCmd {
+	cmd := &LatencyCmd{}
+	cmd.from(res)
+	return cmd
 }
 
 type SlowLog struct {

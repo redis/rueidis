@@ -35,6 +35,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/mock"
 	"go.uber.org/mock/gomock"
 )
@@ -97,6 +98,25 @@ func testAdapterPipeline(resp3 bool) {
 		Expect(echo.Val()).To(Equal("hello"))
 		Expect(ping.Err()).NotTo(HaveOccurred())
 		Expect(ping.Val()).To(Equal("PONG"))
+	})
+
+	It("should Pipeline Latency and LatencyReset", func() {
+		pipe := adapter.Pipeline()
+		latency := pipe.Latency(ctx)
+		reset := pipe.LatencyReset(ctx)
+		Expect(latency.Err()).To(MatchError(errPipelineNotExecuted))
+		Expect(reset.Err()).To(MatchError(errPipelineNotExecuted))
+		Expect(pipe.Len()).To(Equal(2))
+
+		rets, err := pipe.Exec(ctx)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(pipe.Len()).To(Equal(0))
+		Expect(rets).To(HaveLen(2))
+		Expect(rets[0]).To(Equal(latency))
+		Expect(rets[1]).To(Equal(reset))
+		Expect(latency.Err()).NotTo(HaveOccurred())
+		Expect(latency.Val()).NotTo(BeNil())
+		Expect(reset.Err()).NotTo(HaveOccurred())
 	})
 
 	It("should panic for GetToBuffer in Pipeline", func() {
@@ -638,6 +658,8 @@ func TestPipeliner(t *testing.T) {
 		p.SlowLogGet(ctx, 1)
 		p.SlowLogLen(ctx)
 		p.SlowLogReset(ctx)
+		p.Latency(ctx)
+		p.LatencyReset(ctx)
 		p.ClusterMyShardID(ctx)
 		p.ModuleLoadex(ctx, &ModuleLoadexConfig{
 			Path: "/",
@@ -645,7 +667,7 @@ func TestPipeliner(t *testing.T) {
 			Args: []any{"1", "2"},
 		})
 
-		if n := len(p.rets); n != 496 {
+		if n := len(p.rets); n != 498 {
 			t.Fatalf("unexpected pipeline calls: %v", n)
 		}
 		for i, cmd := range p.rets {
@@ -653,7 +675,7 @@ func TestPipeliner(t *testing.T) {
 				t.Fatalf("unexpected pipeline placeholder err(%d): %v", i, err)
 			}
 		}
-		if n := len(p.comp.client.(*proxy).cmds); n != 496 {
+		if n := len(p.comp.client.(*proxy).cmds); n != 498 {
 			t.Fatalf("unexpected pipeline commands: %v", n)
 		}
 		var pipeline [][]string
@@ -682,6 +704,80 @@ func TestPipeliner(t *testing.T) {
 	t.Run("Pipeline.TxPipeline()", func(t *testing.T) {
 		testPipeline(t, newPipeline(m).TxPipeline().(*Pipeline))
 	})
+}
+
+func TestPipelineLatencyExec(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	m := mock.NewClient(ctrl)
+	p := newPipeline(m)
+
+	latencyRes := mock.Result(mock.RedisArray(
+		mock.RedisArray(
+			mock.RedisString("command"),
+			mock.RedisInt64(1700000000),
+			mock.RedisInt64(15),
+			mock.RedisInt64(30),
+		),
+	))
+	resetRes := mock.Result(mock.RedisInt64(1))
+
+	m.EXPECT().DoMulti(gomock.Any(), mock.Match("LATENCY", "LATEST"), mock.Match("LATENCY", "RESET")).Return([]rueidis.RedisResult{latencyRes, resetRes})
+
+	latCmd := p.Latency(ctx)
+	resetCmd := p.LatencyReset(ctx)
+
+	if latCmd.Err() != errPipelineNotExecuted {
+		t.Fatalf("expected errPipelineNotExecuted, got %v", latCmd.Err())
+	}
+	if resetCmd.Err() != errPipelineNotExecuted {
+		t.Fatalf("expected errPipelineNotExecuted, got %v", resetCmd.Err())
+	}
+	if p.Len() != 2 {
+		t.Fatalf("expected pipeline len 2, got %d", p.Len())
+	}
+
+	rets, err := p.Exec(ctx)
+	if err != nil {
+		t.Fatalf("unexpected Exec error: %v", err)
+	}
+	if len(rets) != 2 {
+		t.Fatalf("expected 2 rets, got %d", len(rets))
+	}
+	if p.Len() != 0 {
+		t.Fatalf("expected pipeline len 0, got %d", p.Len())
+	}
+	if rets[0] != latCmd {
+		t.Fatalf("expected rets[0] to be latCmd")
+	}
+	if rets[1] != resetCmd {
+		t.Fatalf("expected rets[1] to be resetCmd")
+	}
+	if latCmd.Err() != nil {
+		t.Fatalf("unexpected latency error: %v", latCmd.Err())
+	}
+	if len(latCmd.Val()) != 1 || latCmd.Val()[0].Name != "command" {
+		t.Fatalf("unexpected latency val: %+v", latCmd.Val())
+	}
+	if resetCmd.Err() != nil {
+		t.Fatalf("unexpected reset error: %v", resetCmd.Err())
+	}
+	if resetCmd.Val() != "1" {
+		t.Fatalf("unexpected reset val: %q, want %q", resetCmd.Val(), "1")
+	}
+
+	// Test LatencyReset with events argument in pipeline
+	p2 := newPipeline(m)
+	m.EXPECT().DoMulti(gomock.Any(), mock.Match("LATENCY", "RESET", "command")).Return([]rueidis.RedisResult{resetRes})
+	resetCmd2 := p2.LatencyReset(ctx, "command")
+	rets2, err := p2.Exec(ctx)
+	if err != nil {
+		t.Fatalf("unexpected Exec error: %v", err)
+	}
+	if len(rets2) != 1 || resetCmd2.Val() != "1" {
+		t.Fatalf("unexpected reset result: %v", resetCmd2.Val())
+	}
 }
 
 var golden = `[
@@ -1179,6 +1275,8 @@ var golden = `[
     ["SLOWLOG","GET","1"],
 	["SLOWLOG","LEN"],
     ["SLOWLOG","RESET"],
+    ["LATENCY","LATEST"],
+    ["LATENCY","RESET"],
     ["CLUSTER","MYSHARDID"],
     ["MODULE","LOADEX","/","CONFIG","k","v","ARGS","1","2"]
 ]`
