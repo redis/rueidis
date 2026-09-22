@@ -1935,6 +1935,30 @@ func TestRedisMessage(t *testing.T) {
 		}
 	})
 
+	t.Run("AsClusterScanEntry", func(t *testing.T) {
+		if _, err := (RedisResult{err: errors.New("other")}).AsClusterScanEntry(); err == nil {
+			t.Fatal("AsClusterScanEntry not failed as expected")
+		}
+		if _, err := (RedisResult{val: RedisMessage{typ: '-'}}).AsClusterScanEntry(); err == nil {
+			t.Fatal("AsClusterScanEntry not failed as expected")
+		}
+		if ret, _ := (RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "0-{06S}-0"), slicemsg('*', []RedisMessage{strmsg('+', "a"), strmsg('+', "b")})})}).AsClusterScanEntry(); !reflect.DeepEqual(ClusterScanEntry{
+			Cursor:   "0-{06S}-0",
+			Elements: []string{"a", "b"},
+		}, ret) {
+			t.Fatal("AsClusterScanEntry not get value as expected")
+		}
+		if _, err := (RedisResult{val: slicemsg('*', []RedisMessage{{typ: '_'}, slicemsg('*', []RedisMessage{strmsg('+', "a"), strmsg('+', "b")})})}).AsClusterScanEntry(); err == nil {
+			t.Fatal("AsClusterScanEntry not failed as expected")
+		}
+		if ret, _ := (RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "0"), {typ: '_'}})}).AsClusterScanEntry(); !reflect.DeepEqual(ClusterScanEntry{}, ret) {
+			t.Fatal("AsClusterScanEntry not get value as expected")
+		}
+		if _, err := (RedisResult{val: slicemsg('*', []RedisMessage{strmsg('+', "0")})}).AsClusterScanEntry(); err == nil || !strings.Contains(err.Error(), "a cluster scan response or its length is not at least 2") {
+			t.Fatal("AsClusterScanEntry not get value as expected")
+		}
+	})
+
 	t.Run("ToMap with non-string key", func(t *testing.T) {
 		redisMessageSet := slicemsg('~', []RedisMessage{{typ: ':'}, {typ: ':'}})
 		_, err := (&redisMessageSet).ToMap()

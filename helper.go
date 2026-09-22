@@ -433,6 +433,40 @@ func (s *Scanner) Err() error {
 	return s.err
 }
 
+type ClusterScanner struct {
+	next func(cursor string) (ClusterScanEntry, error)
+	err  error
+}
+
+func NewClusterScanner(next func(cursor string) (ClusterScanEntry, error)) *ClusterScanner {
+	return &ClusterScanner{next: next}
+}
+
+func (s *ClusterScanner) scan() iter.Seq[[]string] {
+	return func(yield func([]string) bool) {
+		var e ClusterScanEntry
+		for e, s.err = s.next("0"); s.err == nil && yield(e.Elements) && e.Cursor != "0"; {
+			e, s.err = s.next(e.Cursor)
+		}
+	}
+}
+
+func (s *ClusterScanner) Iter() iter.Seq[string] {
+	return func(yield func(string) bool) {
+		for vs := range s.scan() {
+			for _, v := range vs {
+				if !yield(v) {
+					return
+				}
+			}
+		}
+	}
+}
+
+func (s *ClusterScanner) Err() error {
+	return s.err
+}
+
 // PreferReplicaNodeSelector prioritizes reading from any replica using Round-Robin.
 // If no replicas are available, it falls back to the primary.
 func PreferReplicaNodeSelector() ReadNodeSelectorFunc {

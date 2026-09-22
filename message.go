@@ -508,6 +508,16 @@ func (r RedisResult) AsScanEntry() (v ScanEntry, err error) {
 	return
 }
 
+// AsClusterScanEntry delegates to RedisMessage.AsClusterScanEntry.
+func (r RedisResult) AsClusterScanEntry() (v ClusterScanEntry, err error) {
+	if r.err != nil {
+		err = r.err
+	} else {
+		v, err = r.val.AsClusterScanEntry()
+	}
+	return
+}
+
 // ToMap delegates to RedisMessage.ToMap
 func (r RedisResult) ToMap() (v map[string]RedisMessage, err error) {
 	if r.err != nil {
@@ -1212,6 +1222,33 @@ func (m *RedisMessage) AsScanEntry() (e ScanEntry, err error) {
 	}
 	typ := m.typ
 	return ScanEntry{}, fmt.Errorf("%w: redis message type %s is not a scan response or its length is not at least 2", errParse, typeNames[typ])
+}
+
+// ClusterScanEntry is the element type of the CLUSTERSCAN command response.
+type ClusterScanEntry struct {
+	Elements []string
+	Cursor   string
+}
+
+// AsClusterScanEntry check if the message is a redis array/set response of length 2 and convert to ClusterScanEntry.
+func (m *RedisMessage) AsClusterScanEntry() (e ClusterScanEntry, err error) {
+	msgs, err := m.ToArray()
+	if err != nil {
+		return ClusterScanEntry{}, err
+	}
+	if len(msgs) >= 2 {
+		cursor, err := msgs[0].ToString()
+		if err != nil {
+			return ClusterScanEntry{}, err
+		}
+		elements, err := msgs[1].AsStrSlice()
+		if err != nil {
+			return ClusterScanEntry{}, err
+		}
+		return ClusterScanEntry{Cursor: cursor, Elements: elements}, nil
+	}
+	typ := m.typ
+	return ClusterScanEntry{}, fmt.Errorf("%w: redis message type %s is not a cluster scan response or its length is not at least 2", errParse, typeNames[typ])
 }
 
 // AsMap check if the message is a redis array/set response and convert to map[string]RedisMessage
