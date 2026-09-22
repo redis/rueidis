@@ -1107,3 +1107,29 @@ func TestLoaderPanicReleasesFlight(t *testing.T) {
 		t.Fatalf("flight was not released after panic: %q, %v", val, err)
 	}
 }
+
+func TestDeadlock(t *testing.T) {
+	// notice this is a different `SelectDB` than what the main client is using
+	parallel, err := rueidis.NewClient(rueidis.ClientOption{InitAddress: addr, PipelineMultiplex: -1, SelectDB: 6})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer parallel.Close()
+
+	ctx := context.Background()
+	client := makeClient(t, addr).(*Client)
+	key := "deadlock-" + strconv.Itoa(rand.Int())
+
+	if _, err := client.Get(ctx, time.Second, key, func(context.Context, string) (string, error) {
+		return "value", nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := parallel.Do(ctx, client.client.B().Flushdb().Build()).Error(); err != nil {
+		t.Fatalf("FLUSHDB failed: %v", err)
+	}
+
+	// this is going to hang
+	client.Close()
+}

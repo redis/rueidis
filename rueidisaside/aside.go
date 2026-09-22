@@ -87,7 +87,7 @@ func (c *Client) onInvalidation(messages []rueidis.RedisMessage) {
 	}
 	c.mu.Unlock()
 	if id != "" {
-		c.client.Do(context.Background(), c.client.B().Del().Key(id).Build())
+		go c.client.Do(context.Background(), c.client.B().Del().Key(id).Build())
 	}
 }
 
