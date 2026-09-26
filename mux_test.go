@@ -1169,6 +1169,139 @@ func TestMuxRegisterCloseHook(t *testing.T) {
 	})
 }
 
+func TestMuxReconnectsAfterProtocolBug(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	option := ClientOption{
+		AlwaysPipelining:  true,
+		DisableCache:      true,
+		PipelineMultiplex: -1,
+	}
+	first, firstMock, _, forceFirstClose := setup(t, option)
+	defer forceFirstClose()
+	second, secondMock, closeSecond, forceSecondClose := setup(t, option)
+	defer forceSecondClose()
+	defer closeSecond()
+
+	wires := []wire{first, second}
+	var next atomic.Int32
+	wireFn := func(context.Context) wire {
+		index := int(next.Add(1)) - 1
+		if index >= len(wires) {
+			t.Fatalf("unexpected wire creation: %d", index+1)
+		}
+		return wires[index]
+	}
+	m := newMux("", &option, (*pipe)(nil), deadFn(), wireFn, wireFn)
+	client := newSingleClientWithConn(
+		m,
+		cmds.NewBuilder(cmds.NoSlot),
+		false,
+		true,
+		newRetryer(defaultRetryDelayFn),
+		false,
+	)
+
+	closed := make(chan error, 1)
+	m.SetOnCloseHook(func(err error) { closed <- err })
+	go func() {
+		firstMock.Expect("GET", "key").ReplyString("old connection", "unexpected extra response")
+	}()
+
+	if value, err := client.Do(context.Background(), client.B().Get().Key("key").Build()).ToString(); err != nil || value != "old connection" {
+		t.Fatalf("unexpected first result: value=%q err=%v", value, err)
+	}
+	select {
+	case err := <-closed:
+		if !errors.Is(err, errProtocolBug) {
+			t.Fatalf("unexpected close error: %v", err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("mux was not notified of the protocol error")
+	}
+
+	go func() {
+		secondMock.Expect("GET", "key").ReplyString("new connection")
+	}()
+	if value, err := client.Do(context.Background(), client.B().Get().Key("key").Build()).ToString(); err != nil || value != "new connection" {
+		t.Fatalf("client did not recover: value=%q err=%v", value, err)
+	}
+	if created := next.Load(); created != 2 {
+		t.Fatalf("unexpected number of created wires: %d", created)
+	}
+}
+
+func TestMuxRejectsStaleResponsesAfterProtocolBug(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	option := ClientOption{
+		AlwaysPipelining:  true,
+		DisableCache:      true,
+		PipelineMultiplex: -1,
+	}
+	first, firstMock, _, forceFirstClose := setup(t, option)
+	defer forceFirstClose()
+	second, secondMock, closeSecond, forceSecondClose := setup(t, option)
+	defer forceSecondClose()
+	defer closeSecond()
+
+	wires := []wire{first, second}
+	var next atomic.Int32
+	wireFn := func(context.Context) wire {
+		index := int(next.Add(1)) - 1
+		if index >= len(wires) {
+			t.Fatalf("unexpected wire creation: %d", index+1)
+		}
+		return wires[index]
+	}
+	m := newMux("", &option, (*pipe)(nil), deadFn(), wireFn, wireFn)
+	client := newSingleClientWithConn(
+		m,
+		cmds.NewBuilder(cmds.NoSlot),
+		false,
+		true,
+		newRetryer(defaultRetryDelayFn),
+		false,
+	)
+
+	closed := make(chan error, 1)
+	m.SetOnCloseHook(func(err error) { closed <- err })
+	staleWrite := make(chan error, 1)
+	go func() {
+		reply := firstMock.Expect("GET", "key").ReplyString("old connection", "unexpected extra response")
+		reply.ReplyString("stale response")
+		staleWrite <- reply.err
+	}()
+
+	if value, err := client.Do(context.Background(), client.B().Get().Key("key").Build()).ToString(); err != nil || value != "old connection" {
+		t.Fatalf("unexpected first result: value=%q err=%v", value, err)
+	}
+	select {
+	case err := <-closed:
+		if !errors.Is(err, errProtocolBug) {
+			t.Fatalf("unexpected close error: %v", err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("mux was not notified of the protocol error")
+	}
+	select {
+	case err := <-staleWrite:
+		if err == nil {
+			t.Fatal("old connection accepted a response after the protocol error")
+		}
+	case <-time.After(time.Second):
+		t.Fatal("stale response write did not unblock after the connection was discarded")
+	}
+
+	go func() {
+		secondMock.Expect("GET", "key").ReplyString("new connection")
+	}()
+	if value, err := client.Do(context.Background(), client.B().Get().Key("key").Build()).ToString(); err != nil || value != "new connection" {
+		t.Fatalf("client returned data from the discarded connection: value=%q err=%v", value, err)
+	}
+	if created := next.Load(); created != 2 {
+		t.Fatalf("unexpected number of created wires: %d", created)
+	}
+}
+
 func BenchmarkClientSideCaching(b *testing.B) {
 	setup := func(b *testing.B) *mux {
 		c := makeMux("127.0.0.1:6379", &ClientOption{CacheSizeEachConn: DefaultCacheBytes}, func(_ context.Context, dst string, opt *ClientOption) (conn net.Conn, err error) {

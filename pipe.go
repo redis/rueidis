@@ -642,7 +642,9 @@ func (p *pipe) _backgroundRead() (err error) {
 					skipUnsubReply = false
 					continue
 				}
-				panic(protocolbug)
+				// The response stream can no longer be matched safely. Let the
+				// background loop discard this connection instead of crashing the process.
+				return errProtocolBug
 			}
 			if multi == nil {
 				multi = ones
@@ -2052,8 +2054,9 @@ const (
 
 var cacheMark = &(RedisMessage{})
 var (
-	errClosing = &errs{error: ErrClosing}
-	errExpired = &errs{error: errConnExpired}
+	errClosing     = &errs{error: ErrClosing}
+	errExpired     = &errs{error: errConnExpired}
+	errProtocolBug = errors.New(protocolbug)
 )
 
 type errs struct{ error }

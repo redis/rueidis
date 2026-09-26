@@ -1886,21 +1886,83 @@ func TestNoReplyExceedRingSize(t *testing.T) {
 	<-wait
 }
 
-func TestPanicOnProtocolBug(t *testing.T) {
+func TestProtocolBugReturnsError(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
-	p, mock, _, _ := setup(t, ClientOption{})
+	p, mock, _, cleanup := setup(t, ClientOption{})
+	defer cleanup()
+
+	ch, err := p.queue.PutOne(context.Background(), cmds.NewCompleted([]string{"GET", "key"}))
+	if err != nil {
+		t.Fatalf("failed to queue GET: %v", err)
+	}
+	cmd, multi, written := p.queue.NextWriteCmd()
+	if written == nil || multi != nil || strings.Join(cmd.Commands(), " ") != "GET key" {
+		t.Fatalf("unexpected queued command: cmd=%v multi=%v written=%v", cmd.Commands(), multi, written)
+	}
+
+	result := make(chan RedisResult, 1)
+	go func() { result <- <-ch }()
+	go func() {
+		mock.Expect().ReplyString("value", "unexpected extra response")
+	}()
+
+	if err := p._backgroundRead(); err == nil || err.Error() != protocolbug {
+		t.Fatalf("expected %q, got %v", protocolbug, err)
+	}
+	if value, err := (<-result).ToString(); err != nil || value != "value" {
+		t.Fatalf("unexpected GET result: value=%q err=%v", value, err)
+	}
+}
+
+func TestProtocolBugClosesPipe(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, mock, _, forceClose := setup(t, ClientOption{
+		AlwaysPipelining: true,
+		DisableCache:     true,
+	})
+	defer forceClose()
+
+	closed := make(chan error, 2)
+	p.SetOnCloseHook(func(err error) {
+		select {
+		case closed <- err:
+		default:
+		}
+	})
 
 	go func() {
-		mock.Expect().ReplyString("cause panic")
+		mock.Expect("GET", "key").ReplyString("value", "unexpected extra response")
 	}()
 
-	defer func() {
-		if v := recover(); v != protocolbug {
-			t.Fatalf("should panic on protocolbug")
+	if value, err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "key"})).ToString(); err != nil || value != "value" {
+		t.Fatalf("unexpected GET result: value=%q err=%v", value, err)
+	}
+
+	select {
+	case err := <-closed:
+		if !errors.Is(err, errProtocolBug) {
+			t.Fatalf("unexpected close error: %v", err)
 		}
-	}()
+	case <-time.After(time.Second):
+		t.Fatal("close hook was not called")
+	}
 
-	p._backgroundRead()
+	deadline := time.Now().Add(time.Second)
+	for atomic.LoadInt32(&p.state) != 4 && time.Now().Before(deadline) {
+		runtime.Gosched()
+	}
+	if state := atomic.LoadInt32(&p.state); state != 4 {
+		t.Fatalf("pipe did not reach closed state: %d", state)
+	}
+	if !errors.Is(p.Error(), errProtocolBug) {
+		t.Fatalf("unexpected pipe error: %v", p.Error())
+	}
+	if _, err := p.conn.Write([]byte("PING")); err == nil {
+		t.Fatal("connection remained writable after protocol error")
+	}
+	if err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "after-close"})).Error(); !errors.Is(err, errProtocolBug) {
+		t.Fatalf("unexpected error from closed pipe: %v", err)
+	}
 }
 
 func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
@@ -4366,10 +4428,9 @@ func TestPubSub(t *testing.T) {
 	})
 
 	t.Run("PubSub missing unsubReply", func(t *testing.T) {
-		shouldPanic := func(push cmds.Completed) (pass bool) {
-			defer func() { pass = recover() == protocolbug }()
-
-			p, mock, _, _ := setup(t, ClientOption{})
+		returnsProtocolBug := func(push cmds.Completed) bool {
+			p, mock, _, cleanup := setup(t, ClientOption{})
+			defer cleanup()
 			atomic.StoreInt32(&p.state, 1)
 			p.queue.PutOne(context.Background(), push)
 			_, _, ch := p.queue.NextWriteCmd()
@@ -4383,14 +4444,13 @@ func TestPubSub(t *testing.T) {
 			go func() {
 				<-ch
 			}()
-			p._backgroundRead()
-			return
+			return errors.Is(p._backgroundRead(), errProtocolBug)
 		}
 		for _, push := range []cmds.Completed{
 			builder.Sunsubscribe().Channel("ch1").Build(),
 		} {
-			if !shouldPanic(push) {
-				t.Fatalf("should panic on protocolbug")
+			if !returnsProtocolBug(push) {
+				t.Fatalf("should return protocolbug")
 			}
 		}
 	})
