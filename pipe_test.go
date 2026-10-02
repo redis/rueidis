@@ -5843,6 +5843,35 @@ func TestWriteDeadlineIsNoShorterThanContextDeadlineInSyncMode_DoBlocked(t *test
 	p.Close()
 }
 
+func TestBlockingDeadlineKeepsPipeForUnblock_Do(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{})
+	defer cancel()
+
+	ctx, cancelCtx := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	defer cancelCtx()
+
+	go func() {
+		mock.Expect("BLPOP", "a", "0")
+		<-ctx.Done()
+		mock.Expect().Reply(RedisMessage{typ: '_'}) // replied by a CLIENT UNBLOCK from another conn
+		mock.Expect("GET", "a").ReplyString("OK")
+	}()
+	if err := p.Do(ctx, cmds.NewBlockingCompleted([]string{"BLPOP", "a", "0"})).NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if err := p.Error(); err != nil {
+		t.Fatalf("the pipe should not be closed by the deadline of a blocking cmd: %v", err)
+	}
+	if val, err := p.Do(context.Background(), cmds.NewCompleted([]string{"GET", "a"})).ToString(); err != nil || val != "OK" {
+		t.Fatalf("unexpected response %v %v", val, err)
+	}
+	for atomic.LoadInt32(&p.blcksig) != 0 {
+		t.Log("wait for the blcksig to be released")
+		time.Sleep(time.Millisecond * 10)
+	}
+}
+
 func TestOngoingDeadlineShortContextInSyncMode_DoMulti(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 	p, _, _, closeConn := setup(t, ClientOption{ConnWriteTimeout: time.Second})
