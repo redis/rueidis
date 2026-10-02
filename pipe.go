@@ -1123,7 +1123,9 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 			goto queue
 		}
 		dl, ok := ctx.Deadline()
-		if p.queue != nil && !ok && ctx.Done() != nil {
+		// a blocking cmd with a deadline also goes to the queue, so that the deadline aborts the call
+		// without closing the conn, leaving the chance to CLIENT UNBLOCK it. See https://github.com/redis/rueidis/issues/897
+		if p.queue != nil && (!ok || cmd.IsBlock()) && ctx.Done() != nil {
 			p.background()
 			goto queue
 		}
@@ -1156,10 +1158,13 @@ queue:
 	p.decrWaitsAndIncrRecvs()
 	return resp
 abort:
-	go func(ch chan RedisResult) {
+	go func(ch chan RedisResult, block bool) {
 		<-ch
+		if block { // the blocking cmd is finally replied (ex. by CLIENT UNBLOCK), so the pipe is not blocked anymore
+			atomic.AddInt32(&p.blcksig, -1)
+		}
 		p.decrWaitsAndIncrRecvs()
-	}(ch)
+	}(ch, cmd.IsBlock())
 	return NewErrorResult(ctx.Err())
 }
 

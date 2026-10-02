@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"reflect"
 	"runtime"
 	"strconv"
 	"sync"
@@ -962,6 +963,152 @@ func TestMuxDelegation(t *testing.T) {
 		}
 		if !closed {
 			t.Errorf("wire not closed")
+		}
+	})
+
+	t.Run("single blocking unblock and recycle the wire if canceled", func(t *testing.T) {
+		for _, ctxErr := range []error{context.Canceled, context.DeadlineExceeded} {
+			var blocks, closes int32
+			stored := make(chan struct{}, 1)
+			m, checkClean := setupMux([]*mockWire{
+				{
+					DoFn: func(cmd Completed) RedisResult {
+						if !reflect.DeepEqual(cmd.Commands(), []string{"CLIENT", "UNBLOCK", "42"}) {
+							t.Errorf("unexpected command %v", cmd.Commands())
+						}
+						return NewResult(RedisMessage{typ: ':', intlen: 1}, nil)
+					},
+				},
+				{
+					DoFn: func(cmd Completed) RedisResult {
+						if atomic.AddInt32(&blocks, 1) == 1 {
+							return NewErrorResult(ctxErr)
+						}
+						return NewResult(strmsg('+', "OK"), nil)
+					},
+					InfoFn: func() map[string]RedisMessage {
+						return map[string]RedisMessage{"id": {typ: ':', intlen: 42}}
+					},
+					CloseFn: func() {
+						atomic.AddInt32(&closes, 1)
+					},
+					ResetTimerFn: func() bool {
+						stored <- struct{}{}
+						return true
+					},
+				},
+			})
+			if err := m.Dial(); err != nil {
+				t.Fatalf("unexpected dial error %v", err)
+			}
+			if err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"BLOCK"})).Error(); err != ctxErr {
+				t.Errorf("unexpected error %v", err)
+			}
+			<-stored // the wire is returned to the pool after the CLIENT UNBLOCK
+			if val, err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"BLOCK"})).ToString(); err != nil || val != "OK" {
+				t.Errorf("unexpected response %v %v", err, val)
+			}
+			<-stored
+			if atomic.LoadInt32(&closes) != 0 {
+				t.Errorf("wire should not be closed")
+			}
+			m.Close()
+			checkClean(t)
+		}
+	})
+
+	t.Run("single blocking no recycle the wire if unblock failed", func(t *testing.T) {
+		for _, reply := range []RedisResult{
+			NewResult(RedisMessage{typ: ':', intlen: 0}, nil), // not blocked yet
+			NewErrorResult(errors.New("broken")),
+		} {
+			closed := make(chan struct{}, 2)
+			m, checkClean := setupMux([]*mockWire{
+				{
+					DoFn: func(cmd Completed) RedisResult {
+						return reply
+					},
+				},
+				{
+					DoFn: func(cmd Completed) RedisResult {
+						return NewErrorResult(context.Canceled)
+					},
+					InfoFn: func() map[string]RedisMessage {
+						return map[string]RedisMessage{"id": {typ: ':', intlen: 42}}
+					},
+					CloseFn: func() {
+						closed <- struct{}{}
+					},
+				},
+			})
+			if err := m.Dial(); err != nil {
+				t.Fatalf("unexpected dial error %v", err)
+			}
+			if err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"BLOCK"})).Error(); err != context.Canceled {
+				t.Errorf("unexpected error %v", err)
+			}
+			<-closed
+			if m.noUnblock.Load() {
+				t.Errorf("noUnblock should not be set")
+			}
+			m.Close()
+			checkClean(t)
+		}
+	})
+
+	t.Run("single blocking stop unblocking if rejected by server", func(t *testing.T) {
+		var unblocks, broken int32
+		closed := make(chan struct{}, 2)
+		m, checkClean := setupMux([]*mockWire{
+			{
+				DoFn: func(cmd Completed) RedisResult {
+					atomic.AddInt32(&unblocks, 1)
+					return NewResult(strmsg('-', "NOPERM this user has no permissions to run the 'client|unblock' command"), nil)
+				},
+			},
+			{
+				DoFn: func(cmd Completed) RedisResult {
+					return NewErrorResult(context.Canceled)
+				},
+				InfoFn: func() map[string]RedisMessage {
+					return map[string]RedisMessage{"id": {typ: ':', intlen: 42}}
+				},
+				CloseFn: func() {
+					atomic.StoreInt32(&broken, 1)
+					closed <- struct{}{}
+				},
+				ErrorFn: func() error {
+					if atomic.LoadInt32(&broken) == 1 {
+						return ErrClosing
+					}
+					return nil
+				},
+			},
+			{
+				DoFn: func(cmd Completed) RedisResult {
+					return NewErrorResult(context.Canceled)
+				},
+				InfoFn: func() map[string]RedisMessage {
+					return map[string]RedisMessage{"id": {typ: ':', intlen: 43}}
+				},
+				CloseFn: func() {
+					closed <- struct{}{}
+				},
+			},
+		})
+		defer checkClean(t)
+		defer m.Close()
+		if err := m.Dial(); err != nil {
+			t.Fatalf("unexpected dial error %v", err)
+		}
+		for i := 0; i < 2; i++ {
+			if err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"BLOCK"})).Error(); err != context.Canceled {
+				t.Errorf("unexpected error %v", err)
+			}
+			<-closed
+		}
+		if n := atomic.LoadInt32(&unblocks); n != 1 {
+			t.Errorf("unexpected CLIENT UNBLOCK count %v", n)
 		}
 	})
 

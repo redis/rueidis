@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -67,6 +68,8 @@ type mux struct {
 
 	usePool bool
 	optIn   bool
+
+	noUnblock atomic.Bool // set when CLIENT UNBLOCK is rejected by the server
 }
 
 func makeMux(dst string, option *ClientOption, dialFn dialFn) *mux {
@@ -266,11 +269,51 @@ block:
 func (m *mux) blocking(pool *pool, ctx context.Context, cmd Completed) (resp RedisResult) {
 	wire := pool.Acquire(ctx)
 	resp = wire.Do(ctx, cmd)
-	if resp.NonRedisError() != nil { // abort the wire if blocking command return early (ex. context.DeadlineExceeded)
+	if err := resp.NonRedisError(); err != nil { // abort the wire if blocking command return early (ex. context.DeadlineExceeded)
+		if id, ok := m.unblockable(wire, cmd, err); ok {
+			go m.unblock(pool, wire, id)
+			return resp
+		}
 		wire.Close()
 	}
 	pool.Store(wire)
 	return resp
+}
+
+// unblockable reports whether the wire, whose blocking cmd was abandoned with err,
+// can be recovered by CLIENT UNBLOCK instead of being closed.
+// See https://github.com/redis/rueidis/issues/897
+func (m *mux) unblockable(w wire, cmd Completed, err error) (id int64, ok bool) {
+	if !cmd.IsBlock() || m.noUnblock.Load() {
+		return 0, false
+	}
+	if err != context.Canceled && err != context.DeadlineExceeded {
+		return 0, false
+	}
+	if w.Error() != nil { // the wire is already broken
+		return 0, false
+	}
+	idm, ok := w.Info()["id"] // the client id is returned by HELLO
+	if !ok {
+		return 0, false
+	}
+	id, e := idm.AsInt64()
+	return id, e == nil
+}
+
+// unblock sends CLIENT UNBLOCK for the wire through the multiplexed pipeline,
+// and returns the wire to the pool without closing it only if the server confirms it was unblocked.
+func (m *mux) unblock(pool *pool, w wire, id int64) {
+	resp := m.pipeline(context.Background(), cmds.NewCompleted([]string{"CLIENT", "UNBLOCK", strconv.FormatInt(id, 10)}))
+	if n, err := resp.AsInt64(); err != nil || n != 1 {
+		// n == 0 means the server did not find the client blocked. The blocking cmd may still be
+		// in flight and block the wire later, so we can't safely reuse it.
+		if _, ok := err.(*RedisError); ok {
+			m.noUnblock.Store(true) // ex. NOPERM, don't try again on this node.
+		}
+		w.Close()
+	}
+	pool.Store(w)
 }
 
 func (m *mux) blockingMulti(pool *pool, ctx context.Context, cmd []Completed) (resp *redisresults) {
