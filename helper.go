@@ -90,6 +90,24 @@ func MDel(client Client, ctx context.Context, keys []string) map[string]error {
 	return doMultiSet(client, ctx, cmds)
 }
 
+// MUnlink is a helper that consults the redis directly with multiple keys by grouping keys within the same slot into UNLINKs
+func MUnlink(client Client, ctx context.Context, keys []string) map[string]error {
+	if len(keys) == 0 {
+		return make(map[string]error)
+	}
+
+	switch client.(type) {
+	case *singleClient, *standalone, *sentinelClient:
+		return clientMUnlink(client, ctx, keys)
+	}
+
+	cmds := mgetcmdsp.Get(len(keys), len(keys))
+	for i, k := range keys {
+		cmds.s[i] = client.B().Unlink().Key(k).Build().Pin()
+	}
+	return doMultiSet(client, ctx, cmds)
+}
+
 // MSetNX is a helper that consults the redis directly with multiple keys by grouping keys within the same slot into MSETNXs or multiple SETNXs
 func MSetNX(client Client, ctx context.Context, kvs map[string]string) map[string]error {
 	if len(kvs) == 0 {
@@ -248,6 +266,15 @@ func clientMDel(client Client, ctx context.Context, keys []string) map[string]er
 	ret := make(map[string]error, len(keys))
 	for _, k := range keys {
 		ret[k] = err
+	}
+	return ret
+}
+
+func clientMUnlink(client Client, ctx context.Context, keys []string) map[string]error {
+	err := client.Do(ctx, client.B().Unlink().Key(keys...).Build()).Error()
+	ret := make(map[string]error, len(keys))
+	for _, key := range keys {
+		ret[key] = err
 	}
 	return ret
 }
