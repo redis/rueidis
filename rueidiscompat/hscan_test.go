@@ -30,6 +30,7 @@ import (
 	"math"
 	"reflect"
 	"strconv"
+	"testing"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -86,6 +87,110 @@ type TimeData struct {
 }
 
 type i []interface{}
+
+type scanSliceField[T any] struct {
+	Value T `redis:"value"`
+}
+
+type scanIntSlice []int
+type scanByteSlice []byte
+type scanByte byte
+
+type scanScannerSlice []string
+
+func (s *scanScannerSlice) ScanRedis(value string) error {
+	if value == "invalid" {
+		return strconv.ErrSyntax
+	}
+	*s = scanScannerSlice{value}
+	return nil
+}
+
+type scanTextSlice []string
+
+func (s *scanTextSlice) UnmarshalText(value []byte) error {
+	if string(value) == "invalid" {
+		return strconv.ErrSyntax
+	}
+	*s = scanTextSlice{string(value)}
+	return nil
+}
+
+func TestScanUnsupportedSlices(t *testing.T) {
+	var nilInts []int
+	tests := []struct {
+		name string
+		dst  interface{}
+		want interface{}
+		typ  string
+	}{
+		{"integers", &scanSliceField[[]int]{Value: []int{7}}, []int{7}, "[]int"},
+		{"nil integers", &scanSliceField[[]int]{}, []int(nil), "[]int"},
+		{"strings", &scanSliceField[[]string]{Value: []string{"old"}}, []string{"old"}, "[]string"},
+		{"nested slices", &scanSliceField[[][]byte]{}, [][]byte(nil), "[][]uint8"},
+		{"named integers", &scanSliceField[scanIntSlice]{Value: scanIntSlice{7}}, scanIntSlice{7}, "rueidiscompat.scanIntSlice"},
+		{"pointer", &scanSliceField[*[]int]{Value: &[]int{7}}, &[]int{7}, "[]int"},
+		{"nil pointer", &scanSliceField[*[]int]{}, &nilInts, "[]int"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			g := NewWithT(t)
+			for _, value := range []string{"1,2", ""} {
+				g.Expect(Scan(tt.dst, []string{"value"}, i{value})).To(MatchError(ContainSubstring("redis.Scan(unsupported " + tt.typ + ")")))
+				g.Expect(reflect.ValueOf(tt.dst).Elem().Field(0).Interface()).To(Equal(tt.want))
+			}
+		})
+	}
+}
+
+func TestScanByteSlices(t *testing.T) {
+	type byteFields struct {
+		Bytes    []byte        `redis:"bytes"`
+		Named    scanByteSlice `redis:"named"`
+		Elements []scanByte    `redis:"elements"`
+		Pointer  *[]byte       `redis:"pointer"`
+	}
+	for _, value := range []string{"abc", "", "\x00\xff"} {
+		t.Run(value, func(t *testing.T) {
+			g := NewWithT(t)
+			var dst byteFields
+			g.Expect(Scan(&dst, []string{"bytes", "named", "elements", "pointer"}, i{value, value, value, value})).To(Succeed())
+			g.Expect(dst.Bytes).To(Equal([]byte(value)))
+			g.Expect(dst.Named).To(Equal(scanByteSlice(value)))
+			wantElements := make([]scanByte, len(value))
+			for j := range wantElements {
+				wantElements[j] = scanByte(value[j])
+			}
+			g.Expect(dst.Elements).To(Equal(wantElements))
+			g.Expect(dst.Pointer).NotTo(BeNil())
+			g.Expect(*dst.Pointer).To(Equal([]byte(value)))
+		})
+	}
+}
+
+func TestScanCustomSlices(t *testing.T) {
+	type customFields struct {
+		Scanner        scanScannerSlice  `redis:"scanner"`
+		ScannerPointer *scanScannerSlice `redis:"scanner_pointer"`
+		Text           scanTextSlice     `redis:"text"`
+		TextPointer    *scanTextSlice    `redis:"text_pointer"`
+	}
+	g := NewWithT(t)
+	var dst customFields
+	keys := []string{"scanner", "scanner_pointer", "text", "text_pointer"}
+	g.Expect(Scan(&dst, keys, i{"value", "value", "value", "value"})).To(Succeed())
+	want := customFields{
+		Scanner:        scanScannerSlice{"value"},
+		ScannerPointer: &scanScannerSlice{"value"},
+		Text:           scanTextSlice{"value"},
+		TextPointer:    &scanTextSlice{"value"},
+	}
+	g.Expect(dst).To(Equal(want))
+	for _, key := range keys {
+		g.Expect(Scan(&dst, []string{key}, i{"invalid"})).To(MatchError(strconv.ErrSyntax))
+		g.Expect(dst).To(Equal(want))
+	}
+}
 
 var _ = Describe("Scan", func() {
 	It("catches bad args", func() {
