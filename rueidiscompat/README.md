@@ -211,3 +211,23 @@ func main() {
 * `FTSearch`, `FTAggregate`, `FTCreate`, and `FTDropIndex` related methods.
 
 For more details, please refer to those `TODO` marks in the [./adapter.go](./adapter.go)
+
+---
+
+## Rate Limiting (`go-redis/redis_rate/v10` Parity)
+
+For `go-redis/redis_rate/v10` drop-in parity, see the [`rueidiscompatrate`](../rueidiscompatrate) package:
+
+```go
+import (
+	"github.com/redis/rueidis/rueidiscompat"
+	"github.com/redis/rueidis/rueidiscompatrate"
+)
+
+rdb := rueidiscompat.NewAdapter(client)
+limiter := rueidiscompatrate.NewLimiter(rdb)
+res, err := limiter.Allow(ctx, "project:123", rueidiscompatrate.PerMinute(10))
+```
+
+See the [`rueidiscompatrate` documentation](../rueidiscompatrate) for details, bonus APIs (`AllowAtMost`, `Reset`), and full migration reference.
+

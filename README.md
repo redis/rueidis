@@ -14,10 +14,12 @@ A fast Golang Redis client that does auto pipelining and supports server-assiste
 - [Generic Object Mapping with client-side caching](./om)
 - [Cache-Aside pattern with client-side caching](./rueidisaside)
 - [Distributed Locks with client-side caching](./rueidislock)
+- [Distributed Rate Limiting (GCRA & Fixed Window)](./rueidislimiter)
 - [Helpers for writing tests with rueidis mock](./mock)
 - [OpenTelemetry integration](./rueidisotel)
 - [Hooks and other integrations](./rueidishook)
 - [Go-redis like API adapter](./rueidiscompat) by [@418Coffee](https://github.com/418Coffee)
+- [Go-redis redis_rate parity adapter](./rueidiscompatrate)
 - Pub/Sub, Sharded Pub/Sub, Streams
 - Redis Cluster, Sentinel, RedisJSON, RedisBloom, RediSearch, RedisTimeseries, etc.
 - [Probabilistic Data Structures without Redis Stack](./rueidisprob)
