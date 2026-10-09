@@ -1903,6 +1903,143 @@ func TestPanicOnProtocolBug(t *testing.T) {
 	p._backgroundRead()
 }
 
+// waitPipeClosed fails the test instead of hanging when the background worker never finishes.
+func waitPipeClosed(t *testing.T, p *pipe) {
+	t.Helper()
+	deadline := time.Now().Add(5 * time.Second)
+	for atomic.LoadInt32(&p.state) != 4 {
+		if time.Now().After(deadline) {
+			t.Fatalf("the pipe is not closed in time, state: %d", atomic.LoadInt32(&p.state))
+		}
+		time.Sleep(time.Millisecond * 10)
+	}
+}
+
+func TestBackgroundSkipReadWrite(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, mock, _, closeConn := setup(t, ClientOption{})
+	defer closeConn() // also releases the mock when an assertion below fails
+	p.conn = &halfClosedConn{Conn: p.conn}
+
+	// a command queued while the sync path still owned the connection
+	p.incrWaits()
+	ch, _ := p.queue.PutOne(context.Background(), cmds.PingCmd)
+
+	// the sync path has given up on its command, marked the pipe as failed and closed the connection
+	p.error.CompareAndSwap(nil, &errs{error: os.ErrDeadlineExceeded})
+	p.conn.Close()
+	p.backgroundSkipReadWrite()
+
+	replied := make(chan struct{})
+	go func() {
+		mock.Expect().ReplyString("late reply")
+		close(replied)
+	}()
+
+	// the queued command is still answered with the pipe error
+	select {
+	case resp := <-ch:
+		if err := resp.Error(); !errors.Is(err, os.ErrDeadlineExceeded) {
+			t.Fatalf("unexpected err %v", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatalf("the queued command is not answered in time")
+	}
+	p.decrWaits()
+	waitPipeClosed(t, p)
+	select {
+	case <-p.close:
+	default:
+		t.Fatalf("p.close should be closed without _backgroundWrite")
+	}
+	// but nothing is read from the connection
+	select {
+	case <-replied:
+		t.Fatalf("the late reply should not be read from a failed pipe")
+	case <-time.After(time.Millisecond * 100):
+	}
+
+	closeConn()
+	<-replied
+}
+
+// halfClosedConn keeps the connection readable after Close. A tls.Conn behaves like this for
+// the sync path when another goroutine, such as the ping timer, is already inside Close writing
+// the close_notify alert: the second Close returns immediately while the socket is still open.
+type halfClosedConn struct {
+	net.Conn
+}
+
+func (c *halfClosedConn) Close() error {
+	return nil
+}
+
+// testNoProtocolBugOnLateReplyAfterSyncTimeout lets do, which must send n PING commands through
+// a sync path, time out, and then delivers a late reply on the connection that is still readable.
+func testNoProtocolBugOnLateReplyAfterSyncTimeout(t *testing.T, p *pipe, mock *redisMock, closeConn func(), n int, do func() error) {
+	defer closeConn() // also releases the mock when an assertion below fails
+	p.timeout = 50 * time.Millisecond
+	p.conn = &halfClosedConn{Conn: p.conn}
+
+	replied := make(chan struct{})
+	go func() {
+		for i := 0; i < n; i++ {
+			mock.Expect("PING")
+		}
+		time.Sleep(p.timeout * 3) // reply after the sync path has timed out
+		mock.Expect().ReplyString("PONG")
+		close(replied)
+	}()
+
+	if err := do(); !errors.Is(err, os.ErrDeadlineExceeded) {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	// without the fix, the background worker started by the sync path reads the late PONG and panics
+	select {
+	case <-replied:
+		t.Fatalf("the late reply should not be read from a failed pipe")
+	case <-time.After(p.timeout * 6):
+	}
+
+	closeConn()
+	<-replied
+	waitPipeClosed(t, p)
+}
+
+func TestNoProtocolBugOnLateReplyAfterSyncTimeout(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, mock, _, closeConn := setup(t, ClientOption{})
+	testNoProtocolBugOnLateReplyAfterSyncTimeout(t, p, mock, closeConn, 1, func() error {
+		return p.Do(context.Background(), cmds.PingCmd).Error()
+	})
+}
+
+func TestNoProtocolBugOnLateReplyAfterSyncTimeoutMulti(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, mock, _, closeConn := setup(t, ClientOption{})
+	testNoProtocolBugOnLateReplyAfterSyncTimeout(t, p, mock, closeConn, 2, func() error {
+		resps := p.DoMulti(context.Background(), cmds.PingCmd, cmds.PingCmd).s
+		for _, resp := range resps[1:] {
+			if err := resp.Error(); !errors.Is(err, os.ErrDeadlineExceeded) {
+				t.Errorf("unexpected err %v", err)
+			}
+		}
+		return resps[0].Error()
+	})
+}
+
+func TestNoProtocolBugOnLateReplyAfterSyncTimeoutRacingClose(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, mock, _, closeConn := setup(t, ClientOption{})
+	// Close() or ConnLifetime expiry has already stored its error, so the sync path loses the
+	// CompareAndSwap on p.error. The decision to skip reading must not depend on the error value.
+	p.error.Store(errClosing)
+	testNoProtocolBugOnLateReplyAfterSyncTimeout(t, p, mock, closeConn, 1, func() error {
+		return p.Do(context.Background(), cmds.PingCmd).Error()
+	})
+}
+
 func TestResponseSequenceWithPushMessageInjected(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 	p, mock, cancel, _ := setup(t, ClientOption{})
