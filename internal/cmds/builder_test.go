@@ -171,3 +171,111 @@ func TestVerify(t *testing.T) {
 	}()
 	cmd1.cs.Verify()
 }
+
+func TestZrangeStartStopMinMax(t *testing.T) {
+	b := NewBuilder(NoSlot)
+
+	testCases := []struct {
+		name     string
+		startCmd Completed
+		minCmd   Completed
+		expected []string
+	}{
+		{
+			name:     "plain range",
+			startCmd: b.Zrange().Key("k").Start("1").Stop("2").Build(),
+			minCmd:   b.Zrange().Key("k").Min("1").Max("2").Build(),
+			expected: []string{"ZRANGE", "k", "1", "2"},
+		},
+		{
+			name:     "byscore rev",
+			startCmd: b.Zrange().Key("k").Start("+inf").Stop("1251").Byscore().Rev().Build(),
+			minCmd:   b.Zrange().Key("k").Min("+inf").Max("1251").Byscore().Rev().Build(),
+			expected: []string{"ZRANGE", "k", "+inf", "1251", "BYSCORE", "REV"},
+		},
+		{
+			name:     "bylex limit",
+			startCmd: b.Zrange().Key("k").Start("[a").Stop("[z").Bylex().Limit(0, 10).Build(),
+			minCmd:   b.Zrange().Key("k").Min("[a").Max("[z").Bylex().Limit(0, 10).Build(),
+			expected: []string{"ZRANGE", "k", "[a", "[z", "BYLEX", "LIMIT", "0", "10"},
+		},
+		{
+			name:     "withscores",
+			startCmd: b.Zrange().Key("k").Start("0").Stop("-1").Withscores().Build(),
+			minCmd:   b.Zrange().Key("k").Min("0").Max("-1").Withscores().Build(),
+			expected: []string{"ZRANGE", "k", "0", "-1", "WITHSCORES"},
+		},
+		{
+			name:     "byscore rev limit withscores",
+			startCmd: b.Zrange().Key("k").Start("+inf").Stop("0").Byscore().Rev().Limit(1, 5).Withscores().Build(),
+			minCmd:   b.Zrange().Key("k").Min("+inf").Max("0").Byscore().Rev().Limit(1, 5).Withscores().Build(),
+			expected: []string{"ZRANGE", "k", "+inf", "0", "BYSCORE", "REV", "LIMIT", "1", "5", "WITHSCORES"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if !reflect.DeepEqual(tc.startCmd.Commands(), tc.expected) {
+				t.Fatalf("Start/Stop produced %v, expected %v", tc.startCmd.Commands(), tc.expected)
+			}
+			if !reflect.DeepEqual(tc.minCmd.Commands(), tc.expected) {
+				t.Fatalf("Min/Max produced %v, expected %v", tc.minCmd.Commands(), tc.expected)
+			}
+			if !reflect.DeepEqual(tc.startCmd.Commands(), tc.minCmd.Commands()) {
+				t.Fatalf("Start/Stop %v != Min/Max %v", tc.startCmd.Commands(), tc.minCmd.Commands())
+			}
+		})
+	}
+
+	// Cacheable test
+	startCache := b.Zrange().Key("k").Start("1").Stop("2").Cache()
+	minCache := b.Zrange().Key("k").Min("1").Max("2").Cache()
+	if !reflect.DeepEqual(startCache.Commands(), minCache.Commands()) {
+		t.Fatalf("Start/Stop Cache %v != Min/Max Cache %v", startCache.Commands(), minCache.Commands())
+	}
+}
+
+func TestZrangestoreStartStopMinMax(t *testing.T) {
+	b := NewBuilder(NoSlot)
+
+	testCases := []struct {
+		name     string
+		startCmd Completed
+		minCmd   Completed
+		expected []string
+	}{
+		{
+			name:     "plain store",
+			startCmd: b.Zrangestore().Dst("dst").Src("src").Start("1").Stop("2").Build(),
+			minCmd:   b.Zrangestore().Dst("dst").Src("src").Min("1").Max("2").Build(),
+			expected: []string{"ZRANGESTORE", "dst", "src", "1", "2"},
+		},
+		{
+			name:     "byscore rev limit",
+			startCmd: b.Zrangestore().Dst("dst").Src("src").Start("+inf").Stop("1251").Byscore().Rev().Limit(0, 10).Build(),
+			minCmd:   b.Zrangestore().Dst("dst").Src("src").Min("+inf").Max("1251").Byscore().Rev().Limit(0, 10).Build(),
+			expected: []string{"ZRANGESTORE", "dst", "src", "+inf", "1251", "BYSCORE", "REV", "LIMIT", "0", "10"},
+		},
+		{
+			name:     "bylex rev",
+			startCmd: b.Zrangestore().Dst("dst").Src("src").Start("[z").Stop("[a").Bylex().Rev().Build(),
+			minCmd:   b.Zrangestore().Dst("dst").Src("src").Min("[z").Max("[a").Bylex().Rev().Build(),
+			expected: []string{"ZRANGESTORE", "dst", "src", "[z", "[a", "BYLEX", "REV"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if !reflect.DeepEqual(tc.startCmd.Commands(), tc.expected) {
+				t.Fatalf("Start/Stop produced %v, expected %v", tc.startCmd.Commands(), tc.expected)
+			}
+			if !reflect.DeepEqual(tc.minCmd.Commands(), tc.expected) {
+				t.Fatalf("Min/Max produced %v, expected %v", tc.minCmd.Commands(), tc.expected)
+			}
+			if !reflect.DeepEqual(tc.startCmd.Commands(), tc.minCmd.Commands()) {
+				t.Fatalf("Start/Stop %v != Min/Max %v", tc.startCmd.Commands(), tc.minCmd.Commands())
+			}
+		})
+	}
+}
+
