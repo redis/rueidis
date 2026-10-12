@@ -263,14 +263,6 @@ type ClientOption struct {
 	DisableAutoPipelining bool
 	// AlwaysPipelining makes rueidis.Client always pipeline redis commands even if they are not issued concurrently.
 	AlwaysPipelining bool
-	// UnblockOnCancel makes rueidis.Client send CLIENT UNBLOCK when a blocking command (ex. BLPOP) is aborted by
-	// its context, and reuse the connection if the server confirms it was unblocked, instead of closing it.
-	// It requires Redis 6+ and permission to run CLIENT UNBLOCK, otherwise the connection is closed as before.
-	// It only applies to blocking commands sent with Do, or with ToPipe() when DisableAutoPipelining is set.
-	// It is not compatible with DedicatedClient or proxies that may route connections to different servers as
-	// CLIENT UNBLOCK may reach another server and unblock an unrelated client.
-	// Ref: https://github.com/redis/rueidis/issues/897
-	UnblockOnCancel bool
 	// AlwaysRESP2 makes rueidis.Client always uses RESP2; otherwise, it will try using RESP3 first.
 	AlwaysRESP2 bool
 	//  ForceSingleClient force the usage of a single client connection, without letting the lib guessing

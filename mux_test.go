@@ -970,7 +970,7 @@ func TestMuxDelegation(t *testing.T) {
 		for _, ctxErr := range []error{context.Canceled, context.DeadlineExceeded} {
 			var blocks, closes int32
 			stored := make(chan struct{}, 1)
-			m, checkClean := setupMuxWithOption([]*mockWire{
+			m, checkClean := setupMux([]*mockWire{
 				{
 					DoFn: func(cmd Completed) RedisResult {
 						if !reflect.DeepEqual(cmd.Commands(), []string{"CLIENT", "UNBLOCK", "42"}) {
@@ -997,11 +997,11 @@ func TestMuxDelegation(t *testing.T) {
 						return true
 					},
 				},
-			}, &ClientOption{UnblockOnCancel: true})
+			})
 			if err := m.Dial(); err != nil {
 				t.Fatalf("unexpected dial error %v", err)
 			}
-			if err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"BLOCK"})).Error(); err != ctxErr {
+			if err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"BLOCK"}).UnblockOnCancel()).Error(); err != ctxErr {
 				t.Errorf("unexpected error %v", err)
 			}
 			<-stored // the wire is returned to the pool after the CLIENT UNBLOCK
@@ -1017,7 +1017,7 @@ func TestMuxDelegation(t *testing.T) {
 		}
 	})
 
-	t.Run("single blocking no unblock if UnblockOnCancel is disabled", func(t *testing.T) {
+	t.Run("single blocking no unblock without UnblockOnCancel", func(t *testing.T) {
 		closed := make(chan struct{}, 1)
 		m, checkClean := setupMux([]*mockWire{
 			{
@@ -1056,7 +1056,7 @@ func TestMuxDelegation(t *testing.T) {
 			NewResult(strmsg('-', "NOPERM this user has no permissions to run the 'client|unblock' command"), nil),
 		} {
 			closed := make(chan struct{}, 2)
-			m, checkClean := setupMuxWithOption([]*mockWire{
+			m, checkClean := setupMux([]*mockWire{
 				{
 					DoFn: func(cmd Completed) RedisResult {
 						return reply
@@ -1073,11 +1073,11 @@ func TestMuxDelegation(t *testing.T) {
 						closed <- struct{}{}
 					},
 				},
-			}, &ClientOption{UnblockOnCancel: true})
+			})
 			if err := m.Dial(); err != nil {
 				t.Fatalf("unexpected dial error %v", err)
 			}
-			if err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"BLOCK"})).Error(); err != context.Canceled {
+			if err := m.Do(context.Background(), cmds.NewBlockingCompleted([]string{"BLOCK"}).UnblockOnCancel()).Error(); err != context.Canceled {
 				t.Errorf("unexpected error %v", err)
 			}
 			<-closed

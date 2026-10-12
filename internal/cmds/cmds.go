@@ -16,6 +16,8 @@ const (
 	// goroutine commits directly to the client-side cache (no
 	// MULTI/EXEC unwrap). Set via Cacheable.ToStaticTTL().
 	staticTTLTag = uint16(1 << 6)
+	// make single blocking command attempt unblock and reuse the connection instead of closing it when canceled
+	unblockTag = uint16(1 << 5)
 	// InitSlot indicates that the command be sent to any redis node in cluster
 	InitSlot = uint16(1 << 14)
 	// NoSlot indicates that the command has no key slot specified
@@ -138,6 +140,19 @@ func (c Completed) ToRetryable() Completed {
 	return c
 }
 
+// UnblockOnCancel returns a new command that, if it is a blocking command (ex. BLPOP) aborted by its context,
+// makes the client send CLIENT UNBLOCK and reuse the connection if the server confirms it was unblocked, instead
+// of closing it. It requires Redis 6+ and permission to run CLIENT UNBLOCK, otherwise the connection is closed as before.
+// It only applies to Do, and under ClientOption.DisableAutoPipelining only together with ToPipe().
+// It has no effect on DoMulti or on a DedicatedClient.
+// Do not use it behind proxies that may route connections to different servers, as CLIENT UNBLOCK may reach
+// another server and unblock an unrelated client.
+// Ref: https://github.com/redis/rueidis/issues/897
+func (c Completed) UnblockOnCancel() Completed {
+	c.cf |= unblockTag
+	return c
+}
+
 // IsEmpty checks if it is an empty command.
 func (c *Completed) IsEmpty() bool {
 	return c.cs == nil || len(c.cs.s) == 0
@@ -196,6 +211,11 @@ func (c *Completed) IsPipe() bool {
 // IsRetryable checks if it is set retryableTag
 func (c *Completed) IsRetryable() bool {
 	return c.cf&retryableTag == retryableTag
+}
+
+// IsUnblockOnCancel checks if unblockTag is set
+func (c *Completed) IsUnblockOnCancel() bool {
+	return c.cf&unblockTag == unblockTag
 }
 
 // Commands returns the commands as []string.

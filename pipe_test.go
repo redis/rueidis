@@ -5858,14 +5858,14 @@ func TestBlockingDeadlineClosesPipeWithoutUnblockOnCancel_Do(t *testing.T) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	if err := p.Error(); err == nil {
-		t.Fatalf("the pipe should be closed by the deadline of a blocking cmd without UnblockOnCancel")
+		t.Fatalf("the pipe should be closed by the deadline of a blocking cmd without UnblockOnCancel()")
 	}
 	p.Close()
 }
 
 func TestBlockingDeadlineKeepsPipeForUnblock_Do(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
-	p, mock, cancel, _ := setup(t, ClientOption{UnblockOnCancel: true})
+	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 
 	ctx, cancelCtx := context.WithTimeout(context.Background(), 100*time.Millisecond)
@@ -5877,7 +5877,7 @@ func TestBlockingDeadlineKeepsPipeForUnblock_Do(t *testing.T) {
 		mock.Expect().Reply(RedisMessage{typ: '_'}) // replied by a CLIENT UNBLOCK from another conn
 		mock.Expect("GET", "a").ReplyString("OK")
 	}()
-	if err := p.Do(ctx, cmds.NewBlockingCompleted([]string{"BLPOP", "a", "0"})).NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
+	if err := p.Do(ctx, cmds.NewBlockingCompleted([]string{"BLPOP", "a", "0"}).UnblockOnCancel()).NonRedisError(); !errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("unexpected err %v", err)
 	}
 	if err := p.Error(); err != nil {

@@ -1179,7 +1179,6 @@ func TestUnblockOnCancelReusesBlockingConn(t *testing.T) {
 	client, err := NewClient(ClientOption{
 		InitAddress:           []string{"127.0.0.1:6379"},
 		DisableAutoPipelining: true,
-		UnblockOnCancel:       true,
 		BlockingPoolSize:      1, // the next blocking cmd must wait for the unblocked conn instead of dialing a new one
 	})
 	if err != nil {
@@ -1202,7 +1201,7 @@ func TestUnblockOnCancelReusesBlockingConn(t *testing.T) {
 	defer cancel()
 	done := make(chan error, 1)
 	go func() {
-		done <- client.Do(ctx, client.B().Blpop().Key("unblock_on_cancel").Timeout(5).Build().ToPipe()).Error()
+		done <- client.Do(ctx, client.B().Blpop().Key("unblock_on_cancel").Timeout(5).Build().ToPipe().UnblockOnCancel()).Error()
 	}()
 
 	for {
@@ -1247,7 +1246,6 @@ func TestUnblockOnCancelConcurrentReplies(t *testing.T) {
 	client, err := NewClient(ClientOption{
 		InitAddress:           []string{"127.0.0.1:6379"},
 		DisableAutoPipelining: true,
-		UnblockOnCancel:       true,
 		BlockingPoolSize:      4, // fewer conns than workers, so that unblocked conns are reused across workers
 	})
 	if err != nil {
@@ -1283,7 +1281,7 @@ func TestUnblockOnCancelConcurrentReplies(t *testing.T) {
 					}
 				}
 				bctx, cancel := context.WithTimeout(ctx, time.Duration(rand.Intn(5000))*time.Microsecond)
-				v, err := client.Do(bctx, client.B().Blpop().Key(key).Timeout(10).Build().ToPipe()).AsStrSlice()
+				v, err := client.Do(bctx, client.B().Blpop().Key(key).Timeout(10).Build().ToPipe().UnblockOnCancel()).AsStrSlice()
 				cancel()
 				var ne net.Error // the deadline can also expire while dialing a new conn
 				if !errors.Is(err, context.DeadlineExceeded) && !(errors.As(err, &ne) && ne.Timeout()) && !(pushed && err == nil && len(v) == 2 && v[0] == key && v[1] == val) {

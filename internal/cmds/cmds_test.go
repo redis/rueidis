@@ -110,6 +110,16 @@ func TestCompleted_ToBlock(t *testing.T) {
 	}
 }
 
+func TestCompleted_UnblockOnCancel(t *testing.T) {
+	cmd := NewBlockingCompleted([]string{"a", "b"}).ToPipe()
+	if cmd.IsUnblockOnCancel() {
+		t.Fatalf("should not be unblock on cancel command")
+	}
+	if cmd = cmd.UnblockOnCancel(); !cmd.IsUnblockOnCancel() || !cmd.IsBlock() || !cmd.IsPipe() {
+		t.Fatalf("should be unblock on cancel command and preserve other flags")
+	}
+}
+
 func TestCompleted_IsOptIn(t *testing.T) {
 	if cmd := NewCompleted([]string{"a", "b"}); cmd.IsOptIn() {
 		t.Fatalf("should not be opt-in command")

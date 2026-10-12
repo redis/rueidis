@@ -97,7 +97,6 @@ type pipe struct {
 	r2ps            bool // identify this pipe is used for resp2 pubsub or not
 	noNoDelay       bool
 	optIn           bool
-	unblockOnCancel bool
 }
 
 type pipeFn func(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error)
@@ -120,11 +119,10 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 		r:    bufio.NewReaderSize(conn, option.ReadBufferEachConn),
 		w:    bufio.NewWriterSize(conn, option.WriteBufferEachConn),
 
-		timeout:         option.ConnWriteTimeout,
-		pinggap:         option.Dialer.KeepAlive,
-		maxFlushDelay:   option.MaxFlushDelay,
-		noNoDelay:       option.DisableTCPNoDelay,
-		unblockOnCancel: option.UnblockOnCancel,
+		timeout:       option.ConnWriteTimeout,
+		pinggap:       option.Dialer.KeepAlive,
+		maxFlushDelay: option.MaxFlushDelay,
+		noNoDelay:     option.DisableTCPNoDelay,
 
 		r2ps:  r2ps,
 		optIn: isOptIn(option.ClientTrackingOptions),
@@ -1125,9 +1123,9 @@ func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
 			goto queue
 		}
 		dl, ok := ctx.Deadline()
-		// with UnblockOnCancel, a blocking cmd with a deadline also goes to the queue, so that the deadline aborts the call
-		// without closing the conn, leaving the chance to CLIENT UNBLOCK it. See https://github.com/redis/rueidis/issues/897
-		if p.queue != nil && (!ok || (p.unblockOnCancel && cmd.IsBlock())) && ctx.Done() != nil {
+		// a blocking cmd marked with UnblockOnCancel() also goes to the queue if it has a deadline, so that the deadline aborts
+		// the call without closing the conn, leaving the chance to CLIENT UNBLOCK it. See https://github.com/redis/rueidis/issues/897
+		if p.queue != nil && (!ok || (cmd.IsUnblockOnCancel() && cmd.IsBlock())) && ctx.Done() != nil {
 			p.background()
 			goto queue
 		}
