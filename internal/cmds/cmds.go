@@ -218,6 +218,14 @@ func (c *Completed) IsUnblockOnCancel() bool {
 	return c.cf&unblockTag == unblockTag
 }
 
+// ClearUnblockOnCancel clears the unblockTag from the command. Used
+// by dedicated clients, which never send CLIENT UNBLOCK, so that a
+// canceled blocking command closes their connection instead of
+// leaving it blocked.
+func ClearUnblockOnCancel(c *Completed) {
+	c.cf &^= unblockTag
+}
+
 // Commands returns the commands as []string.
 // Note that the returned []string should not be modified
 // and should not be read after passing into the Client interface, because it will be recycled.

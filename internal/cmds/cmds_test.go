@@ -118,6 +118,9 @@ func TestCompleted_UnblockOnCancel(t *testing.T) {
 	if cmd = cmd.UnblockOnCancel(); !cmd.IsUnblockOnCancel() || !cmd.IsBlock() || !cmd.IsPipe() {
 		t.Fatalf("should be unblock on cancel command and preserve other flags")
 	}
+	if ClearUnblockOnCancel(&cmd); cmd.IsUnblockOnCancel() || !cmd.IsBlock() || !cmd.IsPipe() {
+		t.Fatalf("should clear unblock on cancel and preserve other flags")
+	}
 }
 
 func TestCompleted_IsOptIn(t *testing.T) {

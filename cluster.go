@@ -1806,6 +1806,7 @@ func (c *dedicatedClusterClient) B() Builder {
 }
 
 func (c *dedicatedClusterClient) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
+	cmds.ClearUnblockOnCancel(&cmd)
 	attempts := 1
 retry:
 	if w, err := c.acquire(ctx, cmd.Slot()); err != nil {
