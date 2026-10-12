@@ -709,6 +709,9 @@ process:
 			}
 		}
 	}
+	if c.isClosingRedirect(resp.Error()) {
+		return NewErrorResult(ErrClosing)
+	}
 	return resp
 }
 
@@ -871,6 +874,9 @@ func (c *clusterClient) doresultfn(
 		cm := commands[i]
 		results.s[ii] = resp
 		addr, mode := c.shouldRefreshRetry(resp.Error(), ctx)
+		if c.isClosingRedirect(resp.Error()) {
+			results.s[ii] = NewErrorResult(ErrClosing)
+		}
 		if mode != RedirectNone {
 			nc := cc
 			retryDelay := time.Duration(-1)
@@ -1205,6 +1211,9 @@ process:
 			}
 		}
 	}
+	if c.isClosingRedirect(resp.Error()) {
+		return NewErrorResult(ErrClosing)
+	}
 	return resp
 }
 
@@ -1434,6 +1443,9 @@ func (c *clusterClient) resultcachefn(
 		cm := commands[i]
 		results.s[ii] = resp
 		addr, mode := c.shouldRefreshRetry(resp.Error(), ctx)
+		if c.isClosingRedirect(resp.Error()) {
+			results.s[ii] = NewErrorResult(ErrClosing)
+		}
 		if mode != RedirectNone {
 			nc := cc
 			retryDelay := time.Duration(-1)
@@ -1735,6 +1747,15 @@ func (c *clusterClient) shouldRefreshRetry(err error, ctx context.Context) (addr
 		}
 	}
 	return
+}
+
+func (c *clusterClient) isClosingRedirect(err error) bool {
+	if err, ok := err.(*RedisError); ok && atomic.LoadUint32(&c.stop) != 0 {
+		_, moved := err.IsMoved()
+		_, ask := err.IsAsk()
+		return moved || ask
+	}
+	return false
 }
 
 type dedicatedClusterClient struct {
