@@ -2338,6 +2338,10 @@ func testAdapter(resp3 bool) {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(limitedLogEntries)).To(Equal(2))
 
+				defaultLogEntries, err := adapter.ACLLog(ctx, 0).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(defaultLogEntries)).To(Equal(6))
+
 				// cleanup after creating the user
 				err = adapter.ACLDelUser(ctx, "test").Err()
 				Expect(err).NotTo(HaveOccurred())
@@ -2391,6 +2395,59 @@ func testAdapter(resp3 bool) {
 				dryRun := adapter.ACLDryRun(ctx, "default", "get", "randomKey")
 				Expect(dryRun.Err()).NotTo(HaveOccurred())
 				Expect(dryRun.Val()).To(Equal("OK"))
+			})
+
+			It("should list ACL rules via ACLList", func() {
+				users, err := adapter.ACLList(ctx).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(users).NotTo(BeEmpty())
+			})
+
+			It("should work in pipeline with ACLList and ACLDryRun", func() {
+				pipe := adapter.Pipeline()
+				listCmd := pipe.ACLList(ctx)
+				dryRunCmd := pipe.ACLDryRun(ctx, "default", "get", "randomKey")
+				_, err := pipe.Exec(ctx)
+				Expect(err).NotTo(HaveOccurred())
+
+				users, err := listCmd.Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(users).NotTo(BeEmpty())
+
+				dryRunRes, err := dryRunCmd.Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(dryRunRes).To(Equal("OK"))
+			})
+
+			It("should support ACLUsers, ACLWhoAmI, and ACLGenPass", func() {
+				who, err := adapter.ACLWhoAmI(ctx).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(who).To(Equal("default"))
+
+				users, err := adapter.ACLUsers(ctx).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(users).To(ContainElement("default"))
+
+				pass, err := adapter.ACLGenPass(ctx, 0).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(pass)).To(Equal(64)) // 256-bit hex = 64 chars
+
+				passShort, err := adapter.ACLGenPass(ctx, 64).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(passShort)).To(Equal(16)) // 64-bit hex = 16 chars
+			})
+
+			It("should pipeline ACLUsers, ACLWhoAmI, and ACLGenPass", func() {
+				pipe := adapter.Pipeline()
+				whoCmd := pipe.ACLWhoAmI(ctx)
+				usersCmd := pipe.ACLUsers(ctx)
+				passCmd := pipe.ACLGenPass(ctx, 128)
+				_, err := pipe.Exec(ctx)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(whoCmd.Val()).To(Equal("default"))
+				Expect(usersCmd.Val()).To(ContainElement("default"))
+				Expect(len(passCmd.Val())).To(Equal(32)) // 128-bit hex = 32 chars
 			})
 
 			It("lists acl categories and subcategories", func() {

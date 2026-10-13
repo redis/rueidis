@@ -2244,6 +2244,24 @@ func (c *Pipeline) ACLCatArgs(ctx context.Context, options *ACLCatArgs) *StringS
 	return ret
 }
 
+func (c *Pipeline) ACLUsers(ctx context.Context) *StringSliceCmd {
+	ret := c.comp.ACLUsers(ctx)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) ACLWhoAmI(ctx context.Context) *StringCmd {
+	ret := c.comp.ACLWhoAmI(ctx)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) ACLGenPass(ctx context.Context, bit int) *StringCmd {
+	ret := c.comp.ACLGenPass(ctx, bit)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) TFunctionLoad(ctx context.Context, lib string) *StatusCmd {
 	ret := c.comp.TFunctionLoad(ctx, lib)
 	c.rets = append(c.rets, ret)

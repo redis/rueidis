@@ -520,6 +520,9 @@ func TestPipeliner(t *testing.T) {
 		p.ACLLog(ctx, 1)
 		p.ACLCat(ctx)
 		p.ACLList(ctx)
+		p.ACLUsers(ctx)
+		p.ACLWhoAmI(ctx)
+		p.ACLGenPass(ctx, 128)
 		p.ACLLogReset(ctx)
 		p.ACLCatArgs(ctx, &ACLCatArgs{Category: "read"})
 		p.TFunctionLoad(ctx, "1")
@@ -667,7 +670,7 @@ func TestPipeliner(t *testing.T) {
 			Args: []any{"1", "2"},
 		})
 
-		if n := len(p.rets); n != 498 {
+		if n := len(p.rets); n != 501 {
 			t.Fatalf("unexpected pipeline calls: %v", n)
 		}
 		for i, cmd := range p.rets {
@@ -675,7 +678,7 @@ func TestPipeliner(t *testing.T) {
 				t.Fatalf("unexpected pipeline placeholder err(%d): %v", i, err)
 			}
 		}
-		if n := len(p.comp.client.(*proxy).cmds); n != 498 {
+		if n := len(p.comp.client.(*proxy).cmds); n != 501 {
 			t.Fatalf("unexpected pipeline commands: %v", n)
 		}
 		var pipeline [][]string
@@ -1137,6 +1140,9 @@ var golden = `[
     ["ACL","LOG","1"],
     ["ACL","CAT"],
     ["ACL","LIST"],
+    ["ACL","USERS"],
+    ["ACL","WHOAMI"],
+    ["ACL","GENPASS","128"],
     ["ACL","LOG","RESET"],
     ["ACL","CAT","read"],
     ["TFUNCTION","LOAD","1"],

@@ -5021,7 +5021,9 @@ func stringToClientInfo(txt string) (*ClientInfo, error) {
 				case 'T':
 					info.Flags |= ClientNoTouch
 				default:
-					return nil, fmt.Errorf("redis: unexpected client info flags(%s)", string(val[i]))
+					// Forward compatibility: servers can return client-flag characters this client
+					// does not recognize (new flags are added over time). Skip them instead of failing,
+					// matching the skip-unknown-fields behavior of client list/info.
 				}
 			}
 		case "db":
@@ -5162,11 +5164,10 @@ func (cmd *ACLLogCmd) from(res rueidis.RedisResult) {
 			case "timestamp-last-updated":
 				entry.TimestampLastUpdated, err = attr.AsInt64()
 			}
-		}
-
-		if err != nil {
-			cmd.SetErr(err)
-			return
+			if err != nil {
+				cmd.SetErr(err)
+				return
+			}
 		}
 		logEntries = append(logEntries, &entry)
 	}

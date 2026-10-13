@@ -35,6 +35,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/redis/rueidis"
 	"github.com/redis/rueidis/mock"
 )
 
@@ -1733,4 +1734,164 @@ func TestCacheHitDurationCmd(t *testing.T) {
 	if !cmd.IsCacheHit() {
 		t.Error("Expected IsCacheHit to remain true after SetVal, got false")
 	}
+}
+
+func TestACLTypesAndConstants(t *testing.T) {
+	// Verify compatibility of ClientInfo, ACLLogEntry, ClientFlags, and constants
+	var flags ClientFlags = ClientSlave | ClientMaster | ClientPubSub
+	if flags&ClientSlave == 0 {
+		t.Errorf("expected ClientSlave bit set")
+	}
+
+	info := &ClientInfo{
+		Addr:  "127.0.0.1:1234",
+		Flags: flags,
+	}
+	if info.Addr != "127.0.0.1:1234" {
+		t.Errorf("unexpected addr: %s", info.Addr)
+	}
+
+	entry := &ACLLogEntry{
+		Count:      1,
+		Reason:     "auth",
+		ClientInfo: info,
+	}
+	if entry.Reason != "auth" || entry.ClientInfo.Flags != flags {
+		t.Errorf("unexpected entry: %+v", entry)
+	}
+}
+
+func TestClientInfoFlagsAndErrors(t *testing.T) {
+	cases := []struct {
+		name  string
+		flags string
+		want  ClientFlags
+	}{
+		{"single unknown", "m", 0},
+		{"multiple unknown", "go", 0},
+		{"known plus unknown", "tm", ClientTracking},
+		{"known combo plus unknown", "Btm", ClientTrackingBCAST | ClientTracking},
+		{"no-flag sentinel", "N", 0},
+		{"redis newer flags", "SMCIiE", ClientSlave | ClientMaster},
+		{
+			"all known flags",
+			"SOMPxbtRBdcuAUreT",
+			ClientSlave | ClientMonitor | ClientMaster | ClientPubSub | ClientMulti |
+				ClientBlocked | ClientTracking | ClientTrackingBrokenRedir | ClientTrackingBCAST |
+				ClientDirtyCAS | ClientCloseAfterCommand | ClientUnBlocked | ClientCloseASAP |
+				ClientUnixSocket | ClientReadOnly | ClientNoEvict | ClientNoTouch,
+		},
+	}
+	for _, tc := range cases {
+		t.Run("flags_"+tc.name, func(t *testing.T) {
+			info, err := stringToClientInfo("id=1 addr=127.0.0.1:6379 flags=" + tc.flags + " db=0")
+			if err != nil {
+				t.Fatalf("stringToClientInfo(flags=%q) errored: %v", tc.flags, err)
+			}
+			if info.Flags&tc.want != tc.want {
+				t.Fatalf("flags=%q: Flags=%b, want bits %b set", tc.flags, info.Flags, tc.want)
+			}
+		})
+	}
+
+	if _, err := stringToClientInfo("not_a_kv"); err == nil {
+		t.Errorf("expected error on non-kv token")
+	}
+	if _, err := stringToClientInfo("id=not_an_int"); err == nil {
+		t.Errorf("expected error on invalid numeric value")
+	}
+}
+
+func TestACLLogCmd(t *testing.T) {
+	t.Run("RESP3 map format", func(t *testing.T) {
+		entryMap := mock.RedisMap(map[string]rueidis.RedisMessage{
+			"count":                  mock.RedisInt64(1),
+			"reason":                 mock.RedisString("command"),
+			"context":                mock.RedisString("toplevel"),
+			"object":                 mock.RedisString("set"),
+			"username":               mock.RedisString("testuser"),
+			"age-seconds":            mock.RedisFloat64(4.5),
+			"client-info":            mock.RedisString("id=100 addr=127.0.0.1:9999 flags=N"),
+			"entry-id":               mock.RedisInt64(42),
+			"timestamp-created":      mock.RedisInt64(1600000000),
+			"timestamp-last-updated": mock.RedisInt64(1600000001),
+		})
+		res := mock.Result(mock.RedisArray(entryMap))
+
+		entries, err := newACLLogCmd(res).Result()
+		if err != nil {
+			t.Fatalf("unexpected err: %v", err)
+		}
+		if len(entries) != 1 {
+			t.Fatalf("expected 1 entry, got %d", len(entries))
+		}
+		e := entries[0]
+		if e.Count != 1 {
+			t.Errorf("expected count 1, got %d", e.Count)
+		}
+		if e.Reason != "command" || e.Context != "toplevel" || e.Object != "set" || e.Username != "testuser" {
+			t.Errorf("unexpected entry fields: %s, %s, %s, %s", e.Reason, e.Context, e.Object, e.Username)
+		}
+		if e.AgeSeconds != 4.5 {
+			t.Errorf("expected age 4.5, got %f", e.AgeSeconds)
+		}
+		if e.EntryID != 42 || e.TimestampCreated != 1600000000 || e.TimestampLastUpdated != 1600000001 {
+			t.Errorf("unexpected id/timestamps: %d, %d, %d", e.EntryID, e.TimestampCreated, e.TimestampLastUpdated)
+		}
+		if e.ClientInfo == nil || e.ClientInfo.ID != 100 {
+			t.Errorf("expected client-info ID 100")
+		}
+	})
+
+	t.Run("RESP2 flat array format", func(t *testing.T) {
+		entryFlat := mock.RedisArray(
+			mock.RedisString("count"), mock.RedisInt64(3),
+			mock.RedisString("reason"), mock.RedisString("key"),
+			mock.RedisString("object"), mock.RedisString("secret_key"),
+			mock.RedisString("username"), mock.RedisString("alice"),
+		)
+		res := mock.Result(mock.RedisArray(entryFlat))
+
+		entries, err := newACLLogCmd(res).Result()
+		if err != nil {
+			t.Fatalf("unexpected err: %v", err)
+		}
+		if len(entries) != 1 {
+			t.Fatalf("expected 1 entry, got %d", len(entries))
+		}
+		if entries[0].Reason != "key" || entries[0].Object != "secret_key" || entries[0].Username != "alice" {
+			t.Errorf("unexpected entry data: %v", entries[0])
+		}
+	})
+
+	t.Run("error result", func(t *testing.T) {
+		res := mock.ErrorResult(errors.New("err"))
+		if _, err := newACLLogCmd(res).Result(); err == nil {
+			t.Errorf("expected error")
+		}
+	})
+
+	t.Run("non-array message error", func(t *testing.T) {
+		res := mock.Result(mock.RedisString("not_an_array"))
+		if _, err := newACLLogCmd(res).Result(); err == nil {
+			t.Errorf("expected error on non-array message")
+		}
+	})
+
+	t.Run("non-map entry error", func(t *testing.T) {
+		res := mock.Result(mock.RedisArray(mock.RedisString("not_a_map")))
+		if _, err := newACLLogCmd(res).Result(); err == nil {
+			t.Errorf("expected error on non-map entry")
+		}
+	})
+
+	t.Run("invalid client-info type error", func(t *testing.T) {
+		entryMap := mock.RedisMap(map[string]rueidis.RedisMessage{
+			"client-info": mock.RedisInt64(123),
+		})
+		res := mock.Result(mock.RedisArray(entryMap))
+		if _, err := newACLLogCmd(res).Result(); err == nil {
+			t.Errorf("expected error on non-string client-info")
+		}
+	})
 }
