@@ -269,6 +269,7 @@ func (c *dedicatedSingleClient) B() Builder {
 }
 
 func (c *dedicatedSingleClient) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
+	cmds.ClearUnblockOnCancel(&cmd)
 	attempts := 1
 retry:
 	if err := c.check(); err != nil {

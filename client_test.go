@@ -419,6 +419,24 @@ func TestSingleClient(t *testing.T) {
 		}
 	})
 
+	t.Run("Dedicated Do clears UnblockOnCancel", func(t *testing.T) {
+		w := &mockWire{
+			DoFn: func(cmd Completed) RedisResult {
+				if cmd.IsUnblockOnCancel() || !cmd.IsBlock() {
+					t.Fatalf("unexpected command flags %v", cmd)
+				}
+				return NewResult(strmsg('+', "Delegate"), nil)
+			},
+		}
+		m.AcquireFn = func() wire { return w }
+		m.StoreFn = func(ww wire) {}
+		if err := client.Dedicated(func(c DedicatedClient) error {
+			return c.Do(context.Background(), c.B().Blpop().Key("a").Timeout(0).Build().UnblockOnCancel()).Error()
+		}); err != nil {
+			t.Fatalf("unexpected err %v", err)
+		}
+	})
+
 	t.Run("Dedicated Delegate", func(t *testing.T) {
 		closed := false
 		w := &mockWire{
