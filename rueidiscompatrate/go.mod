@@ -11,9 +11,9 @@ replace github.com/redis/rueidis/rueidislimiter => ../rueidislimiter
 require (
 	github.com/onsi/ginkgo/v2 v2.32.2
 	github.com/onsi/gomega v1.42.1
-	github.com/redis/rueidis v1.0.78
-	github.com/redis/rueidis/rueidiscompat v1.0.78
-	github.com/redis/rueidis/rueidislimiter v1.0.78
+	github.com/redis/rueidis v1.0.79
+	github.com/redis/rueidis/rueidiscompat v1.0.79
+	github.com/redis/rueidis/rueidislimiter v1.0.79
 )
 
 require (
