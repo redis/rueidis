@@ -1327,9 +1327,14 @@ func (c Zrange) Key(key string) ZrangeKey {
 
 type ZrangeKey Incomplete
 
-func (c ZrangeKey) Min(min string) ZrangeMin {
+func (c ZrangeKey) Min(min string) ZrangeRangeMinMin {
 	c.cs.s = append(c.cs.s, min)
-	return (ZrangeMin)(c)
+	return (ZrangeRangeMinMin)(c)
+}
+
+func (c ZrangeKey) Start(start string) ZrangeRangeStartStart {
+	c.cs.s = append(c.cs.s, start)
+	return (ZrangeRangeStartStart)(c)
 }
 
 type ZrangeLimit Incomplete
@@ -1349,48 +1354,92 @@ func (c ZrangeLimit) Cache() Cacheable {
 	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ZrangeMax Incomplete
+type ZrangeRangeMinMax Incomplete
 
-func (c ZrangeMax) Byscore() ZrangeSortbyByscore {
+func (c ZrangeRangeMinMax) Byscore() ZrangeSortbyByscore {
 	c.cs.s = append(c.cs.s, "BYSCORE")
 	return (ZrangeSortbyByscore)(c)
 }
 
-func (c ZrangeMax) Bylex() ZrangeSortbyBylex {
+func (c ZrangeRangeMinMax) Bylex() ZrangeSortbyBylex {
 	c.cs.s = append(c.cs.s, "BYLEX")
 	return (ZrangeSortbyBylex)(c)
 }
 
-func (c ZrangeMax) Rev() ZrangeRev {
+func (c ZrangeRangeMinMax) Rev() ZrangeRev {
 	c.cs.s = append(c.cs.s, "REV")
 	return (ZrangeRev)(c)
 }
 
-func (c ZrangeMax) Limit(offset int64, count int64) ZrangeLimit {
+func (c ZrangeRangeMinMax) Limit(offset int64, count int64) ZrangeLimit {
 	c.cs.s = append(c.cs.s, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))
 	return (ZrangeLimit)(c)
 }
 
-func (c ZrangeMax) Withscores() ZrangeWithscores {
+func (c ZrangeRangeMinMax) Withscores() ZrangeWithscores {
 	c.cs.s = append(c.cs.s, "WITHSCORES")
 	return (ZrangeWithscores)(c)
 }
 
-func (c ZrangeMax) Build() Completed {
+func (c ZrangeRangeMinMax) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-func (c ZrangeMax) Cache() Cacheable {
+func (c ZrangeRangeMinMax) Cache() Cacheable {
 	c.cs.Build()
 	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ZrangeMin Incomplete
+type ZrangeRangeMinMin Incomplete
 
-func (c ZrangeMin) Max(max string) ZrangeMax {
+func (c ZrangeRangeMinMin) Max(max string) ZrangeRangeMinMax {
 	c.cs.s = append(c.cs.s, max)
-	return (ZrangeMax)(c)
+	return (ZrangeRangeMinMax)(c)
+}
+
+type ZrangeRangeStartStart Incomplete
+
+func (c ZrangeRangeStartStart) Stop(stop string) ZrangeRangeStartStop {
+	c.cs.s = append(c.cs.s, stop)
+	return (ZrangeRangeStartStop)(c)
+}
+
+type ZrangeRangeStartStop Incomplete
+
+func (c ZrangeRangeStartStop) Byscore() ZrangeSortbyByscore {
+	c.cs.s = append(c.cs.s, "BYSCORE")
+	return (ZrangeSortbyByscore)(c)
+}
+
+func (c ZrangeRangeStartStop) Bylex() ZrangeSortbyBylex {
+	c.cs.s = append(c.cs.s, "BYLEX")
+	return (ZrangeSortbyBylex)(c)
+}
+
+func (c ZrangeRangeStartStop) Rev() ZrangeRev {
+	c.cs.s = append(c.cs.s, "REV")
+	return (ZrangeRev)(c)
+}
+
+func (c ZrangeRangeStartStop) Limit(offset int64, count int64) ZrangeLimit {
+	c.cs.s = append(c.cs.s, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))
+	return (ZrangeLimit)(c)
+}
+
+func (c ZrangeRangeStartStop) Withscores() ZrangeWithscores {
+	c.cs.s = append(c.cs.s, "WITHSCORES")
+	return (ZrangeWithscores)(c)
+}
+
+func (c ZrangeRangeStartStop) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
+}
+
+func (c ZrangeRangeStartStop) Cache() Cacheable {
+	c.cs.Build()
+	return Cacheable{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 type ZrangeRev Incomplete
@@ -1662,38 +1711,72 @@ func (c ZrangestoreLimit) Build() Completed {
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ZrangestoreMax Incomplete
+type ZrangestoreRangeMinMax Incomplete
 
-func (c ZrangestoreMax) Byscore() ZrangestoreSortbyByscore {
+func (c ZrangestoreRangeMinMax) Byscore() ZrangestoreSortbyByscore {
 	c.cs.s = append(c.cs.s, "BYSCORE")
 	return (ZrangestoreSortbyByscore)(c)
 }
 
-func (c ZrangestoreMax) Bylex() ZrangestoreSortbyBylex {
+func (c ZrangestoreRangeMinMax) Bylex() ZrangestoreSortbyBylex {
 	c.cs.s = append(c.cs.s, "BYLEX")
 	return (ZrangestoreSortbyBylex)(c)
 }
 
-func (c ZrangestoreMax) Rev() ZrangestoreRev {
+func (c ZrangestoreRangeMinMax) Rev() ZrangestoreRev {
 	c.cs.s = append(c.cs.s, "REV")
 	return (ZrangestoreRev)(c)
 }
 
-func (c ZrangestoreMax) Limit(offset int64, count int64) ZrangestoreLimit {
+func (c ZrangestoreRangeMinMax) Limit(offset int64, count int64) ZrangestoreLimit {
 	c.cs.s = append(c.cs.s, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))
 	return (ZrangestoreLimit)(c)
 }
 
-func (c ZrangestoreMax) Build() Completed {
+func (c ZrangestoreRangeMinMax) Build() Completed {
 	c.cs.Build()
 	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
-type ZrangestoreMin Incomplete
+type ZrangestoreRangeMinMin Incomplete
 
-func (c ZrangestoreMin) Max(max string) ZrangestoreMax {
+func (c ZrangestoreRangeMinMin) Max(max string) ZrangestoreRangeMinMax {
 	c.cs.s = append(c.cs.s, max)
-	return (ZrangestoreMax)(c)
+	return (ZrangestoreRangeMinMax)(c)
+}
+
+type ZrangestoreRangeStartStart Incomplete
+
+func (c ZrangestoreRangeStartStart) Stop(stop string) ZrangestoreRangeStartStop {
+	c.cs.s = append(c.cs.s, stop)
+	return (ZrangestoreRangeStartStop)(c)
+}
+
+type ZrangestoreRangeStartStop Incomplete
+
+func (c ZrangestoreRangeStartStop) Byscore() ZrangestoreSortbyByscore {
+	c.cs.s = append(c.cs.s, "BYSCORE")
+	return (ZrangestoreSortbyByscore)(c)
+}
+
+func (c ZrangestoreRangeStartStop) Bylex() ZrangestoreSortbyBylex {
+	c.cs.s = append(c.cs.s, "BYLEX")
+	return (ZrangestoreSortbyBylex)(c)
+}
+
+func (c ZrangestoreRangeStartStop) Rev() ZrangestoreRev {
+	c.cs.s = append(c.cs.s, "REV")
+	return (ZrangestoreRev)(c)
+}
+
+func (c ZrangestoreRangeStartStop) Limit(offset int64, count int64) ZrangestoreLimit {
+	c.cs.s = append(c.cs.s, "LIMIT", strconv.FormatInt(offset, 10), strconv.FormatInt(count, 10))
+	return (ZrangestoreLimit)(c)
+}
+
+func (c ZrangestoreRangeStartStop) Build() Completed {
+	c.cs.Build()
+	return Completed{cs: c.cs, cf: uint16(c.cf), ks: c.ks}
 }
 
 type ZrangestoreRev Incomplete
@@ -1744,9 +1827,14 @@ func (c ZrangestoreSortbyByscore) Build() Completed {
 
 type ZrangestoreSrc Incomplete
 
-func (c ZrangestoreSrc) Min(min string) ZrangestoreMin {
+func (c ZrangestoreSrc) Min(min string) ZrangestoreRangeMinMin {
 	c.cs.s = append(c.cs.s, min)
-	return (ZrangestoreMin)(c)
+	return (ZrangestoreRangeMinMin)(c)
+}
+
+func (c ZrangestoreSrc) Start(start string) ZrangestoreRangeStartStart {
+	c.cs.s = append(c.cs.s, start)
+	return (ZrangestoreRangeStartStart)(c)
 }
 
 type Zrank Incomplete

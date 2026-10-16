@@ -8069,12 +8069,36 @@
         "type": "key"
       },
       {
-        "name": "min",
-        "type": "string"
-      },
-      {
-        "name": "max",
-        "type": "string"
+        "name": "range",
+        "type": "oneof",
+        "arguments": [
+          {
+            "type": "block",
+            "arguments": [
+              {
+                "name": "min",
+                "type": "string"
+              },
+              {
+                "name": "max",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "type": "block",
+            "arguments": [
+              {
+                "name": "start",
+                "type": "string"
+              },
+              {
+                "name": "stop",
+                "type": "string"
+              }
+            ]
+          }
+        ]
       },
       {
         "name": "sortby",
@@ -8202,12 +8226,36 @@
         "type": "key"
       },
       {
-        "name": "min",
-        "type": "string"
-      },
-      {
-        "name": "max",
-        "type": "string"
+        "name": "range",
+        "type": "oneof",
+        "arguments": [
+          {
+            "type": "block",
+            "arguments": [
+              {
+                "name": "min",
+                "type": "string"
+              },
+              {
+                "name": "max",
+                "type": "string"
+              }
+            ]
+          },
+          {
+            "type": "block",
+            "arguments": [
+              {
+                "name": "start",
+                "type": "string"
+              },
+              {
+                "name": "stop",
+                "type": "string"
+              }
+            ]
+          }
+        ]
       },
       {
         "name": "sortby",
