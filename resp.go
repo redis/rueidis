@@ -321,6 +321,7 @@ next:
 				for n += nn; nn != 0 && clean && err == nil; n += nn {
 					nn, err, clean = streamTo(i, w)
 				}
+				clean = clean && err == nil
 			}
 			return n, err, clean
 		}

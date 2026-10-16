@@ -397,6 +397,18 @@ func TestReadChunkedStringStream(t *testing.T) {
 	}
 }
 
+func TestReadChunkedStringStreamDestinationFull(t *testing.T) {
+	data := "$?\r\n;4\r\nHell\r\n;5\r\no wor\r\n;1\r\nd\r\n;0\r\n"
+	buf := &limitedbuffer{buf: make([]byte, 1)}
+	n, err, clean := streamTo(bufio.NewReader(strings.NewReader(data)), buf)
+	if n != 1 || err != io.EOF || buf.String() != "H" {
+		t.Fatalf("unexpected stream result: n=%d, err=%v, data=%q", n, err, buf.String())
+	}
+	if clean {
+		t.Fatal("partially consumed chunked response must not be marked clean")
+	}
+}
+
 func TestReadChunkedArray(t *testing.T) {
 	data := "*?\r\n:1\r\n:2\r\n:3\r\n.\r\n"
 
