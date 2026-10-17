@@ -62,7 +62,7 @@ func ParseURL(str string) (opt ClientOption, err error) {
 		opt.Password, _ = u.User.Password()
 	}
 	if u.Scheme != "unix" {
-		if ps := strings.Split(u.Path, "/"); len(ps) == 2 {
+		if ps := strings.Split(u.Path, "/"); len(ps) == 2 && ps[1] != "" {
 			if opt.SelectDB, err = strconv.Atoi(ps[1]); err != nil {
 				return opt, fmt.Errorf("redis: invalid database number: %q", ps[1])
 			}
