@@ -50,6 +50,9 @@ func TestParseURL(t *testing.T) {
 	if opt, err := ParseURL("redis:///1"); err != nil || opt.SelectDB != 1 {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}
+	if opt, err := ParseURL("redis://localhost:6379/"); err != nil || opt.SelectDB != 0 {
+		t.Fatalf("unexpected %v %v", opt, err)
+	}
 	if opt, err := ParseURL("redis:///a"); !strings.HasPrefix(err.Error(), "redis: invalid database number") {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}
