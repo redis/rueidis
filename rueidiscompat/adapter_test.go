@@ -10982,6 +10982,22 @@ func testAdapterCache(resp3 bool) {
 			Expect(result).To(BeEquivalentTo([]int64{1, 2, 3}))
 		})
 
+		It("should TSMAdd fractional values and server timestamps", Label("timeseries", "tsmadd"), func() {
+			Expect(adapter.TSCreate(ctx, "samples").Err()).NotTo(HaveOccurred())
+			result, err := adapter.TSMAdd(ctx, [][]interface{}{
+				{"samples", int64(1), 1.25},
+				{"samples", "*", 2.5},
+			}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(HaveLen(2))
+			Expect(result[0]).To(Equal(int64(1)))
+			Expect(result[1]).To(BeNumerically(">", 1))
+			sample, err := adapter.TSGet(ctx, "samples").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(sample.Timestamp).To(Equal(result[1]))
+			Expect(sample.Value).To(Equal(2.5))
+		})
+
 		It("should TSMGet and TSMGetWithArgs", Label("timeseries", "tsmget", "tsmgetWithArgs"), func() {
 			opt := &TSOptions{Labels: map[string]string{"Test": "This"}}
 			resultCreate, err := adapter.TSCreateWithArgs(ctx, "a", opt).Result()
