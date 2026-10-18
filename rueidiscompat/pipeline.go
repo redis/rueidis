@@ -3242,6 +3242,18 @@ func (c *Pipeline) Watch(_ context.Context, _ func(Tx) error, _ ...string) error
 	panic("not implemented")
 }
 
+func (c *Pipeline) Wait(ctx context.Context, numreplicas int64, timeout time.Duration) *IntCmd {
+	ret := c.comp.Wait(ctx, numreplicas, timeout)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
+func (c *Pipeline) WaitAOF(ctx context.Context, numlocal, numreplicas int64, timeout time.Duration) *IntSliceCmd {
+	ret := c.comp.WaitAOF(ctx, numlocal, numreplicas, timeout)
+	c.rets = append(c.rets, ret)
+	return ret
+}
+
 func (c *Pipeline) ForEachMaster(_ context.Context, _ func(ctx context.Context, client Cmdable) error) error {
 	panic("not implemented")
 }

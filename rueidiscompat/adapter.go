@@ -367,6 +367,8 @@ type CoreCmdable interface {
 	Latency(ctx context.Context) *LatencyCmd
 	LatencyReset(ctx context.Context, events ...interface{}) *StatusCmd
 	Time(ctx context.Context) *TimeCmd
+	Wait(ctx context.Context, numreplicas int64, timeout time.Duration) *IntCmd
+	WaitAOF(ctx context.Context, numlocal, numreplicas int64, timeout time.Duration) *IntSliceCmd
 	DebugObject(ctx context.Context, key string) *StringCmd
 	ReadOnly(ctx context.Context) *StatusCmd
 	ReadWrite(ctx context.Context) *StatusCmd
@@ -5324,6 +5326,21 @@ func (c *Compat) Watch(ctx context.Context, fn func(Tx) error, keys ...string) e
 		return err
 	}
 	return fn(newTx(dc, cancel))
+}
+
+// Wait blocks until the specified number of replicas have acknowledged
+// all previous write commands sent by this connection, or until timeout.
+func (c *Compat) Wait(ctx context.Context, numreplicas int64, timeout time.Duration) *IntCmd {
+	cmd := c.client.B().Wait().Numreplicas(numreplicas).Timeout(formatMs(timeout)).Build()
+	return newIntCmd(c.client.Do(ctx, cmd))
+}
+
+// WaitAOF blocks until all previous write commands sent by this connection
+// have been fsynced to the local AOF and/or to the specified number of
+// replicas, or until timeout.
+func (c *Compat) WaitAOF(ctx context.Context, numlocal, numreplicas int64, timeout time.Duration) *IntSliceCmd {
+	cmd := c.client.B().Waitaof().Numlocal(numlocal).Numreplicas(numreplicas).Timeout(formatMs(timeout)).Build()
+	return newIntSliceCmd(c.client.Do(ctx, cmd))
 }
 
 func (c *Compat) FT_List(ctx context.Context) *StringSliceCmd {

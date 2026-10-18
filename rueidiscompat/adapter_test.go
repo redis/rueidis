@@ -270,6 +270,21 @@ func testAdapter(resp3 bool) {
 			Expect(ping.Val()).To(Equal("PONG"))
 		})
 
+		if resp3 {
+			It("should Wait and WaitAOF", func() {
+				waited, err := adapter.Wait(ctx, 0, time.Second).Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(waited).To(Equal(int64(0)))
+
+				waitedAOF, err := adapter.WaitAOF(ctx, 0, 0, time.Second).Result()
+				if err != nil && (strings.Contains(strings.ToLower(err.Error()), "unknown command") || strings.Contains(strings.ToLower(err.Error()), "err unknown")) {
+					Skip("WAITAOF is not supported by the test server engine")
+				}
+				Expect(err).NotTo(HaveOccurred())
+				Expect(waitedAOF).To(Equal([]int64{0, 0}))
+			})
+		}
+
 		It("should Migrate", func() {
 			var r *StatusCmd
 			if resp3 {
