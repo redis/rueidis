@@ -258,6 +258,7 @@ type CoreCmdable interface {
 	XGroupDelConsumer(ctx context.Context, stream, group, consumer string) *IntCmd
 	XReadGroup(ctx context.Context, a XReadGroupArgs) *XStreamSliceCmd
 	XAck(ctx context.Context, stream, group string, ids ...string) *IntCmd
+	XNack(ctx context.Context, a XNackArgs) *IntCmd
 	XPending(ctx context.Context, stream, group string) *XPendingCmd
 	XPendingExt(ctx context.Context, a XPendingExtArgs) *XPendingExtCmd
 	XClaim(ctx context.Context, a XClaimArgs) *XMessageSliceCmd
@@ -2312,6 +2313,19 @@ func (c *Compat) XReadGroup(ctx context.Context, a XReadGroupArgs) *XStreamSlice
 func (c *Compat) XAck(ctx context.Context, stream, group string, ids ...string) *IntCmd {
 	cmd := c.client.B().Xack().Key(stream).Group(group).Id(ids...).Build()
 	resp := c.client.Do(ctx, cmd)
+	return newIntCmd(resp)
+}
+
+func (c *Compat) XNack(ctx context.Context, a XNackArgs) *IntCmd {
+	arb := c.client.B().Arbitrary("XNACK").Keys(a.Stream).Args(a.Group, a.Mode, "IDS", strconv.Itoa(len(a.IDs))).Args(a.IDs...)
+	if a.RetryCount != nil {
+		arb = arb.Args("RETRYCOUNT", strconv.FormatUint(*a.RetryCount, 10))
+	}
+	if a.Force {
+		arb = arb.Args("FORCE")
+	}
+
+	resp := c.client.Do(ctx, arb.Build())
 	return newIntCmd(resp)
 }
 

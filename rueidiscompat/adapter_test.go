@@ -6266,6 +6266,20 @@ func testAdapter(resp3 bool) {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(n).To(Equal(int64(2)))
 			})
+
+			It("should XNack", func() {
+				n, err := adapter.XNack(ctx, XNackArgs{
+					Stream: "stream",
+					Group:  "group",
+					Mode:   XNackModeSilent,
+					IDs:    []string{"1-0", "2-0", "4-0"},
+				}).Result()
+				if err != nil && (strings.Contains(err.Error(), "unknown command") || strings.Contains(err.Error(), "ERR unknown")) {
+					return
+				}
+				Expect(err).NotTo(HaveOccurred())
+				Expect(n).To(Equal(int64(2)))
+			})
 		})
 
 		Describe("xinfo", func() {
