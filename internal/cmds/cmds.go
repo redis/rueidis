@@ -1,6 +1,9 @@
 package cmds
 
-import "strings"
+import (
+	"encoding/binary"
+	"strings"
+)
 
 const (
 	optInTag     = uint16(1 << 15)
@@ -305,10 +308,38 @@ func (c *Cacheable) IsMGet() bool {
 	return c.cf&mtGetTag == mtGetTag
 }
 
+// cachePartLen returns the length of the cache part made of s and its length
+// prefix.
+func cachePartLen(s string) int {
+	n, l := len(s), 1
+	for n >= 0x80 {
+		n >>= 7
+		l++
+	}
+	return l + len(s)
+}
+
+// appendCachePart appends s to sb prefixed by its uvarint length, so that the
+// resulting string is unambiguous no matter what s contains.
+func appendCachePart(sb *strings.Builder, s string) {
+	if n := len(s); n < 0x80 {
+		sb.WriteByte(byte(n))
+	} else {
+		var buf [binary.MaxVarintLen64]byte
+		sb.Write(buf[:binary.PutUvarint(buf[:], uint64(n))])
+	}
+	sb.WriteString(s)
+}
+
 // MGetCacheCmd returns the cache command of the MGET singular command
 func MGetCacheCmd(c Cacheable) string {
 	if c.cs.s[0][0] == 'J' {
-		return "JSON.GET" + c.cs.s[len(c.cs.s)-1]
+		path := c.cs.s[len(c.cs.s)-1]
+		sb := strings.Builder{}
+		sb.Grow(cachePartLen("JSON.GET") + cachePartLen(path))
+		appendCachePart(&sb, "JSON.GET")
+		appendCachePart(&sb, path)
+		return sb.String()
 	}
 	return "GET"
 }
@@ -338,7 +369,7 @@ func CacheKey(c Cacheable) (key, command string) {
 		if i == kp {
 			continue
 		}
-		length += len(v)
+		length += cachePartLen(v)
 	}
 	sb := strings.Builder{}
 	sb.Grow(length)
@@ -346,7 +377,13 @@ func CacheKey(c Cacheable) (key, command string) {
 		if i == kp {
 			key = v
 		} else {
-			sb.WriteString(v)
+			// Length-prefix every part. Concatenating them as they are makes
+			// different commands produce the same cache key, for example
+			// HGET k ALL and HGETALL k are both "HGETALL", and
+			// GETRANGE k 1 23 and GETRANGE k 12 3 are both "GETRANGE123".
+			// Such commands would then share one cache entry and could be
+			// served each other's reply.
+			appendCachePart(&sb, v)
 		}
 	}
 	return key, sb.String()

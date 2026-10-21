@@ -13,14 +13,35 @@ func TestCacheable_CacheKey(t *testing.T) {
 	}
 
 	key, cmd = CacheKey(Cacheable{cs: newCommandSlice([]string{"HMGET", "A", "B", "C"})})
-	if key != "A" || cmd != "HMGETBC" {
+	if key != "A" || cmd != "\x05HMGET\x01B\x01C" {
 		t.Fatalf("unexpected ret %v %v", key, cmd)
+	}
+}
+
+func TestCacheable_CacheKeyUnique(t *testing.T) {
+	long := strings.Repeat("x", 128)
+	pairs := [][2][]string{
+		// different commands
+		{{"HGET", "A", "ALL"}, {"HGETALL", "A"}},
+		// different arguments of the same command
+		{{"GETRANGE", "A", "1", "23"}, {"GETRANGE", "A", "12", "3"}},
+		// the same bytes split into different arguments
+		{{"SMISMEMBER", "A", "ab", "c"}, {"SMISMEMBER", "A", "a", "bc"}},
+		// an argument long enough for the length prefix to need two bytes
+		{{"SMISMEMBER", "A", long, "c"}, {"SMISMEMBER", "A", long + "c"}},
+	}
+	for _, pair := range pairs {
+		ka, ca := CacheKey(Cacheable{cs: newCommandSlice(pair[0])})
+		kb, cb := CacheKey(Cacheable{cs: newCommandSlice(pair[1])})
+		if ka == kb && ca == cb {
+			t.Fatalf("%v and %v share the cache key %v %v", pair[0], pair[1], ka, ca)
+		}
 	}
 }
 
 func TestCacheable_Scripting(t *testing.T) {
 	key, cmd := CacheKey(Cacheable{cs: newCommandSlice([]string{"EVALSHA_RO", "sha1", "1", "OOO", "XXX"}), cf: scrRoTag})
-	if key != "OOO" || cmd != "EVALSHA_ROsha11XXX" {
+	if key != "OOO" || cmd != "\x0aEVALSHA_RO\x04sha1\x011\x03XXX" {
 		t.Fatalf("unexpected ret %v %v", key, cmd)
 	}
 	defer func() {
@@ -45,7 +66,7 @@ func TestCacheable_Scripting_WithStaticTTLTag(t *testing.T) {
 		cf: scrRoTag,
 	}.ToStaticTTL()
 	key, cmd := CacheKey(tagged)
-	if key != "OOO" || cmd != "EVALSHA_ROsha11XXX" {
+	if key != "OOO" || cmd != "\x0aEVALSHA_RO\x04sha1\x011\x03XXX" {
 		t.Fatalf("script-branch key extraction broke under staticTTLTag: got key=%v cmd=%v", key, cmd)
 	}
 }
@@ -77,8 +98,12 @@ func TestCacheable_MGetCacheCmd(t *testing.T) {
 	if cmd := Cacheable(NewMGetCompleted([]string{"MGET", "K"})); MGetCacheCmd(cmd) != "GET" {
 		t.Fatalf("should be GET")
 	}
-	if cmd := Cacheable(NewMGetCompleted([]string{"JSON.MGET", "K", "$"})); MGetCacheCmd(cmd) != "JSON.GET$" {
-		t.Fatalf("should be JSON.GET$")
+	// JSON.MGET single-key entries must be stored under the same cache command
+	// as the equivalent cacheable JSON.GET command.
+	jsonMGet := Cacheable(NewMGetCompleted([]string{"JSON.MGET", "K", "$"}))
+	_, jsonGet := CacheKey(Cacheable{cs: newCommandSlice([]string{"JSON.GET", "K", "$"})})
+	if cmd := MGetCacheCmd(jsonMGet); cmd != jsonGet {
+		t.Fatalf("JSON.MGET cache command %q does not match the JSON.GET cache command %q", cmd, jsonGet)
 	}
 }
 

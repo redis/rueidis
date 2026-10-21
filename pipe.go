@@ -1654,7 +1654,10 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 	builder := cmds.NewBuilder(cmds.InitSlot)
 	result := RedisResult{val: RedisMessage{typ: '*'}}
 	mgetcc := cmds.MGetCacheCmd(cmd)
-	if mgetcc[0] == 'J' {
+	// mgetcc is length-prefixed now, so the JSON check has to look at the command
+	// name instead of the first byte of the cache command.
+	isJSONMGet := commands[0][0] == 'J'
+	if isJSONMGet {
 		keys-- // the last one of JSON.MGET is a path, not a key
 	}
 	entries := entriesp.Get(keys, keys)
@@ -1685,7 +1688,7 @@ func (p *pipe) doCacheMGet(ctx context.Context, cmd Cacheable, ttl time.Duration
 	if !rewrite.IsZero() {
 		var rewritten Completed
 		var keys int
-		if mgetcc[0] == 'J' { // rewrite JSON.MGET path
+		if isJSONMGet { // rewrite JSON.MGET path
 			rewritten = rewrite.Args(commands[len(commands)-1]).MultiGet()
 			keys = len(rewritten.Commands()) - 2
 		} else {

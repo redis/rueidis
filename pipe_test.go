@@ -2542,6 +2542,9 @@ func TestClientSideCachingMGet(t *testing.T) {
 
 func TestClientSideCachingJSONMGet(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
+	// JSON.MGET single-key entries share the cache command of the equivalent
+	// JSON.GET, which is length-prefixed since cache keys became unambiguous.
+	jsonGetCmd := cmds.MGetCacheCmd(Cacheable(cmds.NewMGetCompleted([]string{"JSON.MGET", "a1", "$"})))
 	p, mock, cancel, _ := setup(t, ClientOption{})
 	defer cancel()
 
@@ -2594,13 +2597,13 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 				t.Errorf("unexpected cached mget response, expected %v, got %v", i+1, v.intlen)
 			}
 		}
-		if ttl := p.cache.(*lru).GetTTL("a1", "JSON.GET$"); !roughly(ttl, time.Second) {
+		if ttl := p.cache.(*lru).GetTTL("a1", jsonGetCmd); !roughly(ttl, time.Second) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
-		if ttl := p.cache.(*lru).GetTTL("a2", "JSON.GET$"); !roughly(ttl, time.Second*2) {
+		if ttl := p.cache.(*lru).GetTTL("a2", jsonGetCmd); !roughly(ttl, time.Second*2) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
-		if ttl := p.cache.(*lru).GetTTL("a3", "JSON.GET$"); !roughly(ttl, time.Second*3) {
+		if ttl := p.cache.(*lru).GetTTL("a3", jsonGetCmd); !roughly(ttl, time.Second*3) {
 			t.Errorf("unexpected ttl %v", ttl)
 		}
 		if v.IsCacheHit() {
@@ -2643,7 +2646,7 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 	}()
 
 	for {
-		if p.cache.(*lru).GetTTL("a1", "JSON.GET$") == -2 && p.cache.(*lru).GetTTL("a3", "JSON.GET$") == -2 {
+		if p.cache.(*lru).GetTTL("a1", jsonGetCmd) == -2 && p.cache.(*lru).GetTTL("a3", jsonGetCmd) == -2 {
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
@@ -2663,13 +2666,13 @@ func TestClientSideCachingJSONMGet(t *testing.T) {
 	if arr[2].intlen != 30 {
 		t.Errorf("unexpected cached mget response, expected %v, got %v", 30, arr[2].intlen)
 	}
-	if ttl := p.cache.(*lru).GetTTL("a1", "JSON.GET$"); !roughly(ttl, time.Second*10) {
+	if ttl := p.cache.(*lru).GetTTL("a1", jsonGetCmd); !roughly(ttl, time.Second*10) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
-	if ttl := p.cache.(*lru).GetTTL("a2", "JSON.GET$"); !roughly(ttl, time.Second*2) {
+	if ttl := p.cache.(*lru).GetTTL("a2", jsonGetCmd); !roughly(ttl, time.Second*2) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
-	if ttl := p.cache.(*lru).GetTTL("a3", "JSON.GET$"); !roughly(ttl, time.Second*30) {
+	if ttl := p.cache.(*lru).GetTTL("a3", jsonGetCmd); !roughly(ttl, time.Second*30) {
 		t.Errorf("unexpected ttl %v", ttl)
 	}
 }
