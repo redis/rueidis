@@ -6825,6 +6825,71 @@ func TestClusterClientMovedRetry(t *testing.T) {
 	})
 }
 
+func TestClusterClientRedirectWhileClosing(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	for _, redirect := range []string{"MOVED 0 :1", "ASK 0 :1"} {
+		var client *clusterClient
+		m := &mockConn{
+			DoFn: func(cmd Completed) RedisResult {
+				if strings.Join(cmd.Commands(), " ") == "CLUSTER SLOTS" {
+					return slotsMultiResp
+				}
+				client.Close()
+				return NewResult(strmsg('-', redirect), nil)
+			},
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				client.Close()
+				return &redisresults{s: []RedisResult{NewResult(strmsg('-', redirect), nil)}}
+			},
+			DoCacheFn: func(cmd Cacheable, ttl time.Duration) RedisResult {
+				client.Close()
+				return NewResult(strmsg('-', redirect), nil)
+			},
+			DoMultiCacheFn: func(multi ...CacheableTTL) *redisresults {
+				client.Close()
+				return &redisresults{s: []RedisResult{NewResult(strmsg('-', redirect), nil)}}
+			},
+		}
+		setup := func() {
+			var err error
+			client, err = newClusterClient(
+				&ClientOption{InitAddress: []string{":0"}},
+				func(dst string, opt *ClientOption) conn { return m },
+				newRetryer(defaultRetryDelayFn),
+			)
+			if err != nil {
+				t.Fatalf("unexpected err %v", err)
+			}
+		}
+
+		t.Run("Do "+redirect, func(t *testing.T) {
+			setup()
+			if err := client.Do(context.Background(), client.B().Get().Key("a").Build()).Error(); err != ErrClosing {
+				t.Fatalf("unexpected err %v", err)
+			}
+		})
+		t.Run("DoMulti "+redirect, func(t *testing.T) {
+			setup()
+			if err := client.DoMulti(context.Background(), client.B().Get().Key("a").Build())[0].Error(); err != ErrClosing {
+				t.Fatalf("unexpected err %v", err)
+			}
+		})
+		t.Run("DoCache "+redirect, func(t *testing.T) {
+			setup()
+			if err := client.DoCache(context.Background(), client.B().Get().Key("a").Cache(), 100).Error(); err != ErrClosing {
+				t.Fatalf("unexpected err %v", err)
+			}
+		})
+		t.Run("DoMultiCache "+redirect, func(t *testing.T) {
+			setup()
+			if err := client.DoMultiCache(context.Background(), CT(client.B().Get().Key("a").Cache(), 100))[0].Error(); err != ErrClosing {
+				t.Fatalf("unexpected err %v", err)
+			}
+		})
+	}
+}
+
 func TestClusterClientMaxMovedRedirections(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 
