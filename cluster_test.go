@@ -1228,17 +1228,15 @@ func TestClusterClientInit(t *testing.T) {
 				},
 			},
 			func(dst string, opt *ClientOption) conn {
-				if dst == "127.0.0.1:0" || dst == "127.0.2.1:0" {
-					if opt.ReplicaOnly {
-						t.Fatalf("unexpected replicaOnly option in primary node")
-					}
-					return primaryNodeConn
-				} else {
-					if !opt.ReplicaOnly {
-						t.Fatalf("unexpected replicaOnly option in replica node")
-					}
-					return replicaNodeConn
+				// Every node, primaries included, is dialed with READONLY so a primary demoted by a failover can serve
+				// replica reads over its reused conn instead of returning MOVED.
+				if !opt.ReplicaOnly {
+					t.Fatalf("unexpected missing replicaOnly option in node %s", dst)
 				}
+				if dst == "127.0.0.1:0" || dst == "127.0.2.1:0" {
+					return primaryNodeConn
+				}
+				return replicaNodeConn
 			},
 			newRetryer(defaultRetryDelayFn),
 		)
@@ -12491,5 +12489,96 @@ func TestClusterRebucketRetriesKeylessConsolidates(t *testing.T) {
 		if len(bucket.commands) != 3 {
 			t.Fatalf("expected all 3 keyless commands on one conn, got %d", len(bucket.commands))
 		}
+	}
+}
+
+// slotsRespFailedOver is slotsResp after a failover: the two nodes swap roles.
+var slotsRespFailedOver = NewResult(slicemsg('*', []RedisMessage{
+	slicemsg('*', []RedisMessage{
+		{typ: ':', intlen: 0},
+		{typ: ':', intlen: 16383},
+		slicemsg('*', []RedisMessage{ // master
+			strmsg('+', "127.0.1.1"),
+			{typ: ':', intlen: 1},
+			strmsg('+', ""),
+		}),
+		slicemsg('*', []RedisMessage{ // replica
+			strmsg('+', "127.0.0.1"),
+			{typ: ':', intlen: 0},
+			strmsg('+', ""),
+		}),
+	}),
+}), nil)
+
+func TestClusterClientSendToReplicasConnsSurviveFailover(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	// Refresh reuses conns across topology changes, so after a failover the demoted primary is reached as a replica
+	// over the conn it was dialed with as a primary. That conn must have issued READONLY, or the replica answers every
+	// read with MOVED and, since refresh keeps reusing it, the client never recovers. Conns that redirectOrNew dials
+	// are reused the same way.
+	const oldPrimary, oldReplica, redirected = "127.0.0.1:0", "127.0.1.1:1", "127.0.9.1:0"
+
+	var failedOver atomic.Bool
+	var mu sync.Mutex
+	readonly := map[conn]bool{}
+
+	client, err := newClusterClient(
+		&ClientOption{
+			InitAddress:    []string{oldPrimary},
+			SendToReplicas: func(cmd Completed) bool { return cmd.IsReadOnly() },
+		},
+		func(dst string, opt *ClientOption) conn {
+			m := &mockConn{
+				DoFn: func(cmd Completed) RedisResult {
+					if failedOver.Load() {
+						return slotsRespFailedOver
+					}
+					return slotsResp
+				},
+				AddrFn: func() string { return dst },
+			}
+			mu.Lock()
+			readonly[m] = opt.ReplicaOnly
+			mu.Unlock()
+			return m
+		},
+		newRetryer(defaultRetryDelayFn),
+	)
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+	defer client.Close()
+
+	client.mu.RLock()
+	demoted := client.conns[oldPrimary].conn
+	promoted := client.conns[oldReplica].conn
+	client.mu.RUnlock()
+
+	failedOver.Store(true)
+	if err := client.refresh(context.Background()); err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+
+	client.mu.RLock()
+	write := client.wslots[0]
+	reads := client.rslots[0]
+	client.mu.RUnlock()
+	if write != promoted {
+		t.Fatal("writes should go to the promoted replica over its existing conn")
+	}
+	if len(reads) != 1 || reads[0].Addr != oldPrimary || reads[0].conn != demoted {
+		t.Fatalf("reads should go to the demoted primary over its existing conn, got %v", reads)
+	}
+
+	redirect := client.redirectOrNew(redirected, nil, 0, RedirectMove)
+
+	mu.Lock()
+	defer mu.Unlock()
+	if !readonly[demoted] {
+		t.Fatal("the demoted primary's conn should have been dialed with READONLY")
+	}
+	if !readonly[redirect] {
+		t.Fatal("a conn dialed by redirectOrNew should be dialed with READONLY")
 	}
 }

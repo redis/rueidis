@@ -28,7 +28,6 @@ type clusterClient struct {
 	wslots       [16384]conn
 	retryHandler retryHandler
 	opt          *ClientOption
-	rOpt         *ClientOption
 	conns        map[string]connrole
 	connFn       connFn
 	stopCh       chan struct{}
@@ -84,9 +83,12 @@ func newClusterClient(opt *ClientOption, connFn connFn, retryer retryHandler) (*
 	}
 
 	if opt.SendToReplicas != nil {
+		// With SendToReplicas, every conn issues READONLY on connect, not only those to current replicas. Roles change
+		// on failover while conns are reused across refreshes, so a demoted primary's conn must already accept reads
+		// routed to it as a replica. A primary ignores READONLY. Copy so the caller's option is not mutated.
 		rOpt := *opt
 		rOpt.ReplicaOnly = true
-		client.rOpt = &rOpt
+		client.opt = &rOpt
 	}
 
 	client.connFn = func(dst string, opt *ClientOption) conn {
@@ -240,14 +242,8 @@ func (c *clusterClient) _refresh() (err error) {
 	conns := make(map[string]connrole, len(groups))
 	for master, g := range groups {
 		conns[master] = connrole{conn: c.connFn(master, c.opt)}
-		if c.rOpt != nil {
-			for _, nodeInfo := range g.nodes[1:] {
-				conns[nodeInfo.Addr] = connrole{conn: c.connFn(nodeInfo.Addr, c.rOpt)}
-			}
-		} else {
-			for _, nodeInfo := range g.nodes[1:] {
-				conns[nodeInfo.Addr] = connrole{conn: c.connFn(nodeInfo.Addr, c.opt)}
-			}
+		for _, nodeInfo := range g.nodes[1:] {
+			conns[nodeInfo.Addr] = connrole{conn: c.connFn(nodeInfo.Addr, c.opt)}
 		}
 	}
 	// make sure InitAddress always be present
@@ -278,14 +274,14 @@ func (c *clusterClient) _refresh() (err error) {
 		}
 
 		switch {
-		case c.opt.ReplicaOnly && len(g.nodes) > 1:
+		case c.opt.ReplicaOnly && c.opt.SendToReplicas == nil && len(g.nodes) > 1:
 			nodesCount := len(g.nodes)
 			for _, slot := range g.slots {
 				for i := slot[0]; i <= slot[1] && i >= 0 && i < 16384; i++ {
 					wslots[i] = g.nodes[1+util.FastRand(nodesCount-1)].conn
 				}
 			}
-		case c.rOpt != nil:
+		case c.opt.SendToReplicas != nil:
 			if len(rslots) == 0 { // lazy init
 				rslots = make([][]NodeInfo, 16384)
 			}
