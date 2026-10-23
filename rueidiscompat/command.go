@@ -1143,13 +1143,14 @@ func (cmd *XPendingCmd) from(res rueidis.RedisResult) {
 		cmd.SetErr(err)
 		return
 	}
+	// A group without pending entries has nil as its lower and higher IDs and consumers.
 	lower, err := arr[1].ToString()
-	if err != nil {
+	if err != nil && !rueidis.IsRedisNil(err) {
 		cmd.SetErr(err)
 		return
 	}
 	higher, err := arr[2].ToString()
-	if err != nil {
+	if err != nil && !rueidis.IsRedisNil(err) {
 		cmd.SetErr(err)
 		return
 	}
@@ -1159,7 +1160,7 @@ func (cmd *XPendingCmd) from(res rueidis.RedisResult) {
 		Higher: higher,
 	}
 	consumerArr, err := arr[3].ToArray()
-	if err != nil {
+	if err != nil && !rueidis.IsRedisNil(err) {
 		cmd.SetErr(err)
 		return
 	}

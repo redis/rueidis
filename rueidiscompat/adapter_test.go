@@ -6125,6 +6125,16 @@ func testAdapter(resp3 bool) {
 				Expect(n).To(Equal(int64(1)))
 			})
 
+			It("should XPending when the group has no pending entries", func() {
+				n, err := adapter.XAck(ctx, "stream", "group", "1-0", "2-0", "3-0").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(n).To(Equal(int64(3)))
+
+				info, err := adapter.XPending(ctx, "stream", "group").Result()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(info).To(Equal(XPending{Count: 0}))
+			})
+
 			if resp3 {
 				It("should XPending", func() {
 					info, err := adapter.XPending(ctx, "stream", "group").Result()
