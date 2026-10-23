@@ -824,6 +824,17 @@ func testAdapter(resp3 bool) {
 			Expect(pttl.Val()).To(BeNumerically("~", expiration, 100*time.Millisecond))
 		})
 
+		It("should PExpireAt beyond the UnixNano range", func() {
+			Expect(adapter.Set(ctx, "key", "Hello", 0).Err()).NotTo(HaveOccurred())
+			expires := time.Date(3000, time.January, 1, 0, 0, 0, 123000000, time.UTC)
+			ok, err := adapter.PExpireAt(ctx, "key", expires).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ok).To(BeTrue())
+			value, err := adapter.Get(ctx, "key").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(value).To(Equal("Hello"))
+		})
+
 		It("should PTTL", func() {
 			set := adapter.Set(ctx, "key", "Hello", 0)
 			Expect(set.Err()).NotTo(HaveOccurred())
