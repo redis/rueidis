@@ -8,6 +8,31 @@ import (
 	"golang.org/x/sys/cpu"
 )
 
+// waitContextOrSignal waits for the condition or context cancellation.
+// Returns nil if the condition is satisfied, or the context error if cancelled.
+func waitContextOrSignal(ctx context.Context, c1, c2 *sync.Cond) error {
+	// Use a done channel so the signaler goroutine can acquire the lock
+	// (required by Cond.Broadcast) without racing with Wait().
+	done := make(chan struct{})
+	go func() {
+		c1.L.Lock()
+		select {
+		case <-ctx.Done():
+			c1.Broadcast()
+		case <-done:
+		}
+		c1.L.Unlock()
+	}()
+	// Drop the lock and park until signaled (by c1.Broadcast from a caller
+	// of NextWriteCmd/NextResultCh, or by our goroutine above on cancel).
+	c1.Wait()
+	close(done)
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+	return nil
+}
+
 type queue interface {
 	PutOne(ctx context.Context, m Completed) (chan RedisResult, error)
 	PutMulti(ctx context.Context, m []Completed, resps []RedisResult) (chan RedisResult, error)
@@ -56,11 +81,15 @@ type node struct {
 	slept bool
 }
 
-func (r *ring) PutOne(_ context.Context, m Completed) (chan RedisResult, error) {
+func (r *ring) PutOne(ctx context.Context, m Completed) (chan RedisResult, error) {
 	n := &r.store[atomic.AddUint32(&r.write, 1)&r.mask]
 	n.c1.L.Lock()
 	for n.mark != 0 {
-		n.c1.Wait()
+		if ctxErr := waitContextOrSignal(ctx, n.c1, n.c2); ctxErr != nil {
+			atomic.AddUint32(&r.write, ^uint32(0)) // decrement write counter on cancel
+			n.c1.L.Unlock()
+			return nil, ctxErr
+		}
 	}
 	n.one = m
 	n.mark = 1
@@ -72,11 +101,15 @@ func (r *ring) PutOne(_ context.Context, m Completed) (chan RedisResult, error) 
 	return n.ch, nil
 }
 
-func (r *ring) PutMulti(_ context.Context, m []Completed, resps []RedisResult) (chan RedisResult, error) {
+func (r *ring) PutMulti(ctx context.Context, m []Completed, resps []RedisResult) (chan RedisResult, error) {
 	n := &r.store[atomic.AddUint32(&r.write, 1)&r.mask]
 	n.c1.L.Lock()
 	for n.mark != 0 {
-		n.c1.Wait()
+		if ctxErr := waitContextOrSignal(ctx, n.c1, n.c2); ctxErr != nil {
+			atomic.AddUint32(&r.write, ^uint32(0)) // decrement write counter on cancel
+			n.c1.L.Unlock()
+			return nil, ctxErr
+		}
 	}
 	n.multi = m
 	n.resps = resps
