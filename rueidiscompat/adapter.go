@@ -5218,20 +5218,20 @@ func (c *Compat) JSONMerge(ctx context.Context, key, path string, value string) 
 }
 
 func (c *Compat) JSONMSetArgs(ctx context.Context, docs []JSONSetArgs) *StatusCmd {
-	_cmd := c.client.B().JsonMset()
+	_cmd := cmds.JsonMsetTripletValue(c.client.B().JsonMset())
 	for _, doc := range docs {
-		_cmd.Key(doc.Key).Path(doc.Path).Value(str(doc.Value))
+		_cmd = _cmd.Key(doc.Key).Path(doc.Path).Value(str(doc.Value))
 	}
-	cmd := (cmds.JsonMsetTripletValue)(_cmd).Build()
+	cmd := _cmd.Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
 func (c *Compat) JSONMSet(ctx context.Context, params ...interface{}) *StatusCmd {
-	_cmd := c.client.B().JsonMset()
+	_cmd := cmds.JsonMsetTripletValue(c.client.B().JsonMset())
 	for i := 0; i < len(params); i += 3 {
-		_cmd.Key(str(params[i])).Path(str(params[i+1])).Value(str(params[i+2]))
+		_cmd = _cmd.Key(str(params[i])).Path(str(params[i+1])).Value(str(params[i+2]))
 	}
-	cmd := (cmds.JsonMsetTripletValue)(_cmd).Build()
+	cmd := _cmd.Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
