@@ -511,6 +511,8 @@ type AuthCredentials struct {
 	Username string
 	Password string
 	// RefreshAfter schedules AuthCredentialsFn to be called again at this time.
+	// The refresh is paused while a connection is held by Dedicated or Dedicate,
+	// except while it is used only for pub/sub over RESP3.
 	RefreshAfter time.Time
 }
 

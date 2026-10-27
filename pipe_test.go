@@ -1127,6 +1127,277 @@ availability_zone:us-west-1a
 	})
 }
 
+func TestAuthRefreshCheckedOut(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	// setupAuthRefresh returns a pipe whose first credentials are refreshed in an hour,
+	// so every refresh in these tests is triggered by setting authRefreshAt with due.
+	// Later AuthCredentialsFn calls are served by next.
+	setupAuthRefresh := func(t *testing.T, next func(p *pipe) (AuthCredentials, error), serve func(mock *redisMock)) (*pipe, *atomic.Int64, func()) {
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+		go func() {
+			mock.Expect("HELLO", "3", "AUTH", "ua", "pa").
+				Reply(slicemsg(
+					'%',
+					[]RedisMessage{
+						strmsg('+', "proto"),
+						{typ: ':', intlen: 3},
+					},
+				))
+			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+				ReplyError("UNKNOWN COMMAND")
+			serve(mock)
+		}()
+		calls := &atomic.Int64{}
+		var pp atomic.Pointer[pipe]
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
+			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
+				if calls.Add(1) == 1 {
+					return AuthCredentials{Username: "ua", Password: "pa", RefreshAfter: time.Now().Add(time.Hour)}, nil
+				}
+				return next(pp.Load())
+			},
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		pp.Store(p)
+		return p, calls, func() {
+			p.Close()
+			mock.Close()
+			n1.Close()
+			n2.Close()
+		}
+	}
+	builder := cmds.NewBuilder(cmds.NoSlot)
+	subscribe := builder.Subscribe().Channel("ch").Build()
+	get := builder.Get().Key("k").Build()
+	refreshed := func(p *pipe) (AuthCredentials, error) {
+		return AuthCredentials{Username: "ua", Password: "pa2"}, nil
+	}
+	due := func(p *pipe) {
+		now := time.Now()
+		p.authRefreshAt.Store(&now)
+	}
+	expectSubscribe := func(mock *redisMock) {
+		mock.Expect(subscribe.Commands()...).Reply(slicemsg('>', []RedisMessage{
+			strmsg('+', "subscribe"),
+			strmsg('+', "ch"),
+			{typ: ':', intlen: 1},
+		}))
+	}
+	// The refresh fires as soon as SUBSCRIBE resumes it, so its AUTH may be
+	// written before or after the SUBSCRIBE.
+	expectSubscribeAndAuth := func(mock *redisMock) {
+		for range 2 {
+			m, err := mock.ReadMessage()
+			if err != nil {
+				t.Errorf("unexpected mock read err %v", err)
+				return
+			}
+			switch args := m.values(); args[0].string() {
+			case "SUBSCRIBE":
+				(&redisExpect{redisMock: mock}).Reply(slicemsg('>', []RedisMessage{
+					strmsg('+', "subscribe"),
+					strmsg('+', "ch"),
+					{typ: ':', intlen: 1},
+				}))
+			case "AUTH":
+				if len(args) != 3 || args[1].string() != "ua" || args[2].string() != "pa2" {
+					t.Errorf("unexpected refresh command %v", args)
+				}
+				(&redisExpect{redisMock: mock}).ReplyString("OK")
+			default:
+				t.Errorf("unexpected command %v", args)
+			}
+		}
+	}
+	fireNow := func(p *pipe) {
+		now := time.Now()
+		p.authRefreshAt.Store(&now)
+		p.authTimer.Reset(0)
+	}
+	expectState := func(t *testing.T, p *pipe, state int32) {
+		t.Helper()
+		if got := atomic.LoadInt32(&p.authState); got != state {
+			t.Fatalf("unexpected auth state %d, expected %d", got, state)
+		}
+	}
+	waitRefresh := func(t *testing.T, refreshDone chan struct{}) {
+		t.Helper()
+		select {
+		case <-refreshDone:
+		case <-time.After(time.Second):
+			t.Fatal("auth refresh did not run")
+		}
+	}
+	checkOut := func(t *testing.T, p *pipe) {
+		t.Helper()
+		if !p.StopTimer() {
+			t.Fatal("StopTimer returned false")
+		}
+		expectState(t, p, authStatePaused)
+	}
+
+	t.Run("Resumes For PubSub", func(t *testing.T) {
+		refreshDone := make(chan struct{})
+		p, _, closeFn := setupAuthRefresh(t, refreshed, func(mock *redisMock) {
+			expectSubscribeAndAuth(mock)
+			close(refreshDone)
+		})
+		defer closeFn()
+		checkOut(t, p)
+		due(p)
+		if err := p.Do(context.Background(), subscribe).Error(); err != nil {
+			t.Fatalf("unexpected subscribe err %v", err)
+		}
+		waitRefresh(t, refreshDone)
+		expectState(t, p, authStatePubSub)
+	})
+
+	t.Run("Resumes For PubSub DoMulti", func(t *testing.T) {
+		refreshDone := make(chan struct{})
+		p, _, closeFn := setupAuthRefresh(t, refreshed, func(mock *redisMock) {
+			expectSubscribeAndAuth(mock)
+			close(refreshDone)
+		})
+		defer closeFn()
+		checkOut(t, p)
+		due(p)
+		if err := p.DoMulti(context.Background(), subscribe).s[0].Error(); err != nil {
+			t.Fatalf("unexpected subscribe err %v", err)
+		}
+		waitRefresh(t, refreshDone)
+	})
+
+	t.Run("Ping Is Neutral", func(t *testing.T) {
+		refreshDone := make(chan struct{})
+		p, _, closeFn := setupAuthRefresh(t, refreshed, func(mock *redisMock) {
+			mock.Expect("PING").ReplyString("PONG")
+			expectSubscribe(mock)
+			mock.Expect("PING").ReplyString("PONG")
+			mock.Expect("AUTH", "ua", "pa2").ReplyString("OK")
+			close(refreshDone)
+		})
+		defer closeFn()
+		checkOut(t, p)
+		if err := p.Do(context.Background(), cmds.PingCmd).Error(); err != nil {
+			t.Fatalf("unexpected ping err %v", err)
+		}
+		expectState(t, p, authStatePaused)
+		if err := p.Do(context.Background(), subscribe).Error(); err != nil {
+			t.Fatalf("unexpected subscribe err %v", err)
+		}
+		if err := p.Do(context.Background(), cmds.PingCmd).Error(); err != nil {
+			t.Fatalf("unexpected ping err %v", err)
+		}
+		expectState(t, p, authStatePubSub)
+		fireNow(p)
+		waitRefresh(t, refreshDone)
+	})
+
+	t.Run("Stays Paused After Other Command", func(t *testing.T) {
+		refreshDone := make(chan struct{})
+		p, calls, closeFn := setupAuthRefresh(t, refreshed, func(mock *redisMock) {
+			mock.Expect(get.Commands()...).ReplyString("v")
+			expectSubscribe(mock)
+			mock.Expect("AUTH", "ua", "pa2").ReplyString("OK")
+			close(refreshDone)
+		})
+		defer closeFn()
+		checkOut(t, p)
+		due(p)
+		if err := p.Do(context.Background(), get).Error(); err != nil {
+			t.Fatalf("unexpected get err %v", err)
+		}
+		if err := p.Do(context.Background(), subscribe).Error(); err != nil {
+			t.Fatalf("unexpected subscribe err %v", err)
+		}
+		expectState(t, p, authStatePinned)
+		if calls.Load() != 1 {
+			t.Fatalf("auth refresh ran on a pipe used for other commands, got %d calls", calls.Load())
+		}
+		p.ResetTimer()
+		expectState(t, p, authStateRunning)
+		waitRefresh(t, refreshDone)
+	})
+
+	t.Run("Pauses Again On Other Command", func(t *testing.T) {
+		refreshDone := make(chan struct{})
+		p, _, closeFn := setupAuthRefresh(t, refreshed, func(mock *redisMock) {
+			expectSubscribe(mock)
+			mock.Expect(get.Commands()...).ReplyString("v")
+			mock.Expect("AUTH", "ua", "pa2").ReplyString("OK")
+			close(refreshDone)
+		})
+		defer closeFn()
+		checkOut(t, p)
+		if err := p.Do(context.Background(), subscribe).Error(); err != nil {
+			t.Fatalf("unexpected subscribe err %v", err)
+		}
+		expectState(t, p, authStatePubSub)
+		if err := p.DoMulti(context.Background(), get).s[0].Error(); err != nil {
+			t.Fatalf("unexpected get err %v", err)
+		}
+		expectState(t, p, authStatePinned)
+		if p.authTimer.Stop() {
+			t.Fatal("auth timer still running on a pinned pipe")
+		}
+		due(p)
+		p.ResetTimer()
+		waitRefresh(t, refreshDone)
+	})
+
+	// The pipe gets pinned while AuthCredentialsFn runs, so the fetched credentials
+	// must not be sent, and a fetch error must not close the pipe.
+	for _, fetchErr := range []error{nil, errors.New("fetch failed")} {
+		t.Run(fmt.Sprintf("Pinned During Fetch err=%v", fetchErr), func(t *testing.T) {
+			fetched := make(chan struct{})
+			refreshDone := make(chan struct{})
+			var once sync.Once
+			p, _, closeFn := setupAuthRefresh(t, func(p *pipe) (AuthCredentials, error) {
+				first := false
+				once.Do(func() { first = true })
+				if !first {
+					return AuthCredentials{Username: "ua", Password: "pa3"}, nil
+				}
+				// Sent by the user while the credentials are fetched.
+				if err := p.Do(context.Background(), get).Error(); err != nil {
+					t.Errorf("unexpected get err %v", err)
+				}
+				defer close(fetched)
+				return AuthCredentials{Username: "ua", Password: "pa2"}, fetchErr
+			}, func(mock *redisMock) {
+				expectSubscribe(mock)
+				mock.Expect(get.Commands()...).ReplyString("v")
+				mock.Expect(get.Commands()...).ReplyString("v")
+				mock.Expect("AUTH", "ua", "pa3").ReplyString("OK")
+				close(refreshDone)
+			})
+			defer closeFn()
+			checkOut(t, p)
+			if err := p.Do(context.Background(), subscribe).Error(); err != nil {
+				t.Fatalf("unexpected subscribe err %v", err)
+			}
+			fireNow(p)
+			<-fetched
+			// Give a wrongly sent AUTH ua pa2, or a wrongly closed pipe, the
+			// chance to show up before the pipe is used and returned.
+			time.Sleep(50 * time.Millisecond)
+			if err := p.Do(context.Background(), get).Error(); err != nil {
+				t.Fatalf("pipe unusable after the skipped refresh: %v", err)
+			}
+			expectState(t, p, authStatePinned)
+			p.ResetTimer()
+			waitRefresh(t, refreshDone)
+		})
+	}
+}
+
 func TestNewPipeSkipsContextWithTimeoutWhenParentDeadlineIsTighter(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 	n1, n2 := net.Pipe()

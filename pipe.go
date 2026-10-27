@@ -85,6 +85,8 @@ type pipe struct {
 	lftmTimer       *time.Timer // lifetime timer, written once in _newPipe
 	info            map[string]RedisMessage
 	authRefreshAt   atomic.Pointer[time.Time]
+	authMu          sync.Mutex // serializes the refresh AUTH with the first non-pub/sub command of a checked-out pipe
+	authTimerMu     sync.Mutex // makes authState transitions atomic with the authTimer Reset or Stop they imply
 	timeout         time.Duration
 	pinggap         time.Duration
 	maxFlushDelay   time.Duration
@@ -92,11 +94,37 @@ type pipe struct {
 	wrCounter       atomic.Uint64
 	version         int32
 	blcksig         int32
+	authState       int32 // one of the authState* constants, only used when authTimer is set
 	state           int32
 	bgState         int32
 	r2ps            bool // identify this pipe is used for resp2 pubsub or not
 	noNoDelay       bool
 	optIn           bool
+}
+
+const (
+	authStateRunning int32 = iota // not checked out, the auth refresh runs
+	authStatePaused               // checked out by StopTimer, the auth refresh is paused
+	authStatePubSub               // checked out and only used for RESP3 pub/sub so far, the auth refresh runs
+	authStatePinned               // checked out and used for other commands, the auth refresh is paused until ResetTimer
+)
+
+const (
+	authCmdOther   = iota // any command AUTH must not be interleaved with, such as MULTI or a blocking one
+	authCmdNeutral        // PING, which neither pauses nor resumes the auth refresh
+	authCmdPubSub         // (S|P)SUBSCRIBE and (S|P)UNSUBSCRIBE
+)
+
+func authCmdKind(multi []Completed) int {
+	kind := authCmdNeutral
+	for _, cmd := range multi {
+		if cmd.NoReply() {
+			kind = authCmdPubSub
+		} else if c := cmd.Commands(); len(c) == 0 || c[0] != "PING" {
+			return authCmdOther
+		}
+	}
+	return kind
 }
 
 type pipeFn func(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error)
@@ -799,7 +827,7 @@ func (p *pipe) backgroundPing() {
 		}
 		ch := make(chan error, 1)
 		tm := time.NewTimer(p.timeout)
-		go func() { ch <- p.Do(context.Background(), cmds.PingCmd).NonRedisError() }()
+		go func() { ch <- p.do(context.Background(), cmds.PingCmd).NonRedisError() }()
 		select {
 		case <-tm.C:
 			err = os.ErrDeadlineExceeded
@@ -820,6 +848,12 @@ func (p *pipe) scheduleAuthRefresh(refreshAfter time.Time) {
 	if refreshAfter.IsZero() || p.Error() != nil || p.authTimer == nil {
 		return
 	}
+	p.authTimerMu.Lock()
+	defer p.authTimerMu.Unlock()
+	if !p.authRefreshAllowed() {
+		// ResetTimer schedules the refresh once the pipe is returned.
+		return
+	}
 	p.authTimer.Reset(time.Until(refreshAfter))
 	// Close or _background can stop authTimer between the error check and Reset.
 	if p.Error() != nil {
@@ -828,12 +862,14 @@ func (p *pipe) scheduleAuthRefresh(refreshAfter time.Time) {
 }
 
 func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials, error), authContext AuthCredentialsContext) {
-	if p.Error() != nil {
+	// A refresh skipped on a paused or pinned pipe leaves authRefreshAt in
+	// the past, so ResetTimer runs it again once the pipe is returned.
+	if p.Error() != nil || !p.authRefreshAllowed() {
 		return
 	}
 	auth, err := authFn(authContext)
 	if err != nil {
-		p._exit(err)
+		p.exitOnAuthRefreshError(err)
 		return
 	}
 	if auth.Username != "" || auth.Password != "" {
@@ -854,13 +890,88 @@ func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials,
 			defer cancel()
 		}
 		cmd := cmds.NewCompleted(args)
-		result := p.Do(ctx, cmd)
-		if err := result.Error(); err != nil {
+		p.authMu.Lock()
+		if !p.authRefreshAllowed() {
+			// The pipe got pinned while the credentials were fetched.
+			p.authMu.Unlock()
+			return
+		}
+		if err := p.do(ctx, cmd).Error(); err != nil {
+			p.error.CompareAndSwap(nil, &errs{error: err})
+			p.authMu.Unlock()
 			p._exit(err)
 			return
 		}
+		p.authMu.Unlock()
 	}
 	p.scheduleAuthRefresh(auth.RefreshAfter)
+}
+
+// exitOnAuthRefreshError closes the pipe after its credentials could not be
+// fetched, unless it got pinned in the meantime: a checked-out pipe used for
+// other commands keeps working as before, and is refreshed once returned.
+func (p *pipe) exitOnAuthRefreshError(err error) {
+	p.authMu.Lock()
+	if !p.authRefreshAllowed() {
+		p.authMu.Unlock()
+		return
+	}
+	// Failing the pipe under authMu makes a command waiting in trackAuthRefresh
+	// observe the error instead of being sent. _exit runs the close hook, so it
+	// is called after unlocking.
+	p.error.CompareAndSwap(nil, &errs{error: err})
+	p.authMu.Unlock()
+	p._exit(err)
+}
+
+func (p *pipe) authRefreshAllowed() bool {
+	state := atomic.LoadInt32(&p.authState)
+	return state == authStateRunning || state == authStatePubSub
+}
+
+// trackAuthRefresh is called before commands are sent on a pipe with an
+// authTimer. StopTimer pauses the auth refresh of a pipe checked out from the
+// pool, because AUTH could otherwise land inside a transaction or behind a
+// blocking command. A dedicated pub/sub pipe, however, is held for as long as
+// its subscriptions live, and its credentials would expire. So the refresh
+// resumes while a checked-out RESP3 pipe is used only for pub/sub, which AUTH
+// is safe to be interleaved with, and pauses again on any other command.
+// RESP2 pub/sub runs on the separate r2p pipe, which is never paused.
+func (p *pipe) trackAuthRefresh(multi ...Completed) {
+	state := atomic.LoadInt32(&p.authState)
+	if state != authStatePaused && state != authStatePubSub {
+		return
+	}
+	kind := authCmdKind(multi)
+	if kind == authCmdNeutral || (state == authStatePubSub && kind == authCmdPubSub) {
+		return
+	}
+	// Taking authMu waits for an in-flight refresh AUTH to be replied before
+	// the commands are sent, and makes later refreshes observe the new state.
+	p.authMu.Lock()
+	defer p.authMu.Unlock()
+	p.authTimerMu.Lock()
+	defer p.authTimerMu.Unlock()
+	switch atomic.LoadInt32(&p.authState) {
+	case authStatePaused:
+		if kind == authCmdOther {
+			atomic.StoreInt32(&p.authState, authStatePinned)
+			return
+		}
+		atomic.StoreInt32(&p.authState, authStatePubSub)
+		if at := p.authRefreshAt.Load(); at != nil && !at.IsZero() {
+			p.authTimer.Reset(time.Until(*at))
+			// Close or _background can stop authTimer between the state change and Reset.
+			if p.Error() != nil {
+				p.authTimer.Stop()
+			}
+		}
+	case authStatePubSub:
+		if kind == authCmdOther {
+			atomic.StoreInt32(&p.authState, authStatePinned)
+			p.authTimer.Stop()
+		}
+	}
 }
 
 func (p *pipe) handlePush(values []RedisMessage) (reply bool, unsubscribe bool) {
@@ -1136,6 +1247,13 @@ func (p *pipe) AZ() string {
 }
 
 func (p *pipe) Do(ctx context.Context, cmd Completed) (resp RedisResult) {
+	if p.authTimer != nil && (p.r2p == nil || !cmd.NoReply()) {
+		p.trackAuthRefresh(cmd)
+	}
+	return p.do(ctx, cmd)
+}
+
+func (p *pipe) do(ctx context.Context, cmd Completed) (resp RedisResult) {
 	if err := ctx.Err(); err != nil {
 		return NewErrorResult(err)
 	}
@@ -1245,6 +1363,9 @@ func (p *pipe) DoMulti(ctx context.Context, multi ...Completed) *redisresults {
 			resultsp.Put(resp)
 			return p.r2p.pipe(ctx).DoMulti(ctx, multi...)
 		}
+	}
+	if p.authTimer != nil {
+		p.trackAuthRefresh(multi...)
 	}
 
 	for _, cmd := range multi {
@@ -2010,7 +2131,10 @@ func (p *pipe) stopLifetimeTimer() bool {
 func (p *pipe) StopTimer() bool {
 	stopped := p.stopLifetimeTimer()
 	if p.authTimer != nil {
+		p.authTimerMu.Lock()
+		atomic.StoreInt32(&p.authState, authStatePaused)
 		stopped = p.authTimer.Stop() && stopped
+		p.authTimerMu.Unlock()
 	}
 	return stopped
 }
@@ -2028,6 +2152,8 @@ func (p *pipe) ResetTimer() bool {
 		}
 	}
 	if p.authTimer != nil {
+		p.authTimerMu.Lock()
+		atomic.StoreInt32(&p.authState, authStateRunning)
 		if at := p.authRefreshAt.Load(); at != nil && !at.IsZero() {
 			reset = p.authTimer.Reset(time.Until(*at)) && reset
 			// Same race as above, with Close or _background stopping authTimer.
@@ -2035,6 +2161,7 @@ func (p *pipe) ResetTimer() bool {
 				p.authTimer.Stop()
 			}
 		}
+		p.authTimerMu.Unlock()
 	}
 	return reset
 }
