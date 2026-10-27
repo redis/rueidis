@@ -796,6 +796,15 @@ type KeyValueSliceCmd struct {
 
 func (cmd *KeyValueSliceCmd) from(res rueidis.RedisResult) {
 	arr, err := res.ToArray()
+	if len(arr) > 0 && !arr[0].IsArray() {
+		// RESP2 replies with [key, value, ...] instead of [[key, value], ...]
+		kv, err := res.AsStrSlice()
+		for i := 0; i+1 < len(kv); i += 2 {
+			cmd.val = append(cmd.val, KeyValue{Key: kv[i], Value: kv[i+1]})
+		}
+		cmd.SetErr(err)
+		return
+	}
 	for _, a := range arr {
 		kv, _ := a.AsStrSlice()
 		for i := 0; i < len(kv); i += 2 {

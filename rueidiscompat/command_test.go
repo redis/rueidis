@@ -29,6 +29,7 @@ package rueidiscompat
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -1469,6 +1470,58 @@ func TestLatencyCmdFrom(t *testing.T) {
 		cmd := newLatencyCmd(res)
 		if cmd.Err() == nil {
 			t.Fatal("expected error, got nil")
+		}
+	})
+}
+
+func TestKeyValueSliceCmdFrom(t *testing.T) {
+	t.Parallel()
+
+	want := []KeyValue{{Key: "f1", Value: "v1"}, {Key: "f2", Value: "v2"}}
+
+	t.Run("RESP3 array of pairs", func(t *testing.T) {
+		res := mock.Result(mock.RedisArray(
+			mock.RedisArray(mock.RedisString("f1"), mock.RedisString("v1")),
+			mock.RedisArray(mock.RedisString("f2"), mock.RedisString("v2")),
+		))
+		cmd := newKeyValueSliceCmd(res)
+		if err := cmd.Err(); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got := cmd.Val(); !reflect.DeepEqual(got, want) {
+			t.Fatalf("got %+v, want %+v", got, want)
+		}
+	})
+
+	t.Run("RESP2 flat array", func(t *testing.T) {
+		res := mock.Result(mock.RedisArray(
+			mock.RedisString("f1"), mock.RedisString("v1"),
+			mock.RedisString("f2"), mock.RedisString("v2"),
+		))
+		cmd := newKeyValueSliceCmd(res)
+		if err := cmd.Err(); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got := cmd.Val(); !reflect.DeepEqual(got, want) {
+			t.Fatalf("got %+v, want %+v", got, want)
+		}
+	})
+
+	t.Run("empty array", func(t *testing.T) {
+		cmd := newKeyValueSliceCmd(mock.Result(mock.RedisArray()))
+		if err := cmd.Err(); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(cmd.Val()) != 0 {
+			t.Fatalf("expected empty slice, got %+v", cmd.Val())
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		err := errors.New("any")
+		cmd := newKeyValueSliceCmd(mock.ErrorResult(err))
+		if cmd.Err() != err {
+			t.Fatalf("got error %v, want %v", cmd.Err(), err)
 		}
 	})
 }
