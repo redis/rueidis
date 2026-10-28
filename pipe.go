@@ -897,6 +897,7 @@ func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials,
 			return
 		}
 		if err := p.do(ctx, cmd).Error(); err != nil {
+			// Same as in exitOnAuthRefreshError.
 			p.error.CompareAndSwap(nil, &errs{error: err})
 			p.authMu.Unlock()
 			p._exit(err)
@@ -916,9 +917,10 @@ func (p *pipe) exitOnAuthRefreshError(err error) {
 		p.authMu.Unlock()
 		return
 	}
-	// Failing the pipe under authMu makes a command waiting in trackAuthRefresh
-	// observe the error instead of being sent. _exit runs the close hook, so it
-	// is called after unlocking.
+	// The pipe is marked failed before a command waiting in trackAuthRefresh
+	// proceeds. That command may still be written, but it fails with the pipe,
+	// which _exit closes right after. _exit runs the close hook, so it is
+	// called after unlocking.
 	p.error.CompareAndSwap(nil, &errs{error: err})
 	p.authMu.Unlock()
 	p._exit(err)
