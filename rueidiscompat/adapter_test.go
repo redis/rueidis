@@ -4713,6 +4713,11 @@ func testAdapter(resp3 bool) {
 				Score:  1,
 				Member: "one",
 			}}))
+
+			// the key is gone after every member is popped
+			members, err = adapter.ZPopMax(ctx, "zset").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(members).To(BeEmpty())
 		})
 
 		It("should ZPopMin", func() {
@@ -4780,6 +4785,11 @@ func testAdapter(resp3 bool) {
 				Score:  3,
 				Member: "three",
 			}}))
+
+			// the key is gone after every member is popped
+			members, err = adapter.ZPopMin(ctx, "zset").Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(members).To(BeEmpty())
 		})
 
 		It("should ZRange", func() {

@@ -692,6 +692,13 @@ type ZSliceCmd struct {
 
 func (cmd *ZSliceCmd) from(res rueidis.RedisResult) {
 	if cmd.single {
+		// ZPOPMAX and ZPOPMIN without a count reply with an empty array,
+		// instead of a single member and score, when the key doesn't exist.
+		if arr, err := res.ToArray(); err == nil && len(arr) == 0 {
+			cmd.SetVal([]Z{})
+			cmd.setIsCacheHit(res.IsCacheHit())
+			return
+		}
 		s, err := res.AsZScore()
 		if err != nil {
 			cmd.SetErr(err)
