@@ -1526,6 +1526,52 @@ func TestKeyValueSliceCmdFrom(t *testing.T) {
 	})
 }
 
+func TestZSliceSingleCmdFrom(t *testing.T) {
+	t.Parallel()
+
+	want := []Z{{Member: "one", Score: 1}}
+
+	t.Run("RESP3 member and score", func(t *testing.T) {
+		res := mock.Result(mock.RedisArray(mock.RedisString("one"), mock.RedisFloat64(1)))
+		cmd := newZSliceSingleCmd(res)
+		if err := cmd.Err(); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got := cmd.Val(); !reflect.DeepEqual(got, want) {
+			t.Fatalf("got %+v, want %+v", got, want)
+		}
+	})
+
+	t.Run("RESP2 member and score", func(t *testing.T) {
+		res := mock.Result(mock.RedisArray(mock.RedisString("one"), mock.RedisString("1")))
+		cmd := newZSliceSingleCmd(res)
+		if err := cmd.Err(); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got := cmd.Val(); !reflect.DeepEqual(got, want) {
+			t.Fatalf("got %+v, want %+v", got, want)
+		}
+	})
+
+	t.Run("empty array", func(t *testing.T) {
+		cmd := newZSliceSingleCmd(mock.Result(mock.RedisArray()))
+		if err := cmd.Err(); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(cmd.Val()) != 0 {
+			t.Fatalf("expected empty slice, got %+v", cmd.Val())
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		err := errors.New("any")
+		cmd := newZSliceSingleCmd(mock.ErrorResult(err))
+		if cmd.Err() != err {
+			t.Fatalf("got error %v, want %v", cmd.Err(), err)
+		}
+	})
+}
+
 // TestCacheHitCmd tests the IsCacheHit and setIsCacheHit functionality for Cmd
 func TestCacheHitCmd(t *testing.T) {
 	cmd := &Cmd{}
