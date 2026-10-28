@@ -434,7 +434,8 @@ func (p *pipe) backgroundSkipReadWrite() {
 // failSync is called by the sync paths (syncDo, syncDoMulti, DoStream and DoMultiStream) when
 // they fail to write or read. It marks the pipe as failed, closes the connection and starts the
 // background worker to clean up goroutines. The sync paths must not use p.background() for
-// this, see backgroundSkipReadWrite.
+// this, see backgroundSkipReadWrite. The escape timer in Close also calls it, for a Close
+// left waiting on a queue that no background worker drains.
 func (p *pipe) failSync(err error) {
 	p.error.CompareAndSwap(nil, &errs{error: err})
 	p.conn.Close()
@@ -1969,12 +1970,17 @@ func (p *pipe) Close() {
 			// which frees a slot and answers the PING with an error. The timer
 			// costs a goroutine only when it fires.
 			//
-			// The drain runs in the background worker. There is always one
-			// here: it is already running, or the branch above started it, or
-			// syncDo starts it when the closed connection breaks its read.
+			// The drain runs in the background worker. Usually there is one: it
+			// is already running, or the branch above started it, or syncDo
+			// starts it when the closed connection breaks its read. But the
+			// other waiter that made the branch above skip may not be a syncDo:
+			// a concurrent Close, or a Do that sees the pipe already stopping,
+			// leaves without starting one. So the timer also starts the cleanup
+			// worker, which drains the queue without reading or writing the
+			// connection and is a no-op when a worker is already running.
 			var escape *time.Timer
 			if p.conn != nil {
-				escape = time.AfterFunc(time.Second, func() { p.conn.Close() })
+				escape = time.AfterFunc(time.Second, func() { p.failSync(errClosing) })
 			}
 			ch, _ := p.queue.PutOne(context.Background(), cmds.PingCmd)
 			<-ch
