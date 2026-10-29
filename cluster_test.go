@@ -6232,7 +6232,7 @@ func TestClusterSlotsParsing(t *testing.T) {
 func TestClusterShardsParsing(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 	t.Run("master selection", func(t *testing.T) {
-		result := parseShards(shardsRespTls.val, "127.0.0.1:5", true)
+		result := parseShards(shardsRespTls.val, "127.0.0.1:5", true).groups
 		if len(result) != 1 {
 			t.Fatalf("unexpected result %v", result)
 		}
@@ -6242,7 +6242,7 @@ func TestClusterShardsParsing(t *testing.T) {
 	})
 
 	t.Run("port selection", func(t *testing.T) {
-		result := parseShards(shardsRespTls.val, "127.0.0.1:5", true)
+		result := parseShards(shardsRespTls.val, "127.0.0.1:5", true).groups
 		if len(result) != 1 {
 			t.Fatalf("unexpected result %v", result)
 		}
@@ -6259,7 +6259,7 @@ func TestClusterShardsParsing(t *testing.T) {
 			}
 		}
 
-		result = parseShards(shardsRespTls.val, "127.0.0.1:5", false)
+		result = parseShards(shardsRespTls.val, "127.0.0.1:5", false).groups
 		if len(result) != 1 {
 			t.Fatalf("unexpected result %v", result)
 		}
@@ -6278,7 +6278,7 @@ func TestClusterShardsParsing(t *testing.T) {
 	})
 
 	t.Run("master position", func(t *testing.T) {
-		result := parseShards(shardsRespTls.val, "127.0.0.1:5", true)
+		result := parseShards(shardsRespTls.val, "127.0.0.1:5", true).groups
 		if len(result) != 1 {
 			t.Fatalf("unexpected result %v", result)
 		}
@@ -12581,4 +12581,217 @@ func TestClusterClientSendToReplicasConnsSurviveFailover(t *testing.T) {
 	if !readonly[redirect] {
 		t.Fatal("a conn dialed by redirectOrNew should be dialed with READONLY")
 	}
+}
+
+type testShardNode struct {
+	endpoint string
+	role     string
+	health   string
+	port     int64
+}
+
+func testShard(slotRanges [][2]int64, nodes ...testShardNode) RedisMessage {
+	slots := make([]RedisMessage, 0, len(slotRanges)*2)
+	for _, r := range slotRanges {
+		slots = append(slots, RedisMessage{typ: typeInteger, intlen: r[0]}, RedisMessage{typ: typeInteger, intlen: r[1]})
+	}
+	shardNodes := make([]RedisMessage, 0, len(nodes))
+	for _, n := range nodes {
+		shardNodes = append(shardNodes, slicemsg(typeMap, []RedisMessage{
+			strmsg(typeBlobString, "port"), {typ: typeInteger, intlen: n.port},
+			strmsg(typeBlobString, "endpoint"), strmsg(typeBlobString, n.endpoint),
+			strmsg(typeBlobString, "role"), strmsg(typeBlobString, n.role),
+			strmsg(typeBlobString, "health"), strmsg(typeBlobString, n.health),
+		}))
+	}
+	return slicemsg(typeMap, []RedisMessage{
+		strmsg(typeBlobString, "slots"), slicemsg(typeArray, slots),
+		strmsg(typeBlobString, "nodes"), slicemsg(typeArray, shardNodes),
+	})
+}
+
+// noPrimaryCluster fakes a cluster whose CLUSTER SHARDS reply can be swapped mid-test.
+type noPrimaryCluster struct {
+	shards  atomic.Pointer[RedisResult]
+	refresh atomic.Int32 // topology refreshes
+	sent    sync.Map // addr -> *atomic.Int32 of non-topology commands
+}
+
+func (f *noPrimaryCluster) set(shards ...RedisMessage) {
+	r := NewResult(slicemsg(typeArray, shards), nil)
+	f.shards.Store(&r)
+}
+
+func (f *noPrimaryCluster) sentTo(addr string) int32 {
+	if v, ok := f.sent.Load(addr); ok {
+		return v.(*atomic.Int32).Load()
+	}
+	return 0
+}
+
+func (f *noPrimaryCluster) client(t *testing.T, opt ClientOption) *clusterClient {
+	t.Helper()
+	opt.InitAddress = []string{"127.0.0.10:7010"}
+	count := func(addr string, n int) {
+		v, _ := f.sent.LoadOrStore(addr, new(atomic.Int32))
+		v.(*atomic.Int32).Add(int32(n))
+	}
+	client, err := newClusterClient(&opt, func(dst string, _ *ClientOption) conn {
+		return &mockConn{
+			AddrFn:    func() string { return dst },
+			VersionFn: func() int { return 8 },
+			DoFn: func(cmd Completed) RedisResult {
+				if cmd.Commands()[0] == "CLUSTER" {
+					if dst == opt.InitAddress[0] { // every refresh probes the seed
+						f.refresh.Add(1)
+					}
+					return *f.shards.Load()
+				}
+				count(dst, 1)
+				return NewResult(strmsg('+', dst), nil)
+			},
+			DoCacheFn: func(Cacheable, time.Duration) RedisResult {
+				count(dst, 1)
+				return NewResult(strmsg('+', dst), nil)
+			},
+			DoMultiFn: func(multi ...Completed) *redisresults {
+				count(dst, len(multi))
+				resps := make([]RedisResult, len(multi))
+				for i := range resps {
+					resps[i] = NewResult(strmsg('+', dst), nil)
+				}
+				return &redisresults{s: resps}
+			},
+		}
+	}, newRetryer(defaultRetryDelayFn))
+	if err != nil {
+		t.Fatalf("unexpected err %v", err)
+	}
+	t.Cleanup(client.Close)
+	return client
+}
+
+func TestClusterClientShardWithoutPrimary(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	const (
+		oldPrimary = "127.0.0.1:7001"
+		newPrimary = "127.0.0.2:7002"
+	)
+	all := [][2]int64{{0, 16383}}
+	// mid-failover: the old primary is down and the replica is not promoted yet
+	noPrimary := testShard(all,
+		testShardNode{endpoint: "127.0.0.1", role: "master", health: "fail", port: 7001},
+		testShardNode{endpoint: "127.0.0.2", role: "replica", health: "online", port: 7002},
+	)
+	promoted := testShard(all,
+		testShardNode{endpoint: "127.0.0.2", role: "master", health: "online", port: 7002},
+	)
+	ctx := context.Background()
+	readOnly := func(cmd Completed) bool { return cmd.IsReadOnly() }
+
+	t.Run("reads go to the online replica", func(t *testing.T) {
+		for name, opt := range map[string]ClientOption{
+			"ReplicaSelector":  {SendToReplicas: readOnly},
+			"ReadNodeSelector": {SendToReplicas: readOnly, ReadNodeSelector: func(uint16, []NodeInfo) int { return 0 }},
+		} {
+			t.Run(name, func(t *testing.T) {
+				f := &noPrimaryCluster{}
+				f.set(noPrimary)
+				c := f.client(t, opt)
+				if v, err := c.Do(ctx, c.B().Get().Key("a").Build()).ToString(); err != nil || v != newPrimary {
+					t.Fatalf("expected read from replica %s, got %v %v", newPrimary, v, err)
+				}
+				if err := c.Do(ctx, c.B().Set().Key("a").Value("1").Build()).Error(); err != ErrNoSlot {
+					t.Fatalf("expected write to fail with ErrNoSlot, got %v", err)
+				}
+				if n := f.sentTo(newPrimary); n != 1 {
+					t.Fatalf("expected only the read on the replica, got %d commands", n)
+				}
+			})
+		}
+	})
+
+	t.Run("waits are bounded", func(t *testing.T) {
+		for _, tc := range []struct {
+			name    string
+			opt     ClientOption
+			ctx     func() (context.Context, context.CancelFunc)
+			advert  RedisMessage
+			want    error
+			minWait time.Duration
+			maxWait time.Duration
+		}{
+			{name: "disabled by default", advert: noPrimary, want: ErrNoSlot, maxWait: noSlotRetryInterval},
+			{name: "disabled with DisableRetry", opt: ClientOption{DisableRetry: true, ClusterOption: ClusterOption{MaxNoSlotWait: time.Second}},
+				advert: noPrimary, want: ErrNoSlot, maxWait: noSlotRetryInterval},
+			{name: "unadvertised slot fails fast", opt: ClientOption{ClusterOption: ClusterOption{MaxNoSlotWait: time.Second}},
+				advert: testShard([][2]int64{{0, 8191}}, testShardNode{endpoint: "127.0.0.2", role: "master", health: "online", port: 7002}),
+				want:   ErrNoSlot, maxWait: noSlotRetryInterval},
+			{name: "MaxNoSlotWait expires", opt: ClientOption{ClusterOption: ClusterOption{MaxNoSlotWait: 350 * time.Millisecond}},
+				advert: noPrimary, want: ErrNoSlot, minWait: 250 * time.Millisecond, maxWait: time.Second},
+			{name: "ctx deadline ends the wait", opt: ClientOption{ClusterOption: ClusterOption{MaxNoSlotWait: time.Minute}},
+				ctx:    func() (context.Context, context.CancelFunc) { return context.WithTimeout(ctx, 350*time.Millisecond) },
+				advert: noPrimary, want: ErrNoSlot, minWait: 250 * time.Millisecond, maxWait: time.Second},
+			{name: "ctx cancel ends the wait", opt: ClientOption{ClusterOption: ClusterOption{MaxNoSlotWait: time.Minute}},
+				ctx: func() (context.Context, context.CancelFunc) {
+					cctx, cancel := context.WithCancel(ctx)
+					time.AfterFunc(150*time.Millisecond, cancel)
+					return cctx, cancel
+				},
+				advert: noPrimary, want: context.Canceled, minWait: 100 * time.Millisecond, maxWait: time.Second},
+		} {
+			t.Run(tc.name, func(t *testing.T) {
+				f := &noPrimaryCluster{}
+				f.set(tc.advert)
+				c := f.client(t, tc.opt)
+				cctx, cancel := context.WithCancel(ctx)
+				if tc.ctx != nil {
+					cctx, cancel = tc.ctx()
+				}
+				defer cancel()
+				before := f.refresh.Load()
+				start := time.Now()
+				err := c.Do(cctx, c.B().Set().Key("a").Value("1").Build()).Error()
+				elapsed := time.Since(start)
+				if err != tc.want {
+					t.Fatalf("expected %v, got %v", tc.want, err)
+				}
+				if elapsed < tc.minWait || elapsed > tc.maxWait {
+					t.Fatalf("expected to wait between %v and %v, waited %v", tc.minWait, tc.maxWait, elapsed)
+				}
+				// one refresh per noSlotRetryInterval plus the first one, never a tight loop
+				if limit := int32(elapsed/noSlotRetryInterval) + 1; f.refresh.Load()-before > limit {
+					t.Fatalf("expected at most %d refreshes, got %d", limit, f.refresh.Load()-before)
+				}
+				if n := f.sentTo(newPrimary); n != 0 {
+					t.Fatalf("expected nothing sent, got %d commands", n)
+				}
+			})
+		}
+	})
+
+	t.Run("commands are sent once the primary appears", func(t *testing.T) {
+		opt := ClientOption{ClusterOption: ClusterOption{MaxNoSlotWait: 5 * time.Second}}
+		for name, do := range map[string]func(c *clusterClient) error{
+			"Do": func(c *clusterClient) error { return c.Do(ctx, c.B().Set().Key("a").Value("1").Build()).Error() },
+			"DoMulti": func(c *clusterClient) error {
+				return c.DoMulti(ctx, c.B().Set().Key("a").Value("1").Build(), c.B().Set().Key("b").Value("1").Build())[0].Error()
+			},
+			"DoCache": func(c *clusterClient) error { return c.DoCache(ctx, c.B().Get().Key("a").Cache(), time.Minute).Error() },
+		} {
+			t.Run(name, func(t *testing.T) {
+				f := &noPrimaryCluster{}
+				f.set(noPrimary)
+				c := f.client(t, opt)
+				time.AfterFunc(250*time.Millisecond, func() { f.set(promoted) })
+				if err := do(c); err != nil {
+					t.Fatalf("expected success after promotion, got %v", err)
+				}
+				if f.sentTo(oldPrimary) != 0 || f.sentTo(newPrimary) == 0 {
+					t.Fatalf("expected commands only on the new primary, got old=%d new=%d", f.sentTo(oldPrimary), f.sentTo(newPrimary))
+				}
+			})
+		}
+	})
 }
