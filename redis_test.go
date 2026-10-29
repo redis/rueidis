@@ -705,13 +705,22 @@ func testPubSub(t *testing.T, client Client) {
 	ctx := context.Background()
 
 	messages := make(chan string, 10)
+	// stop is closed instead of messages: the Receive callbacks keep running
+	// until the unsubscribe below, and a stray message must not panic them.
+	stop := make(chan struct{})
+	var stopOnce sync.Once
+	closeStop := func() { stopOnce.Do(func() { close(stop) }) }
+	receive := func(msg PubSubMessage) {
+		select {
+		case messages <- msg.Message:
+		case <-stop:
+		}
+	}
 
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 	go func() {
-		err := client.Receive(ctx, client.B().Subscribe().Channel("ch1").Build(), func(msg PubSubMessage) {
-			messages <- msg.Message
-		})
+		err := client.Receive(ctx, client.B().Subscribe().Channel("ch1").Build(), receive)
 		if err != nil {
 			t.Errorf("unexpected subscribe response %v", err)
 		}
@@ -719,9 +728,7 @@ func testPubSub(t *testing.T, client Client) {
 	}()
 
 	go func() {
-		err := client.Receive(ctx, client.B().Psubscribe().Pattern("pat*").Build(), func(msg PubSubMessage) {
-			messages <- msg.Message
-		})
+		err := client.Receive(ctx, client.B().Psubscribe().Pattern("pat*").Build(), receive)
 		if err != nil {
 			t.Errorf("unexpected subscribe response %v", err)
 		}
@@ -744,16 +751,20 @@ func testPubSub(t *testing.T, client Client) {
 		}
 		wait()
 		if t.Failed() {
-			close(messages)
+			closeStop()
 		}
 	}()
 
-	for message := range messages {
-		delete(mmap, message)
-		if len(mmap) == 0 {
-			close(messages)
+loop:
+	for len(mmap) != 0 {
+		select {
+		case message := <-messages:
+			delete(mmap, message)
+		case <-stop:
+			break loop
 		}
 	}
+	closeStop()
 
 	for _, c := range client.Nodes() {
 		for _, resp := range c.DoMulti(context.Background(),
@@ -801,13 +812,22 @@ func testPubSubSharded(t *testing.T, client Client) {
 	ctx := context.Background()
 
 	messages := make(chan string, 10)
+	// stop is closed instead of messages: the Receive callbacks keep running
+	// until the unsubscribe below, and a stray message must not panic them.
+	stop := make(chan struct{})
+	var stopOnce sync.Once
+	closeStop := func() { stopOnce.Do(func() { close(stop) }) }
+	receive := func(msg PubSubMessage) {
+		select {
+		case messages <- msg.Message:
+		case <-stop:
+		}
+	}
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
-		err := client.Receive(ctx, client.B().Ssubscribe().Channel("ch1").Build(), func(msg PubSubMessage) {
-			messages <- msg.Message
-		})
+		err := client.Receive(ctx, client.B().Ssubscribe().Channel("ch1").Build(), receive)
 		if err != nil {
 			t.Errorf("unexpected subscribe response %v", err)
 		}
@@ -827,16 +847,20 @@ func testPubSubSharded(t *testing.T, client Client) {
 		}
 		wait()
 		if t.Failed() {
-			close(messages)
+			closeStop()
 		}
 	}()
 
-	for message := range messages {
-		delete(mmap, message)
-		if len(mmap) == 0 {
-			close(messages)
+loop:
+	for len(mmap) != 0 {
+		select {
+		case message := <-messages:
+			delete(mmap, message)
+		case <-stop:
+			break loop
 		}
 	}
+	closeStop()
 
 	for _, resp := range client.DoMulti(context.Background(),
 		client.B().Sunsubscribe().Channel("ch1").Build()) {
