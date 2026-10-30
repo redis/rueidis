@@ -886,7 +886,7 @@ func (c *Compat) PExpire(ctx context.Context, key string, milliseconds time.Dura
 }
 
 func (c *Compat) PExpireAt(ctx context.Context, key string, millisecondsTimestamp time.Time) *BoolCmd {
-	cmd := c.client.B().Pexpireat().Key(key).MillisecondsTimestamp(millisecondsTimestamp.UnixNano() / int64(time.Millisecond)).Build()
+	cmd := c.client.B().Pexpireat().Key(key).MillisecondsTimestamp(millisecondsTimestamp.UnixMilli()).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newBoolCmd(resp)
 }
