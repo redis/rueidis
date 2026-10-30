@@ -5496,6 +5496,28 @@ func TestCloseWithPipeliningAndGracefulPeriodExceeded(t *testing.T) {
 	<-p.close
 }
 
+func TestCloseWithConcurrentWaiter(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, _, cancel, _ := setup(t, ClientOption{})
+	// A concurrent Close, or a Do that then sees the pipe stopping, has counted
+	// itself as a waiter before this Close does. So this Close neither starts
+	// the background worker nor can rely on a syncDo to start it.
+	p.incrWaits()
+	closed := make(chan struct{})
+	go func() {
+		p.Close()
+		close(closed)
+	}()
+	select {
+	case <-closed:
+	case <-time.After(5 * time.Second):
+		t.Fatal("Close hung without a background worker")
+	}
+	p.decrWaits()
+	<-p.close
+	cancel()
+}
+
 func TestAlreadyCanceledContext(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 	p, _, close, closeConn := setup(t, ClientOption{})
