@@ -2924,7 +2924,7 @@ func (c *Compat) ClientKillByFilter(ctx context.Context, keys ...string) *IntCmd
 func (c *Compat) ClientList(ctx context.Context) *StringCmd {
 	cmd := c.client.B().ClientList().Build()
 	resp := c.client.Do(ctx, cmd)
-	return newStringCmd(resp)
+	return newTxtStringCmd(resp)
 }
 
 func (c *Compat) ClientPause(ctx context.Context, dur time.Duration) *BoolCmd {
@@ -3030,7 +3030,7 @@ func (c *Compat) FlushDBAsync(ctx context.Context) *StatusCmd {
 func (c *Compat) Info(ctx context.Context, section ...string) *StringCmd {
 	cmd := c.client.B().Info().Section(section...).Build()
 	resp := c.client.Do(ctx, cmd)
-	return newStringCmd(resp)
+	return newTxtStringCmd(resp)
 }
 
 // InfoMap returns INFO parsed into sections as map[string]map[string]string
@@ -3343,7 +3343,7 @@ func (c *Compat) ClusterShards(ctx context.Context) *ClusterShardsCmd {
 func (c *Compat) ClusterNodes(ctx context.Context) *StringCmd {
 	cmd := c.client.B().ClusterNodes().Build()
 	resp := c.client.Do(ctx, cmd)
-	return newStringCmd(resp)
+	return newTxtStringCmd(resp)
 }
 
 func (c *Compat) ClusterLinks(ctx context.Context) *ClusterLinksCmd {
@@ -3385,7 +3385,7 @@ func (c *Compat) ClusterResetHard(ctx context.Context) *StatusCmd {
 func (c *Compat) ClusterInfo(ctx context.Context) *StringCmd {
 	cmd := c.client.B().ClusterInfo().Build()
 	resp := c.client.Do(ctx, cmd)
-	return newStringCmd(resp)
+	return newTxtStringCmd(resp)
 }
 
 func (c *Compat) ClusterKeySlot(ctx context.Context, key string) *IntCmd {

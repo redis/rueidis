@@ -1572,6 +1572,47 @@ func TestZSliceSingleCmdFrom(t *testing.T) {
 	})
 }
 
+func TestTxtStringCmdFrom(t *testing.T) {
+	t.Parallel()
+
+	// RESP3 verbatim strings carry a "txt:" format prefix. The mock package has
+	// no verbatim string, so a blob string with the same content stands in for it.
+	t.Run("reply with the prefix", func(t *testing.T) {
+		cmd := newTxtStringCmd(mock.Result(mock.RedisBlobString("txt:# Server\r\nredis_version:8.2.1\r\n")))
+		if err := cmd.Err(); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got, want := cmd.Val(), "# Server\r\nredis_version:8.2.1\r\n"; got != want {
+			t.Fatalf("got %q, want %q", got, want)
+		}
+	})
+
+	t.Run("reply without the prefix", func(t *testing.T) {
+		cmd := newTxtStringCmd(mock.Result(mock.RedisBlobString("id=1 addr=127.0.0.1:6379\n")))
+		if err := cmd.Err(); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got, want := cmd.Val(), "id=1 addr=127.0.0.1:6379\n"; got != want {
+			t.Fatalf("got %q, want %q", got, want)
+		}
+	})
+
+	t.Run("newStringCmd keeps the value", func(t *testing.T) {
+		cmd := newStringCmd(mock.Result(mock.RedisBlobString("txt:hello")))
+		if got, want := cmd.Val(), "txt:hello"; got != want {
+			t.Fatalf("got %q, want %q", got, want)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		err := errors.New("any")
+		cmd := newTxtStringCmd(mock.ErrorResult(err))
+		if cmd.Err() != err {
+			t.Fatalf("got error %v, want %v", cmd.Err(), err)
+		}
+	})
+}
+
 // TestCacheHitCmd tests the IsCacheHit and setIsCacheHit functionality for Cmd
 func TestCacheHitCmd(t *testing.T) {
 	cmd := &Cmd{}

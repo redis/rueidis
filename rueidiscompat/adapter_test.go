@@ -203,7 +203,11 @@ func testCluster(resp3 bool) {
 		It("ClusterNodes", func() {
 			nodes, err := adapter.ClusterNodes(ctx).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(strings.Split(strings.TrimSpace(nodes), "\n")).To(HaveLen(3))
+			lines := strings.Split(strings.TrimSpace(nodes), "\n")
+			Expect(lines).To(HaveLen(3))
+			for _, line := range lines {
+				Expect(line).To(MatchRegexp("^[0-9a-f]{40} "))
+			}
 		})
 		It("ClusterMeet", func() {
 			Expect(adapter.ClusterMeet(ctx, "localhost", 8080).Err()).To(MatchError("Invalid node address specified: localhost:8080"))
@@ -217,7 +221,7 @@ func testCluster(resp3 bool) {
 		It("ClusterInfo", func() {
 			info, err := adapter.ClusterInfo(ctx).Result()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(info).NotTo(BeEmpty())
+			Expect(info).To(HavePrefix("cluster_state:"))
 		})
 		It("ClusterKeySlot", func() {
 			slot, err := adapter.ClusterKeySlot(ctx, "1").Result()
@@ -318,7 +322,7 @@ func testAdapter(resp3 bool) {
 		It("should ClientList", func() {
 			r := adapter.ClientList(ctx)
 			Expect(r.Err()).To(BeNil())
-			Expect(r.Val()).NotTo(Equal(""))
+			Expect(r.Val()).To(HavePrefix("id="))
 		})
 
 		It("should ClientID", func() {
@@ -365,7 +369,7 @@ func testAdapter(resp3 bool) {
 		It("should Info", func() {
 			info := adapter.Info(ctx)
 			Expect(info.Err()).NotTo(HaveOccurred())
-			Expect(info.Val()).NotTo(Equal(""))
+			Expect(info.Val()).To(HavePrefix("# Server"))
 		})
 
 		It("should InfoMap", func() {
@@ -380,7 +384,7 @@ func testAdapter(resp3 bool) {
 		It("should Info cpu", func() {
 			info := adapter.Info(ctx, "cpu")
 			Expect(info.Err()).NotTo(HaveOccurred())
-			Expect(info.Val()).NotTo(Equal(""))
+			Expect(info.Val()).To(HavePrefix("# CPU"))
 			Expect(info.Val()).To(ContainSubstring(`used_cpu_sys`))
 		})
 
