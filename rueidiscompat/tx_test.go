@@ -27,11 +27,15 @@
 package rueidiscompat
 
 import (
+	"context"
 	"errors"
+	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/mock"
+	"go.uber.org/mock/gomock"
 )
 
 var _ = Describe("RESP3 TxPipeline Commands", func() {
@@ -135,12 +139,13 @@ func testAdapterTxPipeline(resp3 bool) {
 	It("should Watch Abort", func() {
 		k1 := "_k1_"
 		ch := make(chan error)
+		var del *IntCmd
 		go func() {
 			ch <- adapter.Watch(ctx, func(t Tx) error {
 				ch <- nil
 				<-ch
 				_, err := t.TxPipelined(ctx, func(pipe Pipeliner) error {
-					pipe.Del(ctx, k1)
+					del = pipe.Del(ctx, k1)
 					return nil
 				})
 				return err
@@ -150,6 +155,22 @@ func testAdapterTxPipeline(resp3 bool) {
 		Expect(adapter.Set(ctx, k1, k1, 0).Err()).NotTo(HaveOccurred())
 		ch <- nil
 		Expect(<-ch).To(MatchError(TxFailedErr))
+		Expect(del.Err()).To(MatchError(TxFailedErr))
+	})
+
+	It("should set the command errors when EXEC is aborted", func() {
+		k1 := "_k1_"
+		var incr *IntCmd
+		var set *Cmd
+		_, err := adapter.TxPipelined(ctx, func(pipe Pipeliner) error {
+			incr = pipe.Incr(ctx, k1)
+			set = pipe.Do(ctx, "SET", k1)
+			return nil
+		})
+		Expect(err).To(MatchError(ContainSubstring("EXECABORT")))
+		Expect(incr.Err()).To(Equal(err))
+		Expect(set.Err()).To(MatchError(ContainSubstring("wrong number of arguments")))
+		Expect(adapter.Exists(ctx, k1).Val()).To(Equal(int64(0)))
 	})
 
 	It("should Unwatch and Close", func() {
@@ -186,4 +207,57 @@ func testAdapterTxPipeline(resp3 bool) {
 			pipe.GetToBuffer(ctx, "key", make([]byte, 10))
 		}).To(Panic())
 	})
+}
+
+func TestTxPipelineExecFailure(t *testing.T) {
+	queued := mock.Result(mock.RedisString("QUEUED"))
+	for _, tc := range []struct {
+		name  string
+		queue rueidis.RedisResult // the reply to queuing the second command
+		exec  rueidis.RedisResult
+		err   error
+	}{
+		{
+			name:  "WATCH conflict",
+			queue: queued,
+			exec:  mock.Result(mock.RedisNil()),
+			err:   TxFailedErr,
+		},
+		{
+			name:  "EXECABORT",
+			queue: mock.Result(mock.RedisError("ERR wrong number of arguments for 'set' command")),
+			exec:  mock.Result(mock.RedisError("EXECABORT Transaction discarded because of previous errors.")),
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			client := mock.NewClient(ctrl)
+			client.EXPECT().DoMulti(gomock.Any(), gomock.Any()).Return([]rueidis.RedisResult{
+				mock.Result(mock.RedisString("OK")), queued, tc.queue, tc.exec,
+			})
+
+			pipe := newTxPipeline(client)
+			incr := pipe.Incr(context.Background(), "k")
+			set := pipe.Do(context.Background(), "SET", "k")
+			_, err := pipe.Exec(context.Background())
+
+			want := tc.err
+			if want == nil {
+				want = tc.exec.Error()
+			}
+			if err == nil || err.Error() != want.Error() {
+				t.Fatalf("Exec error: got %v, want %v", err, want)
+			}
+			if incr.Err() == nil || incr.Err().Error() != want.Error() {
+				t.Fatalf("INCR error: got %v, want %v", incr.Err(), want)
+			}
+			wantSet := want
+			if qerr := tc.queue.Error(); qerr != nil {
+				wantSet = qerr
+			}
+			if set.Err() == nil || set.Err().Error() != wantSet.Error() {
+				t.Fatalf("SET error: got %v, want %v", set.Err(), wantSet)
+			}
+		})
+	}
 }
