@@ -844,7 +844,7 @@ func (c *Compat) Keys(ctx context.Context, pattern string) *StringSliceCmd {
 }
 
 func (c *Compat) Migrate(ctx context.Context, host string, port int64, key string, db int64, timeout time.Duration) *StatusCmd {
-	cmd := c.client.B().Migrate().Host(host).Port(port).Key(key).DestinationDb(db).Timeout(formatSec(timeout)).Build()
+	cmd := c.client.B().Migrate().Host(host).Port(port).Key(key).DestinationDb(db).Timeout(formatMs(timeout)).Build()
 	resp := c.client.Do(ctx, cmd)
 	return newStatusCmd(resp)
 }
@@ -2931,7 +2931,7 @@ func (c *Compat) ClientPause(ctx context.Context, dur time.Duration) *BoolCmd {
 	var mu sync.Mutex
 	ret := &BoolCmd{}
 	ret.err = c.doPrimaries(ctx, func(c rueidis.Client) error {
-		res, err := c.Do(ctx, c.B().ClientPause().Timeout(formatSec(dur)).Build()).ToString()
+		res, err := c.Do(ctx, c.B().ClientPause().Timeout(formatMs(dur)).Build()).ToString()
 		if err == nil {
 			mu.Lock()
 			ret.val = res == "OK"

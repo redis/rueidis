@@ -32,6 +32,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -39,8 +40,10 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"go.uber.org/mock/gomock"
 
 	"github.com/redis/rueidis"
+	"github.com/redis/rueidis/mock"
 )
 
 type TimeValue struct {
@@ -14401,4 +14404,42 @@ func _assert_geosearch_result(result *FTSearchResult, expectedDocIDs []string) {
 	}
 	Expect(ids).To(ConsistOf(expectedDocIDs))
 	Expect(result.Total).To(BeEquivalentTo(len(expectedDocIDs)))
+}
+
+// MIGRATE's timeout argument is in milliseconds (https://redis.io/docs/latest/commands/migrate/)
+// and Migrate accepts a time.Duration, so 30s belongs on the wire as "30000". A
+// positive sub-millisecond duration is clamped to 1ms, like formatMs does.
+func TestMigrateTimeoutIsInMilliseconds(t *testing.T) {
+	for _, tc := range []struct {
+		timeout time.Duration
+		want    string
+	}{
+		{30 * time.Second, "30000"},
+		{1500 * time.Millisecond, "1500"},
+		{time.Nanosecond, "1"},
+	} {
+		t.Run(tc.timeout.String(), func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			client := mock.NewClient(ctrl)
+			var got []string
+			client.EXPECT().Do(gomock.Any(), gomock.Any()).DoAndReturn(
+				func(_ context.Context, cmd rueidis.Completed) rueidis.RedisResult {
+					got = append([]string(nil), cmd.Commands()...)
+					return mock.Result(mock.RedisString("OK"))
+				},
+			)
+
+			adapter := NewAdapter(client)
+			if err := adapter.Migrate(context.Background(), "127.0.0.1", 6380, "key", 0, tc.timeout).Err(); err != nil {
+				t.Fatalf("Migrate: %v", err)
+			}
+
+			want := []string{"MIGRATE", "127.0.0.1", "6380", "key", "0", tc.want}
+			if !reflect.DeepEqual(got, want) {
+				t.Fatalf("MIGRATE timeout is sent in the wrong unit:\n got: %q\nwant: %q", got, want)
+			}
+		})
+	}
 }
