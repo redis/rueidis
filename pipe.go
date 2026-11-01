@@ -857,8 +857,14 @@ func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials,
 		cmd := cmds.NewCompleted(args)
 		result := p.Do(ctx, cmd)
 		if err := result.Error(); err != nil {
-			p._exit(err)
-			return
+			// Behind a blocking command, the AUTH waits for the blocking reply
+			// and hits ConnWriteTimeout, like the background PING does. It stays
+			// queued and is applied once the blocking command returns, so the
+			// pipe is kept open.
+			if result.NonRedisError() == nil || atomic.LoadInt32(&p.blcksig) == 0 {
+				p._exit(err)
+				return
+			}
 		}
 	}
 	p.scheduleAuthRefresh(auth.RefreshAfter)
@@ -2013,9 +2019,18 @@ func (p *pipe) stopLifetimeTimer() bool {
 	return true
 }
 
+// StopTimer pauses the timers of a pipe checked out from a pool, and ResetTimer
+// resumes them when the pipe is returned. The auth refresh keeps running while
+// a pipe is checked out: AUTH is an ordinary request, also on a subscribed RESP3
+// connection, a transaction is sent in one DoMulti so AUTH cannot land inside
+// it, and a refresh behind a blocking command is handled in refreshAuth. A
+// dedicated pub/sub pipe would otherwise never be refreshed and be dropped by
+// the server once its credentials expire. Only a nobg pipe, as used by the
+// stream pool, still pauses the refresh: DoStream owns its connection
+// synchronously and cannot share it with a concurrent AUTH.
 func (p *pipe) StopTimer() bool {
 	stopped := p.stopLifetimeTimer()
-	if p.authTimer != nil {
+	if p.authTimer != nil && p.queue == nil {
 		stopped = p.authTimer.Stop() && stopped
 	}
 	return stopped
@@ -2033,7 +2048,7 @@ func (p *pipe) ResetTimer() bool {
 			p.lftmTimer.Stop()
 		}
 	}
-	if p.authTimer != nil {
+	if p.authTimer != nil && p.queue == nil {
 		if at := p.authRefreshAt.Load(); at != nil && !at.IsZero() {
 			reset = p.authTimer.Reset(time.Until(*at)) && reset
 			// Same race as above, with Close or _background stopping authTimer.
