@@ -855,13 +855,17 @@ func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials,
 			defer cancel()
 		}
 		cmd := cmds.NewCompleted(args)
+		// Behind a blocking command, the AUTH waits for the blocking reply and
+		// hits ConnWriteTimeout, like the background PING does. It stays queued
+		// and is applied once the blocking command returns, so the pipe is kept
+		// open. blcksig is sampled before and after the AUTH, because a blocking
+		// command ahead of it can be answered right when the AUTH times out. A
+		// pipe that really stopped replying is closed by the background PING.
+		blocked := atomic.LoadInt32(&p.blcksig) != 0
 		result := p.Do(ctx, cmd)
 		if err := result.Error(); err != nil {
-			// Behind a blocking command, the AUTH waits for the blocking reply
-			// and hits ConnWriteTimeout, like the background PING does. It stays
-			// queued and is applied once the blocking command returns, so the
-			// pipe is kept open.
-			if result.NonRedisError() == nil || atomic.LoadInt32(&p.blcksig) == 0 {
+			blocked = blocked || atomic.LoadInt32(&p.blcksig) != 0
+			if result.NonRedisError() == nil || !blocked {
 				p._exit(err)
 				return
 			}
