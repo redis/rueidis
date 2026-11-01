@@ -1721,6 +1721,7 @@ func BenchmarkSingleClient_DoCache(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
+	defer client.Close()
 	keys := make([]string, 10000)
 	for i := range 10000 {
 		keys[i] = strconv.Itoa(i)
@@ -1779,5 +1780,4 @@ func BenchmarkSingleClient_DoCache(b *testing.B) {
 		})
 		b.StopTimer()
 	})
-	client.Close()
 }
