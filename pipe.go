@@ -855,21 +855,16 @@ func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials,
 			defer cancel()
 		}
 		cmd := cmds.NewCompleted(args)
-		// Behind a blocking command, the AUTH waits for the blocking reply and
-		// hits ConnWriteTimeout, like the background PING does. It stays queued
-		// and is applied once the blocking command returns, so the pipe is kept
-		// open. blcksig is sampled before and after the AUTH, because a blocking
-		// command ahead of it can be answered right when the AUTH times out. A
-		// pipe that really stopped replying is closed by the background PING.
-		blocked := atomic.LoadInt32(&p.blcksig) != 0
-		result := p.Do(ctx, cmd)
-		if err := result.Error(); err != nil {
-			blocked = blocked || atomic.LoadInt32(&p.blcksig) != 0
-			if result.NonRedisError() == nil || !blocked {
-				p._exit(err)
-				return
-			}
-		}
+		// The reply is ignored. The AUTH can fail while the connection is
+		// still fine: behind a blocking command it hits ConnWriteTimeout, like
+		// the background PING, and is applied once the blocking command
+		// returns; a subscribed RESP2 connection rejects it; Valkey 8.1 to 9.x
+		// reject module auth on a subscribed RESP3 connection
+		// (valkey-io/valkey#4862). The connection then keeps its current
+		// credentials and the server drops it when they expire, which is also
+		// what happens when the new credentials are really wrong. A connection
+		// that stopped replying is closed by the background PING.
+		p.Do(ctx, cmd)
 	}
 	p.scheduleAuthRefresh(auth.RefreshAfter)
 }
@@ -2027,7 +2022,7 @@ func (p *pipe) stopLifetimeTimer() bool {
 // resumes them when the pipe is returned. The auth refresh keeps running while
 // a pipe is checked out: AUTH is an ordinary request, also on a subscribed RESP3
 // connection, a transaction is sent in one DoMulti so AUTH cannot land inside
-// it, and a refresh behind a blocking command is handled in refreshAuth. A
+// it, and the reply of the refresh AUTH is ignored, see refreshAuth. A
 // dedicated pub/sub pipe would otherwise never be refreshed and be dropped by
 // the server once its credentials expire. Only a nobg pipe, as used by the
 // stream pool, still pauses the refresh: DoStream owns its connection
