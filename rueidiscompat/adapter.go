@@ -4949,7 +4949,7 @@ func (c *Compat) TSMRangeWithArgs(ctx context.Context, fromTimestamp int, toTime
 // TSMRevRange - Returns a range of samples from multiple time-series keys in reverse order.
 // For more information - https://redis.io/commands/ts.mrevrange/
 func (c *Compat) TSMRevRange(ctx context.Context, fromTimestamp int, toTimestamp int, filterExpr []string) *MapStringSliceInterfaceCmd {
-	cmd := c.client.B().TsMrange().Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp)).Filter(filterExpr...).Build()
+	cmd := c.client.B().TsMrevrange().Fromtimestamp(str(fromTimestamp)).Totimestamp(str(toTimestamp)).Filter(filterExpr...).Build()
 	return newMapStringSliceInterfaceCmd(c.client.Do(ctx, cmd))
 }
 
