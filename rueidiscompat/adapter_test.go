@@ -11512,6 +11512,8 @@ func testAdapterCache(resp3 bool) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(result)).To(BeEquivalentTo(2))
 			Expect(len(result["a"][2].([]interface{}))).To(BeEquivalentTo(100))
+			Expect(result["a"][2].([]interface{})[0]).To(BeEquivalentTo([]interface{}{int64(99), 1.0}))
+			Expect(result["a"][2].([]interface{})[99]).To(BeEquivalentTo([]interface{}{int64(0), 0.0}))
 			// Test Count
 			mrangeOpt := &TSMRevRangeOptions{Count: 10}
 			result, err = adapter.TSMRevRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, mrangeOpt).Result()
