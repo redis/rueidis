@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -265,10 +264,12 @@ func writeN(o *bufio.Writer, id byte, n int) (err error) {
 	_ = o.WriteByte(id)
 	if n < 10 {
 		_ = o.WriteByte(byte('0' + n))
+	} else if o.Available() >= 20 { // AppendInt allocates if the digits do not fit. An int has at most 20 characters.
+		_, _ = o.Write(strconv.AppendInt(o.AvailableBuffer(), int64(n), 10))
 	} else {
-		for d := int(math.Pow10(int(math.Log10(float64(n))))); d > 0; d /= 10 {
-			_ = o.WriteByte(byte('0' + n/d))
-			n = n % d
+		var buf [20]byte
+		for _, c := range strconv.AppendInt(buf[:0], int64(n), 10) {
+			_ = o.WriteByte(c)
 		}
 	}
 	_, err = o.WriteString("\r\n")
