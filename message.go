@@ -1,13 +1,13 @@
 package rueidis
 
 import (
-	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -623,8 +623,9 @@ func (m *RedisMessage) cachesize() int {
 	switch m.typ {
 	case typeInteger, typeNull, typeBool:
 	case typeArray, typeMap, typeSet:
-		for _, val := range m.values() {
-			n += val.cachesize()
+		values := m.values()
+		for i := range values {
+			n += values[i].cachesize()
 		}
 	default:
 		n += len(m.string())
@@ -632,24 +633,23 @@ func (m *RedisMessage) cachesize() int {
 	return n
 }
 
-func (m *RedisMessage) serialize(o *bytes.Buffer) {
-	var buf [8]byte // TODO: can we use VarInt instead of fixed 8 bytes for length?
-	o.WriteByte(m.typ)
+func (m *RedisMessage) serialize(o []byte) []byte {
+	// TODO: can we use VarInt instead of fixed 8 bytes for length?
+	o = append(o, m.typ)
 	switch m.typ {
 	case typeInteger, typeNull, typeBool:
-		binary.BigEndian.PutUint64(buf[:], uint64(m.intlen))
-		o.Write(buf[:])
+		o = binary.BigEndian.AppendUint64(o, uint64(m.intlen))
 	case typeArray, typeMap, typeSet:
-		binary.BigEndian.PutUint64(buf[:], uint64(len(m.values())))
-		o.Write(buf[:])
-		for _, val := range m.values() {
-			val.serialize(o)
+		values := m.values()
+		o = binary.BigEndian.AppendUint64(o, uint64(len(values)))
+		for i := range values {
+			o = values[i].serialize(o)
 		}
 	default:
-		binary.BigEndian.PutUint64(buf[:], uint64(len(m.string())))
-		o.Write(buf[:])
-		o.WriteString(m.string())
+		o = binary.BigEndian.AppendUint64(o, uint64(len(m.string())))
+		o = append(o, m.string()...)
 	}
+	return o
 }
 
 var ErrCacheUnmarshal = errors.New("cache unmarshal error")
@@ -692,13 +692,8 @@ func (m *RedisMessage) CacheSize() int {
 // If the provided buffer is nil, CacheMarshal will allocate one.
 // Note that an output format is not compatible with different client versions.
 func (m *RedisMessage) CacheMarshal(buf []byte) []byte {
-	if buf == nil {
-		buf = make([]byte, 0, m.CacheSize())
-	}
-	o := bytes.NewBuffer(buf)
-	o.Write(m.ttl[:7])
-	m.serialize(o)
-	return o.Bytes()
+	buf = slices.Grow(buf, m.CacheSize())
+	return m.serialize(append(buf, m.ttl[:7]...))
 }
 
 // CacheUnmarshalView construct the RedisMessage from the buffer produced by CacheMarshal.
