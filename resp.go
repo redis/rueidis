@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -266,10 +265,7 @@ func writeN(o *bufio.Writer, id byte, n int) (err error) {
 	if n < 10 {
 		_ = o.WriteByte(byte('0' + n))
 	} else {
-		for d := int(math.Pow10(int(math.Log10(float64(n))))); d > 0; d /= 10 {
-			_ = o.WriteByte(byte('0' + n/d))
-			n = n % d
-		}
+		_, _ = o.Write(strconv.AppendInt(o.AvailableBuffer(), int64(n), 10))
 	}
 	_, err = o.WriteString("\r\n")
 	return err
