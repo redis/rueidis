@@ -5,6 +5,7 @@ import (
 	"bytes"
 	crand "crypto/rand"
 	"io"
+	"math"
 	"math/rand"
 	"reflect"
 	"strconv"
@@ -145,6 +146,33 @@ func TestWriteCmdAndRead(t *testing.T) {
 				if v.string() != cmd[i] {
 					t.Fatalf("unexpected v.string\n expected %v \n got %v", cmd[i], v.string())
 				}
+			}
+		}
+	}
+}
+
+func TestWriteNNearlyFullBuffer(t *testing.T) {
+	pad := make([]byte, 64)
+	for _, n := range []int{10, 1000, 1000000, math.MaxInt} {
+		want := "$" + strconv.Itoa(n) + "\r\n"
+		for used := 0; used <= len(pad); used++ {
+			out := &bytes.Buffer{}
+			w := bufio.NewWriterSize(out, len(pad))
+			_, _ = w.Write(pad[:used])
+			if err := writeN(w, '$', n); err != nil {
+				t.Fatalf("writeN(%d) with %d used bytes: %v", n, used, err)
+			}
+			_ = w.Flush()
+			if got := out.String()[used:]; got != want {
+				t.Fatalf("writeN(%d) with %d used bytes: got %q, want %q", n, used, got, want)
+			}
+			w.Reset(io.Discard)
+			if allocs := testing.AllocsPerRun(10, func() {
+				w.Reset(io.Discard)
+				_, _ = w.Write(pad[:used])
+				_ = writeN(w, '$', n)
+			}); allocs != 0 {
+				t.Fatalf("writeN(%d) with %d used bytes: %v allocs", n, used, allocs)
 			}
 		}
 	}
