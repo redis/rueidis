@@ -2760,3 +2760,12 @@ func TestXRangeSlice_OrderAndDuplicates(t *testing.T) {
 		t.Errorf("Map conversion doesn't match expected behavior. Got %v, want %v", newStyleAsMap, oldStyleMap)
 	}
 }
+
+func TestCacheMarshalAllocs(t *testing.T) {
+	m := RedisMessage{typ: typeArray}
+	m.setValues([]RedisMessage{strmsg(typeBlobString, "a"), {typ: typeInteger, intlen: 1}})
+	buf := make([]byte, 0, m.CacheSize())
+	if n := testing.AllocsPerRun(100, func() { m.CacheMarshal(buf) }); n != 0 {
+		t.Fatalf("CacheMarshal allocated %v times with a large enough buffer", n)
+	}
+}
