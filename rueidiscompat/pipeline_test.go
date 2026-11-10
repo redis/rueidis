@@ -1256,7 +1256,7 @@ var golden = `[
     ["TS.RANGE","1","1","1","COUNT","10"],
     ["TS.MRANGE","1","1","FILTER","1"],
     ["TS.MRANGE","1","1","COUNT","10","FILTER","1"],
-    ["TS.MRANGE","1","1","FILTER","1"],
+    ["TS.MREVRANGE","1","1","FILTER","1"],
     ["TS.MREVRANGE","1","1","COUNT","10","FILTER","1"],
     ["TS.MGET","FILTER","1"],
     ["TS.MGET","LATEST","FILTER","1"],
