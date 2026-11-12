@@ -735,6 +735,11 @@ func (m *RedisMessage) IsString() bool {
 	return m.typ == typeBlobString || m.typ == typeSimpleString
 }
 
+// IsVerbatimString check if the message is a redis RESP3 verbatim string response
+func (m *RedisMessage) IsVerbatimString() bool {
+	return m.typ == typeVerbatimString
+}
+
 // IsBool check if the message is a redis RESP3 bool response
 func (m *RedisMessage) IsBool() bool {
 	return m.typ == typeBool

@@ -1337,6 +1337,14 @@ func TestRedisMessage(t *testing.T) {
 			t.Fatal("IsNil fail")
 		}
 	})
+	t.Run("IsVerbatimString", func(t *testing.T) {
+		if !(&RedisMessage{typ: '='}).IsVerbatimString() {
+			t.Fatal("IsVerbatimString fail")
+		}
+		if (&RedisMessage{typ: '$'}).IsVerbatimString() || (&RedisMessage{typ: '+'}).IsVerbatimString() {
+			t.Fatal("IsVerbatimString fail")
+		}
+	})
 	t.Run("Trim ERR prefix", func(t *testing.T) {
 		// kvrocks: https://github.com/redis/rueidis/issues/152#issuecomment-1333923750
 		redisMessageError := strmsg('-', "ERR no_prefix")

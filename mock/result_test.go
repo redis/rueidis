@@ -18,6 +18,16 @@ func TestRedisString(t *testing.T) {
 	}
 }
 
+func TestRedisVerbatimString(t *testing.T) {
+	m := RedisVerbatimString("txt", "s")
+	if !m.IsVerbatimString() {
+		t.Fatalf("unexpected type %v", m.String())
+	}
+	if v, err := m.ToString(); err != nil || v != "txt:s" {
+		t.Fatalf("unexpected value %v", v)
+	}
+}
+
 func TestRedisError(t *testing.T) {
 	m := RedisError("s")
 	if err := m.Error(); err == nil || err.Error() != "s" {

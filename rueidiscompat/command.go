@@ -359,8 +359,6 @@ func (cmd *Cmd) BoolSlice() ([]bool, error) {
 
 type StringCmd struct {
 	baseCmd[string]
-	// txt drops the "txt:" format prefix of a RESP3 verbatim string reply
-	txt bool
 }
 
 type ZeroCopyStringCmd struct {
@@ -379,9 +377,9 @@ func (cmd *StringCmd) from(res rueidis.RedisResult) {
 			val = strconv.FormatInt(v, 10)
 			err = nil
 		}
-	}
-	if cmd.txt && err == nil {
-		val = strings.TrimPrefix(val, "txt:")
+	} else if msg, _ := res.ToMessage(); msg.IsVerbatimString() && len(val) >= 4 {
+		// drop the format of a RESP3 verbatim string, like the "txt:" of INFO, as go-redis does
+		val = val[4:]
 	}
 	cmd.SetErr(err)
 	cmd.SetVal(val)
@@ -390,14 +388,6 @@ func (cmd *StringCmd) from(res rueidis.RedisResult) {
 
 func newStringCmd(res rueidis.RedisResult) *StringCmd {
 	cmd := &StringCmd{}
-	cmd.from(res)
-	return cmd
-}
-
-// newTxtStringCmd is for commands like INFO and CLIENT LIST, which reply with
-// a verbatim string in RESP3. Its value doesn't start with "txt:", as in RESP2.
-func newTxtStringCmd(res rueidis.RedisResult) *StringCmd {
-	cmd := &StringCmd{txt: true}
 	cmd.from(res)
 	return cmd
 }
