@@ -41,6 +41,9 @@ func TestParseURL(t *testing.T) {
 	if opt, err := ParseURL("redis://[::1]:6379?addr=:6380"); err != nil || opt.InitAddress[0] != "[::1]:6379" || opt.InitAddress[1] != "[::1]:6380" {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}
+	if opt, err := ParseURL("redis://primary:6379?addr=replica.example&addr=[2001:db8::2]&addr=replica2:6380"); err != nil || len(opt.InitAddress) != 4 || opt.InitAddress[0] != "primary:6379" || opt.InitAddress[1] != "replica.example:6379" || opt.InitAddress[2] != "[2001:db8::2]:6379" || opt.InitAddress[3] != "replica2:6380" {
+		t.Fatalf("unexpected %v %v", opt, err)
+	}
 	if opt, err := ParseURL("redis://myhost:1234"); err != nil || opt.InitAddress[0] != "myhost:1234" {
 		t.Fatalf("unexpected %v %v", opt, err)
 	}

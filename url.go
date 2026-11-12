@@ -24,7 +24,11 @@ func ParseURL(str string) (opt ClientOption, err error) {
 		return opt, err
 	}
 	parseAddr := func(hostport string) (host string, addr string) {
-		host, port, _ := net.SplitHostPort(hostport)
+		host, port, err := net.SplitHostPort(hostport)
+		if err != nil && hostport != "" {
+			// no port in the address, e.g. "replica.example" or "[::1]": the whole string is the host
+			host, port = strings.TrimSuffix(strings.TrimPrefix(hostport, "["), "]"), ""
+		}
 		if host == "" {
 			host = u.Hostname()
 		}
