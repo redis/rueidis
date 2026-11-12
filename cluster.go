@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"io"
+	"maps"
 	"math/rand"
 	"net"
+	"slices"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -33,6 +35,7 @@ type clusterClient struct {
 	stopCh       chan struct{}
 	sc           call
 	rslots       [][]NodeInfo
+	unresolved   *[16384]bool // advertised slots without an online primary; nil when there are none
 	mu           sync.RWMutex
 	stop         uint32
 	cmd          Builder
@@ -205,9 +208,16 @@ type clusterslots struct {
 	useShards bool
 }
 
-func (s clusterslots) parse(tls bool) map[string]group {
+// clusterTopology is a parsed CLUSTER SLOTS/SHARDS reply.
+type clusterTopology struct {
+	groups        map[string]group // keyed by primary address
+	replicaGroups []group          // online replicas of shards without an online primary
+	unresolved    [][2]int64       // slot ranges of shards without an online primary
+}
+
+func (s clusterslots) parse(tls bool) clusterTopology {
 	if !s.useShards {
-		return parseSlots(s.reply.val, s.addr)
+		return clusterTopology{groups: parseSlots(s.reply.val, s.addr)}
 	}
 	return parseShards(s.reply.val, s.addr, tls)
 }
@@ -238,11 +248,17 @@ func (c *clusterClient) _refresh() (err error) {
 		return err
 	}
 
-	groups := result.parse(c.opt.TLSConfig != nil)
+	topology := result.parse(c.opt.TLSConfig != nil)
+	groups := topology.groups
 	conns := make(map[string]connrole, len(groups))
 	for master, g := range groups {
 		conns[master] = connrole{conn: c.connFn(master, c.opt)}
 		for _, nodeInfo := range g.nodes[1:] {
+			conns[nodeInfo.Addr] = connrole{conn: c.connFn(nodeInfo.Addr, c.opt)}
+		}
+	}
+	for _, g := range topology.replicaGroups {
+		for _, nodeInfo := range g.nodes {
 			conns[nodeInfo.Addr] = connrole{conn: c.connFn(nodeInfo.Addr, c.opt)}
 		}
 	}
@@ -267,11 +283,27 @@ func (c *clusterClient) _refresh() (err error) {
 
 	wslots := [16384]conn{}
 	var rslots [][]NodeInfo
-	for _, g := range groups {
-
-		for i, nodeInfo := range g.nodes {
-			g.nodes[i].conn = conns[nodeInfo.Addr].conn
+	prepareNodes := func(nodes nodes) {
+		for i, nodeInfo := range nodes {
+			nodes[i].conn = conns[nodeInfo.Addr].conn
 		}
+		if c.opt.SendToReplicas != nil && c.opt.EnableReplicaAZInfo && (c.opt.ReadNodeSelector != nil || len(nodes) > 1) {
+			var wg sync.WaitGroup
+			for i := 0; i < len(nodes); i += 4 { // batch AZ() for every 4 connections
+				for j := i + 1; j < i+4 && j < len(nodes); j++ {
+					wg.Add(1)
+					go func(wg *sync.WaitGroup, info *NodeInfo) {
+						info.AZ = info.conn.AZ()
+						wg.Done()
+					}(&wg, &nodes[j])
+				}
+				nodes[i].AZ = nodes[i].conn.AZ()
+				wg.Wait()
+			}
+		}
+	}
+	for _, g := range groups {
+		prepareNodes(g.nodes)
 
 		switch {
 		case c.opt.ReplicaOnly && c.opt.SendToReplicas == nil && len(g.nodes) > 1:
@@ -284,20 +316,6 @@ func (c *clusterClient) _refresh() (err error) {
 		case c.opt.SendToReplicas != nil:
 			if len(rslots) == 0 { // lazy init
 				rslots = make([][]NodeInfo, 16384)
-			}
-			if c.opt.EnableReplicaAZInfo && (c.opt.ReadNodeSelector != nil || len(g.nodes) > 1) {
-				var wg sync.WaitGroup
-				for i := 0; i < len(g.nodes); i += 4 { // batch AZ() for every 4 connections
-					for j := i + 1; j < i+4 && j < len(g.nodes); j++ {
-						wg.Add(1)
-						go func(wg *sync.WaitGroup, info *NodeInfo) {
-							info.AZ = info.conn.AZ()
-							wg.Done()
-						}(&wg, &g.nodes[j])
-					}
-					g.nodes[i].AZ = g.nodes[i].conn.AZ()
-					wg.Wait()
-				}
 			}
 			if len(g.nodes) > 1 {
 				for _, slot := range g.slots {
@@ -334,6 +352,49 @@ func (c *clusterClient) _refresh() (err error) {
 			}
 		}
 	}
+	// Shards without an online primary serve reads from their online replicas.
+	// Writes are never routed to them; their slots stay empty in wslots.
+	if c.opt.SendToReplicas != nil && len(topology.replicaGroups) > 0 {
+		if len(rslots) == 0 {
+			rslots = make([][]NodeInfo, 16384)
+		}
+		for _, g := range topology.replicaGroups {
+			prepareNodes(g.nodes)
+			selectorNodes := g.nodes
+			if c.opt.ReadNodeSelector != nil {
+				// keep index 0 as the primary position; it has no conn while the primary is missing
+				selectorNodes = make(nodes, len(g.nodes)+1)
+				copy(selectorNodes[1:], g.nodes)
+			}
+			for _, slot := range g.slots {
+				for i := slot[0]; i <= slot[1] && i >= 0 && i < 16384; i++ {
+					if wslots[i] != nil {
+						continue
+					}
+					if c.opt.ReadNodeSelector != nil {
+						rslots[i] = selectorNodes
+						continue
+					}
+					rIndex := c.opt.ReplicaSelector(uint16(i), g.nodes)
+					if rIndex < 0 || rIndex >= len(g.nodes) {
+						rIndex = 0
+					}
+					rslots[i] = nodes{g.nodes[rIndex]}
+				}
+			}
+		}
+	}
+	var unresolved *[16384]bool
+	for _, slot := range topology.unresolved {
+		for i := slot[0]; i <= slot[1] && i >= 0 && i < 16384; i++ {
+			if wslots[i] == nil {
+				if unresolved == nil {
+					unresolved = new([16384]bool)
+				}
+				unresolved[i] = true
+			}
+		}
+	}
 
 	var removes []conn
 	var replaced map[conn]conn
@@ -360,7 +421,7 @@ func (c *clusterClient) _refresh() (err error) {
 		}
 	}
 	if replaced != nil {
-		for _, g := range groups {
+		for _, g := range append(slices.Collect(maps.Values(groups)), topology.replicaGroups...) {
 			hit := false
 			for i := range g.nodes {
 				if _, ok := replaced[g.nodes[i].conn]; ok {
@@ -389,6 +450,7 @@ func (c *clusterClient) _refresh() (err error) {
 	}
 	c.wslots = wslots
 	c.rslots = rslots
+	c.unresolved = unresolved
 	c.conns = conns
 	c.mu.Unlock()
 
@@ -519,8 +581,10 @@ func parseSlots(slots RedisMessage, defaultAddr string) map[string]group {
 
 // parseShards - map redis shards for each redis nodes/addresses
 // defaultAddr is needed in case the node does not know its own IP
-func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]group {
-	groups := make(map[string]group, len(shards.values()))
+// Shards that advertise slots without an online primary are reported in unresolved,
+// with their online replicas in replicaGroups.
+func parseShards(shards RedisMessage, defaultAddr string, tls bool) clusterTopology {
+	topology := clusterTopology{groups: make(map[string]group, len(shards.values()))}
 	for _, v := range shards.values() {
 		m := -1
 		shard, _ := v.AsMap()
@@ -555,10 +619,15 @@ func parseShards(shards RedisMessage, defaultAddr string, tls bool) map[string]g
 		}
 		if m >= 0 {
 			g.nodes[0], g.nodes[m] = g.nodes[m], g.nodes[0]
-			groups[g.nodes[0].Addr] = g
+			topology.groups[g.nodes[0].Addr] = g
+		} else if len(g.slots) > 0 {
+			topology.unresolved = append(topology.unresolved, g.slots...)
+			if len(g.nodes) > 0 {
+				topology.replicaGroups = append(topology.replicaGroups, g)
+			}
 		}
 	}
-	return groups
+	return topology
 }
 
 func (c *clusterClient) runClusterTopologyRefreshment() {
@@ -583,14 +652,7 @@ func (c *clusterClient) _pick(slot uint16, toReplica bool) (p conn) {
 		}
 	} else if toReplica && c.rslots != nil {
 		if nodes := c.rslots[slot]; len(nodes) > 0 {
-			rIndex := 0
-			if c.opt.ReadNodeSelector != nil {
-				rIndex = c.opt.ReadNodeSelector(slot, nodes)
-				if rIndex < 0 || rIndex >= len(nodes) {
-					rIndex = 0
-				}
-			}
-			p = nodes[rIndex].conn
+			p = nodes[selectReadNode(slot, nodes, c.opt.ReadNodeSelector)].conn
 		}
 	} else {
 		p = c.wslots[slot]
@@ -599,16 +661,93 @@ func (c *clusterClient) _pick(slot uint16, toReplica bool) (p conn) {
 	return p
 }
 
-func (c *clusterClient) pick(ctx context.Context, slot uint16, toReplica bool) (p conn, err error) {
-	if p = c._pick(slot, toReplica); p == nil {
-		if err := c.refresh(ctx); err != nil {
-			return nil, err
-		}
-		if p = c._pick(slot, toReplica); p == nil {
-			return nil, ErrNoSlot
+// selectReadNode returns the selected index, falling back to the first node with a conn.
+// nodes[0] has no conn when its shard has no online primary.
+func selectReadNode(slot uint16, nodes nodes, selector ReadNodeSelectorFunc) int {
+	rIndex := 0
+	if selector != nil {
+		rIndex = selector(slot, nodes)
+	}
+	if rIndex >= 0 && rIndex < len(nodes) && nodes[rIndex].conn != nil {
+		return rIndex
+	}
+	for i := range nodes {
+		if nodes[i].conn != nil {
+			return i
 		}
 	}
-	return p, nil
+	return 0
+}
+
+func (c *clusterClient) pick(ctx context.Context, slot uint16, toReplica bool) (p conn, err error) {
+	if p = c._pick(slot, toReplica); p != nil {
+		return p, nil
+	}
+	var deadline time.Time
+	for {
+		if err = c.refresh(ctx); err != nil {
+			return nil, err
+		}
+		if p = c._pick(slot, toReplica); p != nil {
+			return p, nil
+		}
+		if err = c.waitForPrimary(ctx, &deadline, slot); err != nil {
+			return nil, err
+		}
+	}
+}
+
+// noSlotRetryInterval is the pause between topology refreshes while waiting for a primary.
+const noSlotRetryInterval = 100 * time.Millisecond
+
+// waitForPrimary pauses before the next refresh when every slot without a route belongs to a
+// shard that has no online primary yet. It returns ErrNoSlot once ClusterOption.MaxNoSlotWait
+// or the ctx deadline leaves no time for another refresh. Nothing has been sent at this point.
+func (c *clusterClient) waitForPrimary(ctx context.Context, deadline *time.Time, slots ...uint16) error {
+	wait := c.opt.ClusterOption.MaxNoSlotWait
+	if !c.retry || wait <= 0 || !c.unresolvedOnly(slots) {
+		return ErrNoSlot
+	}
+	now := time.Now()
+	if deadline.IsZero() {
+		*deadline = now.Add(wait)
+		if dl, ok := ctx.Deadline(); ok && dl.Before(*deadline) {
+			*deadline = dl
+		}
+	}
+	if deadline.Sub(now) < noSlotRetryInterval {
+		return ErrNoSlot
+	}
+	timer := time.NewTimer(noSlotRetryInterval)
+	defer timer.Stop()
+	select {
+	case <-timer.C:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-c.stopCh:
+		return ErrClosing
+	}
+}
+
+// unresolvedOnly reports whether every slot without a primary is advertised by a shard that has no online primary.
+func (c *clusterClient) unresolvedOnly(slots []uint16) bool {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	if c.unresolved == nil {
+		return false
+	}
+	found := false
+	for _, slot := range slots {
+		if slot == cmds.InitSlot || c.wslots[slot] != nil {
+			continue
+		}
+		if !c.unresolved[slot] {
+			return false
+		}
+		found = true
+	}
+	return found
 }
 
 func (c *clusterClient) redirectOrNew(addr string, prev conn, slot uint16, mode RedirectMode) conn {
@@ -743,14 +882,9 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 			if c.opt.SendToReplicas(cmd) {
 				if nodes := c.rslots[slot]; len(nodes) > 0 {
 					bm.Set(i)
-					rIndex := 0
-					if c.opt.ReadNodeSelector != nil {
-						rIndex = c.opt.ReadNodeSelector(slot, nodes)
-						if rIndex < 0 || rIndex >= len(nodes) {
-							rIndex = 0
-						} else if rIndex != 0 { // the default itor[i] is 0
-							itor[i] = rIndex
-						}
+					rIndex := selectReadNode(slot, nodes, c.opt.ReadNodeSelector)
+					if rIndex != 0 { // the default itor[i] is 0
+						itor[i] = rIndex
 					}
 					cc = nodes[rIndex].conn
 				}
@@ -840,15 +974,25 @@ func (c *clusterClient) _pickMulti(multi []Completed) (retries *connretry, init 
 
 func (c *clusterClient) pickMulti(ctx context.Context, multi []Completed) (*connretry, bool, error) {
 	conns, hasInit := c._pickMulti(multi)
-	if conns == nil {
+	if conns != nil {
+		return conns, hasInit, nil
+	}
+	var deadline time.Time
+	for {
 		if err := c.refresh(ctx); err != nil {
 			return nil, false, err
 		}
-		if conns, hasInit = c._pickMulti(multi); conns == nil {
-			return nil, false, ErrNoSlot
+		if conns, hasInit = c._pickMulti(multi); conns != nil {
+			return conns, hasInit, nil
+		}
+		slots := make([]uint16, len(multi))
+		for i, cmd := range multi {
+			slots[i] = cmd.Slot()
+		}
+		if err := c.waitForPrimary(ctx, &deadline, slots...); err != nil {
+			return nil, false, err
 		}
 	}
-	return conns, hasInit, nil
 }
 
 func isMulti(cmd Completed) bool {
@@ -1380,14 +1524,7 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 			slot := cmd.Cmd.Slot()
 			if c.opt.SendToReplicas(Completed(cmd.Cmd)) {
 				if nodes := c.rslots[slot]; len(nodes) > 0 {
-					rIndex := 0
-					if c.opt.ReadNodeSelector != nil {
-						rIndex = c.opt.ReadNodeSelector(slot, nodes)
-						if rIndex < 0 || rIndex >= len(nodes) {
-							rIndex = 0
-						}
-					}
-					p = nodes[rIndex].conn
+					p = nodes[selectReadNode(slot, nodes, c.opt.ReadNodeSelector)].conn
 				}
 			} else {
 				p = c.wslots[slot]
@@ -1418,15 +1555,25 @@ func (c *clusterClient) _pickMultiCache(multi []CacheableTTL) *connretrycache {
 
 func (c *clusterClient) pickMultiCache(ctx context.Context, multi []CacheableTTL) (*connretrycache, error) {
 	conns := c._pickMultiCache(multi)
-	if conns == nil {
+	if conns != nil {
+		return conns, nil
+	}
+	var deadline time.Time
+	for {
 		if err := c.refresh(ctx); err != nil {
 			return nil, err
 		}
-		if conns = c._pickMultiCache(multi); conns == nil {
-			return nil, ErrNoSlot
+		if conns = c._pickMultiCache(multi); conns != nil {
+			return conns, nil
+		}
+		slots := make([]uint16, len(multi))
+		for i, cmd := range multi {
+			slots[i] = cmd.Cmd.Slot()
+		}
+		if err := c.waitForPrimary(ctx, &deadline, slots...); err != nil {
+			return nil, err
 		}
 	}
-	return conns, nil
 }
 
 func (c *clusterClient) resultcachefn(
