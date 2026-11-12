@@ -44,6 +44,18 @@ func (c *TxPipeline) Exec(ctx context.Context) ([]Cmder, error) {
 	if rueidis.IsRedisNil(err) {
 		err = TxFailedErr
 	}
+	if err != nil {
+		// EXEC failed, so there are no results. Like go-redis, give each command
+		// the error it got when it was queued, or else the error of EXEC.
+		for i, ret := range rets {
+			if qerr := resp[i+1].Error(); qerr != nil {
+				ret.SetErr(qerr)
+			} else {
+				ret.SetErr(err)
+			}
+		}
+		return rets, err
+	}
 	for i, r := range results {
 		rets[i].SetErr(nil)
 		rets[i].from(rueidis.NewResult(r, resp[i+1].NonRedisError()))
