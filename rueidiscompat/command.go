@@ -2061,7 +2061,7 @@ func (cmd *ClusterShardsCmd) from(res rueidis.RedisResult) {
 	}
 	val := make([]ClusterShard, 0, len(arr))
 	for _, v := range arr {
-		dict, err := v.ToMap()
+		dict, err := v.AsMap()
 		if err != nil {
 			cmd.SetErr(err)
 			return
@@ -2089,7 +2089,7 @@ func (cmd *ClusterShardsCmd) from(res rueidis.RedisResult) {
 			}
 			shard.Nodes = make([]Node, len(arr))
 			for i := 0; i < len(arr); i++ {
-				nodeMap, err := arr[i].ToMap()
+				nodeMap, err := arr[i].AsMap()
 				if err != nil {
 					cmd.SetErr(err)
 					return
@@ -3092,7 +3092,7 @@ type TopKInfoCmd struct {
 
 func (cmd *TopKInfoCmd) from(res rueidis.RedisResult) {
 	info := TopKInfo{}
-	m, err := res.ToMap()
+	m, err := res.AsMap()
 	if err != nil {
 		cmd.err = err
 		return

@@ -1572,6 +1572,107 @@ func TestZSliceSingleCmdFrom(t *testing.T) {
 	})
 }
 
+func TestTopKInfoCmdFrom(t *testing.T) {
+	t.Parallel()
+
+	want := TopKInfo{K: 3, Width: 8, Depth: 7, Decay: 0.9}
+
+	t.Run("RESP3 map", func(t *testing.T) {
+		res := mock.Result(mock.RedisMap(map[string]rueidis.RedisMessage{
+			"k":     mock.RedisInt64(3),
+			"width": mock.RedisInt64(8),
+			"depth": mock.RedisInt64(7),
+			"decay": mock.RedisFloat64(0.9),
+		}))
+		cmd := newTopKInfoCmd(res)
+		if err := cmd.Err(); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got := cmd.Val(); got != want {
+			t.Fatalf("got %+v, want %+v", got, want)
+		}
+	})
+
+	t.Run("RESP2 flat array", func(t *testing.T) {
+		res := mock.Result(mock.RedisArray(
+			mock.RedisString("k"), mock.RedisInt64(3),
+			mock.RedisString("width"), mock.RedisInt64(8),
+			mock.RedisString("depth"), mock.RedisInt64(7),
+			mock.RedisString("decay"), mock.RedisString("0.9"),
+		))
+		cmd := newTopKInfoCmd(res)
+		if err := cmd.Err(); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got := cmd.Val(); got != want {
+			t.Fatalf("got %+v, want %+v", got, want)
+		}
+	})
+
+	t.Run("odd-length array", func(t *testing.T) {
+		res := mock.Result(mock.RedisArray(
+			mock.RedisString("k"), mock.RedisInt64(3), mock.RedisString("width"),
+		))
+		if err := newTopKInfoCmd(res).Err(); err == nil {
+			t.Fatal("expected an error")
+		}
+	})
+
+}
+
+func TestClusterShardsCmdFrom(t *testing.T) {
+	t.Parallel()
+
+	want := []ClusterShard{{
+		Slots: []SlotRange{{Start: 0, End: 5460}},
+		Nodes: []Node{{ID: "n1", Endpoint: "127.0.0.1", IP: "127.0.0.1", Port: 30001, Role: "master", ReplicationOffset: 72156, Health: "online"}},
+	}}
+
+	t.Run("RESP3 maps", func(t *testing.T) {
+		res := mock.Result(mock.RedisArray(mock.RedisMap(map[string]rueidis.RedisMessage{
+			"slots": mock.RedisArray(mock.RedisInt64(0), mock.RedisInt64(5460)),
+			"nodes": mock.RedisArray(mock.RedisMap(map[string]rueidis.RedisMessage{
+				"id":                 mock.RedisString("n1"),
+				"port":               mock.RedisInt64(30001),
+				"ip":                 mock.RedisString("127.0.0.1"),
+				"endpoint":           mock.RedisString("127.0.0.1"),
+				"role":               mock.RedisString("master"),
+				"replication-offset": mock.RedisInt64(72156),
+				"health":             mock.RedisString("online"),
+			})),
+		})))
+		cmd := newClusterShardsCmd(res)
+		if err := cmd.Err(); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got := cmd.Val(); !reflect.DeepEqual(got, want) {
+			t.Fatalf("got %+v, want %+v", got, want)
+		}
+	})
+
+	t.Run("RESP2 flat arrays", func(t *testing.T) {
+		res := mock.Result(mock.RedisArray(mock.RedisArray(
+			mock.RedisString("slots"), mock.RedisArray(mock.RedisInt64(0), mock.RedisInt64(5460)),
+			mock.RedisString("nodes"), mock.RedisArray(mock.RedisArray(
+				mock.RedisString("id"), mock.RedisString("n1"),
+				mock.RedisString("port"), mock.RedisInt64(30001),
+				mock.RedisString("ip"), mock.RedisString("127.0.0.1"),
+				mock.RedisString("endpoint"), mock.RedisString("127.0.0.1"),
+				mock.RedisString("role"), mock.RedisString("master"),
+				mock.RedisString("replication-offset"), mock.RedisInt64(72156),
+				mock.RedisString("health"), mock.RedisString("online"),
+			)),
+		)))
+		cmd := newClusterShardsCmd(res)
+		if err := cmd.Err(); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got := cmd.Val(); !reflect.DeepEqual(got, want) {
+			t.Fatalf("got %+v, want %+v", got, want)
+		}
+	})
+}
+
 // TestCacheHitCmd tests the IsCacheHit and setIsCacheHit functionality for Cmd
 func TestCacheHitCmd(t *testing.T) {
 	cmd := &Cmd{}
