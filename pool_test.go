@@ -139,8 +139,8 @@ func TestPool(t *testing.T) {
 			t.Fatalf("pool does not close existing wire after Close()")
 		}
 		for range 100 {
-			if rw := pool.Acquire(context.Background()); rw != dead {
-				t.Fatalf("pool does not return the dead wire after Close()")
+			if rw := pool.Acquire(context.Background()); rw.Error() != ErrClosing {
+				t.Fatalf("pool does not return ErrClosing after Close()")
 			}
 		}
 		pool.Store(w2)
@@ -164,8 +164,8 @@ func TestPool(t *testing.T) {
 			t.Fatalf("pool should not make new wire")
 		}
 		for range 100 {
-			if rw := pool.Acquire(context.Background()); rw != dead {
-				t.Fatalf("pool does not return the dead wire after Close()")
+			if rw := pool.Acquire(context.Background()); rw.Error() != ErrClosing {
+				t.Fatalf("pool does not return ErrClosing after Close()")
 			}
 		}
 		pool.Store(w1)
@@ -184,8 +184,8 @@ func TestPool(t *testing.T) {
 		for range 100 {
 			go func() {
 				atomic.AddInt64(&pending, 1)
-				if rw := pool.Acquire(context.Background()); rw != dead {
-					t.Errorf("pool does not return the dead wire after Close()")
+				if rw := pool.Acquire(context.Background()); rw.Error() != ErrClosing {
+					t.Errorf("pool does not return ErrClosing after Close()")
 				}
 				atomic.AddInt64(&pending, -1)
 			}()

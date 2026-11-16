@@ -41,6 +41,20 @@ type pool struct {
 	timerOn bool
 }
 
+// poolAcquireError carries an acquisition failure without owning a pool slot.
+// Streaming failures must not return the embedded wire to the pool either.
+type poolAcquireError struct {
+	wire
+}
+
+func (w *poolAcquireError) DoStream(context.Context, *pool, Completed) RedisResultStream {
+	return NewErrorResultStream(w.Error())
+}
+
+func (w *poolAcquireError) DoMultiStream(context.Context, *pool, ...Completed) MultiRedisResultStream {
+	return NewErrorResultStream(w.Error())
+}
+
 func (p *pool) Acquire(ctx context.Context) (v wire) {
 	p.cond.L.Lock()
 
@@ -65,13 +79,13 @@ retry:
 	if ctx.Err() != nil {
 		deadPipe := deadFn()
 		deadPipe.error.Store(&errs{error: ctx.Err()})
-		v = deadPipe
+		v = &poolAcquireError{wire: deadPipe}
 		p.cond.L.Unlock()
 		return v
 	}
 
 	if p.down {
-		v = p.dead
+		v = &poolAcquireError{wire: p.dead}
 		p.cond.L.Unlock()
 		return v
 	}
@@ -104,6 +118,9 @@ retry:
 }
 
 func (p *pool) Store(v wire) {
+	if _, unacquired := v.(*poolAcquireError); unacquired {
+		return
+	}
 	p.cond.L.Lock()
 	if !p.down && v.Error() == nil {
 		p.list = append(p.list, v)
