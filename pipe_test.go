@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -1785,6 +1786,176 @@ func TestBlockWriteWithNoMaxFlushDelay(t *testing.T) {
 	}
 	for range times {
 		mock.Expect("PING").ReplyString("OK").Expect("PING").ReplyString("OK")
+	}
+}
+
+func TestWriteWithYieldBeforeFlush(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{
+		AlwaysPipelining: true,
+		YieldBeforeFlush: true,
+	})
+	defer cancel()
+	times := 2000
+	wg := sync.WaitGroup{}
+	wg.Add(times)
+
+	for range times {
+		go func() {
+			defer wg.Done()
+			ExpectOK(t, p.Do(context.Background(), cmds.NewCompleted([]string{"PING"})))
+		}()
+	}
+	for range times {
+		mock.Expect("PING").ReplyString("OK")
+	}
+	wg.Wait()
+}
+
+func TestBlockWriteWithYieldBeforeFlush(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, mock, cancel, _ := setup(t, ClientOption{
+		AlwaysPipelining: true,
+		YieldBeforeFlush: true,
+	})
+	defer cancel()
+	times := 2000
+	wg := sync.WaitGroup{}
+	wg.Add(times)
+
+	for range times {
+		go func() {
+			defer wg.Done()
+			for _, resp := range p.DoMulti(context.Background(),
+				cmds.NewBlockingCompleted([]string{"PING"}),
+				cmds.NewBlockingCompleted([]string{"PING"})).s {
+				ExpectOK(t, resp)
+			}
+		}()
+	}
+	for range times {
+		mock.Expect("PING").ReplyString("OK").Expect("PING").ReplyString("OK")
+	}
+	wg.Wait()
+}
+
+func TestPipeShouldYield(t *testing.T) {
+	for _, c := range []struct {
+		name    string
+		enabled bool
+		replied int // completed calls raise recvs, the upper half of wrCounter, but not waits
+		waits   int
+		yielded bool
+		want    bool
+	}{
+		{name: "disabled", enabled: false, waits: 2, want: false},
+		{name: "single caller", enabled: true, waits: 1, want: false},
+		{name: "single caller after earlier replies", enabled: true, replied: 3, waits: 1, want: false},
+		{name: "concurrent callers", enabled: true, waits: 2, want: true},
+		{name: "already yielded since the last flush", enabled: true, waits: 2, yielded: true, want: false},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			p := &pipe{yieldBeforeFlush: c.enabled}
+			for range c.replied {
+				p.incrWaits()
+				p.decrWaitsAndIncrRecvs()
+			}
+			for range c.waits {
+				p.incrWaits()
+			}
+			if got := p.shouldYield(c.yielded); got != c.want {
+				t.Fatalf("shouldYield(%v) with waits=%d, recvs=%d: got %v, want %v",
+					c.yielded, p.loadWaits(), p.loadRecvs(), got, c.want)
+			}
+		})
+	}
+}
+
+type writeCountingConn struct {
+	net.Conn
+	writes *atomic.Int64
+}
+
+func (c *writeCountingConn) Write(b []byte) (int, error) {
+	c.writes.Add(1)
+	return c.Conn.Write(b)
+}
+
+// BenchmarkFlushStrategies needs a live Redis at 127.0.0.1:6379. writes/op approximates write syscalls per command.
+func BenchmarkFlushStrategies(b *testing.B) {
+	strategies := []struct {
+		name string
+		opt  func(*ClientOption)
+	}{
+		{"Default", func(*ClientOption) {}},
+		{"MaxFlushDelay20us", func(o *ClientOption) { o.MaxFlushDelay = 20 * time.Microsecond }},
+		{"YieldBeforeFlush", func(o *ClientOption) { o.YieldBeforeFlush = true }},
+	}
+	for _, s := range strategies {
+		// key=value names allow: benchstat -col /Strategy -row /Goroutines
+		b.Run("Strategy="+s.name, func(b *testing.B) {
+			var writes atomic.Int64
+			option := ClientOption{
+				InitAddress: []string{"127.0.0.1:6379"},
+				Dialer:      net.Dialer{KeepAlive: -1},
+				DialCtxFn: func(ctx context.Context, dst string, dialer *net.Dialer, _ *tls.Config) (net.Conn, error) {
+					conn, err := dialer.DialContext(ctx, "tcp", dst)
+					if err != nil {
+						return nil, err
+					}
+					return &writeCountingConn{Conn: conn, writes: &writes}, nil
+				},
+			}
+			s.opt(&option)
+			client, err := NewClient(option)
+			if err != nil {
+				b.Skipf("skipping live Redis benchmark: %v", err)
+			}
+			defer client.Close()
+
+			ctx := context.Background()
+			if err := client.Do(ctx, client.B().Set().Key("bench_flush").Value("val").Build()).Error(); err != nil {
+				b.Fatalf("unexpected SET error: %v", err)
+			}
+			cmd := client.B().Get().Key("bench_flush").Build().Pin()
+
+			for _, n := range []int{1, 8, 64, 256} {
+				b.Run("Goroutines="+strconv.Itoa(n), func(b *testing.B) {
+					total := int64(b.N)
+					var next atomic.Int64
+					var wg sync.WaitGroup
+					wg.Add(n)
+					writes.Store(0)
+					user0, sys0, cpuOK := processCPUTime()
+					b.ResetTimer()
+					for range n {
+						go func() {
+							defer wg.Done()
+							for next.Add(1) <= total {
+								if err := client.Do(ctx, cmd).Error(); err != nil {
+									b.Errorf("unexpected error: %v", err)
+								}
+							}
+						}()
+					}
+					wg.Wait()
+					b.StopTimer()
+					user1, sys1, _ := processCPUTime()
+					w := writes.Load()
+					b.ReportMetric(float64(w)/float64(b.N), "writes/op")
+					if w > 0 {
+						b.ReportMetric(float64(b.N)/float64(w), "cmds/write")
+					}
+					if elapsed := b.Elapsed(); elapsed > 0 {
+						b.ReportMetric(float64(b.N)/elapsed.Seconds(), "ops/s")
+					}
+					if cpuOK {
+						b.ReportMetric(float64((user1-user0)+(sys1-sys0))/float64(b.N), "cpu-ns/op")
+						b.ReportMetric(float64(sys1-sys0)/float64(b.N), "sys-ns/op")
+					}
+				})
+			}
+		})
 	}
 }
 

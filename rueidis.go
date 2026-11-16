@@ -87,6 +87,8 @@ var (
 	ErrNoSendToReplicas = errors.New("no SendToReplicas provided for standalone client with replicas")
 	// ErrWrongPipelineMultiplex means wrong value for ClientOption.PipelineMultiplex
 	ErrWrongPipelineMultiplex = errors.New("ClientOption.PipelineMultiplex must not be bigger than MaxPipelineMultiplex")
+	// ErrMaxFlushDelayWithYieldBeforeFlush means both ClientOption.MaxFlushDelay and ClientOption.YieldBeforeFlush are set
+	ErrMaxFlushDelayWithYieldBeforeFlush = errors.New("ClientOption.MaxFlushDelay and ClientOption.YieldBeforeFlush cannot be used together")
 	// ErrDedicatedClientRecycled means the caller attempted to use the dedicated client which has been already recycled (after canceled/closed).
 	ErrDedicatedClientRecycled = errors.New("dedicated client should not be used after recycled")
 	// DisableClientSetInfo is the value that can be used for ClientOption.ClientSetInfo to disable making the CLIENT SETINFO command
@@ -241,7 +243,13 @@ type ClientOption struct {
 	// connection without extra delays. Depending on network latency and application-specific conditions, the value
 	// of MaxFlushDelay may vary, something like 20 microseconds should not affect latency/throughput a lot but still
 	// produce notable CPU usage reduction under load. Ref: https://github.com/redis/rueidis/issues/156
+	// It cannot be used together with YieldBeforeFlush.
 	MaxFlushDelay time.Duration
+
+	// YieldBeforeFlush makes the pipeline write loop yield once before flushing when other callers are using the
+	// same connection, so that their commands join the same write system call. It reduces CPU usage like
+	// MaxFlushDelay but without a fixed delay. It cannot be used together with MaxFlushDelay.
+	YieldBeforeFlush bool
 
 	// ClusterOption is the options for the redis cluster client.
 	ClusterOption ClusterOption
@@ -521,6 +529,9 @@ func NewClient(option ClientOption) (client Client, err error) {
 	// Validate configuration conflicts early
 	if option.Standalone.EnableRedirect && len(option.Standalone.ReplicaAddress) > 0 {
 		return nil, errors.New("EnableRedirect and ReplicaAddress cannot be used together")
+	}
+	if option.MaxFlushDelay > 0 && option.YieldBeforeFlush {
+		return nil, ErrMaxFlushDelayWithYieldBeforeFlush
 	}
 
 	if option.ReadBufferEachConn < 32 { // the buffer should be able to hold an int64 string at least

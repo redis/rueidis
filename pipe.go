@@ -66,37 +66,38 @@ type wire interface {
 var _ wire = (*pipe)(nil)
 
 type pipe struct {
-	conn            net.Conn
-	clhks           atomic.Value // closed hook, invoked after the conn is closed
-	queue           queue
-	cache           CacheStore
-	pshks           atomic.Pointer[pshks] // pubsub hook, registered by the SetPubSubHooks
-	error           atomic.Pointer[errs]
-	r               *bufio.Reader
-	w               *bufio.Writer
-	close           chan struct{}
-	onInvalidations func([]RedisMessage)
-	ssubs           *subs // pubsub smessage subscriptions
-	nsubs           *subs // pubsub  message subscriptions
-	psubs           *subs // pubsub pmessage subscriptions
-	r2p             *r2p
-	pingTimer       *time.Timer // timer for background ping
-	authTimer       *time.Timer // timer for refreshing dynamic auth credentials, written once in _newPipe
-	lftmTimer       *time.Timer // lifetime timer, written once in _newPipe
-	info            map[string]RedisMessage
-	authRefreshAt   atomic.Pointer[time.Time]
-	timeout         time.Duration
-	pinggap         time.Duration
-	maxFlushDelay   time.Duration
-	lftm            time.Duration // lifetime
-	wrCounter       atomic.Uint64
-	version         int32
-	blcksig         int32
-	state           int32
-	bgState         int32
-	r2ps            bool // identify this pipe is used for resp2 pubsub or not
-	noNoDelay       bool
-	optIn           bool
+	conn             net.Conn
+	clhks            atomic.Value // closed hook, invoked after the conn is closed
+	queue            queue
+	cache            CacheStore
+	pshks            atomic.Pointer[pshks] // pubsub hook, registered by the SetPubSubHooks
+	error            atomic.Pointer[errs]
+	r                *bufio.Reader
+	w                *bufio.Writer
+	close            chan struct{}
+	onInvalidations  func([]RedisMessage)
+	ssubs            *subs // pubsub smessage subscriptions
+	nsubs            *subs // pubsub  message subscriptions
+	psubs            *subs // pubsub pmessage subscriptions
+	r2p              *r2p
+	pingTimer        *time.Timer // timer for background ping
+	authTimer        *time.Timer // timer for refreshing dynamic auth credentials, written once in _newPipe
+	lftmTimer        *time.Timer // lifetime timer, written once in _newPipe
+	info             map[string]RedisMessage
+	authRefreshAt    atomic.Pointer[time.Time]
+	timeout          time.Duration
+	pinggap          time.Duration
+	maxFlushDelay    time.Duration
+	lftm             time.Duration // lifetime
+	wrCounter        atomic.Uint64
+	version          int32
+	blcksig          int32
+	state            int32
+	bgState          int32
+	r2ps             bool // identify this pipe is used for resp2 pubsub or not
+	noNoDelay        bool
+	optIn            bool
+	yieldBeforeFlush bool
 }
 
 type pipeFn func(ctx context.Context, connFn func(ctx context.Context) (net.Conn, error), option *ClientOption) (p *pipe, err error)
@@ -119,10 +120,11 @@ func _newPipe(ctx context.Context, connFn func(context.Context) (net.Conn, error
 		r:    bufio.NewReaderSize(conn, option.ReadBufferEachConn),
 		w:    bufio.NewWriterSize(conn, option.WriteBufferEachConn),
 
-		timeout:       option.ConnWriteTimeout,
-		pinggap:       option.Dialer.KeepAlive,
-		maxFlushDelay: option.MaxFlushDelay,
-		noNoDelay:     option.DisableTCPNoDelay,
+		timeout:          option.ConnWriteTimeout,
+		pinggap:          option.Dialer.KeepAlive,
+		maxFlushDelay:    option.MaxFlushDelay,
+		noNoDelay:        option.DisableTCPNoDelay,
+		yieldBeforeFlush: option.YieldBeforeFlush,
 
 		r2ps:  r2ps,
 		optIn: isOptIn(option.ClientTrackingOptions),
@@ -557,6 +559,8 @@ func (p *pipe) _backgroundWrite() (err error) {
 
 		flushDelay = p.maxFlushDelay
 		flushStart = time.Time{}
+
+		yielded bool
 	)
 
 	for err == nil {
@@ -565,9 +569,16 @@ func (p *pipe) _backgroundWrite() (err error) {
 				flushStart = time.Now()
 			}
 			if p.w.Buffered() != 0 {
+				// Let concurrent callers enqueue more commands into this write syscall, at most once per flush.
+				if p.shouldYield(yielded) {
+					yielded = true
+					runtime.Gosched()
+					continue
+				}
 				if err = p.w.Flush(); err != nil {
 					break
 				}
+				yielded = false
 			}
 			ones[0], multi, ch = p.queue.WaitForWrite()
 			if flushDelay != 0 && p.loadWaits() > 1 { // do not delay for sequential usage
@@ -594,6 +605,10 @@ func (p *pipe) _backgroundWrite() (err error) {
 		}
 	}
 	return
+}
+
+func (p *pipe) shouldYield(yielded bool) bool {
+	return p.yieldBeforeFlush && !yielded && p.loadWaits() > 1
 }
 
 func (p *pipe) _backgroundRead() (err error) {

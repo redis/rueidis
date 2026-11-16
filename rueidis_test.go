@@ -635,6 +635,32 @@ func TestNewClientMaxMultiplex(t *testing.T) {
 	}
 }
 
+func TestNewClientFlushStrategies(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	for _, c := range []struct {
+		name          string
+		maxFlushDelay time.Duration
+		yield         bool
+		want          error
+	}{
+		{name: "both", maxFlushDelay: 20 * time.Microsecond, yield: true, want: ErrMaxFlushDelayWithYieldBeforeFlush},
+		{name: "MaxFlushDelay only", maxFlushDelay: 20 * time.Microsecond, want: ErrNoAddr},
+		{name: "YieldBeforeFlush only", yield: true, want: ErrNoAddr},
+		{name: "negative MaxFlushDelay is no delay", maxFlushDelay: -1, yield: true, want: ErrNoAddr},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			_, err := NewClient(ClientOption{
+				InitAddress:      []string{},
+				MaxFlushDelay:    c.maxFlushDelay,
+				YieldBeforeFlush: c.yield,
+			})
+			if !errors.Is(err, c.want) {
+				t.Fatalf("expected %v, got %v", c.want, err)
+			}
+		})
+	}
+}
+
 func TestNewClientWithEnableRedirectPriority(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 
