@@ -145,6 +145,8 @@ type ClientOption struct {
 	// If set, ReadNodeSelector is prioritized over ReplicaSelector.
 	// If the returned index is out of range, the primary node will be selected.
 	// The function is called only when SendToReplicas returns true.
+	// nodes[0] is the primary; it is a zero NodeInfo while the shard has no online primary,
+	// and selecting it then falls back to the first replica.
 	// Each NodeInfo must not be modified.
 	// NOTE: This function can't be used with ReplicaSelector option.
 	ReadNodeSelector ReadNodeSelectorFunc
@@ -345,6 +347,15 @@ type ClusterOption struct {
 	// Enable this ONLY if your engine's CLUSTER SHARDS is fixed: Valkey >= 7.2.6 or Redis >= 8.0.
 	// Do NOT enable it on Redis 7.x: its CLUSTER SHARDS returns wrong topology after a failover.
 	PreferClusterShards bool
+
+	// MaxNoSlotWait is how long a command waits for a primary when CLUSTER SHARDS still advertises
+	// its slot but the shard has no online primary, as during a failover. While waiting, the client
+	// refreshes the topology every 100ms; the command is sent only once a primary is found, so it
+	// never runs twice. The wait also ends at the ctx deadline, and then ErrNoSlot is returned.
+	// A batch waits as long as any of its slots does. Slots not advertised by any shard fail with
+	// ErrNoSlot immediately. Requires CLUSTER SHARDS (see PreferClusterShards) and retries enabled.
+	// The default 0 disables the wait.
+	MaxNoSlotWait time.Duration
 }
 
 // StandaloneOption is the options for the standalone client.
