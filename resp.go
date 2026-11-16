@@ -354,16 +354,16 @@ next:
 		}
 		switch m.typ {
 		case typeSimpleString, typeFloat, typeBigNumber:
-			n, err := w.Write([]byte(m.string()))
-			return int64(n), err, true
+			n, err := io.Copy(w, strings.NewReader(m.string()))
+			return n, err, true
 		case typeNull:
 			return 0, Nil, true
 		case typeSimpleErr, typeBlobErr:
 			mm := m
 			return 0, (*RedisError)(&mm), true
 		case typeInteger, typeBool:
-			n, err := w.Write([]byte(strconv.FormatInt(m.intlen, 10)))
-			return int64(n), err, true
+			n, err := io.Copy(w, strings.NewReader(strconv.FormatInt(m.intlen, 10)))
+			return n, err, true
 		case typePush:
 			goto next
 		default:
