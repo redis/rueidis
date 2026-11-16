@@ -5,7 +5,7 @@ go 1.26.0
 replace github.com/redis/rueidis => ../
 
 require (
-	github.com/redis/rueidis v1.0.79
+	github.com/redis/rueidis v1.0.80
 	github.com/twmb/murmur3 v1.2.2
 )
 

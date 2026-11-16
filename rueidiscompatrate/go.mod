@@ -4,6 +4,8 @@ go 1.26.0
 
 replace github.com/redis/rueidis => ../
 
+replace github.com/redis/rueidis/mock => ../mock
+
 replace github.com/redis/rueidis/rueidiscompat => ../rueidiscompat
 
 replace github.com/redis/rueidis/rueidislimiter => ../rueidislimiter
@@ -11,9 +13,9 @@ replace github.com/redis/rueidis/rueidislimiter => ../rueidislimiter
 require (
 	github.com/onsi/ginkgo/v2 v2.34.0
 	github.com/onsi/gomega v1.44.0
-	github.com/redis/rueidis v1.0.79
-	github.com/redis/rueidis/rueidiscompat v1.0.79
-	github.com/redis/rueidis/rueidislimiter v1.0.79
+	github.com/redis/rueidis v1.0.80
+	github.com/redis/rueidis/rueidiscompat v1.0.80
+	github.com/redis/rueidis/rueidislimiter v1.0.80
 )
 
 require (

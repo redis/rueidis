@@ -8,8 +8,8 @@ replace (
 )
 
 require (
-	github.com/redis/rueidis v1.0.79
-	github.com/redis/rueidis/rueidisgcp v1.0.79
+	github.com/redis/rueidis v1.0.80
+	github.com/redis/rueidis/rueidisgcp v1.0.80
 	golang.org/x/oauth2 v0.38.0
 )
 

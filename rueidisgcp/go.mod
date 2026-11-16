@@ -5,7 +5,7 @@ go 1.26.0
 replace github.com/redis/rueidis => ../
 
 require (
-	github.com/redis/rueidis v1.0.79
+	github.com/redis/rueidis v1.0.80
 	golang.org/x/oauth2 v0.38.0
 )
 
