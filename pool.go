@@ -10,6 +10,10 @@ import (
 // errAcquireComplete is a special error used to indicate that the Acquire operation has completed successfully
 var errAcquireComplete = errors.New("acquire complete")
 
+// unacquiredWire marks a synthetic error wire returned when Acquire is
+// canceled before it reserves a connection from the pool.
+type unacquiredWire struct{ wire }
+
 func newPool(cap int, dead wire, cleanup time.Duration, minSize int, makeFn func(context.Context) wire) *pool {
 	if cap <= 0 {
 		cap = DefaultPoolSize
@@ -65,7 +69,7 @@ retry:
 	if ctx.Err() != nil {
 		deadPipe := deadFn()
 		deadPipe.error.Store(&errs{error: ctx.Err()})
-		v = deadPipe
+		v = unacquiredWire{wire: deadPipe}
 		p.cond.L.Unlock()
 		return v
 	}
@@ -105,7 +109,9 @@ retry:
 
 func (p *pool) Store(v wire) {
 	p.cond.L.Lock()
-	if !p.down && v.Error() == nil {
+	if _, unacquired := v.(unacquiredWire); unacquired {
+		v.Close()
+	} else if !p.down && v.Error() == nil {
 		p.list = append(p.list, v)
 		p.startTimerIfNeeded()
 		v.ResetTimer()

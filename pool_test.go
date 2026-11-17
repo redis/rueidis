@@ -570,6 +570,37 @@ func TestPoolWithAcquireCtx(t *testing.T) {
 	})
 }
 
+func TestPoolStoreCancelledAcquireDoesNotReduceSize(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+
+	p := newPool(2, dead, 0, 0, func(context.Context) wire {
+		return &mockWire{}
+	})
+	defer p.Close()
+
+	first := p.Acquire(context.Background())
+	second := p.Acquire(context.Background())
+	defer first.Close()
+	defer second.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Millisecond)
+	defer cancel()
+	canceled := p.Acquire(ctx)
+	if !errors.Is(canceled.Error(), context.DeadlineExceeded) {
+		t.Fatalf("expected timed out acquisition, got %v", canceled.Error())
+	}
+
+	// Acquire returns a synthetic error wire here and does not reserve pool
+	// capacity. Storing it must not decrement the two outstanding connections.
+	p.Store(canceled)
+
+	p.cond.L.Lock()
+	defer p.cond.L.Unlock()
+	if p.size != 2 {
+		t.Fatalf("pool size after storing canceled acquisition = %d, want 2", p.size)
+	}
+}
+
 func TestPoolWithCtxTimeout(t *testing.T) {
 	defer ShouldNotLeak(SetupLeakDetection())
 	setup := func(size int, delay time.Duration) *pool {
