@@ -4085,7 +4085,11 @@ func (c *Compat) CFLoadChunk(ctx context.Context, key string, iterator int64, da
 func (c *Compat) CMSIncrBy(ctx context.Context, key string, elements ...interface{}) *IntSliceCmd {
 	_cmd := c.client.B().CmsIncrby().Key(key)
 	for i := 0; i < len(elements); i += 2 {
-		_cmd.Item(str(elements[i])).Increment((int64)(elements[i+1].(int)))
+		incr, err := strconv.ParseInt(str(elements[i+1]), 10, 64)
+		if err != nil {
+			panic(err)
+		}
+		_cmd.Item(str(elements[i])).Increment(incr)
 	}
 	cmd := (cmds.CmsIncrbyItemsIncrement)(_cmd).Build()
 	return newIntSliceCmd(c.client.Do(ctx, cmd))
