@@ -1080,6 +1080,8 @@ func (c *Compat) GetEx(ctx context.Context, key string, expiration time.Duration
 		} else {
 			resp = c.client.Do(ctx, c.client.B().Getex().Key(key).ExSeconds(formatSec(expiration)).Build())
 		}
+	} else if expiration == 0 {
+		resp = c.client.Do(ctx, c.client.B().Getex().Key(key).Persist().Build())
 	} else {
 		resp = c.client.Do(ctx, c.client.B().Getex().Key(key).Build())
 	}
