@@ -3886,17 +3886,23 @@ func (c *Compat) BFInfoExpansion(ctx context.Context, key string) *BFInfoCmd {
 }
 
 func (c *Compat) BFInsert(ctx context.Context, key string, options *BFInsertOptions, elements ...interface{}) *BoolSliceCmd {
-	_cmd := c.client.B().
-		BfInsert().
-		Key(key).
-		Capacity(options.Capacity).
-		Error(options.Error).
-		Expansion(options.Expansion)
-	if options.NonScaling {
-		_cmd.Nonscaling()
-	}
-	if options.NoCreate {
-		_cmd.Nocreate()
+	_cmd := c.client.B().BfInsert().Key(key)
+	if options != nil {
+		if options.Capacity != 0 {
+			_cmd.Capacity(options.Capacity)
+		}
+		if options.Error != 0 {
+			_cmd.Error(options.Error)
+		}
+		if options.Expansion != 0 {
+			_cmd.Expansion(options.Expansion)
+		}
+		if options.NonScaling {
+			_cmd.Nonscaling()
+		}
+		if options.NoCreate {
+			_cmd.Nocreate()
+		}
 	}
 	items := _cmd.Items()
 	for _, e := range elements {
@@ -3990,7 +3996,9 @@ func (c *Compat) CFInfo(ctx context.Context, key string) *CFInfoCmd {
 func (c *Compat) CFInsert(ctx context.Context, key string, options *CFInsertOptions, elements ...interface{}) *BoolSliceCmd {
 	_cmd := c.client.B().CfInsert().Key(key)
 	if options != nil {
-		_cmd.Capacity(options.Capacity)
+		if options.Capacity != 0 {
+			_cmd.Capacity(options.Capacity)
+		}
 		if options.NoCreate {
 			_cmd.Nocreate()
 		}
@@ -4004,9 +4012,14 @@ func (c *Compat) CFInsert(ctx context.Context, key string, options *CFInsertOpti
 }
 
 func (c *Compat) CFInsertNX(ctx context.Context, key string, options *CFInsertOptions, elements ...interface{}) *IntSliceCmd {
-	_cmd := c.client.B().CfInsertnx().Key(key).Capacity(options.Capacity)
-	if options.NoCreate {
-		_cmd.Nocreate()
+	_cmd := c.client.B().CfInsertnx().Key(key)
+	if options != nil {
+		if options.Capacity != 0 {
+			_cmd.Capacity(options.Capacity)
+		}
+		if options.NoCreate {
+			_cmd.Nocreate()
+		}
 	}
 	items := _cmd.Items()
 	for _, e := range elements {
@@ -4258,11 +4271,16 @@ func (c *Compat) TDigestMin(ctx context.Context, key string) *FloatCmd {
 }
 
 func (c *Compat) TDigestMerge(ctx context.Context, destKey string, options *TDigestMergeOptions, sourceKeys ...string) *StatusCmd {
-	_cmd := c.client.B().TdigestMerge().DestinationKey(destKey).Numkeys(int64(len(sourceKeys))).SourceKey(sourceKeys...).Compression(options.Compression)
-	if options.Override {
-		_cmd.Override()
+	_cmd := c.client.B().TdigestMerge().DestinationKey(destKey).Numkeys(int64(len(sourceKeys))).SourceKey(sourceKeys...)
+	if options != nil {
+		if options.Compression != 0 {
+			_cmd.Compression(options.Compression)
+		}
+		if options.Override {
+			_cmd.Override()
+		}
 	}
-	cmd := (cmds.TdigestMergeOverride)(_cmd).Build()
+	cmd := _cmd.Build()
 	return newStatusCmd(c.client.Do(ctx, cmd))
 }
 
