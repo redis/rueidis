@@ -1673,6 +1673,79 @@ func TestClusterShardsCmdFrom(t *testing.T) {
 	})
 }
 
+func TestMapStringSliceInterfaceCmdFrom(t *testing.T) {
+	t.Parallel()
+
+	t.Run("RESP3 map", func(t *testing.T) {
+		res := mock.Result(mock.RedisMap(map[string]rueidis.RedisMessage{
+			"a": mock.RedisArray(
+				mock.RedisMap(map[string]rueidis.RedisMessage{"team": mock.RedisString("x")}),
+				mock.RedisArray(mock.RedisArray(mock.RedisInt64(1), mock.RedisFloat64(2))),
+			),
+		}))
+		cmd := newMapStringSliceInterfaceCmd(res)
+		if err := cmd.Err(); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		want := map[string][]any{"a": {
+			map[string]any{"team": "x"},
+			[]any{[]any{int64(1), float64(2)}},
+		}}
+		if got := cmd.Val(); !reflect.DeepEqual(got, want) {
+			t.Fatalf("got %#v, want %#v", got, want)
+		}
+	})
+
+	t.Run("RESP2 arrays", func(t *testing.T) {
+		// TS.MRANGE WITHLABELS: [[key, labels, samples], ...]
+		res := mock.Result(mock.RedisArray(
+			mock.RedisArray(
+				mock.RedisString("a"),
+				mock.RedisArray(mock.RedisArray(mock.RedisString("team"), mock.RedisString("x"))),
+				mock.RedisArray(mock.RedisArray(mock.RedisInt64(1), mock.RedisString("2"))),
+			),
+			mock.RedisArray(mock.RedisString("b"), mock.RedisArray()),
+		))
+		cmd := newMapStringSliceInterfaceCmd(res)
+		if err := cmd.Err(); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		want := map[string][]any{
+			"a": {
+				[]any{[]any{"team", "x"}},
+				[]any{[]any{int64(1), "2"}},
+			},
+			"b": {[]any{}},
+		}
+		if got := cmd.Val(); !reflect.DeepEqual(got, want) {
+			t.Fatalf("got %#v, want %#v", got, want)
+		}
+	})
+
+	t.Run("RESP2 empty reply", func(t *testing.T) {
+		cmd := newMapStringSliceInterfaceCmd(mock.Result(mock.RedisArray()))
+		if err := cmd.Err(); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got := cmd.Val(); len(got) != 0 {
+			t.Fatalf("got %#v, want an empty map", got)
+		}
+	})
+
+	for name, entry := range map[string]rueidis.RedisMessage{
+		"RESP2 entry without key": mock.RedisArray(),
+		"RESP2 entry not array":   mock.RedisString("a"),
+		"RESP2 non-string key":    mock.RedisArray(mock.RedisInt64(1), mock.RedisArray()),
+		"RESP2 error value":       mock.RedisArray(mock.RedisString("a"), mock.RedisError("ERR x")),
+	} {
+		t.Run(name, func(t *testing.T) {
+			if err := newMapStringSliceInterfaceCmd(mock.Result(mock.RedisArray(entry))).Err(); err == nil {
+				t.Fatal("expected an error")
+			}
+		})
+	}
+}
+
 // TestCacheHitCmd tests the IsCacheHit and setIsCacheHit functionality for Cmd
 func TestCacheHitCmd(t *testing.T) {
 	cmd := &Cmd{}
