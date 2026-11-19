@@ -3406,7 +3406,16 @@ type MapStringSliceInterfaceCmd struct {
 }
 
 func (cmd *MapStringSliceInterfaceCmd) from(res rueidis.RedisResult) {
-	m, err := res.ToMap()
+	msg, err := res.ToMessage()
+	if err != nil {
+		cmd.err = err
+		return
+	}
+	if msg.IsArray() {
+		cmd.fromRESP2(msg)
+		return
+	}
+	m, err := msg.ToMap()
 	if err != nil {
 		cmd.err = err
 		return
@@ -3418,19 +3427,52 @@ func (cmd *MapStringSliceInterfaceCmd) from(res rueidis.RedisResult) {
 			cmd.err = err
 			return
 		}
-		anySlice := make([]any, 0, len(vals))
-		for _, v := range vals {
-			var err error
-			ele, err := v.ToAny()
-			if err != nil {
-				cmd.err = err
-				return
-			}
-			anySlice = append(anySlice, ele)
+		if mapStrSliceInt[k], err = toAnySlice(vals); err != nil {
+			cmd.err = err
+			return
 		}
-		mapStrSliceInt[k] = anySlice
 	}
 	cmd.SetVal(mapStrSliceInt)
+}
+
+// fromRESP2 reads the RESP2 reply of TS.MRANGE, TS.MREVRANGE and TS.MGET,
+// an array of [key, value...] arrays, the same way go-redis does.
+func (cmd *MapStringSliceInterfaceCmd) fromRESP2(msg rueidis.RedisMessage) {
+	entries, _ := msg.ToArray()
+	mapStrSliceInt := make(map[string][]any, len(entries))
+	for _, entry := range entries {
+		vals, err := entry.ToArray()
+		if err != nil {
+			cmd.err = err
+			return
+		}
+		if len(vals) == 0 {
+			cmd.err = fmt.Errorf("got %d, expected at least 1", len(vals))
+			return
+		}
+		key, err := vals[0].ToString()
+		if err != nil {
+			cmd.err = err
+			return
+		}
+		if mapStrSliceInt[key], err = toAnySlice(vals[1:]); err != nil {
+			cmd.err = err
+			return
+		}
+	}
+	cmd.SetVal(mapStrSliceInt)
+}
+
+func toAnySlice(vals []rueidis.RedisMessage) ([]any, error) {
+	anySlice := make([]any, 0, len(vals))
+	for _, v := range vals {
+		ele, err := v.ToAny()
+		if err != nil {
+			return nil, err
+		}
+		anySlice = append(anySlice, ele)
+	}
+	return anySlice, nil
 }
 
 func newMapStringSliceInterfaceCmd(res rueidis.RedisResult) *MapStringSliceInterfaceCmd {

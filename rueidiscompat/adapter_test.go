@@ -14344,6 +14344,38 @@ func testAdapterSearchRESP2() {
 			Expect(res.Docs[1].ID).To(BeEquivalentTo("property:2"))
 		})
 	})
+
+	Describe("Timeseries commands Resp 2", Label("timeseries"), func() {
+		ctx := context.TODO()
+
+		It("should TSMRange, TSMRevRange and TSMGet", Label("timeseries", "tsmrange", "tsmrevrange", "tsmget"), func() {
+			createOpt := &TSOptions{Labels: map[string]string{"Test": "This", "team": "ny"}}
+			Expect(adapter.TSCreateWithArgs(ctx, "a", createOpt).Err()).NotTo(HaveOccurred())
+			for i := 0; i < 3; i++ {
+				Expect(adapter.TSAdd(ctx, "a", i, float64(i)).Err()).NotTo(HaveOccurred())
+			}
+			samples := []interface{}{[]interface{}{int64(0), "0"}, []interface{}{int64(1), "1"}, []interface{}{int64(2), "2"}}
+
+			result, err := adapter.TSMRange(ctx, 0, 200, []string{"Test=This"}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(BeEquivalentTo(map[string][]interface{}{"a": {[]interface{}{}, samples}}))
+
+			result, err = adapter.TSMRangeWithArgs(ctx, 0, 200, []string{"Test=This"}, &TSMRangeOptions{SelectedLabels: []interface{}{"team"}}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["a"][0]).To(BeEquivalentTo([]interface{}{[]interface{}{"team", "ny"}}))
+
+			result, err = adapter.TSMRevRange(ctx, 0, 200, []string{"Test=This"}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result["a"][1]).To(BeEquivalentTo([]interface{}{samples[2], samples[1], samples[0]}))
+
+			result, err = adapter.TSMGetWithArgs(ctx, []string{"Test=This"}, &TSMGetOptions{WithLabels: true}).Result()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(result).To(HaveLen(1))
+			Expect(result["a"]).To(HaveLen(2))
+			Expect(result["a"][0]).To(ConsistOf([]interface{}{"Test", "This"}, []interface{}{"team", "ny"}))
+			Expect(result["a"][1]).To(BeEquivalentTo(samples[2]))
+		})
+	})
 }
 
 func libCode(libName string) string {
