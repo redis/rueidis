@@ -1229,6 +1229,8 @@ func (m *clientMock) ExpectGetEx(key string, expiration time.Duration) *Expected
 		} else {
 			cmd = m.raw.B().Getex().Key(key).ExSeconds(formatSec(expiration)).Build()
 		}
+	} else if expiration == 0 {
+		cmd = m.raw.B().Getex().Key(key).Persist().Build()
 	} else {
 		cmd = m.raw.B().Getex().Key(key).Build()
 	}
