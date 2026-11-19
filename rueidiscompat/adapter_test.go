@@ -14445,3 +14445,130 @@ func TestMigrateTimeoutIsInMilliseconds(t *testing.T) {
 		})
 	}
 }
+
+func TestBFInsertOmitsUnsetOptions(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		options *BFInsertOptions
+		want    []string
+	}{
+		{name: "nil", options: nil, want: []string{"BF.INSERT", "key", "ITEMS", "item"}},
+		{name: "empty", options: &BFInsertOptions{}, want: []string{"BF.INSERT", "key", "ITEMS", "item"}},
+		{name: "capacity", options: &BFInsertOptions{Capacity: 2000}, want: []string{"BF.INSERT", "key", "CAPACITY", "2000", "ITEMS", "item"}},
+		{name: "nocreate", options: &BFInsertOptions{NoCreate: true}, want: []string{"BF.INSERT", "key", "NOCREATE", "ITEMS", "item"}},
+		{
+			name:    "all",
+			options: &BFInsertOptions{Capacity: 2000, Error: 0.001, Expansion: 3},
+			want:    []string{"BF.INSERT", "key", "CAPACITY", "2000", "ERROR", "0.001", "EXPANSION", "3", "ITEMS", "item"},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			client := mock.NewClient(ctrl)
+			var got []string
+			client.EXPECT().Do(gomock.Any(), gomock.Any()).DoAndReturn(
+				func(_ context.Context, cmd rueidis.Completed) rueidis.RedisResult {
+					got = append([]string(nil), cmd.Commands()...)
+					return mock.Result(mock.RedisArray(mock.RedisInt64(1)))
+				},
+			)
+
+			adapter := NewAdapter(client)
+			if err := adapter.BFInsert(context.Background(), "key", tc.options, "item").Err(); err != nil {
+				t.Fatalf("BFInsert: %v", err)
+			}
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Fatalf("unexpected command:\n got: %q\nwant: %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestCFInsertOmitsUnsetOptions(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		options *CFInsertOptions
+		want    []string
+	}{
+		{name: "nil", options: nil, want: []string{"key", "ITEMS", "item"}},
+		{name: "empty", options: &CFInsertOptions{}, want: []string{"key", "ITEMS", "item"}},
+		{name: "nocreate", options: &CFInsertOptions{NoCreate: true}, want: []string{"key", "NOCREATE", "ITEMS", "item"}},
+		{
+			name:    "all",
+			options: &CFInsertOptions{Capacity: 3000, NoCreate: true},
+			want:    []string{"key", "CAPACITY", "3000", "NOCREATE", "ITEMS", "item"},
+		},
+	} {
+		for _, name := range []string{"CF.INSERT", "CF.INSERTNX"} {
+			t.Run(name+"/"+tc.name, func(t *testing.T) {
+				ctrl := gomock.NewController(t)
+				defer ctrl.Finish()
+
+				client := mock.NewClient(ctrl)
+				var got []string
+				client.EXPECT().Do(gomock.Any(), gomock.Any()).DoAndReturn(
+					func(_ context.Context, cmd rueidis.Completed) rueidis.RedisResult {
+						got = append([]string(nil), cmd.Commands()...)
+						return mock.Result(mock.RedisArray(mock.RedisInt64(1)))
+					},
+				)
+
+				adapter := NewAdapter(client)
+				var err error
+				if name == "CF.INSERT" {
+					err = adapter.CFInsert(context.Background(), "key", tc.options, "item").Err()
+				} else {
+					err = adapter.CFInsertNX(context.Background(), "key", tc.options, "item").Err()
+				}
+				if err != nil {
+					t.Fatalf("%s: %v", name, err)
+				}
+				want := append([]string{name}, tc.want...)
+				if !reflect.DeepEqual(got, want) {
+					t.Fatalf("unexpected command:\n got: %q\nwant: %q", got, want)
+				}
+			})
+		}
+	}
+}
+
+func TestTDigestMergeOmitsUnsetOptions(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		options *TDigestMergeOptions
+		want    []string
+	}{
+		{name: "nil", options: nil, want: []string{"TDIGEST.MERGE", "dst", "2", "a", "b"}},
+		{name: "empty", options: &TDigestMergeOptions{}, want: []string{"TDIGEST.MERGE", "dst", "2", "a", "b"}},
+		{name: "override", options: &TDigestMergeOptions{Override: true}, want: []string{"TDIGEST.MERGE", "dst", "2", "a", "b", "OVERRIDE"}},
+		{
+			name:    "all",
+			options: &TDigestMergeOptions{Compression: 1000, Override: true},
+			want:    []string{"TDIGEST.MERGE", "dst", "2", "a", "b", "COMPRESSION", "1000", "OVERRIDE"},
+		},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			client := mock.NewClient(ctrl)
+			var got []string
+			client.EXPECT().Do(gomock.Any(), gomock.Any()).DoAndReturn(
+				func(_ context.Context, cmd rueidis.Completed) rueidis.RedisResult {
+					got = append([]string(nil), cmd.Commands()...)
+					return mock.Result(mock.RedisString("OK"))
+				},
+			)
+
+			adapter := NewAdapter(client)
+			if err := adapter.TDigestMerge(context.Background(), "dst", tc.options, "a", "b").Err(); err != nil {
+				t.Fatalf("TDigestMerge: %v", err)
+			}
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Fatalf("unexpected command:\n got: %q\nwant: %q", got, tc.want)
+			}
+		})
+	}
+}
