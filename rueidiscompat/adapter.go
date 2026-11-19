@@ -4368,9 +4368,10 @@ func (c *Compat) TSCreateWithArgs(ctx context.Context, key string, options *TSOp
 	if options.ChunkSize != 0 {
 		_cmd.ChunkSize(int64(options.ChunkSize))
 	}
-	if options.Encoding != "" {
+	switch options.Encoding {
+	case "COMPRESSED", "":
 		_cmd.EncodingCompressed()
-	} else {
+	case "UNCOMPRESSED":
 		_cmd.EncodingUncompressed()
 	}
 	if options.DuplicatePolicy != "" {

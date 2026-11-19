@@ -1234,7 +1234,7 @@ var golden = `[
     ["TS.ADD","1","1","1"],
     ["TS.ADD","1","1","1","RETENTION","20","ENCODING","COMPRESSED","LABELS","Time","Series"],
     ["TS.CREATE","1"],
-    ["TS.CREATE","1","RETENTION","20","ENCODING","UNCOMPRESSED","LABELS","Time","Series"],
+    ["TS.CREATE","1","RETENTION","20","ENCODING","COMPRESSED","LABELS","Time","Series"],
     ["TS.ALTER","1","DUPLICATE_POLICY","MIN"],
     ["TS.CREATERULE","1","1","AGGREGATION","AVG","1"],
     ["TS.CREATERULE","1","1","AGGREGATION","AVG","1","1"],
