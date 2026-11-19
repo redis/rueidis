@@ -14445,3 +14445,37 @@ func TestMigrateTimeoutIsInMilliseconds(t *testing.T) {
 		})
 	}
 }
+
+func TestTSCreateWithArgsEncoding(t *testing.T) {
+	for _, tc := range []struct {
+		encoding string
+		want     string
+	}{
+		{encoding: "", want: "COMPRESSED"},
+		{encoding: "COMPRESSED", want: "COMPRESSED"},
+		{encoding: "UNCOMPRESSED", want: "UNCOMPRESSED"},
+	} {
+		t.Run(tc.encoding, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			client := mock.NewClient(ctrl)
+			var got []string
+			client.EXPECT().Do(gomock.Any(), gomock.Any()).DoAndReturn(
+				func(_ context.Context, cmd rueidis.Completed) rueidis.RedisResult {
+					got = append([]string(nil), cmd.Commands()...)
+					return mock.Result(mock.RedisString("OK"))
+				},
+			)
+
+			adapter := NewAdapter(client)
+			if err := adapter.TSCreateWithArgs(context.Background(), "key", &TSOptions{Encoding: tc.encoding}).Err(); err != nil {
+				t.Fatalf("TSCreateWithArgs: %v", err)
+			}
+			want := []string{"TS.CREATE", "key", "ENCODING", tc.want}
+			if !reflect.DeepEqual(got, want) {
+				t.Fatalf("unexpected command: got %v, want %v", got, want)
+			}
+		})
+	}
+}
