@@ -29,6 +29,7 @@ package rueidiscompat
 import (
 	"context"
 	"errors"
+	"reflect"
 	"runtime"
 	"sync/atomic"
 	"testing"
@@ -287,4 +288,23 @@ func TestForEachMaster(t *testing.T) {
 			t.Errorf("expected no error, got %v", err)
 		}
 	})
+}
+
+func TestGetExZeroExpirationPersists(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	client := mock.NewClient(ctrl)
+	var got []string
+	client.EXPECT().Do(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, cmd rueidis.Completed) rueidis.RedisResult {
+		got = cmd.Commands()
+		return mock.Result(mock.RedisString("value"))
+	})
+
+	if err := NewAdapter(client).GetEx(context.Background(), "key", 0).Err(); err != nil {
+		t.Fatalf("unexpected error %v", err)
+	}
+	if want := []string{"GETEX", "key", "PERSIST"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("GetEx with zero expiration sent %v, want %v", got, want)
+	}
 }
