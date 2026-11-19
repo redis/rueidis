@@ -94,3 +94,21 @@ func recovered(fn func()) (msg string) {
 	fn()
 	return msg
 }
+
+type s7 struct {
+	A string `json:"a,omitempty" redis:",key"`
+	B int64  `json:"b,omitempty" redis:",ver"`
+	C string `json:"c,omitempty"`
+}
+
+func TestSchemaJSONTagOptions(t *testing.T) {
+	typ := reflect.TypeOf(s7{})
+	sc := newSchema(typ)
+	if sc.key.name != "a" || sc.ver.name != "b" {
+		t.Fatalf("unexpected key/ver field names %q %q", sc.key.name, sc.ver.name)
+	}
+	fields := newHashConvFactory(typ, sc).NewConverter(reflect.ValueOf(s7{A: "1", B: 2, C: "3"})).ToHash()
+	if !reflect.DeepEqual(fields, map[string]string{"a": "1", "b": "2", "c": "3"}) {
+		t.Fatalf("unexpected hash fields %v", fields)
+	}
+}
