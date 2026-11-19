@@ -1745,6 +1745,8 @@ func (c *Compat) HGetEXWithArgs(ctx context.Context, key string, options *HGetEX
 		cmd = c.client.B().Hgetex().Key(key).Pxat(options.ExpirationVal).Fields().Numfields(int64(len(fields))).Field(fields...).Build()
 	case HGetEXExpirationPERSIST:
 		cmd = c.client.B().Hgetex().Key(key).Persist().Fields().Numfields(int64(len(fields))).Field(fields...).Build()
+	default:
+		return c.HGetEX(ctx, key, fields...)
 	}
 	resp := c.client.Do(ctx, cmd)
 	return newStringSliceCmd(resp)
