@@ -14445,3 +14445,38 @@ func TestMigrateTimeoutIsInMilliseconds(t *testing.T) {
 		})
 	}
 }
+
+func TestCMSIncrByAcceptsIntegerTypes(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		incr any
+	}{
+		{name: "int", incr: 5},
+		{name: "int64", incr: int64(5)},
+		{name: "uint32", incr: uint32(5)},
+		{name: "string", incr: "5"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			client := mock.NewClient(ctrl)
+			var got []string
+			client.EXPECT().Do(gomock.Any(), gomock.Any()).DoAndReturn(
+				func(_ context.Context, cmd rueidis.Completed) rueidis.RedisResult {
+					got = append([]string(nil), cmd.Commands()...)
+					return mock.Result(mock.RedisArray(mock.RedisInt64(5)))
+				},
+			)
+
+			adapter := NewAdapter(client)
+			if err := adapter.CMSIncrBy(context.Background(), "key", "item", tc.incr).Err(); err != nil {
+				t.Fatalf("CMSIncrBy: %v", err)
+			}
+			want := []string{"CMS.INCRBY", "key", "item", "5"}
+			if !reflect.DeepEqual(got, want) {
+				t.Fatalf("unexpected command:\n got: %q\nwant: %q", got, want)
+			}
+		})
+	}
+}
