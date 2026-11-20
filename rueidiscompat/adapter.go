@@ -4658,19 +4658,11 @@ func (c *Compat) TSInfoWithArgs(ctx context.Context, key string, options *TSInfo
 // TSMAdd - Adds multiple samples to multiple time-series keys.
 // For more information - https://redis.io/commands/ts.madd/
 func (c *Compat) TSMAdd(ctx context.Context, ktvSlices [][]interface{}) *IntSliceCmd {
-	_cmd := c.client.B().TsMadd().KeyTimestampValue()
+	_cmd := c.client.B().Arbitrary("TS.MADD")
 	for _, ktv := range ktvSlices {
-		tstmp, err := toInt64(int64(ktv[1].(int)))
-		if err != nil {
-			panic(err)
-		}
-		val, err := toFloat64(int64(ktv[2].(int)))
-		if err != nil {
-			panic(err)
-		}
-		_cmd.KeyTimestampValue(str(ktv[0]), tstmp, val)
+		_cmd = _cmd.Keys(str(ktv[0])).Args(str(ktv[1]), str(ktv[2]))
 	}
-	cmd := (cmds.TsMaddKeyTimestampValue)(_cmd).Build()
+	cmd := _cmd.Build()
 	return newIntSliceCmd(c.client.Do(ctx, cmd))
 }
 
