@@ -80,7 +80,7 @@ func newSchema(t reflect.Type) schema {
 
 func parse(f reflect.StructField) (field field) {
 	v, _ := f.Tag.Lookup("json")
-	vs := strings.SplitN(v, ",", 1)
+	vs := strings.SplitN(v, ",", 2)
 	if vs[0] == "" {
 		field.name = f.Name
 	} else {
