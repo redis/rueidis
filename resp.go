@@ -147,6 +147,9 @@ func readArray(i *bufio.Reader) (m RedisMessage, err error) {
 func readMap(i *bufio.Reader) (m RedisMessage, err error) {
 	length, err := readI(i)
 	if err == nil {
+		if length == -1 {
+			return m, errOldNull
+		}
 		m.array, m.intlen, err = readA(i, length*2)
 	} else if err == errChunked {
 		m.array, m.intlen, err = readE(i)
