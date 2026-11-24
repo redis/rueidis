@@ -740,3 +740,22 @@ func randN(n int) (v int) {
 	}
 	return
 }
+
+func TestReadRESP3NullMap(t *testing.T) {
+	data := "%-1\r\n"
+	for i := 1; i <= len(data); i++ {
+		m, err := readNextMessage(bufio.NewReader(io.LimitReader(strings.NewReader(data), int64(i))))
+		if i < len(data) {
+			if err == nil {
+				t.Fatalf("unexpected no error: %v", i)
+			}
+		} else {
+			if err != nil {
+				t.Fatal(err)
+			}
+			if m.typ != typeNull {
+				t.Fatalf("unexpected msg type %v", m.typ)
+			}
+		}
+	}
+}
