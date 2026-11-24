@@ -210,6 +210,9 @@ func readB(i *bufio.Reader) (*byte, int64, error) {
 	if length == -1 {
 		return nil, 0, errOldNull
 	}
+	if length < 0 {
+		return nil, 0, errors.New(unexpectedNumByte + "negative length")
+	}
 	bs := make([]byte, length)
 	if _, err = io.ReadFull(i, bs); err != nil {
 		return nil, 0, err

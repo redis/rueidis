@@ -740,3 +740,15 @@ func randN(n int) (v int) {
 	}
 	return
 }
+
+func TestReadBlobStringRejectsNegativeLength(t *testing.T) {
+	for _, s := range []string{"$-2\r\n", "$-100\r\n"} {
+		r := bufio.NewReader(strings.NewReader(s + strings.Repeat("x", 10)))
+		if _, err := r.ReadByte(); err != nil { // consume the type byte
+			t.Fatal(err)
+		}
+		if _, _, err := readB(r); err == nil {
+			t.Errorf("readB(%q) accepted a negative length", s)
+		}
+	}
+}
