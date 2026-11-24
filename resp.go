@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -192,12 +193,19 @@ func readI(i *bufio.Reader) (v int64, err error) {
 		s = -1
 		bs = bs[1:]
 	}
+	limit := uint64(math.MaxInt64)
+	if s < 0 {
+		limit++ // MinInt64 has one more magnitude than MaxInt64
+	}
 	for _, c := range bs[:len(bs)-2] {
-		if d := int64(c - '0'); d >= 0 && d <= 9 {
-			v = v*10 + d
-		} else {
+		if c < '0' || c > '9' {
 			return 0, errors.New(unexpectedNumByte + strconv.Itoa(int(c)))
 		}
+		d := uint64(c - '0')
+		if uint64(v) > (limit-d)/10 {
+			return 0, errors.New(unexpectedNumByte + "overflow")
+		}
+		v = v*10 + int64(d)
 	}
 	return v * s, nil
 }
