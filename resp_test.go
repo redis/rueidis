@@ -740,3 +740,15 @@ func randN(n int) (v int) {
 	}
 	return
 }
+
+func TestReadIRejectsOverflow(t *testing.T) {
+	for _, s := range []string{
+		"92233720368547758070", // MaxInt64 with a trailing zero
+		"-92233720368547758070",
+		"99999999999999999999999999999999",
+	} {
+		if _, err := readI(source(s)); err == nil {
+			t.Errorf("readI(%q) accepted an overflowing integer", s)
+		}
+	}
+}
