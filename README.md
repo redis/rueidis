@@ -436,17 +436,54 @@ directly without allocating them to the memory. They work by first sending comma
 then directly copying the response values to the given `io.Writer`, and finally recycling the connection.
 
 ```go
-s := client.DoMultiStream(ctx, client.B().Get().Key("a{slot1}").Build(), client.B().Get().Key("b{slot1}").Build())
-for s.HasNext() {
-    n, err := s.WriteTo(io.Discard)
-    if rueidis.IsRedisNil(err) {
-        // ...
+func streamValues(ctx context.Context, client rueidis.Client, firstKey, secondKey string, dst io.Writer) error {
+    s := client.DoMultiStream(ctx,
+        client.B().Get().Key(firstKey).Build(),
+        client.B().Get().Key(secondKey).Build(),
+    )
+    if err := s.Error(); err != nil {
+        return err // The stream may fail before there are any replies.
     }
+
+    w := &streamDestination{dst: dst}
+    for s.HasNext() {
+        _, err := s.WriteTo(w)
+        if w.err == nil && err != nil && !rueidis.IsRedisNil(err) {
+            w.err = err
+        }
+    }
+    return w.err
+}
+
+type streamDestination struct {
+    dst io.Writer
+    err error
+}
+
+func (w *streamDestination) Write(p []byte) (int, error) {
+    if w.err == nil {
+        n, err := w.dst.Write(p)
+        if err == nil && n != len(p) {
+            err = io.ErrShortWrite
+        }
+        w.err = err
+    }
+    // Save the error for the caller, but consume all bytes from Redis.
+    // Do not call the destination again once it has failed.
+    return len(p), nil
 }
 ```
 
-Note that these two methods will occupy connections until all responses are written to the given `io.Writer`.
-This can take a long time and hurt performance. Use the normal `Do()` and `DoMulti()` instead unless you want to avoid allocating memory for a large redis response.
+For example, use `streamValues(ctx, client, "a{slot1}", "b{slot1}", dst)` to read two keys in the same cluster slot.
+This example skips missing keys and writes the remaining values to `dst`. It returns the first other error
+after consuming all remaining readable replies. Check `Error()` before the loop: on a startup error,
+`HasNext()` is already false. After normal consumption, `Error()` returns `io.EOF`.
+
+These methods hold a pooled connection while replies are pending. The example records a destination
+write error and discards the rest of that reply and subsequent replies, so a failed write does not
+interrupt the response framing. Keep draining while `HasNext()` is true so the connection can be recycled. A protocol or network error
+can instead stop the stream and close the connection. Use `Do()` or `DoMulti()` unless you need to avoid
+holding a large Redis response in memory.
 
 Also note that these two methods only work with `string`, `integer`, and `float` redis responses. And `DoMultiStream` currently
 does not support pipelining keys across multiple slots when connecting to a redis cluster.
