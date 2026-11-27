@@ -954,7 +954,7 @@ availability_zone:us-west-1a
 		n1.Close()
 		n2.Close()
 	})
-	t.Run("Auth Credentials Refresh Timer Lifecycle", func(t *testing.T) {
+	t.Run("Auth Credentials Refresh Runs While Checked Out", func(t *testing.T) {
 		n1, n2 := net.Pipe()
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
 		refreshDone := make(chan struct{})
@@ -989,28 +989,27 @@ availability_zone:us-west-1a
 		if err != nil {
 			t.Fatalf("pipe setup failed: %v", err)
 		}
+		// A pipe checked out from a pool, as by Dedicate, keeps refreshing.
 		if !p.StopTimer() {
 			t.Fatal("StopTimer returned false")
 		}
-		time.Sleep(50 * time.Millisecond)
-		if calls.Load() != 1 {
-			t.Fatalf("auth refresh ran while the timer was stopped, got %d calls", calls.Load())
-		}
-		p.ResetTimer()
 		select {
 		case <-refreshDone:
 		case <-time.After(time.Second):
-			t.Fatal("auth refresh did not resume after ResetTimer")
+			t.Fatal("auth refresh did not run while the pipe was checked out")
 		}
+		p.ResetTimer()
 		p.Close()
 		mock.Close()
 		n1.Close()
 		n2.Close()
 	})
-	t.Run("Auth Credentials Refresh Timeout", func(t *testing.T) {
+	t.Run("Auth Credentials Refresh Behind Blocking Command", func(t *testing.T) {
 		n1, n2 := net.Pipe()
 		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
-		refreshRead := make(chan struct{})
+		blocked := make(chan struct{})
+		unblock := make(chan struct{})
+		refreshDone := make(chan struct{})
 		go func() {
 			mock.Expect("HELLO", "3", "AUTH", "ua", "pa").
 				Reply(slicemsg(
@@ -1026,17 +1025,111 @@ availability_zone:us-west-1a
 				ReplyError("UNKNOWN COMMAND")
 			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
 				ReplyError("UNKNOWN COMMAND")
-			mock.Expect("AUTH", "ua", "pa2")
-			close(refreshRead)
+			blpop := mock.Expect("BLPOP", "k", "0")
+			close(blocked)
+			<-unblock
+			blpop.Reply(slicemsg('*', []RedisMessage{strmsg('+', "k"), strmsg('+', "v")}))
+			// The AUTH that timed out behind BLPOP is still applied.
+			mock.Expect("AUTH", "ua", "pa2").
+				ReplyString("OK")
+			mock.Expect("PING").
+				ReplyString("PONG")
+			close(refreshDone)
 		}()
+		far := time.Now().Add(time.Hour)
 		var calls atomic.Int64
 		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
 			ConnWriteTimeout: 20 * time.Millisecond,
 			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
 				if calls.Add(1) == 1 {
+					return AuthCredentials{Username: "ua", Password: "pa", RefreshAfter: time.Now().Add(time.Hour)}, nil
+				}
+				return AuthCredentials{Username: "ua", Password: "pa2", RefreshAfter: far}, nil
+			},
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		blpopDone := make(chan error, 1)
+		go func() {
+			blpopDone <- p.Do(context.Background(), cmds.NewBlockingCompleted([]string{"BLPOP", "k", "0"})).Error()
+		}()
+		<-blocked
+		now := time.Now()
+		p.authRefreshAt.Store(&now)
+		p.authTimer.Reset(0)
+		// The AUTH hits ConnWriteTimeout behind BLPOP. The refresh must still
+		// schedule the next one and keep the pipe open.
+		deadline := time.After(time.Second)
+		for at := p.authRefreshAt.Load(); !at.Equal(far); at = p.authRefreshAt.Load() {
+			select {
+			case <-deadline:
+				t.Fatal("auth refresh did not finish behind the blocking command")
+			case <-time.After(5 * time.Millisecond):
+			}
+		}
+		if err := p.Error(); err != nil {
+			t.Fatalf("auth refresh closed the pipe behind a blocking command: %v", err)
+		}
+		close(unblock)
+		if err := <-blpopDone; err != nil {
+			t.Fatalf("unexpected blpop err %v", err)
+		}
+		if err := p.Do(context.Background(), cmds.PingCmd).Error(); err != nil {
+			t.Fatalf("unexpected ping err %v", err)
+		}
+		select {
+		case <-refreshDone:
+		case <-time.After(time.Second):
+			t.Fatal("queued AUTH was not applied after the blocking command")
+		}
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
+	t.Run("Auth Credentials Refresh Timeout Keeps Pipe", func(t *testing.T) {
+		// On a pipelining pipe, as every pub/sub pipe is, an AUTH that hits
+		// ConnWriteTimeout does not close the pipe, and its late reply is
+		// consumed.
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+		refreshRead := make(chan struct{})
+		authReply := make(chan struct{})
+		refreshDone := make(chan struct{})
+		go func() {
+			mock.Expect("HELLO", "3", "AUTH", "ua", "pa").
+				Reply(slicemsg(
+					'%',
+					[]RedisMessage{
+						strmsg('+', "proto"),
+						{typ: ':', intlen: 3},
+					},
+				))
+			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+				ReplyError("UNKNOWN COMMAND")
+			auth := mock.Expect("AUTH", "ua", "pa2")
+			close(refreshRead)
+			<-authReply
+			auth.ReplyString("OK")
+			mock.Expect("PING").
+				ReplyString("PONG")
+			close(refreshDone)
+		}()
+		far := time.Now().Add(time.Hour)
+		var calls atomic.Int64
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
+			ConnWriteTimeout: 20 * time.Millisecond,
+			AlwaysPipelining: true,
+			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
+				if calls.Add(1) == 1 {
 					return AuthCredentials{Username: "ua", Password: "pa", RefreshAfter: time.Now().Add(10 * time.Millisecond)}, nil
 				}
-				return AuthCredentials{Username: "ua", Password: "pa2"}, nil
+				return AuthCredentials{Username: "ua", Password: "pa2", RefreshAfter: far}, nil
 			},
 		})
 		if err != nil {
@@ -1047,13 +1140,91 @@ availability_zone:us-west-1a
 		case <-time.After(time.Second):
 			t.Fatal("auth refresh command was not sent")
 		}
+		// The mock holds the reply past ConnWriteTimeout.
 		deadline := time.After(time.Second)
-		for p.Error() == nil {
+		for at := p.authRefreshAt.Load(); !at.Equal(far); at = p.authRefreshAt.Load() {
+			if err := p.Error(); err != nil {
+				t.Fatalf("auth refresh timeout closed the pipe: %v", err)
+			}
 			select {
 			case <-deadline:
-				t.Fatal("auth refresh did not honor ConnWriteTimeout")
-			case <-time.After(10 * time.Millisecond):
+				t.Fatal("auth refresh did not finish")
+			case <-time.After(5 * time.Millisecond):
 			}
+		}
+		close(authReply)
+		if err := p.Do(context.Background(), cmds.PingCmd).Error(); err != nil {
+			t.Fatalf("unexpected ping err %v", err)
+		}
+		select {
+		case <-refreshDone:
+		case <-time.After(time.Second):
+			t.Fatal("late AUTH reply was not consumed")
+		}
+		p.Close()
+		mock.Close()
+		n1.Close()
+		n2.Close()
+	})
+	t.Run("Auth Credentials Refresh Rejected Keeps Pipe", func(t *testing.T) {
+		// A rejected AUTH, as a subscribed RESP2 connection or Valkey 8.1 to
+		// 9.x with module auth reply, leaves the pipe open with its current
+		// credentials and schedules the next refresh.
+		n1, n2 := net.Pipe()
+		mock := &redisMock{buf: bufio.NewReader(n2), conn: n2, t: t}
+		refreshDone := make(chan struct{})
+		go func() {
+			mock.Expect("HELLO", "3", "AUTH", "ua", "pa").
+				Reply(slicemsg(
+					'%',
+					[]RedisMessage{
+						strmsg('+', "proto"),
+						{typ: ':', intlen: 3},
+					},
+				))
+			mock.Expect("CLIENT", "TRACKING", "ON", "OPTIN").
+				ReplyString("OK")
+			mock.Expect("CLIENT", "SETINFO", "LIB-NAME", LibName).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("CLIENT", "SETINFO", "LIB-VER", LibVer).
+				ReplyError("UNKNOWN COMMAND")
+			mock.Expect("AUTH", "ua", "pa2").
+				ReplyError("ERR Can't execute 'auth': only (P|S)SUBSCRIBE / (P|S)UNSUBSCRIBE / PING / QUIT / RESET are allowed in this context")
+			mock.Expect("PING").
+				ReplyString("PONG")
+			close(refreshDone)
+		}()
+		far := time.Now().Add(time.Hour)
+		var calls atomic.Int64
+		p, err := newPipe(context.Background(), func(ctx context.Context) (net.Conn, error) { return n1, nil }, &ClientOption{
+			AuthCredentialsFn: func(context AuthCredentialsContext) (AuthCredentials, error) {
+				if calls.Add(1) == 1 {
+					return AuthCredentials{Username: "ua", Password: "pa", RefreshAfter: time.Now().Add(10 * time.Millisecond)}, nil
+				}
+				return AuthCredentials{Username: "ua", Password: "pa2", RefreshAfter: far}, nil
+			},
+		})
+		if err != nil {
+			t.Fatalf("pipe setup failed: %v", err)
+		}
+		deadline := time.After(time.Second)
+		for at := p.authRefreshAt.Load(); !at.Equal(far); at = p.authRefreshAt.Load() {
+			if err := p.Error(); err != nil {
+				t.Fatalf("rejected auth refresh closed the pipe: %v", err)
+			}
+			select {
+			case <-deadline:
+				t.Fatal("auth refresh did not finish")
+			case <-time.After(5 * time.Millisecond):
+			}
+		}
+		if err := p.Do(context.Background(), cmds.PingCmd).Error(); err != nil {
+			t.Fatalf("unexpected ping err %v", err)
+		}
+		select {
+		case <-refreshDone:
+		case <-time.After(time.Second):
+			t.Fatal("pipe unusable after the rejected auth refresh")
 		}
 		p.Close()
 		mock.Close()
@@ -5494,6 +5665,28 @@ func TestCloseWithPipeliningAndGracefulPeriodExceeded(t *testing.T) {
 	}()
 	mock.Expect("PING")
 	<-p.close
+}
+
+func TestCloseWithConcurrentWaiter(t *testing.T) {
+	defer ShouldNotLeak(SetupLeakDetection())
+	p, _, cancel, _ := setup(t, ClientOption{})
+	// A concurrent Close, or a Do that then sees the pipe stopping, has counted
+	// itself as a waiter before this Close does. So this Close neither starts
+	// the background worker nor can rely on a syncDo to start it.
+	p.incrWaits()
+	closed := make(chan struct{})
+	go func() {
+		p.Close()
+		close(closed)
+	}()
+	select {
+	case <-closed:
+	case <-time.After(5 * time.Second):
+		t.Fatal("Close hung without a background worker")
+	}
+	p.decrWaits()
+	<-p.close
+	cancel()
 }
 
 func TestAlreadyCanceledContext(t *testing.T) {

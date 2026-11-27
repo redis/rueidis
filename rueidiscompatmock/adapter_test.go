@@ -1828,6 +1828,11 @@ func TestClientClusterCommands(t *testing.T) {
 			return err
 		},
 		func() error {
+			cm.ExpectClientPause(time.Nanosecond).SetVal(true)
+			_, err := rdb.ClientPause(ctx, time.Nanosecond).Result()
+			return err
+		},
+		func() error {
 			cm.ExpectClientUnpause().SetVal(true)
 			_, err := rdb.ClientUnpause(ctx).Result()
 			return err
@@ -1999,6 +2004,10 @@ func TestGenericBitmapScanSortCommands(t *testing.T) {
 		func() error {
 			cm.ExpectMigrate("127.0.0.1", "6379", "k", 0, time.Second).SetVal("OK")
 			return rdb.Migrate(ctx, "127.0.0.1", 6379, "k", 0, time.Second).Err()
+		},
+		func() error {
+			cm.ExpectMigrate("127.0.0.1", "6379", "k", 0, time.Nanosecond).SetVal("OK")
+			return rdb.Migrate(ctx, "127.0.0.1", 6379, "k", 0, time.Nanosecond).Err()
 		},
 		func() error {
 			cm.ExpectRestore("k", time.Hour, "val").SetVal("OK")

@@ -1,0 +1,70 @@
+name: Update Benchmark Baseline
+
+# Least privilege: no token scope by default. Jobs ask for what they need (benchmark-main pushes to gh-pages).
+permissions: {}
+
+on:
+  push:
+    branches: [ main ]
+    # Go code, plus the benchmark tooling itself.
+    paths:
+      - '**/*.go'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/scripts/bench.sh'
+      - '.github/workflows/benchmark-pr.yml'
+      - '.github/workflows/benchmark-main.yml'
+
+# One gh-pages update at a time. Two quick merges would otherwise push at the same moment and one push would be
+# rejected. cancel-in-progress is false so a run that is already publishing is never killed halfway.
+concurrency:
+  group: benchmark-gh-pages
+  cancel-in-progress: false
+
+jobs:
+  check-branch:
+    if: vars.DISABLE_BENCHMARKS != 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      exists: ${{ steps.check.outputs.exists }}
+    steps:
+      - name: Check if gh-pages exists
+        id: check
+        run: |
+          if git ls-remote --exit-code --heads https://github.com/${{ github.repository }}.git gh-pages; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  benchmark-main:
+    needs: check-branch
+    if: needs.check-branch.outputs.exists == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with: { go-version-file: go.mod }
+      # The benchmark list, Redis startup and report formatting live in bench.sh, shared with benchmark-pr.yml.
+      - name: Start Redis
+        run: .github/scripts/bench.sh start-redis
+      - name: Run Main Benchmarks
+        run: .github/scripts/bench.sh run main out.txt
+      - name: Average Results
+        if: always()
+        run: .github/scripts/bench.sh report main out.txt averaged.txt
+      - name: Teardown Redis
+        if: always()
+        run: docker compose down -v
+      - name: Update gh-pages Baseline
+        uses: benchmark-action/github-action-benchmark@4322e5726e6334590d251fc4f92bec0efafc45dc # v1.22.2
+        with:
+          tool: 'go'
+          output-file-path: averaged.txt
+          # GITHUB_TOKEN can push and deploy the gh-pages dashboard; a PAT is only needed to push to another repository.
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true

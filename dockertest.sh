@@ -4,7 +4,7 @@ set -ev
 
 go vet ./...
 
-go install honnef.co/go/tools/cmd/staticcheck@v0.7.0
+go install honnef.co/go/tools/cmd/staticcheck@v0.8.2
 # disabled checks
 #  -ST1000 missing package doc in internal packages
 #  -ST1003 wrong naming convention would require breaking changes

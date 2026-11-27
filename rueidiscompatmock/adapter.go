@@ -788,7 +788,13 @@ func usePrecise(d time.Duration) bool {
 	return d < time.Second || d%time.Second != 0
 }
 
-func formatMs(d time.Duration) int64 { return int64(d / time.Millisecond) }
+func formatMs(d time.Duration) int64 {
+	if d > 0 && d < time.Millisecond {
+		// too small, truncate to 1ms, matching rueidiscompat.formatMs
+		return 1
+	}
+	return int64(d / time.Millisecond)
+}
 
 func formatSec(d time.Duration) int64 { return int64(d / time.Second) }
 
@@ -2152,7 +2158,7 @@ func (m *clientMock) ExpectClientList() *ExpectedString {
 
 func (m *clientMock) ExpectClientPause(dur time.Duration) *ExpectedBool {
 	m.expectRoleMaster()
-	cmd := m.raw.B().ClientPause().Timeout(formatSec(dur)).Build()
+	cmd := m.raw.B().ClientPause().Timeout(formatMs(dur)).Build()
 	e := m.push(match(cmd.Commands()...), mock.Result(mock.RedisString("OK")))
 	return &ExpectedBool{exp: e, encode: okBoolMessage}
 }
@@ -2356,7 +2362,7 @@ func (m *clientMock) ExpectKeys(pattern string) *ExpectedStringSlice {
 
 func (m *clientMock) ExpectMigrate(host, port, key string, db int, timeout time.Duration) *ExpectedStatus {
 	portNum, _ := strconv.ParseInt(port, 10, 64)
-	cmd := m.raw.B().Migrate().Host(host).Port(portNum).Key(key).DestinationDb(int64(db)).Timeout(formatSec(timeout)).Build()
+	cmd := m.raw.B().Migrate().Host(host).Port(portNum).Key(key).DestinationDb(int64(db)).Timeout(formatMs(timeout)).Build()
 	e := m.push(match(cmd.Commands()...), defaultStatusResult())
 	return &ExpectedStatus{exp: e}
 }

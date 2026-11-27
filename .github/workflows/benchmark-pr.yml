@@ -1,0 +1,69 @@
+name: PR Benchmarks
+
+# Runs on pull_request, so fork PRs get a read-only token and no secrets. That is why the results go to the job
+# summary (which needs no token) instead of a comment, and why it is safe to build and run the PR's own code here.
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    # Go code, plus the benchmark tooling itself.
+    paths:
+      - '**/*.go'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/scripts/bench.sh'
+      - '.github/workflows/benchmark-pr.yml'
+      - '.github/workflows/benchmark-main.yml'
+
+# A new push to the PR cancels the previous run for that PR.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout base
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
+      - name: Checkout head
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: head
+          persist-credentials: false
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version-file: head/go.mod
+          # setup-go looks for go.sum only at the workspace root, and the checkouts are in subdirectories.
+          cache-dependency-path: head/go.sum
+      - name: Install benchstat
+        # Pinned: bench.sh parses benchstat's CSV layout.
+        run: go install golang.org/x/perf/cmd/benchstat@v0.0.0-20260908200009-22c9c6c9d4da
+      # bench.sh comes from the PR checkout, not from base: base only gets it once this PR merges, and the PR's copy
+      # is the one that knows about new benchmarks. That is safe because this workflow has no privileges. A branch
+      # that predates bench.sh has no copy, so it uses the base's.
+      - name: Pick bench.sh
+        run: |
+          if [ -f head/.github/scripts/bench.sh ]; then from="head"; else from="base"; fi
+          echo "BENCH_SH=$from/.github/scripts/bench.sh" >> "$GITHUB_ENV"
+      - name: Start Redis
+        run: '"$BENCH_SH" start-redis head'
+      - name: Run benchmarks
+        run: '"$BENCH_SH" run pr base head "$RUNNER_TEMP/bench"'
+      - name: Report
+        if: ${{ !cancelled() }}
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: '"$BENCH_SH" report pr "$RUNNER_TEMP/bench" "$BASE_SHA" "$HEAD_SHA"'
+      - name: Teardown Redis
+        if: always()
+        working-directory: head
+        run: docker compose down -v || true

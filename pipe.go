@@ -21,7 +21,7 @@ import (
 )
 
 const LibName = "rueidis"
-const LibVer = "1.0.79"
+const LibVer = "1.0.80"
 
 var (
 	noHello = regexp.MustCompile("unknown command .?(HELLO|hello).?")
@@ -434,7 +434,8 @@ func (p *pipe) backgroundSkipReadWrite() {
 // failSync is called by the sync paths (syncDo, syncDoMulti, DoStream and DoMultiStream) when
 // they fail to write or read. It marks the pipe as failed, closes the connection and starts the
 // background worker to clean up goroutines. The sync paths must not use p.background() for
-// this, see backgroundSkipReadWrite.
+// this, see backgroundSkipReadWrite. The escape timer in Close also calls it, for a Close
+// left waiting on a queue that no background worker drains.
 func (p *pipe) failSync(err error) {
 	p.error.CompareAndSwap(nil, &errs{error: err})
 	p.conn.Close()
@@ -854,11 +855,16 @@ func (p *pipe) refreshAuth(authFn func(AuthCredentialsContext) (AuthCredentials,
 			defer cancel()
 		}
 		cmd := cmds.NewCompleted(args)
-		result := p.Do(ctx, cmd)
-		if err := result.Error(); err != nil {
-			p._exit(err)
-			return
-		}
+		// The reply is ignored. The AUTH can fail while the connection is
+		// still fine: behind a blocking command it hits ConnWriteTimeout, like
+		// the background PING, and is applied once the blocking command
+		// returns; a subscribed RESP2 connection rejects it; Valkey 8.1 to 9.x
+		// reject module auth on a subscribed RESP3 connection
+		// (valkey-io/valkey#4862). The connection then keeps its current
+		// credentials and the server drops it when they expire, which is also
+		// what happens when the new credentials are really wrong. A connection
+		// that stopped replying is closed by the background PING.
+		p.Do(ctx, cmd)
 	}
 	p.scheduleAuthRefresh(auth.RefreshAfter)
 }
@@ -1969,12 +1975,17 @@ func (p *pipe) Close() {
 			// which frees a slot and answers the PING with an error. The timer
 			// costs a goroutine only when it fires.
 			//
-			// The drain runs in the background worker. There is always one
-			// here: it is already running, or the branch above started it, or
-			// syncDo starts it when the closed connection breaks its read.
+			// The drain runs in the background worker. Usually there is one: it
+			// is already running, or the branch above started it, or syncDo
+			// starts it when the closed connection breaks its read. But the
+			// other waiter that made the branch above skip may not be a syncDo:
+			// a concurrent Close, or a Do that sees the pipe already stopping,
+			// leaves without starting one. So the timer also starts the cleanup
+			// worker, which drains the queue without reading or writing the
+			// connection and is a no-op when a worker is already running.
 			var escape *time.Timer
 			if p.conn != nil {
-				escape = time.AfterFunc(time.Second, func() { p.conn.Close() })
+				escape = time.AfterFunc(time.Second, func() { p.failSync(errClosing) })
 			}
 			ch, _ := p.queue.PutOne(context.Background(), cmds.PingCmd)
 			<-ch
@@ -2007,9 +2018,18 @@ func (p *pipe) stopLifetimeTimer() bool {
 	return true
 }
 
+// StopTimer pauses the timers of a pipe checked out from a pool, and ResetTimer
+// resumes them when the pipe is returned. The auth refresh keeps running while
+// a pipe is checked out: AUTH is an ordinary request, also on a subscribed RESP3
+// connection, a transaction is sent in one DoMulti so AUTH cannot land inside
+// it, and the reply of the refresh AUTH is ignored, see refreshAuth. A
+// dedicated pub/sub pipe would otherwise never be refreshed and be dropped by
+// the server once its credentials expire. Only a nobg pipe, as used by the
+// stream pool, still pauses the refresh: DoStream owns its connection
+// synchronously and cannot share it with a concurrent AUTH.
 func (p *pipe) StopTimer() bool {
 	stopped := p.stopLifetimeTimer()
-	if p.authTimer != nil {
+	if p.authTimer != nil && p.queue == nil {
 		stopped = p.authTimer.Stop() && stopped
 	}
 	return stopped
@@ -2027,7 +2047,7 @@ func (p *pipe) ResetTimer() bool {
 			p.lftmTimer.Stop()
 		}
 	}
-	if p.authTimer != nil {
+	if p.authTimer != nil && p.queue == nil {
 		if at := p.authRefreshAt.Load(); at != nil && !at.IsZero() {
 			reset = p.authTimer.Reset(time.Until(*at)) && reset
 			// Same race as above, with Close or _background stopping authTimer.
