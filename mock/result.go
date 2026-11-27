@@ -32,6 +32,12 @@ func RedisBlobString(v string) rueidis.RedisMessage {
 	return *(*rueidis.RedisMessage)(unsafe.Pointer(&m))
 }
 
+// RedisVerbatimString returns a RESP3 verbatim string, whose format is 3 bytes, like "txt"
+func RedisVerbatimString(format, v string) rueidis.RedisMessage {
+	m := strmsg('=', format+":"+v)
+	return *(*rueidis.RedisMessage)(unsafe.Pointer(&m))
+}
+
 func RedisError(v string) rueidis.RedisMessage {
 	m := strmsg('-', v)
 	return *(*rueidis.RedisMessage)(unsafe.Pointer(&m))

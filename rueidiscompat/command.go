@@ -377,6 +377,9 @@ func (cmd *StringCmd) from(res rueidis.RedisResult) {
 			val = strconv.FormatInt(v, 10)
 			err = nil
 		}
+	} else if msg, _ := res.ToMessage(); msg.IsVerbatimString() && len(val) >= 4 {
+		// drop the format of a RESP3 verbatim string, like the "txt:" of INFO, as go-redis does
+		val = val[4:]
 	}
 	cmd.SetErr(err)
 	cmd.SetVal(val)

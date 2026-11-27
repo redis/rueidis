@@ -1572,6 +1572,41 @@ func TestZSliceSingleCmdFrom(t *testing.T) {
 	})
 }
 
+func TestStringCmdFromVerbatimString(t *testing.T) {
+	t.Parallel()
+
+	t.Run("txt", func(t *testing.T) {
+		cmd := newStringCmd(mock.Result(mock.RedisVerbatimString("txt", "# Server\r\nredis_version:8.2.1\r\n")))
+		if err := cmd.Err(); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if got, want := cmd.Val(), "# Server\r\nredis_version:8.2.1\r\n"; got != want {
+			t.Fatalf("got %q, want %q", got, want)
+		}
+	})
+
+	t.Run("other format", func(t *testing.T) {
+		cmd := newStringCmd(mock.Result(mock.RedisVerbatimString("mkd", "# Title")))
+		if got, want := cmd.Val(), "# Title"; got != want {
+			t.Fatalf("got %q, want %q", got, want)
+		}
+	})
+
+	t.Run("empty", func(t *testing.T) {
+		cmd := newStringCmd(mock.Result(mock.RedisVerbatimString("txt", "")))
+		if got, want := cmd.Val(), ""; got != want {
+			t.Fatalf("got %q, want %q", got, want)
+		}
+	})
+
+	t.Run("blob string", func(t *testing.T) {
+		cmd := newStringCmd(mock.Result(mock.RedisBlobString("txt:hello")))
+		if got, want := cmd.Val(), "txt:hello"; got != want {
+			t.Fatalf("got %q, want %q", got, want)
+		}
+	})
+}
+
 func TestTopKInfoCmdFrom(t *testing.T) {
 	t.Parallel()
 

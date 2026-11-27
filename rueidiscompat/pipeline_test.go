@@ -119,6 +119,16 @@ func testAdapterPipeline(resp3 bool) {
 		Expect(reset.Err()).NotTo(HaveOccurred())
 	})
 
+	It("should Pipeline Info and ClientList", func() {
+		pipe := adapter.Pipeline()
+		info := pipe.Info(ctx)
+		clients := pipe.ClientList(ctx)
+		_, err := pipe.Exec(ctx)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(info.Val()).To(HavePrefix("# Server"))
+		Expect(clients.Val()).To(HavePrefix("id="))
+	})
+
 	It("should panic for GetToBuffer in Pipeline", func() {
 		pipe := adapter.Pipeline()
 
