@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unsafe"
 
@@ -34,7 +35,7 @@ func NewClient(option ClientOption) (cc CacheAsideClient, err error) {
 		option.ClientTTL = 10 * time.Second
 	}
 	ca := &Client{
-		waits:      make(map[string]chan struct{}),
+		waits:      make(map[string]*waiter),
 		flights:    make(map[string]chan struct{}),
 		ttl:        option.ClientTTL,
 		useLuaLock: option.UseLuaLock,
@@ -57,7 +58,7 @@ func NewClient(option ClientOption) (cc CacheAsideClient, err error) {
 type Client struct {
 	client     rueidis.Client
 	ctx        context.Context
-	waits      map[string]chan struct{}
+	waits      map[string]*waiter
 	flights    map[string]chan struct{}
 	cancel     context.CancelFunc
 	id         string
@@ -72,15 +73,15 @@ func (c *Client) onInvalidation(messages []rueidis.RedisMessage) {
 	if messages == nil {
 		id = c.id
 		c.id = ""
-		for _, ch := range c.waits {
-			close(ch)
+		for _, w := range c.waits {
+			close(w.ch)
 		}
-		c.waits = make(map[string]chan struct{})
+		c.waits = make(map[string]*waiter)
 	} else {
 		for _, m := range messages {
 			key, _ := m.ToString()
-			if ch := c.waits[key]; ch != nil {
-				close(ch)
+			if w := c.waits[key]; w != nil {
+				close(w.ch)
 				delete(c.waits, key)
 			}
 		}
@@ -91,14 +92,40 @@ func (c *Client) onInvalidation(messages []rueidis.RedisMessage) {
 	}
 }
 
-func (c *Client) register(key string) (ch chan struct{}) {
+// waiter is closed by onInvalidation when the key it watches is invalidated.
+// refs counts the Get calls that currently hold it. It is only incremented with Client.mu held.
+type waiter struct {
+	ch   chan struct{}
+	refs atomic.Int32
+}
+
+func (c *Client) register(key string) (w *waiter) {
 	c.mu.Lock()
-	if ch = c.waits[key]; ch == nil {
-		ch = make(chan struct{})
-		c.waits[key] = ch
+	if w = c.waits[key]; w == nil {
+		w = &waiter{ch: make(chan struct{})}
+		c.waits[key] = w
 	}
+	w.refs.Add(1)
 	c.mu.Unlock()
 	return
+}
+
+// release gives up a reference taken by register.
+//
+// A waiter is normally removed by onInvalidation, but Redis only sends an invalidation for a key that is
+// modified, expired or deleted. A key that does not exist is never invalidated until it is created, so its waiter
+// would stay in c.waits forever. When drop is true, release removes the waiter once nobody else holds it.
+// This is always safe, because every Get registers before it reads the key, and so it never depends on a
+// waiter that was registered by an earlier Get.
+func (c *Client) release(key string, w *waiter, drop bool) {
+	if w.refs.Add(-1) == 0 && drop {
+		c.mu.Lock()
+		// register may have taken a new reference in the meantime, but it can not do that while mu is held.
+		if w.refs.Load() == 0 && c.waits[key] == w {
+			delete(c.waits, key)
+		}
+		c.mu.Unlock()
+	}
 }
 
 func (c *Client) refresh(id string) {
@@ -155,51 +182,65 @@ func (c *Client) Get(ctx context.Context, ttl time.Duration, key string, fn func
 		defer cancel()
 	}
 
-retry:
+	for {
+		if val, retry, err := c.get(ctx, ttl, key, fn); !retry {
+			return val, err
+		}
+	}
+}
+
+// get makes one attempt of Get. It reports retry == true if the attempt should be repeated.
+func (c *Client) get(ctx context.Context, ttl time.Duration, key string, fn func(ctx context.Context, key string) (val string, err error)) (val string, retry bool, err error) {
 	wait := c.register(key)
 	resp := c.client.DoCache(ctx, c.client.B().Get().Key(key).Cache(), ttl)
-	val, err := resp.ToString()
+	val, err = resp.ToString()
+	// Only an existing key is guaranteed to be invalidated later, so only then the waiter can stay registered for
+	// the next Get to reuse. Otherwise, it must not outlive this call. See release.
+	defer func(exists bool) { c.release(key, wait, !exists) }(err == nil)
 
 	if rueidis.IsRedisNil(err) && fn != nil { // cache miss, prepare to populate the value by fn()
 		f, leader := c.beginFlight(key)
 		if !leader {
 			select {
 			case <-f:
-				goto retry
+				return "", true, nil
 			case <-ctx.Done():
-				return "", ctx.Err()
+				return "", false, ctx.Err()
 			case <-c.ctx.Done():
-				return "", c.ctx.Err()
+				return "", false, c.ctx.Err()
 			}
 		}
 		val, err = c.populate(ctx, ttl, key, fn, f)
 	}
 
 	if err != nil {
-		return val, err
+		return val, false, err
 	}
 
 	if strings.HasPrefix(val, PlaceholderPrefix) {
-		ph := c.register(val)
-		err = c.client.DoCache(ctx, c.client.B().Get().Key(val).Cache(), c.ttl).Error()
+		id := val
+		ph := c.register(id)
+		// A placeholder that is gone is never invalidated again, so it must not stay registered.
+		defer c.release(id, ph, true)
+		err = c.client.DoCache(ctx, c.client.B().Get().Key(id).Cache(), c.ttl).Error()
 		if rueidis.IsRedisNil(err) {
 			// the client who held the lock has gone, release the lock.
-			delkey.Exec(context.Background(), c.client, []string{key}, []string{val})
-			goto retry
+			delkey.Exec(context.Background(), c.client, []string{key}, []string{id})
+			return "", true, nil
 		}
 		val = ""
 		if err == nil {
 			select {
-			case <-ph:
-			case <-wait:
+			case <-ph.ch:
+			case <-wait.ch:
 			case <-ctx.Done():
-				return "", ctx.Err()
+				return "", false, ctx.Err()
 			}
-			goto retry
+			return "", true, nil
 		}
 	}
 
-	return val, err
+	return val, false, err
 }
 
 func (c *Client) beginFlight(key string) (f chan struct{}, leader bool) {
