@@ -1133,3 +1133,100 @@ func TestDeadlock(t *testing.T) {
 	// this is going to hang
 	client.Close()
 }
+
+func waitsLen(c *Client) int {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return len(c.waits)
+}
+
+func TestGetMissingKeyDoesNotLeakWaiters(t *testing.T) {
+	client := makeClient(t, addr)
+	defer client.Close()
+	c := client.(*Client)
+	prefix := "missing-" + strconv.Itoa(rand.Int()) + "-"
+
+	// a key that does not exist is not invalidated by Redis until it is created,
+	// so nothing should be left behind in c.waits once Get returns.
+	for i := 0; i < 100; i++ {
+		if _, err := c.Get(context.Background(), time.Second, prefix+strconv.Itoa(i), nil); !rueidis.IsRedisNil(err) {
+			t.Fatalf("unexpected err %v", err)
+		}
+	}
+	if n := waitsLen(c); n != 0 {
+		t.Fatalf("%d waiters are leaked after reading missing keys", n)
+	}
+}
+
+func TestGetGonePlaceholderDoesNotLeakWaiters(t *testing.T) {
+	client := makeClient(t, addr)
+	defer client.Close()
+	c := client.(*Client)
+
+	key := "gone-" + strconv.Itoa(rand.Int())
+	gone := PlaceholderPrefix + "gone-" + strconv.Itoa(rand.Int()) // marker of a client that does not exist anymore
+	if err := c.Client().Do(context.Background(), c.Client().B().Set().Key(key).Value(gone).Build()).Error(); err != nil {
+		t.Fatal(err)
+	}
+	val, err := c.Get(context.Background(), time.Second, key, func(ctx context.Context, key string) (string, error) {
+		return "filled", nil
+	})
+	if err != nil || val != "filled" {
+		t.Fatalf("unexpected %q %v", val, err)
+	}
+	c.mu.Lock()
+	_, leaked := c.waits[gone]
+	c.mu.Unlock()
+	if leaked {
+		t.Fatal("the waiter of a placeholder that does not exist is leaked")
+	}
+}
+
+func TestWaiterIsSharedUntilReleasedByAll(t *testing.T) {
+	client := makeClient(t, addr)
+	defer client.Close()
+	c := client.(*Client)
+	ctx := context.Background()
+	key := "shared-" + strconv.Itoa(rand.Int())
+
+	w1, w2 := c.register(key), c.register(key)
+	if w1 != w2 {
+		t.Fatal("concurrent Gets of the same key must share a waiter")
+	}
+	// the first one drops, but the second still depends on the waiter to be woken up.
+	c.release(key, w1, true)
+	c.mu.Lock()
+	kept := c.waits[key] == w2
+	c.mu.Unlock()
+	if !kept {
+		t.Fatal("a waiter that is still held must not be removed")
+	}
+
+	// invalidate the key for real, which must wake up the remaining holder.
+	if err := c.Client().DoCache(ctx, c.Client().B().Get().Key(key).Cache(), time.Minute).Error(); !rueidis.IsRedisNil(err) {
+		t.Fatalf("unexpected err %v", err)
+	}
+	if err := c.Client().Do(ctx, c.Client().B().Set().Key(key).Value("v").Build()).Error(); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-w2.ch:
+	case <-time.After(5 * time.Second):
+		t.Fatal("the remaining holder is not woken up by the invalidation")
+	}
+
+	// releasing a waiter that was already removed by the invalidation must not remove a newer one.
+	w3 := c.register(key)
+	c.release(key, w2, true)
+	c.mu.Lock()
+	kept = c.waits[key] == w3
+	c.mu.Unlock()
+	if !kept {
+		t.Fatal("releasing a stale waiter must not remove a newer waiter")
+	}
+	c.release(key, w3, true)
+	if n := waitsLen(c); n != 0 {
+		t.Fatalf("%d waiters remain", n)
+	}
+	c.Client().Do(ctx, c.Client().B().Del().Key(key).Build())
+}
