@@ -155,28 +155,36 @@ func (c *Client) Get(ctx context.Context, ttl time.Duration, key string, fn func
 		defer cancel()
 	}
 
-retry:
+	for {
+		if val, retry, err := c.get(ctx, ttl, key, fn); !retry {
+			return val, err
+		}
+	}
+}
+
+// get makes one attempt of Get. It reports retry == true if the attempt should be repeated.
+func (c *Client) get(ctx context.Context, ttl time.Duration, key string, fn func(ctx context.Context, key string) (val string, err error)) (val string, retry bool, err error) {
 	wait := c.register(key)
 	resp := c.client.DoCache(ctx, c.client.B().Get().Key(key).Cache(), ttl)
-	val, err := resp.ToString()
+	val, err = resp.ToString()
 
 	if rueidis.IsRedisNil(err) && fn != nil { // cache miss, prepare to populate the value by fn()
 		f, leader := c.beginFlight(key)
 		if !leader {
 			select {
 			case <-f:
-				goto retry
+				return "", true, nil
 			case <-ctx.Done():
-				return "", ctx.Err()
+				return "", false, ctx.Err()
 			case <-c.ctx.Done():
-				return "", c.ctx.Err()
+				return "", false, c.ctx.Err()
 			}
 		}
 		val, err = c.populate(ctx, ttl, key, fn, f)
 	}
 
 	if err != nil {
-		return val, err
+		return val, false, err
 	}
 
 	if strings.HasPrefix(val, PlaceholderPrefix) {
@@ -185,7 +193,7 @@ retry:
 		if rueidis.IsRedisNil(err) {
 			// the client who held the lock has gone, release the lock.
 			delkey.Exec(context.Background(), c.client, []string{key}, []string{val})
-			goto retry
+			return "", true, nil
 		}
 		val = ""
 		if err == nil {
@@ -193,13 +201,13 @@ retry:
 			case <-ph:
 			case <-wait:
 			case <-ctx.Done():
-				return "", ctx.Err()
+				return "", false, ctx.Err()
 			}
-			goto retry
+			return "", true, nil
 		}
 	}
 
-	return val, err
+	return val, false, err
 }
 
 func (c *Client) beginFlight(key string) (f chan struct{}, leader bool) {
